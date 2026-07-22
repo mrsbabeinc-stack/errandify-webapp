@@ -266,21 +266,21 @@ export default function AuthPage({ onLogin }: AuthPageProps) {
                 disabled={loading}
                 className="w-full py-2 px-4 bg-yellow-50 border-2 border-yellow-400 text-yellow-700 rounded-lg font-semibold hover:bg-yellow-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                👨‍💼 Demo: Manager (Allocate Tasks)
+                👨‍💼 Demo: Manager (Allocate Errands)
               </button>
               <button
                 onClick={() => handleDemoLogin('demo_staff1')}
                 disabled={loading}
                 className="w-full py-2 px-4 bg-cyan-50 border-2 border-cyan-400 text-cyan-700 rounded-lg font-semibold hover:bg-cyan-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                👷 Demo: Staff 1 (Execute Tasks)
+                👷 Demo: Staff 1 (Execute Errands)
               </button>
               <button
                 onClick={() => handleDemoLogin('demo_staff2')}
                 disabled={loading}
                 className="w-full py-2 px-4 bg-cyan-50 border-2 border-cyan-400 text-cyan-700 rounded-lg font-semibold hover:bg-cyan-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                👷‍♀️ Demo: Staff 2 (Execute Tasks)
+                👷‍♀️ Demo: Staff 2 (Execute Errands)
               </button>
             </div>
           </div>

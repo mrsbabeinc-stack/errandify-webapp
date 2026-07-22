@@ -250,7 +250,7 @@ const CompanyAdvertisingManagement: React.FC = () => {
           <div className="opportunity-card" style={{padding: '16px', background: 'white', border: '2px solid #FFE5D9', borderRadius: '12px', cursor: 'pointer', transition: 'all 0.3s ease', position: 'relative'}}>
             <div className="opp-icon" style={{fontSize: '24px', marginBottom: '8px'}}>📰</div>
             <div className="opp-title" style={{fontSize: '14px', fontWeight: '700', marginBottom: '8px'}}>In-Feed Ads</div>
-            <div style={{fontSize: '12px', color: '#666', marginBottom: '12px', lineHeight: '1.5'}}>Subtle banner between tasks. AI picks the best time & position to show your ad. Learns from engagement patterns to reach active users.</div>
+            <div style={{fontSize: '12px', color: '#666', marginBottom: '12px', lineHeight: '1.5'}}>Subtle banner between errands. AI picks the best time & position to show your ad. Learns from engagement patterns to reach active users.</div>
             <div className="opp-price" style={{fontSize: '13px', fontWeight: '700', color: '#FF6B35'}}>SGD $180/week</div>
           </div>
         </div>

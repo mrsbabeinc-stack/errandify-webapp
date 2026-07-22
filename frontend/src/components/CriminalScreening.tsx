@@ -61,13 +61,13 @@ export default function CriminalScreening({ onComplete, onCancel }: CriminalScre
 
             <p className="text-gray-700 mb-6">
               Errandify is committed to creating a safe community. To protect everyone, we conduct
-              safety screening before allowing access to sensitive task categories.
+              safety screening before allowing access to sensitive errand categories.
             </p>
 
             <div className="bg-orange-50 border-l-4 border-errandify-orange-500 p-4 mb-6">
               <p className="font-semibold text-errandify-orange-900 mb-2">What are \"Sensitive Categories\"?</p>
               <p className="text-errandify-orange-800 text-sm">
-                Tasks involving childcare, elderly care, or home access require background screening
+                Errands involving childcare, elderly care, or home access require background screening
                 for everyone's safety. If you have a criminal conviction under certain acts, you
                 won't be able to access these categories.
               </p>
@@ -85,7 +85,7 @@ export default function CriminalScreening({ onComplete, onCancel }: CriminalScre
 
             <p className="text-gray-600 text-sm mb-6">
               ✅ You can still use Errandify for many other categories (delivery, shopping, errands,
-              etc). Only sensitive home-access and vulnerable-person tasks are restricted.
+              etc). Only sensitive home-access and vulnerable-person errands are restricted.
             </p>
 
             <button
@@ -247,7 +247,7 @@ export default function CriminalScreening({ onComplete, onCancel }: CriminalScre
                   <p className="font-semibold text-gray-800">I understand the restrictions</p>
                   <p className="text-sm text-gray-600 mt-1">
                     {hasAnyConviction
-                      ? 'I acknowledge that I will not be able to access childcare, elderly care, or home-access tasks.'
+                      ? 'I acknowledge that I will not be able to access childcare, elderly care, or home-access errands.'
                       : 'I confirm that I have answered honestly and understand these questions are for safety.'}
                   </p>
                 </div>
@@ -283,8 +283,8 @@ export default function CriminalScreening({ onComplete, onCancel }: CriminalScre
 
         <p className="text-gray-700 mb-6">
           {hasAnyConviction
-            ? 'Your declaration has been recorded. You have access to all categories except: Childcare, Elderly Care, and Home Access tasks. You can still use Errandify for many other errands!'
-            : 'Welcome to Errandify! You have access to all task categories. Thank you for your honesty.'}
+            ? 'Your declaration has been recorded. You have access to all categories except: Childcare, Elderly Care, and Home Access errands. You can still use Errandify for many other errands!'
+            : 'Welcome to Errandify! You have access to all errand categories. Thank you for your honesty.'}
         </p>
 
         <p className="text-sm text-gray-600">Continuing...</p>

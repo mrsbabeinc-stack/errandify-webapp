@@ -450,7 +450,7 @@ export default function MyProfilePage() {
           )}
           <div className="bg-white rounded-lg shadow p-4 text-center">
             <p className="text-3xl font-bold text-errandify-orange">{profile.completedTasks || 0}</p>
-            <p className="text-xs text-gray-600 font-semibold">✅ Tasks</p>
+            <p className="text-xs text-gray-600 font-semibold">✅ Errands</p>
           </div>
         </div>
 

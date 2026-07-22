@@ -298,7 +298,7 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
         {/* Header Subtitle */}
         <div style={{marginBottom: isMobile ? '8px' : '16px', background: 'linear-gradient(135deg, #FFF9F5 0%, #FFF5F0 100%)', borderRadius: '12px', padding: isMobile ? '8px 12px' : '16px', border: '2px solid #FFE0D6', boxShadow: '0 4px 16px rgba(255, 107, 53, 0.12)'}}>
           <p style={{color: '#555', fontSize: isMobile ? '12px' : '14px', margin: 0, fontWeight: '500', lineHeight: '1.4'}}>
-            {userRole === 'asker' ? '✨ Manage your posted tasks and track all activity' : '✨ View and manage your active tasks'} 🎯
+            {userRole === 'asker' ? '✨ Manage your posted errands and track all activity' : '✨ View and manage your active errands'} 🎯
           </p>
         </div>
 

@@ -1,5 +1,8 @@
+import cookieParser from 'cookie-parser';
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import http from 'http';
 import { config } from './config.js';
 import { initializeSocket } from './socket.js';
@@ -33,6 +36,9 @@ import adminRoutes from './routes/admin.js';
 import questionsRoutes from './routes/questions.js';
 // import emailRoutes from './routes/email.js'; // TODO: Fix email module imports
 import newsRoutes from './routes/news.js';
+import blogRoutes from './routes/blog.js';
+import recruitmentRoutes from './routes/recruitment.js';
+import { community as communityRoutes, announcements as announcementRoutes, events as eventRoutes } from './routes/community.js';
 // import verificationRoutes from './routes/verification.js'; // TODO: Fix module imports
 import referralRoutes from './routes/referrals.js';
 import speechRoutes from './routes/speech.js';
@@ -43,6 +49,7 @@ import uploadRoutes from './routes/uploads.js';
 import categoryPreferencesRoutes from './routes/categoryPreferences.js';
 import safetyRoutes from './routes/safety.js';
 import disputesL2L3Routes from './routes/disputes_l2_l3.js';
+import moderationReviewRoutes from './routes/moderationReview.js';
 import casesRoutes from './routes/cases.js';
 import companyRoutes from './routes/companyRoutes.js';
 import acraRoutes from './routes/acraRoutes.js';
@@ -473,8 +480,52 @@ const app = express();
 })();
 
 // Middleware
-app.use(cors());
-app.use(express.json({ limit: '10mb' }));
+// Security headers. CSP is left off because this server also serves the SPA;
+// a tailored CSP can be added later without breaking the frontend.
+app.use(helmet({ contentSecurityPolicy: false, crossOriginResourcePolicy: false }));
+
+// CORS allowlist — the dev frontend (:5173) is cross-origin; the built SPA is
+// served same-origin. Extra origins can be added via CORS_ORIGINS (comma-list).
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'http://127.0.0.1:5173',
+  ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : []),
+  ...(process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',').map((o) => o.trim()) : []),
+];
+app.use(
+  cors({
+    origin: (origin, cb) => {
+      // allow same-origin / server-to-server (no Origin header) and allowlisted origins
+      if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+      return cb(new Error('Not allowed by CORS'));
+    },
+    credentials: true,
+  })
+);
+
+// Singpass state/nonce ride in httpOnly cookies through the OIDC redirect
+app.use(cookieParser());
+app.use(express.json({ limit: '10mb' })); // large enough for base64 photo uploads
+
+// Rate limiting (anti brute-force / abuse). Generous global cap on the API,
+// strict cap on auth to stop credential stuffing. Tunable via env.
+const apiLimiter = rateLimit({
+  windowMs: 60_000,
+  max: Number(process.env.RATE_LIMIT_MAX || 300), // per IP per minute
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please slow down and try again shortly.' },
+});
+const authLimiter = rateLimit({
+  windowMs: 15 * 60_000,
+  max: Number(process.env.AUTH_RATE_LIMIT_MAX || 20), // login/signup attempts per IP / 15 min
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many attempts. Please wait a few minutes and try again.' },
+});
+app.use('/api/auth', authLimiter);
+app.use('/api', apiLimiter);
 
 // Health check
 app.get('/health', (req, res) => {
@@ -496,6 +547,13 @@ app.use('/api/mock-auth', mockAuthRoutes);
 app.use('/api/mock-payment', mockPaymentRoutes);
 
 // REAL ROUTES
+// The JWKS endpoint registered with Singpass. Public keys only — this is how
+// Singpass verifies the client assertions we sign.
+app.get('/api/.well-known/jwks.json', async (_req, res) => {
+  const { publicJwks } = await import('./services/singpass.js');
+  res.set('Cache-Control', 'public, max-age=3600').json(publicJwks());
+});
+
 app.use('/api/auth', authRoutes);
 app.use('/api/chat', chatRoutes);
 // Mount category preferences BEFORE general user routes (more specific first)
@@ -508,6 +566,7 @@ app.use('/api/jobs', jobsRoutes);
 app.use('/api/messages', messagesRoutes);
 app.use('/api/disputes', disputesRoutes);
 app.use('/api/disputes', disputesL2L3Routes); // L2+L3 resolution routes
+app.use('/api/moderation', moderationReviewRoutes);
 app.use('/api/cases', casesRoutes); // Admin case management
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/chas', chasRoutes);
@@ -548,14 +607,38 @@ app.use('/api/questions', questionsRoutes);
 // app.use('/api/email', emailRoutes); // TODO: Fix email module imports
 // app.use('/api/verification', verificationRoutes); // TODO: Fix module imports
 app.use('/api/news', newsRoutes);
+// blog.ts existed since the blog pages were written but was never mounted,
+// so every /api/blog call 404'd and the pages fell back to bundled data.
+app.use('/api/blog', blogRoutes);
+app.use('/api/recruitment', recruitmentRoutes);
+// MyKampung content: authored in admin, read by the app. Both ends existed
+// but were never connected — the admin screens saved to localStorage.
+app.use('/api/community', communityRoutes);
+app.use('/api/announcements', announcementRoutes);
+app.use('/api/events', eventRoutes);
 app.use('/api/referrals', referralRoutes);
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/safety', safetyRoutes);
 app.use('/api', companyRoutes); // Company module routes
 app.use('/api/acra-lookup', acraRoutes); // ACRA company verification
-app.use('/api/demo', demoRoutes);
+// Demo routes create users with fabricated SingPass identities, which would
+// bypass the compulsory-SingPass rule. Development only.
+if (process.env.NODE_ENV !== 'production') {
+  app.use('/api/demo', demoRoutes);
+} else {
+  console.log('[Startup] Demo routes disabled in production');
+}
 // Company errand allocation, leave, recommendations - merged into companyRoutes
 app.use('/api', hanaRoutes);
+
+// An unmatched /api/* request is a missing endpoint, not a page. Without this
+// the React fallback below answered them with 200 and index.html, so a call to
+// a route that does not exist looked like a success until response.json() blew
+// up on "<!doctype html>" — which reads as a parsing bug rather than a 404.
+// Comes first precisely because the fallback is greedy.
+app.use('/api', (req: express.Request, res: express.Response) => {
+  res.status(404).json({ error: `No such endpoint: ${req.method} /api${req.path}` });
+});
 
 // Serve index.html for all non-API routes (React Router fallback)
 app.get('*', (req, res) => {

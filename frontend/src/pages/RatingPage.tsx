@@ -167,10 +167,10 @@ export default function RatingPage() {
 
             {/* Errand Summary */}
             <div className="mb-8 p-6 bg-gray-50 rounded-lg border border-gray-200">
-              <h3 className="font-semibold text-errandify-brown mb-3">Task Details</h3>
+              <h3 className="font-semibold text-errandify-brown mb-3">Errand Details</h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Task:</span>
+                  <span className="text-gray-600">Errand:</span>
                   <span className="font-medium">{errand.title}</span>
                 </div>
                 <div className="flex justify-between">

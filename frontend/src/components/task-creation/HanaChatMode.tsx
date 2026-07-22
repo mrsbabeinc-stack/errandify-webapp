@@ -27,7 +27,7 @@ export default function HanaChatMode({
     {
       id: '1',
       role: 'hana',
-      content: "Hello! I'm Hana 🌸. Let's create your task together. What do you need done?",
+      content: "Hello! I'm Hana 🌸. Let's create your errand together. What do you need done?",
       timestamp: new Date(),
     },
   ]);
@@ -53,7 +53,7 @@ export default function HanaChatMode({
     date: "When do you need it? (date and time)",
     budget: "What's your budget? (in SGD)",
     notes: "Any special requirements? (optional, you can skip)",
-    complete: "Perfect! Let me review your task.",
+    complete: "Perfect! Let me review your errand.",
   };
 
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -198,7 +198,7 @@ export default function HanaChatMode({
     }
 
     addHanaMessage(
-      "Perfect! Here's your task summary:\n\n" +
+      "Perfect! Here's your errand summary:\n\n" +
       `📝 ${taskData.title}\n` +
       `📍 ${taskData.location}\n` +
       `📅 ${taskData.date} at ${taskData.time}\n` +
@@ -284,7 +284,7 @@ export default function HanaChatMode({
                 {
                   id: '1',
                   role: 'hana',
-                  content: "Hello! I'm Hana 🌸. Let's create your task together. What do you need done?",
+                  content: "Hello! I'm Hana 🌸. Let's create your errand together. What do you need done?",
                   timestamp: new Date(),
                 },
               ]);

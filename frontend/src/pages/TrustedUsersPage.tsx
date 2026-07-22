@@ -25,32 +25,17 @@ export default function TrustedUsersPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/user/trusted-users`,
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/trusted-users`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setTrustedUsers(response.data.data || []);
       setError('');
     } catch (err: any) {
       console.error('Failed to fetch trusted users:', err);
-      // Set mock data for demo
-      setTrustedUsers([
-        {
-          id: 1,
-          displayName: 'John Doe',
-          profileImage: '👨',
-          rating: 4.8,
-          role: 'doer',
-          addedAt: '2026-05-15',
-        },
-        {
-          id: 2,
-          displayName: 'Jane Smith',
-          profileImage: '👩',
-          rating: 4.9,
-          role: 'asker',
-          addedAt: '2026-04-20',
-        },
-      ]);
+      // Show the failure. This list previously fell back to two invented
+      // people, which read as a real trusted list the user never built.
+      setTrustedUsers([]);
+      setError('We could not load your trusted neighbours. Pull to refresh and we will try again.');
     } finally {
       setLoading(false);
     }
@@ -60,7 +45,7 @@ export default function TrustedUsersPage() {
     try {
       const token = localStorage.getItem('token');
       await axios.delete(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/user/trusted-users/${userId}`,
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/trusted-users/${userId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setTrustedUsers(prev => prev.filter(u => u.id !== userId));

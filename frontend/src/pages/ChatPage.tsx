@@ -347,7 +347,7 @@ export default function ChatPage({ userRole }: ChatPageProps) {
         <div style={{marginBottom: '16px'}}>
           <input
             type="text"
-            placeholder="🔍 Search task name or user..."
+            placeholder="🔍 Search errand name or user..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             style={{width: '100%', padding: '10px 12px', border: '2px solid #FFE0D6', borderRadius: '8px', fontSize: '14px', fontWeight: '500', background: '#FFF9F7', outline: 'none', transition: 'all 0.2s'}}

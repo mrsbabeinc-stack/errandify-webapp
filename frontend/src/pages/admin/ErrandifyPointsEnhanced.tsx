@@ -42,7 +42,7 @@ export const ErrandifyPointsEnhancedPage: React.FC = () => {
   ];
 
   const issuanceByType = [
-    { type: 'Task Completed', points: 5240, percentage: 58 },
+    { type: 'Errand Completed', points: 5240, percentage: 58 },
     { type: 'Referral Bonus', points: 2150, percentage: 24 },
     { type: 'Streak Bonus', points: 1260, percentage: 14 },
     { type: 'Rating Bonus', points: 380, percentage: 4 },
@@ -193,7 +193,7 @@ export const ErrandifyPointsEnhancedPage: React.FC = () => {
             <AIAnalysisPanel
               healthScore={87}
               healthLabel="Points System Health"
-              healthSentiment="Strong engagement with 43.5% redemption rate. Task completion is primary driver (58% of issuance). Peak activity 6pm, indicating post-work engagement."
+              healthSentiment="Strong engagement with 43.5% redemption rate. Errand completion is primary driver (58% of issuance). Peak activity 6pm, indicating post-work engagement."
               riskLevel={{
                 level: 'low',
                 description: 'Balanced issuance/redemption. No abnormal patterns detected. Point inflation minimal at 4.4 EP per user average.'
@@ -211,8 +211,8 @@ export const ErrandifyPointsEnhancedPage: React.FC = () => {
                   description: '6pm shows highest issuance (420 EP/hour = SGD $21/hour). This peak correlates with highest user activity and redemptions.'
                 },
                 {
-                  title: 'Task Completion ROI',
-                  description: 'Task completion is primary driver (58% of issuance, SGD $311.25 cost). Generates highest user engagement and retention.'
+                  title: 'Errand Completion ROI',
+                  description: 'Errand completion is primary driver (58% of issuance, SGD $311.25 cost). Generates highest user engagement and retention.'
                 },
                 {
                   title: 'Strong Redemption Economics',
@@ -253,7 +253,7 @@ export const ErrandifyPointsEnhancedPage: React.FC = () => {
               </select>
               <select style={{ padding: '6px 8px', fontSize: '11px', border: '1px solid #ddd', borderRadius: '4px', background: '#fff' }}>
                 <option>All Types</option>
-                <option>Task Completed</option>
+                <option>Errand Completed</option>
                 <option>Referral Bonus</option>
                 <option>Streak Bonus</option>
                 <option>Rating Bonus</option>
@@ -277,14 +277,14 @@ export const ErrandifyPointsEnhancedPage: React.FC = () => {
           {/* Table Rows */}
           <div style={{ overflowY: 'auto', flex: 1 }}>
             {[
-              { user: 'Sarah Tan', desc: 'Task Completed', points: 25, date: '2026-07-14' },
+              { user: 'Sarah Tan', desc: 'Errand Completed', points: 25, date: '2026-07-14' },
               { user: 'John Lee', desc: 'Referral Bonus', points: 50, date: '2026-07-14' },
               { user: 'Alice Wong', desc: 'Rating Bonus', points: 10, date: '2026-07-14' },
               { user: 'Bob Chen', desc: 'Redemption', points: -100, date: '2026-07-13' },
               { user: 'Eve Kumar', desc: 'Streak Bonus', points: 75, date: '2026-07-13' },
-              { user: 'David Lim', desc: 'Task Completed', points: 30, date: '2026-07-13' },
+              { user: 'David Lim', desc: 'Errand Completed', points: 30, date: '2026-07-13' },
               { user: 'Maya Patel', desc: 'Referral Bonus', points: 50, date: '2026-07-12' },
-              { user: 'Chris Wong', desc: 'Task Completed', points: 20, date: '2026-07-12' },
+              { user: 'Chris Wong', desc: 'Errand Completed', points: 20, date: '2026-07-12' },
             ].map((row, idx) => (
               <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 0.8fr 0.8fr 0.8fr', gap: '8px', paddingTop: '8px', paddingBottom: '8px', borderBottom: '1px solid #f5f5f5', fontSize: '10px', alignItems: 'center' }}>
                 <div style={{ fontWeight: '500', color: '#333' }}>{row.user}</div>

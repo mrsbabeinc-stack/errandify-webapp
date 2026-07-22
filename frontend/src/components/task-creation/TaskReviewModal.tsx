@@ -29,12 +29,12 @@ export default function TaskReviewModal({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-        <h2 className="text-2xl font-bold text-errandify-brown mb-6">Review Your Task</h2>
+        <h2 className="text-2xl font-bold text-errandify-brown mb-6">Review Your Errand</h2>
 
         {/* Task Summary */}
         <div className="space-y-4 mb-6 bg-gray-50 p-4 rounded-lg">
           <div>
-            <p className="text-xs font-semibold text-gray-600 mb-1">Task</p>
+            <p className="text-xs font-semibold text-gray-600 mb-1">Errand</p>
             <p className="text-lg font-semibold text-errandify-brown">{taskData.title}</p>
           </div>
 
@@ -113,13 +113,13 @@ export default function TaskReviewModal({
             disabled={isSubmitting}
             className="flex-1 bg-errandify-orange text-white py-3 rounded-lg font-bold hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isSubmitting ? 'Posting...' : 'Post Task'}
+            {isSubmitting ? 'Posting...' : 'Post Errand'}
           </button>
         </div>
 
         {/* Info Message */}
         <p className="text-xs text-gray-500 text-center mt-4">
-          You can edit this task anytime after posting.
+          You can edit this errand anytime after posting.
         </p>
       </div>
     </div>

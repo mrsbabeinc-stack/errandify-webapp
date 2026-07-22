@@ -188,7 +188,7 @@ export default function CategoryPreferencesPage() {
             🎯 Your Category Preferences
           </h1>
           <p className="text-gray-600">
-            Select what you can help with (as a doer) and what you need help with (as an asker). This helps us match you with the right tasks!
+            Select what you can help with (as a doer) and what you need help with (as an asker). This helps us match you with the right errands!
           </p>
         </div>
 
@@ -276,7 +276,7 @@ export default function CategoryPreferencesPage() {
           <ul className="text-sm text-blue-800 space-y-1 mt-2">
             <li>✓ <strong>I Can Help:</strong> Mark categories you specialize in as a doer. When someone posts in these categories, you'll see them first!</li>
             <li>✓ <strong>I Need Help:</strong> Mark categories you need help with as an asker. We'll recommend doers who specialize in these!</li>
-            <li>✓ <strong>AI Learning:</strong> The more tasks you complete, the smarter our suggestions get.</li>
+            <li>✓ <strong>AI Learning:</strong> The more errands you complete, the smarter our suggestions get.</li>
           </ul>
         </div>
 

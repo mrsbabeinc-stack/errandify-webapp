@@ -191,87 +191,42 @@ export const getAutoCorrections = (text: string): Map<string, string> => {
   return corrections;
 };
 
-// AI-based content moderation using Qwen
+// AI-based content moderation. Runs on the BACKEND — the server holds the API key
+// and applies the hardened moderation rules. Never call the AI provider from the
+// browser (that would ship the key to every visitor).
 export const moderateWithAI = async (content: string): Promise<{
   isAppropriate: boolean;
   reason: string;
   confidence: number;
 }> => {
   try {
-    const apiKey = import.meta.env.VITE_QWEN_API_KEY;
-    if (!apiKey) {
-      console.warn('Qwen API key not configured, skipping AI moderation');
-      return { isAppropriate: true, reason: '', confidence: 0 };
-    }
-
-    const response = await fetch('https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'qwen-turbo',
-        messages: [
-          {
-            role: 'system',
-            content: `You are a content moderation expert for a task/errand marketplace chat. Be LENIENT - allow normal conversation between doer and asker.
-
-HARD BLOCKS ONLY (zero tolerance):
-1. DRUGS - Illegal drug references (cocaine, heroin, weed, meth, etc.)
-2. SEX WORK - Sexual services or prostitution offers
-3. VIOLENCE - Threats, violence, or harm
-4. SCAMS - Crypto investment, forex, MLM, wire transfers, pyramid schemes
-
-✅ ALLOW:
-- Task coordination ("when?", "what time?", "where?")
-- Greetings ("hello", "hi", "hey")
-- Questions about the job
-- Price discussion
-- Status updates
-- Casual chat and emoji
-- Location/address mentions for work
-
-Respond with JSON:
-{
-  "isAppropriate": boolean,
-  "reason": "reason only if blocking",
-  "confidence": number 0-1
-}`,
-          },
-          {
-            role: 'user',
-            content: `Is this task message appropriate? "${content}"`,
-          },
-        ],
-        temperature: 0.3,
-        top_p: 0.9,
-      }),
-    });
+    const response = await fetch(
+      `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/content-filter`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: content, description: '', notes: '' }),
+      }
+    );
 
     if (!response.ok) {
-      console.error('Qwen API error:', response.statusText);
-      return { isAppropriate: true, reason: '', confidence: 0 };
+      console.error('Moderation API error:', response.statusText);
+      return { isAppropriate: true, reason: '', confidence: 0 }; // fail open
     }
 
     const data = await response.json();
-    const output = data.output?.text || '';
-
-    // Extract JSON from response
-    const jsonMatch = output.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      console.warn('No JSON found in Qwen response:', output);
-      return { isAppropriate: true, reason: '', confidence: 0 };
+    const result = data?.data;
+    if (result && typeof result.is_safe === 'boolean') {
+      return {
+        isAppropriate: result.is_safe,
+        reason: result.is_safe ? '' : (result.reason || 'This message contains content we can\'t allow.'),
+        confidence: typeof result.confidence === 'number' ? result.confidence : 0.9,
+      };
     }
 
-    const result = JSON.parse(jsonMatch[0]);
-    return {
-      isAppropriate: result.isAppropriate !== false,
-      reason: result.reason || '',
-      confidence: result.confidence || 0.5,
-    };
+    return { isAppropriate: true, reason: '', confidence: 0 };
   } catch (error) {
     console.error('AI moderation error:', error);
-    return { isAppropriate: true, reason: '', confidence: 0 };
+    return { isAppropriate: true, reason: '', confidence: 0 }; // fail open
   }
 };

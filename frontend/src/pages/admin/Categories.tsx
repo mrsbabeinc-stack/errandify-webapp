@@ -41,7 +41,7 @@ export const CategoriesPage: React.FC = () => {
                   <span className="stat-value">{cat.gmv}</span>
                 </div>
                 <div className="stat">
-                  <span className="stat-label">Tasks</span>
+                  <span className="stat-label">Errands</span>
                   <span className="stat-value">{cat.tasks}</span>
                 </div>
                 <div className="stat">

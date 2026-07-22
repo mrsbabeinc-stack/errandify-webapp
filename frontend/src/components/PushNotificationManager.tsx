@@ -61,7 +61,7 @@ export default function PushNotificationManager({
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-gray-800 text-sm">Stay Updated!</p>
           <p className="text-xs text-gray-600 mt-1">
-            Get instant notifications when bids are accepted, tasks reopen, or payments are released.
+            Get instant notifications when offers are accepted, errands reopen, or payments are released.
           </p>
 
           {error && (

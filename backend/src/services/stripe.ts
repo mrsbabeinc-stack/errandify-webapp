@@ -15,9 +15,28 @@ export const stripeService = {
    * Create a payment intent for task payment
    * Called when user tries to pay for a task
    */
+  /**
+   * Charge the asker when the offer is accepted.
+   *
+   * The money settles into the PLATFORM's Stripe balance and stays in Stripe's
+   * custody until we transfer it — to the doer's connected account when the
+   * work is confirmed, or back to the asker as a refund. It never reaches an
+   * Errandify bank account. That is the escrow: a held payout, not a held card
+   * authorisation.
+   *
+   * We used to authorise (capture_method: 'manual') and capture later. That
+   * failed on this product: authorisations lapse after ~7 days, and errands
+   * here run 8 days on average between acceptance and deadline — so the money
+   * would routinely die before the work was even due.
+   *
+   * Charging at ACCEPTANCE rather than completion is deliberate. A card that
+   * declines at acceptance costs nobody anything: the offer simply is not
+   * confirmed and the doer never sets off. A card that declines after the work
+   * is done leaves an unpaid doer and no leverage.
+   */
   async createPaymentIntent(amount: number, taskId: number, doerId: number): Promise<any> {
     try {
-      console.log(`[Stripe] Creating payment intent for task ${taskId}, amount: $${amount}`);
+      console.log(`[Stripe] Charging for task ${taskId}, amount: $${amount}`);
 
       const paymentIntent = await stripe.paymentIntents.create({
         amount: Math.round(amount * 100), // Convert to cents
@@ -26,17 +45,67 @@ export const stripeService = {
           taskId,
           doerId,
         },
-        description: `Payment for task ${taskId}`,
+        description: `Errand ${taskId} — held in Errandify's Stripe balance pending completion`,
       });
 
       console.log(`[Stripe] Payment intent created: ${paymentIntent.id}`);
       return {
         clientSecret: paymentIntent.client_secret,
         intentId: paymentIntent.id,
+        status: paymentIntent.status,
       };
     } catch (error) {
       console.error('[Stripe] Failed to create payment intent:', error);
       throw new Error('Failed to create payment intent');
+    }
+  },
+
+  /**
+   * Capture an authorised payment — this is the moment money actually moves
+   * from the asker. Called when an offer is accepted, not when the errand is
+   * posted, so unfilled errands never cost a processing fee.
+   *
+   * `amount` is optional: capturing less than the authorised amount
+   * automatically releases the remainder back to the asker, which is exactly
+   * what a partial dispute settlement needs.
+   */
+  async capturePayment(intentId: string, amount?: number): Promise<any> {
+    try {
+      const params: any = {};
+      if (typeof amount === 'number') params.amount_to_capture = Math.round(amount * 100);
+
+      const intent = await stripe.paymentIntents.capture(intentId, params, {
+        // Same errand captured twice returns the original rather than charging again
+        idempotencyKey: `capture-${intentId}-${params.amount_to_capture ?? 'full'}`,
+      });
+
+      console.log(`[Stripe] Captured ${intent.amount_received / 100} of ${intent.amount / 100} on ${intentId}`);
+      return {
+        intentId: intent.id,
+        status: intent.status,
+        amountCaptured: intent.amount_received / 100,
+      };
+    } catch (error: any) {
+      console.error('[Stripe] Capture failed:', error?.message || error);
+      throw error;
+    }
+  },
+
+  /**
+   * Release an authorisation without taking any money — for an errand that
+   * expired, was cancelled, or was fully refunded before capture. Unlike a
+   * refund, this costs nothing.
+   */
+  async cancelAuthorisation(intentId: string, reason = 'requested_by_customer'): Promise<any> {
+    try {
+      const intent = await stripe.paymentIntents.cancel(intentId, {
+        cancellation_reason: reason as any,
+      });
+      console.log(`[Stripe] Authorisation released: ${intentId}`);
+      return { intentId: intent.id, status: intent.status };
+    } catch (error: any) {
+      console.error('[Stripe] Cancel failed:', error?.message || error);
+      throw error;
     }
   },
 

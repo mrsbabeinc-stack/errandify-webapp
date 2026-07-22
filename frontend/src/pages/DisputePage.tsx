@@ -136,7 +136,7 @@ export default function DisputePage() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-800 mb-2">⚖️ Dispute Resolution</h1>
-          <p className="text-gray-600">Manage task disputes and resolutions</p>
+          <p className="text-gray-600">Manage errand disputes and resolutions</p>
         </div>
 
         {/* Quick Stats */}
@@ -282,7 +282,7 @@ export default function DisputePage() {
 
               {/* Task Info */}
               <div className="p-4 bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-600 font-semibold mb-2">Task Information</p>
+                <p className="text-sm text-gray-600 font-semibold mb-2">Errand Information</p>
                 <p className="text-lg font-bold text-gray-800 mb-1">{selectedDispute.taskTitle}</p>
                 <p className="text-sm text-gray-600">Budget: SGD ${selectedDispute.budget}</p>
               </div>

@@ -41,7 +41,7 @@ export default function TaskCompletedPage() {
       );
       setTask(response.data.data);
     } catch (err) {
-      console.error('Failed to load task:', err);
+      console.error('Failed to load errand:', err);
     } finally {
       setLoading(false);
     }
@@ -69,7 +69,7 @@ export default function TaskCompletedPage() {
           {/* Celebration */}
           <div className="text-center mt-12 mb-8">
             <div className="text-9xl mb-4 animate-bounce">✓</div>
-            <h1 className="text-4xl font-bold text-green-700 mb-2">Task Completed!</h1>
+            <h1 className="text-4xl font-bold text-green-700 mb-2">Errand Completed!</h1>
             <p className="text-lg text-gray-600">Amazing work! You've submitted your completion.</p>
           </div>
 
@@ -135,7 +135,7 @@ export default function TaskCompletedPage() {
               {/* Payment Info */}
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                 <p className="text-sm text-green-800">
-                  <strong>💰 Task Budget:</strong> SGD ${task.budget.toFixed(2)}
+                  <strong>💰 Errand Budget:</strong> SGD ${task.budget.toFixed(2)}
                 </p>
                 <p className="text-xs text-green-700 mt-2">
                   Payment will be released once {task.asker?.display_name || 'the asker'} approves and there's no active dispute.
@@ -175,7 +175,7 @@ export default function TaskCompletedPage() {
           <div className="text-center mt-8">
             <p className="text-lg font-bold text-green-700 mb-2">🌟 You're Building Your Reputation!</p>
             <p className="text-sm text-gray-600">
-              Every completed task gets you closer to earning more and matching with better tasks.
+              Every completed errand gets you closer to earning more and matching with better errands.
             </p>
           </div>
         </div>
@@ -264,7 +264,7 @@ export default function TaskCompletedPage() {
             {/* Budget Info */}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <p className="text-sm text-blue-800">
-                <strong>💰 Task Budget:</strong> SGD ${task.budget.toFixed(2)}
+                <strong>💰 Errand Budget:</strong> SGD ${task.budget.toFixed(2)}
               </p>
               <p className="text-xs text-blue-700 mt-2">
                 This amount will be deducted from your account once you approve the completion.

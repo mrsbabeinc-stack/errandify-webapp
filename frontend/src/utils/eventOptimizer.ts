@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { generateText } from './aiClient';
 
 export interface Event {
   id: string;
@@ -64,22 +65,9 @@ Tone: Warm, professional, community-focused, engaging
 
 Respond with ONLY the event description, no quotes or extra text.`;
 
-      const response = await axios.post(
-        'https://dashscope.aliyuncs.com/api/v1/services/aigc/text2text/qwen',
-        {
-          model: 'qwen-turbo',
-          input: { messages: [{ role: 'user', content: prompt }] },
-          parameters: { max_tokens: 500, temperature: 0.7 },
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.VITE_QWEN_API_KEY || 'demo'}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const responseText = await generateText(prompt, { maxTokens: 500, temperature: 0.7 });
 
-      return response.data.output?.text || '';
+      return responseText || '';
     } catch (error) {
       console.error('Failed to generate description:', error);
       return '';
@@ -123,22 +111,9 @@ Respond with ONLY valid JSON:
   ]
 }`;
 
-      const response = await axios.post(
-        'https://dashscope.aliyuncs.com/api/v1/services/aigc/text2text/qwen',
-        {
-          model: 'qwen-turbo',
-          input: { messages: [{ role: 'user', content: prompt }] },
-          parameters: { max_tokens: 1500, temperature: 0.7 },
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.VITE_QWEN_API_KEY || 'demo'}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const responseText = await generateText(prompt, { maxTokens: 1500, temperature: 0.7 });
 
-      const result = response.data.output?.text || '';
+      const result = responseText || '';
       if (!result) return [];
 
       const parsed = JSON.parse(result);
@@ -177,22 +152,9 @@ Tone: Warm Kampung community style, NOT corporate
 
 Respond with ONLY the message.`;
 
-      const response = await axios.post(
-        'https://dashscope.aliyuncs.com/api/v1/services/aigc/text2text/qwen',
-        {
-          model: 'qwen-turbo',
-          input: { messages: [{ role: 'user', content: prompt }] },
-          parameters: { max_tokens: 200, temperature: 0.7 },
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.VITE_QWEN_API_KEY || 'demo'}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const responseText = await generateText(prompt, { maxTokens: 200, temperature: 0.7 });
 
-      return response.data.output?.text || '';
+      return responseText || '';
     } catch (error) {
       console.error('Failed to generate reminder:', error);
       return '';
@@ -219,22 +181,9 @@ Tone: Warm, FOMO-inducing, community-focused, friendly
 
 Respond with ONLY the promotional message.`;
 
-      const response = await axios.post(
-        'https://dashscope.aliyuncs.com/api/v1/services/aigc/text2text/qwen',
-        {
-          model: 'qwen-turbo',
-          input: { messages: [{ role: 'user', content: prompt }] },
-          parameters: { max_tokens: 250, temperature: 0.8 },
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.VITE_QWEN_API_KEY || 'demo'}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const responseText = await generateText(prompt, { maxTokens: 250, temperature: 0.8 });
 
-      return response.data.output?.text || '';
+      return responseText || '';
     } catch (error) {
       console.error('Failed to generate promotional message:', error);
       return '';

@@ -66,10 +66,10 @@ export default function FirstLoginPreferenceModal({ isOpen, onClose, onComplete 
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
         <h2 className="text-2xl font-bold text-errandify-brown mb-2">
-          🎯 Help Us Recommend Tasks For You
+          🎯 Help Us Recommend Errands For You
         </h2>
         <p className="text-gray-600 mb-6">
-          Select the types of tasks you're interested in. We'll use this to recommend relevant jobs and help you find work faster!
+          Select the types of errands you're interested in. We'll use this to recommend relevant jobs and help you find work faster!
         </p>
 
         {/* Category Grid */}
@@ -123,7 +123,7 @@ export default function FirstLoginPreferenceModal({ isOpen, onClose, onComplete 
         </div>
 
         <p className="text-xs text-gray-500 mt-4 text-center">
-          You can update your preferences anytime in MyAccount → Task Preferences
+          You can update your preferences anytime in MyAccount → Errand Preferences
         </p>
       </div>
     </div>

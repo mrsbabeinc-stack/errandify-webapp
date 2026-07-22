@@ -12,8 +12,6 @@ export default function VerificationStep({ onComplete, onBack }: VerificationSte
 
   const [formData, setFormData] = useState({
     criminalRecord: false,
-    noCriminalRecord: false,
-    noConvictions: false,
     agreeBackgroundVerification: false,
     accurateInformation: false,
     agreeTerms: false,
@@ -41,8 +39,6 @@ export default function VerificationStep({ onComplete, onBack }: VerificationSte
     const newErrors: Record<string, string> = {};
 
     // Required checkboxes (safety critical)
-    if (!formData.noCriminalRecord) newErrors.noCriminalRecord = 'Required';
-    if (!formData.noConvictions) newErrors.noConvictions = 'Required';
     if (!formData.agreeBackgroundVerification) newErrors.agreeBackgroundVerification = 'Required';
     if (!formData.accurateInformation) newErrors.accurateInformation = 'Required';
     if (!formData.agreeTerms) newErrors.agreeTerms = 'Required';
@@ -66,27 +62,30 @@ export default function VerificationStep({ onComplete, onBack }: VerificationSte
     try {
       const token = localStorage.getItem('token');
 
-      const response = await fetch(`${API_URL}/api/screenings`, {
+      // /api/screenings never existed, so every agreement collected here was
+      // discarded while the screen reported success. These are the consents;
+      // the criminal declarations are made on the next step.
+      const response = await fetch(`${API_URL}/api/users/consents`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          criminal_record: formData.noCriminalRecord ? false : true,
-          convictions: formData.noConvictions ? false : true,
-          disputes: !formData.noDisputes,
-          cancelled_accounts: !formData.noCancelledAccounts,
-          authorized_to_work: formData.authorizedToWork,
           agreed_terms: formData.agreeTerms,
           agreed_privacy: formData.agreePrivacy,
           responsible_use: formData.responsibleUse,
+          authorized_to_work: formData.authorizedToWork,
+          accurate_information: formData.accurateInformation,
+          agreed_background_verification: formData.agreeBackgroundVerification,
+          no_disputes: formData.noDisputes,
+          no_cancelled_accounts: formData.noCancelledAccounts,
         })
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to submit verification');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to record your agreement');
       }
 
       showSuccess('✓ Verification Complete', 'Your identity has been verified');
@@ -119,52 +118,13 @@ export default function VerificationStep({ onComplete, onBack }: VerificationSte
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-8">
-            {/* Section 1: Criminal Background */}
-            <div className="border-b-2 border-gray-200 pb-8">
-              <h2 className="text-xl font-bold text-errandify-brown mb-6">
-                Criminal Background Declaration
-              </h2>
-              <div className="space-y-4">
-                <label className={`flex items-start gap-4 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                  errors.noCriminalRecord
-                    ? 'border-red-500 bg-red-50'
-                    : formData.noCriminalRecord
-                    ? 'border-errandify-orange bg-orange-50'
-                    : 'border-gray-300 hover:border-errandify-orange'
-                }`}>
-                  <input
-                    type="checkbox"
-                    checked={formData.noCriminalRecord}
-                    onChange={() => handleCheckboxChange('noCriminalRecord')}
-                    disabled={loading}
-                    className="w-5 h-5 mt-1 flex-shrink-0 cursor-pointer"
-                  />
-                  <span className="text-sm font-semibold text-errandify-brown">
-                    I declare I have no criminal records *
-                  </span>
-                </label>
-
-                <label className={`flex items-start gap-4 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                  errors.noConvictions
-                    ? 'border-red-500 bg-red-50'
-                    : formData.noConvictions
-                    ? 'border-errandify-orange bg-orange-50'
-                    : 'border-gray-300 hover:border-errandify-orange'
-                }`}>
-                  <input
-                    type="checkbox"
-                    checked={formData.noConvictions}
-                    onChange={() => handleCheckboxChange('noConvictions')}
-                    disabled={loading}
-                    className="w-5 h-5 mt-1 flex-shrink-0 cursor-pointer"
-                  />
-                  <span className="text-sm font-semibold text-errandify-brown">
-                    I have not been convicted of any crime *
-                  </span>
-                </label>
-              </div>
-            </div>
-
+            {/* Criminal background is no longer asked here. A conviction does not
+                bar someone from Errandify — they join, and the categories that
+                involve vulnerable people or home access are withheld from them.
+                That declaration is made on its own screen straight after this
+                one, statute by statute, and is what applies the restrictions.
+                Asking "I have no criminal record" here contradicted it: it
+                turned a restriction into a wall, and the answer went nowhere. */}
             {/* Section 2: Background Verification */}
             <div className="border-b-2 border-gray-200 pb-8">
               <h2 className="text-xl font-bold text-errandify-brown mb-6">

@@ -189,9 +189,9 @@ export default function AdminAlertsNotifications() {
         },
         {
           id: 't_2',
-          name: 'Task Completed',
+          name: 'Errand Completed',
           type: 'push',
-          content: '✓ {{doerName}} completed your task {{errandTitle}}',
+          content: '✓ {{doerName}} completed your errand {{errandTitle}}',
           createdAt: new Date(Date.now() - 1296000000).toISOString(),
         },
         {

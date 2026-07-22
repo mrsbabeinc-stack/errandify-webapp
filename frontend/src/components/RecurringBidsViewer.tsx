@@ -59,8 +59,8 @@ export default function RecurringBidsViewer({
         setBids(response.data.data.bids || []);
       }
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to load bids');
-      console.error('Error fetching recurring bids:', err);
+      setError(err.response?.data?.error || 'Failed to load offers');
+      console.error('Error fetching recurring offers:', err);
     } finally {
       setLoading(false);
     }
@@ -105,8 +105,8 @@ export default function RecurringBidsViewer({
         [bidId]: [],
       }));
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Failed to accept bid');
-      console.error('Error accepting bid:', err);
+      alert(err.response?.data?.error || 'Failed to accept offer');
+      console.error('Error accepting offer:', err);
     } finally {
       setSubmitting(false);
     }
@@ -123,7 +123,7 @@ export default function RecurringBidsViewer({
   if (loading) {
     return (
       <div className="text-center py-8">
-        <p className="text-gray-600">Loading bids...</p>
+        <p className="text-gray-600">Loading offers...</p>
       </div>
     );
   }
@@ -139,7 +139,7 @@ export default function RecurringBidsViewer({
   if (bids.length === 0) {
     return (
       <div className="text-center py-8 bg-blue-50 rounded-lg border border-blue-200">
-        <p className="text-gray-600">No bids yet. Share your task to get doers interested!</p>
+        <p className="text-gray-600">No offers yet. Share your errand to get doers interested!</p>
       </div>
     );
   }
@@ -179,7 +179,7 @@ export default function RecurringBidsViewer({
 
       {/* Bids */}
       <div className="space-y-4">
-        <h3 className="font-semibold text-gray-800">💰 Bids Received</h3>
+        <h3 className="font-semibold text-gray-800">💰 Offers Received</h3>
         {bids.map((bid) => (
           <div key={bid.bidId} className="bg-white border-2 border-gray-200 rounded-lg p-4 hover:border-errandify-orange transition">
             {/* Doer Info */}

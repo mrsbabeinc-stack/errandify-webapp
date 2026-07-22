@@ -36,7 +36,7 @@ export default function ReferralPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/user/referral`,
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/referral`,
         {
           headers: { Authorization: `Bearer ${token}` },
           timeout: 3000
@@ -274,7 +274,7 @@ export default function ReferralPage() {
                     💌 Invite & Earn Together!
                   </h2>
                   <p className="text-sm text-gray-600 mb-4">
-                    Share your referral code. You both earn 50 EP when they complete their first task! 🎁
+                    Share your referral code. You both earn 50 EP when they complete their first errand! 🎁
                   </p>
 
                   {/* QR Code */}
@@ -318,10 +318,10 @@ export default function ReferralPage() {
                       readOnly
                       value={`🎯 Join Me on Errandify!
 
-Hi! I found this amazing app called Errandify where we can help each other with everyday tasks and earn rewards!
+Hi! I found this amazing app called Errandify where we can help each other with everyday errands and earn rewards!
 
 💰 Join with my referral code: ${referralData.code}
-🎁 We both earn 50 Errandify Points when you complete your first task!
+🎁 We both earn 50 Errandify Points when you complete your first errand!
 
 🔗 ${referralData.link}
 
@@ -331,7 +331,7 @@ Let's help each other in our community! 🤝`}
                     <button
                       onClick={() => {
                         navigator.clipboard.writeText(
-                          `🎯 Join Me on Errandify!\n\nHi! I found this amazing app called Errandify where we can help each other with everyday tasks and earn rewards!\n\n💰 Join with my referral code: ${referralData.code}\n🎁 We both earn 50 Errandify Points when you complete your first task!\n\n🔗 ${referralData.link}\n\nLet's help each other in our community! 🤝`
+                          `🎯 Join Me on Errandify!\n\nHi! I found this amazing app called Errandify where we can help each other with everyday errands and earn rewards!\n\n💰 Join with my referral code: ${referralData.code}\n🎁 We both earn 50 Errandify Points when you complete your first errand!\n\n🔗 ${referralData.link}\n\nLet's help each other in our community! 🤝`
                         );
                         setCopied('code');
                         setTimeout(() => setCopied(null), 2000);
@@ -345,7 +345,7 @@ Let's help each other in our community! 🤝`}
                   {/* Share Buttons */}
                   <div className="grid grid-cols-2 gap-2 mb-4">
                     <a
-                      href={`https://wa.me/?text=${encodeURIComponent(`🎯 Join Me on Errandify!\n\nHi! I found this amazing app called Errandify where we can help each other with everyday tasks and earn rewards!\n\n💰 Join with my referral code: ${referralData.code}\n🎁 We both earn 50 Errandify Points when you complete your first task!\n\n🔗 ${referralData.link}\n\nLet's help each other in our community! 🤝`)}`}
+                      href={`https://wa.me/?text=${encodeURIComponent(`🎯 Join Me on Errandify!\n\nHi! I found this amazing app called Errandify where we can help each other with everyday errands and earn rewards!\n\n💰 Join with my referral code: ${referralData.code}\n🎁 We both earn 50 Errandify Points when you complete your first errand!\n\n🔗 ${referralData.link}\n\nLet's help each other in our community! 🤝`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="px-3 py-2 bg-green-500 text-white text-xs font-semibold rounded hover:bg-green-600 transition text-center"
@@ -355,7 +355,7 @@ Let's help each other in our community! 🤝`}
                     <button
                       onClick={() => {
                         const subject = `Join me on Errandify!`;
-                        const body = `🎯 Join Me on Errandify!\n\nHi! I found this amazing app called Errandify where we can help each other with everyday tasks and earn rewards!\n\n💰 Join with my referral code: ${referralData.code}\n🎁 We both earn 50 Errandify Points when you complete your first task!\n\n🔗 ${referralData.link}\n\nLet's help each other in our community! 🤝`;
+                        const body = `🎯 Join Me on Errandify!\n\nHi! I found this amazing app called Errandify where we can help each other with everyday errands and earn rewards!\n\n💰 Join with my referral code: ${referralData.code}\n🎁 We both earn 50 Errandify Points when you complete your first errand!\n\n🔗 ${referralData.link}\n\nLet's help each other in our community! 🤝`;
                         window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
                       }}
                       className="px-3 py-2 bg-blue-600 text-white text-xs font-semibold rounded hover:bg-blue-700 transition"

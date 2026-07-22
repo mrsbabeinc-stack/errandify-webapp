@@ -188,7 +188,7 @@ export default function HanaTaskCreation({
       'admin-business': `Data entry for my business, ${postalCode}, ${date}, ${time}, ${duration}, $${budget}`,
       'charity-community': `Pack donation boxes, ${postalCode}, ${date}, ${time}, ${duration}, $${budget}`,
     };
-    return examples[category] || `[task], [postal code], [date], [time], [duration], $[amount]`;
+    return examples[category] || `[errand], [postal code], [date], [time], [duration], $[amount]`;
   };
 
   const initializeChat = () => {
@@ -283,7 +283,7 @@ export default function HanaTaskCreation({
         occurrences: extracted.occurrences || 1,
       };
 
-      console.log('[Hana] Updated task data:', updatedTaskData);
+      console.log('[Hana] Updated errand data:', updatedTaskData);
 
       setTaskData(updatedTaskData);
 
@@ -390,7 +390,7 @@ export default function HanaTaskCreation({
   };
 
   const buildSummary = (data: TaskData) => {
-    let summary = '✓ Task Summary:\n\n';
+    let summary = '✓ Errand Summary:\n\n';
     if (data.title) summary += `📝 ${data.title}\n`;
     if (data.fullAddress) summary += `📍 ${data.fullAddress}\n`;
     else if (data.location) summary += `📍 ${data.location}\n`;
@@ -419,7 +419,7 @@ export default function HanaTaskCreation({
       );
 
       if (filterResponse.data.data.status === 'FLAG') {
-        setHanaMessage('⚠️ This task needs review. Our team will check it shortly.');
+        setHanaMessage('⚠️ This errand needs review. Our team will check it shortly.');
         return;
       }
 
@@ -524,34 +524,26 @@ export default function HanaTaskCreation({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 z-40 flex items-end justify-center p-0">
-      {/* Full-height sheet with a rounded top (no page peeking behind) */}
-      <div className="bg-white shadow-2xl w-full h-screen max-w-2xl flex flex-col overflow-hidden rounded-t-3xl">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-errandify-orange to-orange-400 px-5 py-3 flex items-center justify-between flex-shrink-0 shadow-md">
-          <div className="flex items-center gap-3 min-w-0">
-            <img src="/images/hana-avatar.png" alt="Hana" className="w-10 h-10 rounded-full object-cover border-2 border-white/60 flex-shrink-0" />
-            <div className="min-w-0">
-              <h1 className="text-lg font-bold text-white whitespace-nowrap leading-tight">Hana <span className="text-xs font-medium text-orange-100">(Your AI Sister)</span></h1>
-              <p className="text-orange-100 text-[11px] leading-tight">Chat With Hana</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={onSkipToManual}
-              className="px-2.5 py-1.5 bg-white text-errandify-orange rounded-full font-bold hover:bg-orange-100 text-xs flex-shrink-0"
-              title="Skip Hana and enter details manually"
-            >
-              ✎ Manual
-            </button>
-            <button
-              onClick={onClose}
-              className="text-white hover:text-orange-100 text-2xl font-light"
-            >
-              ✕
-            </button>
-          </div>
+    <div className="fixed inset-0 bg-white z-40 flex items-stretch justify-center p-0">
+      {/* Full-screen sheet — covers the app header behind so nothing peeks through */}
+      <div className="bg-white shadow-2xl w-full h-screen max-w-2xl flex flex-col overflow-hidden">
+        {/* No top header — just floating Manual + Close controls, nudged down from the top edge */}
+        <div className="flex items-center justify-end gap-2 px-5 pt-6 pb-1 flex-shrink-0">
+          <button
+            type="button"
+            onClick={onSkipToManual}
+            className="px-3 py-1.5 bg-white text-errandify-orange border border-orange-200 rounded-full font-bold hover:bg-orange-50 text-xs shadow-sm flex-shrink-0"
+            title="Skip Hana and enter details manually"
+          >
+            ✎ Manual
+          </button>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-full bg-white border border-gray-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50 text-lg font-light flex items-center justify-center shadow-sm flex-shrink-0"
+            title="Close"
+          >
+            ✕
+          </button>
         </div>
 
         {/* Main Content - Bubble Renders First (Loads First), Hana Below (Visual Order) */}
@@ -603,7 +595,7 @@ export default function HanaTaskCreation({
                         </p>
                         {example && (
                           <div className="mt-3 rounded-2xl px-4 py-3 text-center bg-white/70" style={{ border: '1px dashed rgba(255,140,66,0.45)' }}>
-                            <p className="text-[10px] font-extrabold uppercase tracking-widest mb-1" style={{ color: '#FF6B35' }}>💡 Example</p>
+                            <p className="text-xs font-semibold mb-1" style={{ color: '#FF8C42' }}>💡 For example</p>
                             <p className="text-sm font-semibold leading-snug" style={{ color: '#6B4A35' }}>{example}</p>
                           </div>
                         )}

@@ -170,7 +170,7 @@ export default function EmailNotificationSettingsPage() {
               </div>
               <div className="space-y-3">
                 {[
-                  { key: 'bid_accepted', label: 'Bid Accepted', icon: '✅' },
+                  { key: 'bid_accepted', label: 'Offer Accepted', icon: '✅' },
                   { key: 'payment_released', label: 'Payment Released', icon: '💰' },
                   { key: 'dispute_opened', label: 'Dispute Opened', icon: '⚠️' },
                 ].map(item => (
@@ -190,10 +190,10 @@ export default function EmailNotificationSettingsPage() {
               </div>
               <div className="space-y-3">
                 {[
-                  { key: 'task_completed', label: 'Task Completed', icon: '🏁' },
+                  { key: 'task_completed', label: 'Errand Completed', icon: '🏁' },
                   { key: 'new_bid_received', label: 'New Offer Received', icon: '💪' },
                   { key: 'review_received', label: 'Review Received', icon: '⭐' },
-                  { key: 'task_cancelled', label: 'Task Cancelled', icon: '❌' },
+                  { key: 'task_cancelled', label: 'Errand Cancelled', icon: '❌' },
                 ].map(item => (
                   <button
                     key={item.key}

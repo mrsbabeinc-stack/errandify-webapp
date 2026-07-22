@@ -97,7 +97,10 @@ async function subscribeToPush(): Promise<PushSubscription | null> {
     }
 
     // Create new subscription
-    const vapidPublicKey = process.env.REACT_APP_VAPID_PUBLIC_KEY;
+    // Was process.env.REACT_APP_VAPID_PUBLIC_KEY — a Create React App name in a
+    // Vite project, so `process` was undefined and this threw before it could
+    // even check for the key. Vite exposes env vars on import.meta.env.
+    const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
     if (!vapidPublicKey) {
       console.warn('VAPID public key not configured');
       return null;

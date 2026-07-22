@@ -24,23 +24,18 @@ export default function BlockListPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/user/blocked-users`,
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/blocked-users`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setBlockedUsers(response.data.data || []);
       setError('');
     } catch (err: any) {
       console.error('Failed to fetch blocked users:', err);
-      // Set mock data for demo
-      setBlockedUsers([
-        {
-          id: 5,
-          displayName: 'Spam User',
-          profileImage: '🚫',
-          role: 'doer',
-          blockedAt: '2026-06-10',
-        },
-      ]);
+      // Never invent entries here. This list previously fell back to a fake
+      // "Spam User", which would tell someone they had blocked a person they
+      // had not — the one wrong answer a block list must never give.
+      setBlockedUsers([]);
+      setError('We could not load your block list. Pull to refresh and we will try again.');
     } finally {
       setLoading(false);
     }
@@ -50,7 +45,7 @@ export default function BlockListPage() {
     try {
       const token = localStorage.getItem('token');
       await axios.delete(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/user/blocked-users/${userId}`,
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/blocked-users/${userId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setBlockedUsers(prev => prev.filter(u => u.id !== userId));

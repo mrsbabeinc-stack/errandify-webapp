@@ -146,7 +146,7 @@ const ErrandActivityTimeline = forwardRef<ErrandActivityTimelineHandle, ErrandAc
           📅 Activity Timeline
         </h3>
         <p className="text-xs text-gray-600 mt-0.5">
-          What's happened on this task
+          What's happened on this errand
         </p>
       </div>
 

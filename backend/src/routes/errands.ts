@@ -1,10 +1,13 @@
 import { Router, Request, Response } from 'express';
-import { AuthRequest, authMiddleware } from '../middleware/auth.js';
+import { AuthRequest, authMiddleware, requireAdmin } from '../middleware/auth.js';
 import db from '../db.js';
 import { activityLogService } from '../services/activityLogService.js';
 import { sendCriticalEmail } from '../services/emailNotifications.js';
 import { generateRecurringInstances } from '../services/recurringService.js';
 import { moderateContent } from '../services/contentModerationService.js';
+import { checkContentWithQwen } from '../modules/content-moderation.js';
+import { getRestrictedSlugs, getRestrictionReason } from '../services/categoryRestrictions.js';
+import { recordModerationEvent, decideAction, blockedMessage } from '../utils/moderationLog.js';
 import { getCategoryCode } from '../utils/categoryCodes.js';
 
 const router = Router();
@@ -49,7 +52,7 @@ async function resolveErrandId(idParam: string): Promise<number | null> {
 router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     console.log('[Errands GET] Request received - userId:', req.userId);
-    const { category, status, sort, myOnly, accepted, recommended } = req.query;
+    const { category, status, sort, myOnly, accepted, recommended, myAllocated } = req.query;
     const currentUserId = req.userId ? parseInt(req.userId, 10) : null;
 
     console.log('[Errands GET] currentUserId:', currentUserId, 'filters:', { myOnly, accepted, recommended });
@@ -66,8 +69,21 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
     const isMyOnly = myOnly === 'true' || myOnly === true;
     const isAccepted = accepted === 'true' || accepted === true;
     const isRecommended = recommended === 'true' || recommended === true;
+    const isMyAllocated = myAllocated === 'true' || myAllocated === true;
 
-    if (isMyOnly) {
+    if (isMyAllocated) {
+      // Company staff: the errands allocated to me through company_orders.
+      // StaffDashboard has always sent ?myAllocated=true, but nothing read it,
+      // so the filter fell through to the browse branch and the dashboard
+      // listed every open errand on the platform instead of this person's work.
+      query = `SELECT e.*, co.status AS allocation_status, co.company_id
+                 FROM errands e
+                 INNER JOIN company_orders co ON co.errand_id = e.id
+                WHERE co.assigned_staff_id = $1
+                  AND co.status NOT IN ('declined')`;
+      params.push(currentUserId);
+      paramIndex = 2;
+    } else if (isMyOnly) {
       // Show errands posted by current user (for askers)
       query = 'SELECT * FROM errands WHERE asker_id = $1';
       params.push(currentUserId);
@@ -128,9 +144,29 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       paramIndex = 4;
     }
 
+    // Hide categories this user is barred from.
+    //
+    // Someone who declared a conviction keeps their account but never sees
+    // childcare, eldercare or home-access work in the app — they are filtered
+    // out here rather than shown and refused later, which would tell every
+    // browsing user what is on somebody's record.
+    //
+    // Applies to browsing and recommendations only. myOnly is the user's own
+    // posted errands (they are the asker, not the worker), and isAccepted /
+    // isMyAllocated are jobs already assigned — removing those from view would
+    // strand work someone is mid-way through rather than prevent anything.
+    if (!isMyOnly && !isAccepted && !isMyAllocated) {
+      const restricted = await getRestrictedSlugs(currentUserId);
+      if (restricted.length > 0) {
+        query += ` AND NOT (category = ANY($${paramIndex}::text[]))`;
+        params.push(restricted);
+        paramIndex++;
+      }
+    }
+
     // Filter by category
     if (category) {
-      const tablePrefix = isAccepted ? 'e.' : '';
+      const tablePrefix = (isAccepted || isMyAllocated) ? 'e.' : '';
       query += ` AND ${tablePrefix}category = $${paramIndex}`;
       params.push(category);
       paramIndex++;
@@ -138,7 +174,7 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
 
     // Filter by status (additional status filter for myOnly)
     if (status && isMyOnly) {
-      const statusPrefix = isAccepted ? 'e.' : '';
+      const statusPrefix = (isAccepted || isMyAllocated) ? 'e.' : '';
       query += ` AND ${statusPrefix}status = $${paramIndex}`;
       params.push(status);
       paramIndex++;
@@ -147,7 +183,7 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
     // Exclude expired errands for doers without bids (but show if they have a bid on it)
     if (!isMyOnly) {
       // For doers: exclude expired errands UNLESS they have made a bid on it
-      const tablePrefix = isAccepted ? 'e.' : '';
+      const tablePrefix = (isAccepted || isMyAllocated) ? 'e.' : '';
       query += ` AND (${tablePrefix}status != 'expired' OR EXISTS (
         SELECT 1 FROM bids WHERE bids.errand_id = ${tablePrefix}id AND bids.doer_id = $${paramIndex}
       ))`;
@@ -156,7 +192,7 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
     }
 
     // Sorting
-    const tablePrefix = isAccepted ? 'e.' : '';
+    const tablePrefix = (isAccepted || isMyAllocated) ? 'e.' : '';
     if (sort === 'budget-high') {
       query += ` ORDER BY ${tablePrefix}budget DESC NULLS LAST`;
     } else if (sort === 'deadline') {
@@ -437,25 +473,82 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
 
     // Moderate errand title and description for contact info and inappropriate content
     try {
-      const titleModeration = await moderateContent(title, 'task_description');
-      if (titleModeration.status === 'blocked') {
-        return res.status(400).json({
-          error: `❌ Title blocked: ${titleModeration.reason}. Do not include contact information (phone, email, address, social profiles, business cards).`,
-        });
-      }
+      // Deterministic rules — a phone number is a phone number, so these still
+      // hard block. Logged either way so the rate is measurable.
+      for (const [field, text] of [['title', title], ['description', description]] as [string, string][]) {
+        if (!text) continue;
+        const check = await moderateContent(text, 'task_description');
 
-      if (description) {
-        const descriptionModeration = await moderateContent(description, 'task_description');
-        if (descriptionModeration.status === 'blocked') {
-          return res.status(400).json({
-            error: `❌ Description blocked: ${descriptionModeration.reason}. Do not include contact information (phone, email, address, social profiles, business cards).`,
-          });
+        // 'flagged' was being treated as a pass, so contact details in a title
+        // sailed through despite the rule we tell people about. The pattern
+        // layer is deterministic — a phone number is a phone number — so a
+        // flag from it blocks, while the AI-driven flags stay advisory.
+        const blocked = check.status === 'blocked' || check.status === 'flagged';
+
+        const eventId = await recordModerationEvent({
+          userId: parseInt(req.userId || '0', 10) || null,
+          surface: `errand_${field}`,
+          layer: 'keyword',
+          decision: blocked ? 'blocked' : 'passed',
+          reason: check.reason,
+          content: text,
+        });
+
+        if (blocked) {
+          return res.status(400).json(
+            blockedMessage(
+              `We can't post this ${field} — ${check.reason}. Please leave out contact details like phone numbers, emails or addresses.`,
+              eventId
+            )
+          );
         }
       }
     } catch (moderationErr) {
       console.error('[DEBUG] Content moderation check failed:', moderationErr);
       // Log the error but continue - don't block posting due to moderation service failure
       console.log('[DEBUG] Continuing despite moderation error');
+    }
+
+    // AI moderation for inappropriate content (illegal, drugs/weapons, adult/sexual,
+    // violence, harassment, hate, scams, offensive language)
+    try {
+      const safety = await checkContentWithQwen(title, description || '', '');
+      const category = safety.flags?.[0] || null;
+      const action = decideAction({
+        layer: 'ai',
+        isSafe: safety.is_safe,
+        category,
+        flags: safety.flags,
+      });
+
+      const reason = (safety.details && (safety.details as any).reason) ||
+        'It may contain inappropriate or unsafe content.';
+
+      const eventId = await recordModerationEvent({
+        userId: parseInt(req.userId || '0', 10) || null,
+        surface: 'errand_post',
+        layer: 'ai',
+        decision: action,
+        category,
+        reason: safety.is_safe ? null : reason,
+        flags: safety.flags,
+        confidence: safety.confidence ?? null,
+        content: `${title} ${description || ''}`,
+      });
+
+      // Only serious categories block on the model's word alone. Anything else
+      // publishes and waits for a person — a bad day from the model should not
+      // silently kill an ordinary errand.
+      if (action === 'blocked') {
+        console.log('[Moderation] Errand blocked as unsafe:', safety.flags, reason);
+        return res.status(400).json(blockedMessage(`We can't post this errand. ${reason}`, eventId));
+      }
+      if (action === 'flagged') {
+        console.log('[Moderation] Errand published but flagged for review:', safety.flags, reason);
+      }
+    } catch (aiModErr) {
+      // Fail open — never block a legitimate post because the AI service errored
+      console.error('[Moderation] AI content check errored, allowing post:', aiModErr);
     }
 
     // Check for duplicate/similar errands posted by same user in last 24 hours
@@ -805,9 +898,8 @@ router.post('/:id/complete', authMiddleware, async (req: AuthRequest, res: Respo
 
           // Log EP transaction
           await db.query(
-            `INSERT INTO ep_transactions (user_id, transaction_type, points_change, description, created_at)
-             SELECT $1, 'referral_first_job', $2, 'Referral first job bonus - ' || $3 || ' completed first errand', NOW()
-             FROM users WHERE id = $1`,
+            `INSERT INTO ep_transactions (user_id, amount, reason, created_at)
+             VALUES ($1, $2, LEFT('Referral first job bonus - ' || $3 || ' completed first errand', 100), NOW())`,
             [referrerId, firstJobBonus, doerName]
           );
 
@@ -872,9 +964,8 @@ router.post('/:id/complete', authMiddleware, async (req: AuthRequest, res: Respo
 
           // Log EP transaction
           await db.query(
-            `INSERT INTO ep_transactions (user_id, transaction_type, points_change, description, created_at)
-             SELECT $1, 'referral_loyalty', $2, 'Referral loyalty bonus - ' || $3 || ' reached 10 errands', NOW()
-             FROM users WHERE id = $1`,
+            `INSERT INTO ep_transactions (user_id, amount, reason, created_at)
+             VALUES ($1, $2, LEFT('Referral loyalty bonus - ' || $3 || ' reached 10 errands', 100), NOW())`,
             [referrerId, loyaltyBonus, doerName]
           );
 
@@ -1673,12 +1764,10 @@ router.post('/:id/confirm-extension-approve', authMiddleware, async (req: AuthRe
 });
 
 // GET /api/errands/disputes - Get all disputes (admin only)
-router.get('/disputes/list/all', authMiddleware, async (req: AuthRequest, res: Response) => {
+router.get('/disputes/list/all', authMiddleware, requireAdmin(), async (req: AuthRequest, res: Response) => {
   try {
     const userId = parseInt(req.userId || '0', 10);
 
-    // TODO: Check if user is admin
-    // For now, return disputes
     const result = await db.query(
       `SELECT id, title, asker_id, status, dispute_reason, created_at, dispute_deadline
        FROM errands WHERE status = 'disputed' ORDER BY created_at DESC`
@@ -2332,6 +2421,76 @@ router.delete('/:id/clear-allocation', authMiddleware, async (req: AuthRequest, 
   } catch (error) {
     console.error('[ErrandAllocationClear] Error:', error);
     res.status(500).json({ error: 'Failed to clear allocation', details: error instanceof Error ? error.message : 'Unknown error' });
+  }
+});
+
+/**
+ * POST /api/errands/:id/errand-decline — company staff refusing an allocation.
+ *
+ * StaffDashboard has always had this flow, collecting a reason and notes, but
+ * the route did not exist: the decline appeared to work, the modal closed, and
+ * the job stayed assigned to someone who had refused it. A manager had no way
+ * to know, because ManagerStaffAllocations reads decline_reason and nothing
+ * ever wrote one.
+ *
+ * The company is resolved from company_orders rather than taken from the
+ * request — the dashboard has no companyId to send, and trusting a
+ * client-supplied one would let a member of one company act on another's work.
+ * Only the person the job is actually allocated to may decline it.
+ */
+router.post('/:id/errand-decline', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const errandId = parseInt(req.params.id, 10);
+    if (Number.isNaN(errandId)) return res.status(400).json({ error: 'Invalid errand' });
+    const userId = parseInt(req.userId || '0', 10);
+    const { reason, notes } = req.body || {};
+
+    if (!reason || !String(reason).trim()) {
+      return res.status(400).json({ error: 'Please tell your manager why you cannot take this one' });
+    }
+
+    const order = await db.query(
+      `SELECT id, company_id, status FROM company_orders
+        WHERE errand_id = $1 AND assigned_staff_id = $2`,
+      [errandId, userId]
+    );
+    if (order.rows.length === 0) {
+      return res.status(403).json({ error: "That errand isn't allocated to you" });
+    }
+
+    // Work already under way is not declined, it is abandoned — that needs a
+    // manager, not a checkbox, so it is refused here.
+    if (order.rows[0].status !== 'assigned') {
+      return res.status(409).json({
+        error: 'You have already started this errand. Speak to your manager to hand it over.',
+      });
+    }
+
+    const updated = await db.query(
+      `UPDATE company_orders
+          SET status = 'declined',
+              assigned_staff_id = NULL,
+              decline_reason = $1,
+              decline_notes = $2,
+              declined_at = NOW(),
+              declined_by = $3,
+              updated_at = NOW()
+        WHERE id = $4
+        RETURNING id, company_id, errand_id, status`,
+      [String(reason).trim(), notes ? String(notes).trim() : null, userId, order.rows[0].id]
+    );
+
+    // Clearing assigned_staff_id returns the errand to the company's pool, so
+    // a manager can allocate it to someone else without a second step.
+    console.log('[Errands] Staff', userId, 'declined errand', errandId);
+    res.json({
+      success: true,
+      message: 'Declined — your manager can now allocate this to someone else',
+      data: updated.rows[0],
+    });
+  } catch (error) {
+    console.error('[Errands] Decline failed:', error);
+    res.status(500).json({ error: 'Could not record that decline' });
   }
 });
 

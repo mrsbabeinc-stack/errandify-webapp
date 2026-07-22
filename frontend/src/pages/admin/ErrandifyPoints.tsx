@@ -3,7 +3,7 @@ import AdminLayout from '../../components/admin/AdminLayout';
 
 export const ErrandifyPointsPage: React.FC = () => {
   const [transactions] = useState([
-    { id: 1, user: 'Sarah Tan', action: 'Task Completed', points: '+25 EP', date: '2 hours ago', balance: '450 EP' },
+    { id: 1, user: 'Sarah Tan', action: 'Errand Completed', points: '+25 EP', date: '2 hours ago', balance: '450 EP' },
     { id: 2, user: 'John Lee', action: 'Referral Bonus', points: '+50 EP', date: '5 hours ago', balance: '325 EP' },
     { id: 3, user: 'Alice Wong', action: 'Rating Bonus', points: '+10 EP', date: '1 day ago', balance: '180 EP' },
     { id: 4, user: 'Bob Chen', action: 'Redemption', points: '-100 EP', date: '2 days ago', balance: '25 EP' },

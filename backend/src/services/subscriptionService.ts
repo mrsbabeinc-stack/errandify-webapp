@@ -66,12 +66,16 @@ export async function getCompanySubscription(companyId: number): Promise<Company
 export async function getCommissionRate(companyId: number): Promise<number> {
   const subscription = await getCompanySubscription(companyId);
 
+  // No free tier exists — a company without an active subscription row is
+  // mid-signup, not on a free plan, so it gets the entry (silver) rate rather
+  // than the 20% individual rate.
   if (!subscription || subscription.status !== 'active') {
-    return 0.20; // Free tier
+    const silver = await getTierConfig('silver');
+    return Number(silver.commission_rate);
   }
 
   const tier = await getTierConfig(subscription.current_tier);
-  return tier.commission_rate;
+  return Number(tier.commission_rate);
 }
 
 /**

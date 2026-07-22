@@ -2,6 +2,13 @@ import { Router } from 'express';
 import axios from 'axios';
 import { config } from '../config.js';
 import { authMiddleware } from '../middleware/auth.js';
+import {
+  SAFE_REFUSAL,
+  screenUserMessage,
+  sanitizeHanaReply,
+  buildHanaMessages,
+  allowHanaRequest,
+} from '../modules/hanaGuardrails.js';
 
 const router = Router();
 
@@ -12,6 +19,30 @@ router.post('/chat/hana', authMiddleware, async (req: any, res: any) => {
 
     if (!message) {
       return res.status(400).json({ error: 'Message required' });
+    }
+
+    // Anti-spam: cap requests per user
+    const rlKey = String(req.user?.id || req.ip);
+    if (!allowHanaRequest(rlKey)) {
+      return res.status(429).json({
+        success: true,
+        data: { response: "You're sending messages very quickly — give me a moment and try again.", conversationId },
+      });
+    }
+
+    // Reject over-long messages (spam / prompt-stuffing)
+    if (typeof message === 'string' && message.length > 2000) {
+      return res.status(200).json({
+        success: true,
+        data: { response: 'That message is a bit long for me — please shorten it and ask again.', conversationId },
+      });
+    }
+
+    // Deterministic guardrail: block obvious attacks before calling the model
+    const screen = screenUserMessage(message);
+    if (screen.blocked) {
+      console.warn('[Hana] Blocked message (', screen.tag, ') from', rlKey);
+      return res.status(200).json({ success: true, data: { response: SAFE_REFUSAL, conversationId } });
     }
 
     // Call Qwen Plus for conversational response
@@ -35,11 +66,13 @@ You represent Hana - the helpful neighbor who gets things done.`;
       {
         model: 'qwen-plus',
         input: {
-          prompt: `${systemPrompt}\n\nUser: ${message}\nHana:`,
+          // Strict role separation (system rules vs untrusted user data)
+          messages: buildHanaMessages(systemPrompt, message),
         },
         parameters: {
           temperature: 0.7,
           max_tokens: 512,
+          result_format: 'message',
         },
       },
       {
@@ -50,7 +83,12 @@ You represent Hana - the helpful neighbor who gets things done.`;
       }
     );
 
-    const assistantResponse = response.data.output?.text?.trim() || 'How can I help you?';
+    const rawResponse =
+      response.data.output?.choices?.[0]?.message?.content?.trim() ||
+      response.data.output?.text?.trim() ||
+      'How can I help you?';
+    // Output guard: never let a reply leak the prompt or a secret
+    const assistantResponse = sanitizeHanaReply(rawResponse);
 
     res.json({
       success: true,
@@ -114,8 +152,9 @@ If this is a life-threatening emergency, please call 999 first.`;
   }
 });
 
-// Customer Service - Hana AI assistant for support
-router.post('/chat/hana/customer-service', async (req: any, res: any) => {
+// Customer Service - Hana AI assistant for support (auth required — the floating
+// assistant is only shown to signed-in users; this blocks anonymous abuse/cost)
+router.post('/chat/hana/customer-service', authMiddleware, async (req: any, res: any) => {
   try {
     const { message, language = 'en' } = req.body;
 
@@ -131,6 +170,21 @@ router.post('/chat/hana/customer-service', async (req: any, res: any) => {
     };
 
     const languageInstruction = languageMap[language] || languageMap['en'];
+
+    // Anti-spam (this endpoint is unauthenticated → key by IP)
+    const rlKey = `cs:${req.user?.id || req.ip}`;
+    if (!allowHanaRequest(rlKey, 15, 60_000)) {
+      return res.json({ success: true, data: { reply: "You're messaging very quickly — please pause a moment and try again." } });
+    }
+    if (typeof message === 'string' && message.length > 2000) {
+      return res.json({ success: true, data: { reply: 'That message is a bit long — please shorten it and ask again.' } });
+    }
+    // Deterministic guardrail: block obvious attacks before calling the model
+    const screen = screenUserMessage(message);
+    if (screen.blocked) {
+      console.warn('[Hana/CS] Blocked message (', screen.tag, ') from', rlKey);
+      return res.json({ success: true, data: { reply: SAFE_REFUSAL } });
+    }
 
     let reply = 'How can I help you today?';
 
@@ -153,11 +207,12 @@ router.post('/chat/hana/customer-service', async (req: any, res: any) => {
           {
             model: 'qwen-plus',
             input: {
-              prompt: `${systemPrompt}\n\nCustomer: ${message}\nHana:`,
+              messages: buildHanaMessages(systemPrompt, message),
             },
             parameters: {
               temperature: 0.7,
               max_tokens: 512,
+              result_format: 'message',
             },
           },
           {
@@ -169,7 +224,12 @@ router.post('/chat/hana/customer-service', async (req: any, res: any) => {
         );
 
         console.log('[DEBUG] Qwen API response received:', response.data);
-        reply = response.data.output?.text?.trim() || reply;
+        const rawReply =
+          response.data.output?.choices?.[0]?.message?.content?.trim() ||
+          response.data.output?.text?.trim() ||
+          reply;
+        // Output guard: never let a reply leak the prompt or a secret
+        reply = sanitizeHanaReply(rawReply);
         console.log('[DEBUG] Qwen reply:', reply);
       } catch (apiError: any) {
         console.error('Qwen API error:', {

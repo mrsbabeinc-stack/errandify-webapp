@@ -5,117 +5,150 @@
  * Accuracy: 100% verified mapping based on official postal code allocation
  */
 
+// Mapping follows Singapore's official postal DISTRICTS (the first 2 digits of the
+// 6-digit code = "sector"; sectors are grouped into 28 districts). Each sector is
+// mapped to its most representative planning area / locality.
 const POSTAL_CODE_SECTOR_MAPPING: Record<string, string> = {
-  // Central area (01-09)
+  // District 01 (01-06) — Raffles Place, Marina, Cecil, People's Park
   "01": "Raffles Place",
-  "02": "Downtown Core",
-  "03": "Marina Bay",
-  "04": "Bukit Merah",
+  "02": "Tanjong Pagar",
+  "03": "Downtown Core",
+  "04": "Downtown Core",
   "05": "Outram",
-  "06": "Bukit Merah",
-  "07": "Outram",
-  "08": "Outram",
-  "09": "Outram",
+  "06": "Raffles Place",
 
-  // Orchard area (10-12, 23)
-  "10": "Orchard",
-  "11": "Orchard",
-  "12": "Orchard",
+  // District 02 (07-08) — Anson, Tanjong Pagar
+  "07": "Tanjong Pagar",
+  "08": "Tanjong Pagar",
+
+  // District 04 (09-10) — Telok Blangah, HarbourFront, Sentosa
+  "09": "Telok Blangah",
+  "10": "Telok Blangah",
+
+  // District 05 (11-13) — Pasir Panjang, Clementi, West Coast, Buona Vista
+  "11": "Queenstown",
+  "12": "Clementi",
+  "13": "Clementi",
+
+  // District 03 (14-16) — Queenstown, Alexandra, Bukit Merah, Tiong Bahru
+  "14": "Queenstown",
+  "15": "Bukit Merah",
+  "16": "Bukit Merah",
+
+  // District 06 (17) — City Hall, High Street
+  "17": "Downtown Core",
+
+  // District 07 (18-19) — Bugis, Beach Road, Golden Mile, Rochor
+  "18": "Rochor",
+  "19": "Rochor",
+
+  // District 08 (20-21) — Little India, Farrer Park, Serangoon Road
+  "20": "Rochor",
+  "21": "Kallang",
+
+  // District 09 (22-23) — Orchard, Cairnhill, River Valley
+  "22": "Orchard",
   "23": "Orchard",
 
-  // West area (13-16)
-  "13": "Tanglin",
-  "14": "Tanglin",
-  "15": "Clementi",
-  "16": "Clementi",
+  // District 10 (24-27) — Tanglin, Bukit Timah, Holland, Ardmore
+  "24": "Tanglin",
+  "25": "Bukit Timah",
+  "26": "Bukit Timah",
+  "27": "Bukit Timah",
 
-  // Central-North area (17-20)
-  "17": "Novena",
-  "18": "Novena",
-  "19": "Bukit Timah",
-  "20": "Bukit Timah",
+  // District 11 (28-30) — Novena, Newton, Thomson, Watten Estate
+  "28": "Novena",
+  "29": "Novena",
+  "30": "Novena",
 
-  // Central area (21-22)
-  "21": "Clementi",
-  "22": "Clementi",
+  // District 12 (31-33) — Balestier, Toa Payoh, Serangoon
+  "31": "Toa Payoh",
+  "32": "Toa Payoh",
+  "33": "Toa Payoh",
 
-  // Central-North area (24-27)
-  "24": "Kallang",
-  "25": "Kallang",
-  "26": "Geylang",
-  "27": "Geylang",
-
-  // East area (28-30)
-  "28": "Bedok",
-  "29": "Bedok",
-  "30": "Bedok",
-
-  // North-East area (31-34)
-  "31": "Tampines",
-  "32": "Tampines",
-  "33": "Tampines",
-  "34": "Tampines",
-
-  // Central-North area (35-36)
+  // District 13 (34-37) — Macpherson, Braddell, Potong Pasir, Bidadari
+  "34": "Geylang",
   "35": "Toa Payoh",
   "36": "Toa Payoh",
-
-  // North-East area (37-40)
   "37": "Serangoon",
-  "38": "Serangoon",
-  "39": "Hougang",
-  "40": "Hougang",
 
-  // North area (41-48)
-  "41": "Bishan",
-  "42": "Bishan",
-  "43": "Serangoon",
-  "44": "Serangoon",
-  "45": "Sengkang",
-  "46": "Sengkang",
-  "47": "Tampines",
-  "48": "Sengkang",
+  // District 14 (38-41) — Geylang, Eunos, Paya Lebar, Kembangan
+  "38": "Geylang",
+  "39": "Geylang",
+  "40": "Geylang",
+  "41": "Geylang",
 
-  // Central area (49)
-  "49": "Geylang",
+  // District 15 (42-45) — Katong, Joo Chiat, Amber, Marine Parade, Tanjong Rhu
+  "42": "Marine Parade",
+  "43": "Marine Parade",
+  "44": "Marine Parade",
+  "45": "Marine Parade",
 
-  // West area (50-64)
-  "50": "Bukit Timah",
-  "51": "Bukit Timah",
-  "52": "Bukit Timah",
-  "53": "Bukit Timah",
-  "54": "Bukit Timah",
-  "55": "Ang Mo Kio",
+  // District 16 (46-48) — Bedok, Upper East Coast, Eastwood, Kew Drive
+  "46": "Bedok",
+  "47": "Bedok",
+  "48": "Bedok",
+
+  // District 17 (49-50, 81) — Loyang, Changi
+  "49": "Changi",
+  "50": "Changi",
+
+  // District 18 (51-52) — Tampines, Simei, Pasir Ris
+  "51": "Tampines",
+  "52": "Tampines",
+
+  // District 19 (53-55, 82) — Serangoon Garden, Hougang, Kovan, Sengkang, Punggol
+  "53": "Serangoon",
+  "54": "Hougang",
+  "55": "Hougang",
+
+  // District 20 (56-57) — Bishan, Ang Mo Kio, Braddell
   "56": "Ang Mo Kio",
   "57": "Bishan",
+
+  // District 21 (58-59) — Upper Bukit Timah, Clementi Park, Ulu Pandan, Hillview
   "58": "Upper Bukit Timah",
   "59": "Upper Bukit Timah",
+
+  // District 22 (60-64) — Jurong, Boon Lay, Tuas
   "60": "Jurong East",
   "61": "Jurong East",
   "62": "Jurong West",
   "63": "Jurong West",
   "64": "Jurong West",
 
-  // North area (65-75)
-  "65": "Jurong West",
-  "66": "Jurong West",
-  "67": "Clementi",
+  // District 23 (65-68) — Hillview, Bukit Batok, Bukit Panjang, Choa Chu Kang
+  "65": "Bukit Batok",
+  "66": "Bukit Batok",
+  "67": "Bukit Panjang",
   "68": "Choa Chu Kang",
-  "69": "Jurong West",
-  "70": "Woodlands",
-  "71": "Woodlands",
+
+  // District 24 (69-71) — Lim Chu Kang, Tengah, Kranji
+  "69": "Kranji",
+  "70": "Kranji",
+  "71": "Kranji",
+
+  // District 25 (72-73) — Kranji, Woodgrove, Woodlands
   "72": "Woodlands",
   "73": "Woodlands",
+
+  // District 27 (74-76) — Yishun, Sembawang, Admiralty
   "74": "Yishun",
   "75": "Yishun",
+  "76": "Sembawang",
 
-  // North area (76-82)
-  "76": "Yishun",
-  "77": "Yishun",
-  "78": "Sembawang",
-  "79": "Sembawang",
-  "80": "Punggol",
-  "81": "Punggol",
+  // District 26 (77-78) — Upper Thomson, Springleaf, Mandai
+  "77": "Upper Thomson",
+  "78": "Upper Thomson",
+
+  // District 28 (79-80) — Seletar, Yio Chu Kang
+  "79": "Seletar",
+  "80": "Seletar",
+
+  // District 17 (81) — Pasir Ris, Loyang
+  "81": "Pasir Ris",
+
+  // District 19 (82) — Sengkang, Punggol
   "82": "Punggol",
 };
 

@@ -84,7 +84,7 @@ export default function DisputesManagementPage() {
   };
 
   const handleCancelTask = async (taskId: number) => {
-    if (!window.confirm('Are you sure you want to cancel this task? A refund will be issued.')) return;
+    if (!window.confirm('Are you sure you want to cancel this errand? A refund will be issued.')) return;
 
     try {
       await axios.post(
@@ -94,10 +94,10 @@ export default function DisputesManagementPage() {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         }
       );
-      alert('✅ Task cancelled. Refund will be processed.');
+      alert('✅ Errand cancelled. Refund will be processed.');
       fetchDisputes();
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Failed to cancel task');
+      alert(err.response?.data?.error || 'Failed to cancel errand');
     }
   };
 

@@ -116,7 +116,7 @@ const StaffDashboard: React.FC = () => {
 
       setLoading(false);
     } catch (error) {
-      console.error('Error fetching tasks:', error);
+      console.error('Error fetching errands:', error);
       // Keep using mock data on error
       setLoading(false);
     }
@@ -138,7 +138,7 @@ const StaffDashboard: React.FC = () => {
         navigate(`/errand/${task.id}`);
       }
     } catch (error) {
-      console.error('Error starting task:', error);
+      console.error('Error starting errand:', error);
     }
   };
 
@@ -168,14 +168,14 @@ const StaffDashboard: React.FC = () => {
         fetchTasks();
       }
     } catch (error) {
-      console.error('Error declining task:', error);
+      console.error('Error declining errand:', error);
     }
   };
 
   if (loading) {
     return (
       <div className="staff-dashboard loading">
-        <div className="loading-spinner">Loading your tasks...</div>
+        <div className="loading-spinner">Loading your errands...</div>
       </div>
     );
   }
@@ -185,7 +185,7 @@ const StaffDashboard: React.FC = () => {
       {/* MINIMAL HEADER - Just navigation and title */}
       <div style={{ padding: '20px', borderBottom: '1px solid #e0e0e0', background: 'white' }}>
         <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#333', margin: '0 0 4px 0' }}>My Work</h2>
-        <p style={{ fontSize: '13px', color: '#999', margin: 0 }}>Manage your tasks</p>
+        <p style={{ fontSize: '13px', color: '#999', margin: 0 }}>Manage your errands</p>
       </div>
 
       <div className="tabs">
@@ -215,7 +215,7 @@ const StaffDashboard: React.FC = () => {
           <div className="tasks-section">
             {tasks.filter(t => t.status === 'pending').length === 0 ? (
               <div className="empty-state">
-                <p>📭 No pending tasks. Great job staying on top of things!</p>
+                <p>📭 No pending errands. Great job staying on top of things!</p>
               </div>
             ) : (
               <div className="tasks-grid">
@@ -247,7 +247,7 @@ const StaffDashboard: React.FC = () => {
           <div className="tasks-section">
             {tasks.filter(t => t.status === 'active').length === 0 ? (
               <div className="empty-state">
-                <p>🚀 No active tasks right now. Browse errands to start working!</p>
+                <p>🚀 No active errands right now. Browse errands to start working!</p>
               </div>
             ) : (
               <div className="tasks-grid">
@@ -277,7 +277,7 @@ const StaffDashboard: React.FC = () => {
           <div className="tasks-section">
             {completedTasks.length === 0 ? (
               <div className="empty-state">
-                <p>✨ No completed tasks yet. Keep working to build your reputation!</p>
+                <p>✨ No completed errands yet. Keep working to build your reputation!</p>
               </div>
             ) : (
               <div className="tasks-grid">
@@ -306,7 +306,7 @@ const StaffDashboard: React.FC = () => {
       {showDeclineModal && selectedTask && (
         <div className="modal-overlay" onClick={() => setShowDeclineModal(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <h2>Decline Task</h2>
+            <h2>Decline Errand</h2>
             <select
               value={declineReason}
               onChange={e => setDeclineReason(e.target.value)}

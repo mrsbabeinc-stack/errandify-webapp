@@ -9,6 +9,8 @@ const CompanyPostErrandPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [industry, setIndustry] = useState('');
+  // POST /api/companies/errands requires companyId; this page never captured it
+  const [companyId, setCompanyId] = useState<number | null>(null);
   const [hanaExamples, setHanaExamples] = useState<string[]>([]);
 
   // Industry-based Hana examples mapping
@@ -94,6 +96,7 @@ const CompanyPostErrandPage: React.FC = () => {
             }
           }
 
+          setCompanyId(data.data.id ?? null);
           setIndustry(companyIndustry);
           setHanaExamples(examplesByIndustry[matchedKey] || examplesByIndustry['admin']);
         }
@@ -107,8 +110,12 @@ const CompanyPostErrandPage: React.FC = () => {
   }, [API_URL]);
 
   const handleHanaExtract = async () => {
+    if (!companyId) {
+      setError('Still loading your company details — give it a second and try again.');
+      return;
+    }
     if (!hanaInput.trim()) {
-      setError('Please describe the task');
+      setError('Please describe the errand');
       return;
     }
 
@@ -116,13 +123,15 @@ const CompanyPostErrandPage: React.FC = () => {
     try {
       const token = localStorage.getItem('token');
 
-      const res = await fetch(`${API_URL}/api/hana/extract`, {
+      // Was /api/hana/extract, which is not a route on this server — the whole
+      // form failed here. The individual Hana flow uses this endpoint.
+      const res = await fetch(`${API_URL}/api/ai/extract-task-info`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ text: hanaInput }),
+        body: JSON.stringify({ text: hanaInput, input: hanaInput }),
       });
 
       if (res.ok) {
@@ -137,11 +146,13 @@ const CompanyPostErrandPage: React.FC = () => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
+            companyId,
             title: extracted.title || hanaInput.substring(0, 50),
             description: extracted.description || hanaInput,
             category: extracted.category || 'general',
             budget: extracted.budget || '',
             deadline: extracted.deadline || '',
+            postal_code: extracted.postal_code || extracted.postalCode || '',
           }),
         });
 
@@ -149,7 +160,10 @@ const CompanyPostErrandPage: React.FC = () => {
           alert('✨ Errand posted successfully!');
           navigate('/company/dashboard');
         } else {
-          setError('Failed to post errand');
+          // Surface the server's actual reason — "Failed to post errand" hid
+          // things like the missing companyId and the verification gate.
+          const body = await errandRes.json().catch(() => ({}));
+          setError(body.error || 'Failed to post errand');
         }
       } else {
         setError('Hana extraction failed, please try again');
@@ -170,8 +184,8 @@ const CompanyPostErrandPage: React.FC = () => {
 
       <div className="hana-container">
         <div className="hana-header">
-          <h1>✨ Hana - Task Assistant</h1>
-          <p>Describe your task naturally for your {industry || 'business'}</p>
+          <h1>✨ Hana - Errand Assistant</h1>
+          <p>Describe your errand naturally for your {industry || 'business'}</p>
           {industry && <span className="industry-badge">{industry}</span>}
         </div>
 
@@ -198,7 +212,7 @@ const CompanyPostErrandPage: React.FC = () => {
           <textarea
             value={hanaInput}
             onChange={(e) => setHanaInput(e.target.value)}
-            placeholder="Describe your task in detail. Hana will extract all the information needed..."
+            placeholder="Describe your errand in detail. Hana will extract all the information needed..."
             rows={5}
             className="hana-textarea"
           />

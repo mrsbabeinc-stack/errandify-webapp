@@ -7,7 +7,7 @@ interface MockUserData {
   address: string;
 }
 
-interface MockSingpassModalProps {
+interface DevIdentityStubProps {
   onComplete: (data: MockUserData) => void;
   onBack: () => void;
 }
@@ -33,10 +33,10 @@ const MOCK_PERSONAS: Record<string, MockUserData> = {
   },
 };
 
-export default function MockSingpassModal({
+export default function DevIdentityStub({
   onComplete,
   onBack,
-}: MockSingpassModalProps) {
+}: DevIdentityStubProps) {
   const [mode, setMode] = useState<'select' | 'custom'>('select');
   const [selectedPersona, setSelectedPersona] = useState('persona1');
   const [customData, setCustomData] = useState<MockUserData>({
@@ -62,16 +62,32 @@ export default function MockSingpassModal({
     customData.nric.trim() &&
     customData.address.trim();
 
+  // Hard stop: this component must never render in production, whatever routes
+  // or feature flags say. A fake identity screen in production is a way in.
+  if (import.meta.env.PROD) {
+    console.error('[DevIdentityStub] Refused to render in a production build.');
+    return null;
+  }
+
   return (
-    <div className="min-h-screen bg-errandify-bg flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-sm bg-white rounded-lg shadow-lg p-6">
-        {/* Header */}
+    <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4">
+      <div className="w-full max-w-sm bg-white rounded-lg shadow-lg p-6 border-4 border-dashed border-amber-500">
+        {/* Deliberately does NOT resemble Singpass. Real identity is verified on
+            Singpass's own screen, on their domain — anything here that looked
+            official would be teaching people to trust a lookalike. */}
         <div className="mb-6">
-          <h2 className="text-2xl font-bold text-errandify-orange mb-2">
-            SingPass Demo Mode
-          </h2>
+          <div className="bg-amber-100 border border-amber-400 rounded px-3 py-2 mb-3">
+            <p className="text-xs font-bold text-amber-900 tracking-wide">
+              ⚠ DEVELOPER TEST STUB — NOT SINGPASS
+            </p>
+            <p className="text-[11px] text-amber-800 mt-1">
+              Fake identity for local testing. Real sign-in happens on Singpass's
+              own website. This screen never appears in production.
+            </p>
+          </div>
+          <h2 className="text-xl font-bold text-slate-800 mb-1">Pick a test identity</h2>
           <p className="text-sm text-gray-600">
-            For testing only. Select a test persona or enter custom details.
+            Choose a persona or type your own. Nothing here is verified.
           </p>
         </div>
 
@@ -181,7 +197,7 @@ export default function MockSingpassModal({
                 onChange={(e) =>
                   setCustomData({ ...customData, nric: e.target.value })
                 }
-                placeholder="e.g. S1234567A"
+                placeholder="Test NRIC/FIN — not verified"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-errandify-orange"
               />
             </div>

@@ -232,7 +232,7 @@ export default function JobExecutionPanel({
     return (
       <div className="bg-orange-50 rounded-lg p-4 border border-errandify-orange-200">
         <p className="text-sm text-errandify-orange-900">
-          🔵 <strong>{doerName}</strong> is working on your task. They'll submit proof photos when done.
+          🔵 <strong>{doerName}</strong> is working on your errand. They'll submit proof photos when done.
         </p>
       </div>
     );
@@ -263,7 +263,7 @@ export default function JobExecutionPanel({
     return (
       <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200 space-y-3">
         <p className="text-sm text-yellow-900">
-          🌸 <strong>{doerName}</strong> has completed the task. Please confirm or raise a dispute within 48
+          🌸 <strong>{doerName}</strong> has completed the errand. Please confirm or raise a dispute within 48
           hours.
         </p>
         <p className="text-xs text-yellow-800">
@@ -317,7 +317,7 @@ export default function JobExecutionPanel({
           <div className="p-6 space-y-5">
             {/* Task Info */}
             <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-              <h3 className="font-semibold text-gray-800 mb-1">Task: {taskTitle}</h3>
+              <h3 className="font-semibold text-gray-800 mb-1">Errand: {taskTitle}</h3>
               <p className="text-sm text-gray-600">Budget: SGD ${budget} | Doer: {doerName}</p>
             </div>
 
@@ -342,7 +342,7 @@ export default function JobExecutionPanel({
                       { value: 'other', label: '❓ Other Dispute', desc: 'Communication breakdown or other concern' },
                     ]
                   : [
-                      { value: 'work_not_completed', label: '❌ Work Wasn\'t Completed', desc: 'Parts of the task weren\'t done' },
+                      { value: 'work_not_completed', label: '❌ Work Wasn\'t Completed', desc: 'Parts of the errand weren\'t done' },
                       { value: 'low_quality', label: '⚠️ Quality Issues', desc: 'Work was done but doesn\'t match what was promised' },
                       { value: 'safety_concern', label: '🚨 Safety/Accident', desc: 'Property damage, injury, or safety violation' },
                       { value: 'other', label: '❓ Other Issue', desc: 'Communication breakdown or other concern' },

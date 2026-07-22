@@ -47,7 +47,7 @@ export default function NotificationPreferencesSection() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/user/preferences`,
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/preferences`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -89,7 +89,7 @@ export default function NotificationPreferencesSection() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.patch(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/user/preferences`,
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/preferences`,
         { notification_preferences: preferences },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -171,7 +171,7 @@ export default function NotificationPreferencesSection() {
             </div>
             <div className="divide-y divide-gray-100">
               {renderEventToggle('bid_accepted', 'Offer Confirmed', 'When someone confirms your offer', true)}
-              {renderEventToggle('task_reopened', 'Errand Reopened', 'When an errand you bid on becomes available again', true)}
+              {renderEventToggle('task_reopened', 'Errand Reopened', 'When an errand you offer on becomes available again', true)}
               {renderEventToggle('payment_released', 'Payment Released', 'When payment is released for completed work', true)}
             </div>
           </div>

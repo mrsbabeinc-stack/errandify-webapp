@@ -51,38 +51,19 @@ const RecruitmentApplicationsDashboard: React.FC = () => {
   const loadApplications = async () => {
     try {
       setLoading(true);
-      // In production: const response = await fetch('/api/recruitment/applications');
-      // For now use mock data
-      setApplications([
-        {
-          id: 1,
-          application_id: 'APP-001',
-          job_id: 'JOB-001',
-          first_name: 'John',
-          last_name: 'Doe',
-          email: 'john@example.com',
-          position_applied: 'Software Engineer',
-          years_of_experience: 5,
-          status: 'submitted',
-          ai_match_score: 0.85,
-          submitted_at: '2026-07-15',
-        },
-        {
-          id: 2,
-          application_id: 'APP-002',
-          job_id: 'JOB-001',
-          first_name: 'Jane',
-          last_name: 'Smith',
-          email: 'jane@example.com',
-          position_applied: 'Software Engineer',
-          years_of_experience: 8,
-          status: 'shortlisted',
-          ai_match_score: 0.92,
-          submitted_at: '2026-07-14',
-          interview_stage: 'Round 1 - Phone Screening',
-        },
-      ]);
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/recruitment/applications`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!response.ok) throw new Error('request failed');
+      const result = await response.json();
+      // Real applicants only. This list previously showed two invented
+      // candidates, which is a poor thing to act on in a hiring queue.
+      setApplications(result.applications || []);
     } catch (error) {
+      setApplications([]);
       showToast('Failed to load applications', 'error');
     } finally {
       setLoading(false);
@@ -95,27 +76,45 @@ const RecruitmentApplicationsDashboard: React.FC = () => {
     try {
       setLoading(true);
 
-      if (approvalAction === 'approve') {
-        // Move to Staff Manager
-        showToast(`✅ Application approved! Moving ${selectedApp.first_name} to Staff Manager...`, 'success');
-        // In production: await fetch(`/api/recruitment/applications/${selectedApp.id}/approve`, { method: 'POST' })
-      } else {
-        // Update status
-        const statusMap = {
-          shortlist: 'shortlisted',
-          reject: 'rejected',
-          schedule_interview: 'interview_scheduled',
-          offer: 'offered',
-          approve: 'accepted',
-        };
+      const statusMap: Record<string, string> = {
+        shortlist: 'shortlisted',
+        reject: 'rejected',
+        schedule_interview: 'interview_scheduled',
+        offer: 'offered',
+        approve: 'accepted',
+      };
 
-        const newStatus = statusMap[approvalAction];
-        showToast(`✅ Application status updated to ${newStatus}`, 'success');
+      // Persist the decision before showing it. This previously only changed
+      // local state, so a reviewer's shortlist or rejection vanished on reload
+      // and the next reviewer saw an untouched application.
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      const token = localStorage.getItem('token');
+      const response = await fetch(
+        `${API_URL}/api/recruitment/applications/${selectedApp.id}/${approvalAction}`,
+        {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reason: notes || undefined }),
+        }
+      );
+
+      const result = await response.json();
+      if (!response.ok) {
+        showToast(`❌ ${result.error || 'Failed to update application'}`, 'error');
+        return;
       }
+
+      const newStatus = statusMap[approvalAction] || selectedApp.status;
+      showToast(
+        approvalAction === 'approve'
+          ? `✅ Application approved — ${selectedApp.first_name} can now be added in Staff Manager`
+          : `✅ Application status updated to ${newStatus}`,
+        'success'
+      );
 
       setApplications(applications.map(app =>
         app.id === selectedApp.id
-          ? { ...app, status: statusMap[approvalAction] || app.status, reviewed_by: 'Current User' }
+          ? { ...app, status: result.data.status, reviewed_by: 'Current User' }
           : app
       ));
 

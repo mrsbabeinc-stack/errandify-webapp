@@ -73,17 +73,20 @@ export async function getL2DisputesForAgent(agentId: number): Promise<any[]> {
         e.ai_recommendation,
         e.ai_reasoning,
         e.status,
-        d.task_id,
-        d.asker_id,
-        d.doer_id,
-        d.amount,
-        d.reason,
-        u1.name as asker_name,
-        u2.name as doer_name
+        d.errand_id,
+        er.formatted_id,
+        er.asker_id,
+        ab.doer_id,
+        COALESCE(ab.amount, er.budget) AS amount,
+        d.description AS reason,
+        COALESCE(u1.alias, u1.display_name) as asker_name,
+        COALESCE(u2.alias, u2.display_name) as doer_name
        FROM dispute_escalations e
        JOIN disputes d ON e.dispute_id = d.id
-       JOIN users u1 ON d.asker_id = u1.id
-       JOIN users u2 ON d.doer_id = u2.id
+       JOIN errands er ON er.id = d.errand_id
+       LEFT JOIN bids ab ON ab.id = er.accepted_bid_id
+       LEFT JOIN users u1 ON er.asker_id = u1.id
+       LEFT JOIN users u2 ON ab.doer_id = u2.id
        WHERE e.assigned_to_user_id = $1 AND e.level = 2
        ORDER BY e.created_at DESC`,
       [agentId]
@@ -186,17 +189,20 @@ export async function getL3Appeals(): Promise<any[]> {
         a.appealed_by_user_id,
         a.appealed_at,
         a.status,
-        d.task_id,
-        d.asker_id,
-        d.doer_id,
-        d.amount,
-        u1.name as asker_name,
-        u2.name as doer_name,
-        u3.name as appealer_name
+        d.errand_id,
+        er.formatted_id,
+        er.asker_id,
+        ab.doer_id,
+        COALESCE(ab.amount, er.budget) AS amount,
+        COALESCE(u1.alias, u1.display_name) as asker_name,
+        COALESCE(u2.alias, u2.display_name) as doer_name,
+        COALESCE(u3.alias, u3.display_name) as appealer_name
        FROM dispute_appeals a
        JOIN disputes d ON a.dispute_id = d.id
-       JOIN users u1 ON d.asker_id = u1.id
-       JOIN users u2 ON d.doer_id = u2.id
+       JOIN errands er ON er.id = d.errand_id
+       LEFT JOIN bids ab ON ab.id = er.accepted_bid_id
+       LEFT JOIN users u1 ON er.asker_id = u1.id
+       LEFT JOIN users u2 ON ab.doer_id = u2.id
        LEFT JOIN users u3 ON a.appealed_by_user_id = u3.id
        WHERE a.status IN ('pending', 'approved')
        ORDER BY a.appealed_at DESC`,
@@ -282,12 +288,15 @@ export async function getSupportQueue(): Promise<any[]> {
         q.category,
         q.status,
         q.created_at,
-        d.task_id,
-        d.amount,
+        d.errand_id,
+        er.formatted_id,
+        COALESCE(ab.amount, er.budget) AS amount,
         e.level,
         e.status as escalation_status
        FROM support_queue q
        JOIN disputes d ON q.dispute_id = d.id
+       JOIN errands er ON er.id = d.errand_id
+       LEFT JOIN bids ab ON ab.id = er.accepted_bid_id
        LEFT JOIN dispute_escalations e ON d.id = e.dispute_id
        WHERE q.status IN ('open', 'in_progress')
        ORDER BY q.priority DESC, q.created_at ASC`,

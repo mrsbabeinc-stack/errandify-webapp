@@ -48,7 +48,7 @@ export const EPRulesPage: React.FC = () => {
       id: 3,
       name: 'Errand Completion',
       actionType: 'Errand Completion',
-      description: 'Reward Point Rate for Task Completion',
+      description: 'Reward Point Rate for Errand Completion',
       triggerEvent: 'Asker confirms the errand result.',
       conditions: [
         'Both Doer & Asker have confirmed that the errand is closed.',

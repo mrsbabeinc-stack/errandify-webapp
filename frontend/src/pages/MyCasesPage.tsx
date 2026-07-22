@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { CaseReportModal } from '../components/CaseReportModal';
 import { useToast, ToastContainer } from '../components/Toast';
 
 interface UserCase {
@@ -49,7 +50,7 @@ export const MyCasesPage: React.FC = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/cases/my-cases', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/cases/my-cases`, {
         headers: { 'Authorization': `Bearer ${token}` },
       });
 
@@ -65,7 +66,7 @@ export const MyCasesPage: React.FC = () => {
           case_type: 'dispute',
           status: 'in_progress',
           severity: 'high',
-          subject: 'Payment not released after task completion',
+          subject: 'Payment not released after errand completion',
           description: 'I waited 35 minutes at the location but the customer did not open the door.',
           created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
           updated_at: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
@@ -143,6 +144,10 @@ export const MyCasesPage: React.FC = () => {
     }
   };
 
+  // Reporting a new issue belongs here — this is where people come when
+  // something has gone wrong and they want to know what happens next.
+  const [reportOpen, setReportOpen] = useState(false);
+
   const filteredCases = filter === 'all' ? cases : cases.filter(c => c.status === filter);
 
   return (
@@ -150,14 +155,35 @@ export const MyCasesPage: React.FC = () => {
       <ToastContainer toasts={toasts} onClose={removeToast} />
 
       {/* Header */}
-      <div style={{ marginBottom: '24px' }}>
-        <h1 style={{ fontSize: '20px', fontWeight: '700', color: '#333', marginBottom: '4px', margin: 0 }}>
-          📋 My Cases
-        </h1>
-        <p style={{ fontSize: '13px', color: '#666', margin: 0 }}>
-          Track your reported issues and follow their progress
-        </p>
+      <div style={{
+        marginBottom: '24px', display: 'flex', justifyContent: 'space-between',
+        alignItems: 'flex-start', gap: '12px',
+      }}>
+        <div>
+          <h1 style={{ fontSize: '20px', fontWeight: '700', color: '#333', marginBottom: '4px', margin: 0 }}>
+            📋 My Cases
+          </h1>
+          <p style={{ fontSize: '13px', color: '#666', margin: 0 }}>
+            Track your reported issues and follow their progress
+          </p>
+        </div>
+        <button
+          onClick={() => setReportOpen(true)}
+          style={{
+            background: '#FF6B35', color: 'white', border: 'none', borderRadius: '999px',
+            padding: '9px 16px', fontWeight: 700, fontSize: '13px', cursor: 'pointer',
+            whiteSpace: 'nowrap', flexShrink: 0,
+          }}
+        >
+          Report an issue
+        </button>
       </div>
+
+      <CaseReportModal
+        isOpen={reportOpen}
+        onClose={() => setReportOpen(false)}
+        onSubmitted={() => fetchMyCases()}
+      />
 
       {/* Filters */}
       <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', overflowX: 'auto' }}>

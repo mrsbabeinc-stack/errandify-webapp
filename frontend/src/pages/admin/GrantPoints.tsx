@@ -22,10 +22,10 @@ export const GrantPointsPage: React.FC = () => {
   ]);
 
   const [grantHistory] = useState([
-    { id: 1, username: 'account_two', name: 'Anna Tran', points: 30, description: 'Task completion reward: task B', grantedDate: '27-06-2026 02:39 PM', expiryDate: '30-06-2027 11:59 PM' },
-    { id: 2, username: 'account_three', name: 'Sunny love', points: 30, description: 'Task completion reward: task B', grantedDate: '27-06-2026 02:39 PM', expiryDate: '30-06-2027 11:59 PM' },
-    { id: 3, username: 'account_two', name: 'Anna Tran', points: 200, description: 'Task completion reward: Weekly Apartment Cleaning 3', grantedDate: '24-06-2026 06:04 PM', expiryDate: '30-06-2027 11:59 PM' },
-    { id: 4, username: 'USER0000109', name: 'Test User', points: 200, description: 'Task completion reward: Weekly Apartment Cleaning 3', grantedDate: '24-06-2026 06:04 PM', expiryDate: '30-06-2027 11:59 PM' },
+    { id: 1, username: 'account_two', name: 'Anna Tran', points: 30, description: 'Errand completion reward: errand B', grantedDate: '27-06-2026 02:39 PM', expiryDate: '30-06-2027 11:59 PM' },
+    { id: 2, username: 'account_three', name: 'Sunny love', points: 30, description: 'Errand completion reward: errand B', grantedDate: '27-06-2026 02:39 PM', expiryDate: '30-06-2027 11:59 PM' },
+    { id: 3, username: 'account_two', name: 'Anna Tran', points: 200, description: 'Errand completion reward: Weekly Apartment Cleaning 3', grantedDate: '24-06-2026 06:04 PM', expiryDate: '30-06-2027 11:59 PM' },
+    { id: 4, username: 'USER0000109', name: 'Test User', points: 200, description: 'Errand completion reward: Weekly Apartment Cleaning 3', grantedDate: '24-06-2026 06:04 PM', expiryDate: '30-06-2027 11:59 PM' },
     { id: 5, username: 'account_two', name: 'Anna Tran', points: -25, description: 'Redeemed voucher: voucher b', grantedDate: '22-06-2026 11:16 PM', expiryDate: '—' },
     { id: 6, username: 'USER0000109', name: 'Test User', points: -500, description: 'Redeemed voucher: starbucks', grantedDate: '22-06-2026 06:07 PM', expiryDate: '—' },
   ]);

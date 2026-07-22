@@ -57,10 +57,10 @@ const AdCreditReminder: React.FC<AdCreditReminderProps> = ({ companyId, compact 
     return (
       <div
         style={{
-          background: available > 25 ? '#E8F5E9' : '#FFEBEE',
-          border: `2px solid ${available > 25 ? '#4CAF50' : '#F44336'}`,
-          borderRadius: '8px',
-          padding: '12px',
+          background: available > 25 ? '#E2F3EF' : '#FCE9E6',
+          border: `1px solid ${available > 25 ? '#2FA48F' : '#E2736B'}`,
+          borderRadius: '10px',
+          padding: '10px 12px',
           marginBottom: '16px',
           cursor: 'pointer',
           transition: 'all 0.3s ease',
@@ -72,12 +72,12 @@ const AdCreditReminder: React.FC<AdCreditReminderProps> = ({ companyId, compact 
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
           <span style={{ fontSize: '16px' }}>{available > 25 ? '✅' : '⚠️'}</span>
-          <strong style={{ fontSize: '12px', color: available > 25 ? '#2E7D32' : '#C62828' }}>
+          <strong style={{ fontSize: '12px', color: available > 25 ? '#1B7D6C' : '#A8392A' }}>
             Ad Credits
           </strong>
         </div>
 
-        <div style={{ fontSize: '18px', fontWeight: '700', color: available > 25 ? '#2E7D32' : '#C62828' }}>
+        <div style={{ fontSize: '18px', fontWeight: '700', color: available > 25 ? '#1B7D6C' : '#A8392A' }}>
           SGD ${available.toFixed(2)}
         </div>
 

@@ -35,12 +35,22 @@ export default function BottomNav({ onLogout, userRole, onCreateTask }: BottomNa
   useEffect(() => {
     fetchProfileImage();
 
-    const checkChats = () => {
-      const stored = localStorage.getItem('unreadChats');
-      if (stored) {
-        const unreadMap = JSON.parse(stored);
-        const total = Object.values(unreadMap).reduce((sum: number, count: any) => sum + count, 0);
-        setUnreadCount(total);
+    // Unread chat count comes from the server, so it is correct across devices
+    // and after logout. (It used to read localStorage, which never synced.)
+    const checkChats = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          setUnreadCount(0);
+          return;
+        }
+        const res = await axios.get(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/messages/unread-count`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setUnreadCount(res.data?.data?.total || 0);
+      } catch {
+        // leave the previous count in place on a transient failure
       }
     };
 

@@ -15,7 +15,7 @@ export const OperationsPage: React.FC = () => {
           <h2>Operations Dashboard</h2>
           <p>Monitor system performance and operational metrics</p>
           <div className="placeholder-items">
-            <div className="item">• Task processing efficiency</div>
+            <div className="item">• Errand processing efficiency</div>
             <div className="item">• Payment processing metrics</div>
             <div className="item">• System uptime & reliability</div>
             <div className="item">• Response time analytics</div>

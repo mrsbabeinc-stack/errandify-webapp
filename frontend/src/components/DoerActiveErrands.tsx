@@ -97,7 +97,7 @@ const DoerActiveErrands: React.FC = () => {
     try {
       // Fetch company details
       const companyRes = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/company/${cId}`,
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/${cId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (companyRes.data.data) {
@@ -107,7 +107,7 @@ const DoerActiveErrands: React.FC = () => {
 
       // Fetch company subscription
       const subRes = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/company/${cId}/subscription`,
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/${cId}/subscription`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (subRes.data.data) {
@@ -116,7 +116,7 @@ const DoerActiveErrands: React.FC = () => {
 
       // Fetch advertising campaigns
       const adsRes = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/company/${cId}/advertising`,
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/companies/${cId}/advertising`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (adsRes.data.data) {

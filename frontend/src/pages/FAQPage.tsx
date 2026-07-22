@@ -28,13 +28,13 @@ export default function FAQPage() {
       id: 'g1',
       category: 'general',
       question: 'What is Errandify?',
-      answer: 'Errandify is Singapore-based AI-powered neighbourhood marketplace where neighbours help each other with daily tasks. Whether you need help or want to earn by helping others, Errandify connects you with trusted community members.',
+      answer: 'Errandify is Singapore-based AI-powered neighbourhood marketplace where neighbours help each other with daily errands. Whether you need help or want to earn by helping others, Errandify connects you with trusted community members.',
     },
     {
       id: 'g2',
       category: 'general',
       question: 'How much does it cost to use Errandify?',
-      answer: 'Errandify is free to join and use. Doers pay a 20% platform fee from their earnings. Askers pay Stripe payment processing fees (2-3% depending on payment method). For example: If you bid SGD $100, you earn SGD $80 (after 20% platform fee). Asker pays SGD $100 + Stripe fees (~$2-3).',
+      answer: 'Errandify is free to join and use. Doers pay a 20% platform fee from their earnings. Askers pay Stripe payment processing fees (2-3% depending on payment method). For example: If you offer SGD $100, you earn SGD $80 (after 20% platform fee). Asker pays SGD $100 + Stripe fees (~$2-3).',
     },
     {
       id: 'g3',
@@ -54,13 +54,13 @@ export default function FAQPage() {
       id: 'a1',
       category: 'asker',
       question: 'How do I post an errand?',
-      answer: 'Click the plus button (+) in the home screen, select a category, describe what you need, set your budget, and post. Doers will submit bids within hours. You review, compare, and pick the best fit.',
+      answer: 'Click the plus button (+) in the home screen, select a category, describe what you need, set your budget, and post. Doers will submit offers within hours. You review, compare, and pick the best fit.',
     },
     {
       id: 'a2',
       category: 'asker',
       question: 'How much should I budget for an errand?',
-      answer: 'It depends on the task complexity, time required, and location. Browse similar errands or ask doers during bidding. Errandify displays average rates per category to guide you.',
+      answer: 'It depends on the errand complexity, time required, and location. Browse similar errands or ask doers during offering. Errandify displays average rates per category to guide you.',
     },
     {
       id: 'a3',
@@ -78,7 +78,7 @@ export default function FAQPage() {
       id: 'a5',
       category: 'asker',
       question: 'Can I request the same doer again?',
-      answer: 'Absolutely! You can bookmark doers, message them directly, or set up recurring errands for regular tasks (weekly cleaning, tutoring, etc.). Recurring errands have special pricing.',
+      answer: 'Absolutely! You can bookmark doers, message them directly, or set up recurring errands for regular errands (weekly cleaning, tutoring, etc.). Recurring errands have special pricing.',
     },
 
     // For Doers
@@ -86,7 +86,7 @@ export default function FAQPage() {
       id: 'd1',
       category: 'doer',
       question: 'How do I earn money on Errandify?',
-      answer: 'Browse errands (each shows the asker budget), submit your bid at any rate you choose, get accepted by the asker, complete the work, and receive payment. Your ratings build your reputation, leading to more opportunities.',
+      answer: 'Browse errands (each shows the asker budget), submit your offer at any rate you choose, get accepted by the asker, complete the work, and receive payment. Your ratings build your reputation, leading to more opportunities.',
     },
     {
       id: 'd2',
@@ -104,7 +104,7 @@ export default function FAQPage() {
       id: 'd5',
       category: 'doer',
       question: 'Can I work part-time or on my schedule?',
-      answer: 'Yes! Errandify is designed for flexible work. Browse errands anytime, bid on what interests you, and set your availability. Work as much or as little as you want.',
+      answer: 'Yes! Errandify is designed for flexible work. Browse errands anytime, offer on what interests you, and set your availability. Work as much or as little as you want.',
     },
     {
       id: 'd6',
@@ -130,7 +130,7 @@ export default function FAQPage() {
       id: 'p3',
       category: 'payment',
       question: 'Are there any fees?',
-      answer: 'Yes. Doers pay a 20% platform fee from their earnings. Askers pay Stripe payment processing fees (2-3%). Example: If you (doer) bid SGD $100, you earn SGD $80 (Errandify takes 20%). Asker pays the SGD $100 + Stripe fees (~$2-3).',
+      answer: 'Yes. Doers pay a 20% platform fee from their earnings. Askers pay Stripe payment processing fees (2-3%). Example: If you (doer) offer SGD $100, you earn SGD $80 (Errandify takes 20%). Asker pays the SGD $100 + Stripe fees (~$2-3).',
     },
     {
       id: 'p4',
@@ -206,7 +206,7 @@ export default function FAQPage() {
       id: 'c3',
       category: 'conduct',
       question: 'Can I share contact information or move off-platform?',
-      answer: 'We recommend completing tasks through Errandify for safety and dispute protection. Sharing email, phone, or asking to move to WhatsApp/Telegram is discouraged and may result in account restrictions. Our in-app messaging keeps both parties protected.',
+      answer: 'We recommend completing errands through Errandify for safety and dispute protection. Sharing email, phone, or asking to move to WhatsApp/Telegram is discouraged and may result in account restrictions. Our in-app messaging keeps both parties protected.',
     },
     {
       id: 'c4',
@@ -232,7 +232,7 @@ export default function FAQPage() {
       id: 't2',
       category: 'doer',
       question: 'How do I submit proof of work?',
-      answer: 'After completing the errand, upload photos or videos showing the finished work. Clear, well-lit photos help askers confirm quality. Be honest - good evidence builds your reputation and leads to positive ratings, more bids, and higher earnings.',
+      answer: 'After completing the errand, upload photos or videos showing the finished work. Clear, well-lit photos help askers confirm quality. Be honest - good evidence builds your reputation and leads to positive ratings, more offers, and higher earnings.',
     },
     {
       id: 't3',
@@ -266,13 +266,13 @@ export default function FAQPage() {
       id: 'rec1',
       category: 'asker',
       question: 'How do recurring errands work?',
-      answer: 'For regular tasks (weekly cleaning, bi-weekly tutoring), set it up as recurring. The doer gets priority matching for future sessions at a pre-agreed rate. Both parties benefit: askers get reliable service, doers get guaranteed income. Easy to pause or modify anytime.',
+      answer: 'For regular errands (weekly cleaning, bi-weekly tutoring), set it up as recurring. The doer gets priority matching for future sessions at a pre-agreed rate. Both parties benefit: askers get reliable service, doers get guaranteed income. Easy to pause or modify anytime.',
     },
     {
       id: 'rec2',
       category: 'doer',
       question: 'What are the benefits of recurring errands?',
-      answer: 'Recurring errands provide steady income with less bidding competition. You build a relationship with the asker, learn their preferences, and can deliver better service. Many doers prefer recurring work for predictable monthly earnings.',
+      answer: 'Recurring errands provide steady income with less offering competition. You build a relationship with the asker, learn their preferences, and can deliver better service. Many doers prefer recurring work for predictable monthly earnings.',
     },
 
     // Disputes & Refunds
@@ -306,7 +306,7 @@ export default function FAQPage() {
       id: 'ref2',
       category: 'general',
       question: 'How much can I earn from referrals?',
-      answer: 'You earn bonus Errandify Points when referred friends join and complete tasks. Points accumulate and can be redeemed for cash. Top referrers can earn significant monthly bonuses. It\'s a great way to earn while growing the community.',
+      answer: 'You earn bonus Errandify Points when referred friends join and complete errands. Points accumulate and can be redeemed for cash. Top referrers can earn significant monthly bonuses. It\'s a great way to earn while growing the community.',
     },
 
     // Errandify Points
@@ -314,7 +314,7 @@ export default function FAQPage() {
       id: 'ep1',
       category: 'general',
       question: 'What are Errandify Points (EP) and how do I earn them?',
-      answer: 'EP is our community rewards currency. Earn EP with every completed errand (points vary by task value), referrals, and milestone achievements. Redeem EP for cash bonus in your wallet, service discounts, or donate to Singapore charities.',
+      answer: 'EP is our community rewards currency. Earn EP with every completed errand (points vary by errand value), referrals, and milestone achievements. Redeem EP for cash bonus in your wallet, service discounts, or donate to Singapore charities.',
     },
     {
       id: 'ep2',

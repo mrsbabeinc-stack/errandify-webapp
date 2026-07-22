@@ -37,56 +37,50 @@ export default function Events() {
   // Edit state
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  useEffect(() => {
-    const saved = localStorage.getItem('events');
-    if (saved) {
-      setEvents(JSON.parse(saved));
-    } else {
-      const demoEvents: Event[] = [
-        {
-          id: 'evt_1',
-          name: 'Community Networking Breakfast',
-          description: 'Join fellow members for a warm breakfast gathering to share stories and build connections.',
-          type: 'offline',
-          location: 'The Pinnacle@Duxton, Marina Bay, Singapore',
-          startDate: '2026-07-25',
-          startTime: '08:00',
-          endTime: '10:00',
-          cutoffDate: '2026-07-23',
-          cutoffTime: '17:00',
-          cost: 15,
-          minPax: 20,
-          maxPax: 100,
-          currentSignups: 45,
-          status: 'active',
-          createdAt: new Date(Date.now() - 604800000).toISOString(),
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
+  // Events used to live in localStorage, so an event created here was saved to
+  // this browser alone — MyKampung could never show it and it was lost with the
+  // cache. Both ends now read and write community_events.
+  const loadEvents = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/events/all`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
+      if (!res.ok) throw new Error('request failed');
+      const result = await res.json();
+      setEvents(
+        (result.data || []).map((e: any) => ({
+          id: String(e.id),
+          name: e.title,
+          description: e.description || '',
+          type: e.format,
+          location: e.location || undefined,
+          onlineLink: e.onlineLink || undefined,
+          startDate: e.date || '',
+          startTime: e.time || '',
+          endTime: e.endTime || '',
+          cutoffDate: e.cutoffDate || '',
+          cutoffTime: e.cutoffTime || '',
+          cost: e.cost ?? 0,
+          minPax: e.minPax ?? 0,
+          maxPax: e.maxPax ?? 0,
+          currentSignups: e.attendees ?? 0,
+          status: e.status,
+          createdAt: e.createdAt,
           signups: [],
-          remindersSent: false,
-        },
-        {
-          id: 'evt_2',
-          name: 'Virtual Skills Workshop - Financial Planning',
-          description: 'Learn financial planning tips from industry experts in this interactive online workshop.',
-          type: 'online',
-          onlineLink: 'https://meet.google.com/xyz',
-          startDate: '2026-07-30',
-          startTime: '19:00',
-          endTime: '20:30',
-          cutoffDate: '2026-07-28',
-          cutoffTime: '18:00',
-          cost: 0,
-          minPax: 15,
-          maxPax: 200,
-          currentSignups: 87,
-          status: 'active',
-          createdAt: new Date(Date.now() - 432000000).toISOString(),
-          signups: [],
-          remindersSent: false,
-        },
-      ];
-      setEvents(demoEvents);
-      localStorage.setItem('events', JSON.stringify(demoEvents));
+          remindersSent: e.remindersSent ?? false,
+        }))
+      );
+    } catch (err) {
+      console.error('Failed to load events:', err);
+      setEvents([]);
+      showToast('Could not load events', 'error');
     }
+  };
+
+  useEffect(() => {
+    loadEvents();
   }, []);
 
   const handleGenerateDescription = async () => {
@@ -134,7 +128,82 @@ export default function Events() {
     setAiEngagementLoading(false);
   };
 
-  const handleCreateEvent = () => {
+  // Editing reuses the create form rather than a second one: the fields are
+  // identical, and two forms drifting apart is how an edit screen ends up
+  // silently unable to change something the create screen can set.
+  const startEdit = (event: Event) => {
+    setEditingId(event.id);
+    setNewEventName(event.name);
+    setNewDescription(event.description || '');
+    setNewEventType(event.type);
+    setNewLocation(event.location || '');
+    setNewStartDate(event.startDate || '');
+    setNewStartTime(event.startTime || '09:00');
+    setNewEndTime(event.endTime || '11:00');
+    setNewCutoffDate(event.cutoffDate || '');
+    setNewCutoffTime(event.cutoffTime || '17:00');
+    setNewCost(String(event.cost ?? 0));
+    setNewMinPax(String(event.minPax ?? 10));
+    setNewMaxPax(String(event.maxPax ?? 50));
+    setActiveTab('create');
+  };
+
+  const resetForm = () => {
+    setEditingId(null);
+    setNewEventName('');
+    setNewDescription('');
+    setNewLocation('');
+    setNewStartDate('');
+    setNewCutoffDate('');
+    setNewCost('0');
+    setNewMinPax('10');
+    setNewMaxPax('50');
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingId) return;
+    if (!newEventName.trim()) {
+      showToast('⚠️ Event name is required', 'error');
+      return;
+    }
+    try {
+      const res = await fetch(`${API_URL}/api/events/${editingId}`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: newEventName,
+          description: newDescription,
+          format: newEventType,
+          location: newLocation || null,
+          date: newStartDate || null,
+          time: newStartTime,
+          endTime: newEndTime,
+          cutoffDate: newCutoffDate || null,
+          cutoffTime: newCutoffTime,
+          cost: parseFloat(newCost),
+          minPax: parseInt(newMinPax),
+          maxPax: parseInt(newMaxPax),
+        }),
+      });
+      if (!res.ok) {
+        const result = await res.json().catch(() => ({}));
+        showToast(result.error || 'Could not save that event', 'error');
+        return;
+      }
+      resetForm();
+      await loadEvents();
+      showToast('✅ Event updated!', 'success');
+      setActiveTab('events');
+    } catch (err) {
+      console.error('Failed to save event:', err);
+      showToast('Could not save that event', 'error');
+    }
+  };
+
+  const handleCreateEvent = async () => {
     if (!newEventName.trim() || !newDescription.trim() || !newStartDate || !newCutoffDate) {
       showToast('⚠️ Fill in all required fields', 'error');
       return;
@@ -145,64 +214,92 @@ export default function Events() {
       return;
     }
 
-    const newEvent: Event = {
-      id: `evt_${Date.now()}`,
-      name: newEventName,
-      description: newDescription,
-      type: newEventType,
-      location: newLocation || undefined,
-      onlineLink: newEventType === 'online' ? eventOptimizer.generateAccessLink(`evt_${Date.now()}`) : undefined,
-      startDate: newStartDate,
-      startTime: newStartTime,
-      endTime: newEndTime,
-      cutoffDate: newCutoffDate,
-      cutoffTime: newCutoffTime,
-      cost: parseFloat(newCost),
-      minPax: parseInt(newMinPax),
-      maxPax: parseInt(newMaxPax),
-      currentSignups: 0,
-      status: 'draft',
-      createdAt: new Date().toISOString(),
-      signups: [],
-      remindersSent: false,
-    };
+    try {
+      const res = await fetch(`${API_URL}/api/events`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: newEventName,
+          description: newDescription,
+          format: newEventType,
+          location: newLocation || null,
+          onlineLink:
+            newEventType === 'online'
+              ? eventOptimizer.generateAccessLink(`evt_${Date.now()}`)
+              : null,
+          date: newStartDate,
+          time: newStartTime,
+          endTime: newEndTime,
+          cutoffDate: newCutoffDate,
+          cutoffTime: newCutoffTime,
+          cost: parseFloat(newCost),
+          minPax: parseInt(newMinPax),
+          maxPax: parseInt(newMaxPax),
+        }),
+      });
 
-    const updated = [...events, newEvent];
-    setEvents(updated);
-    localStorage.setItem('events', JSON.stringify(updated));
-
-    // Reset form
-    setNewEventName('');
-    setNewDescription('');
-    setNewLocation('');
-    setNewStartDate('');
-    setNewCutoffDate('');
-    setNewCost('0');
-    setNewMinPax('10');
-    setNewMaxPax('50');
-    setAiTopic('');
-    setSuggestedFeatures([]);
+      const result = await res.json();
+      if (!res.ok) {
+        showToast(result.error || 'Could not create that event', 'error');
+        return;
+      }
+      await loadEvents();
+    } catch (err) {
+      console.error('Failed to create event:', err);
+      showToast('Could not create that event', 'error');
+      return;
+    }
 
     showToast('✅ Event created!', 'success');
     setActiveTab('events');
   };
 
-  const handleDeleteEvent = (id: string) => {
-    if (confirm('Delete this event?')) {
-      const updated = events.filter(e => e.id !== id);
-      setEvents(updated);
-      localStorage.setItem('events', JSON.stringify(updated));
+  const handleDeleteEvent = async (id: string) => {
+    if (!confirm('Delete this event?')) return;
+    try {
+      const res = await fetch(`${API_URL}/api/events/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
+      if (!res.ok) {
+        const result = await res.json().catch(() => ({}));
+        showToast(result.error || 'Could not delete that event', 'error');
+        return;
+      }
+      await loadEvents();
       showToast('🗑️ Event deleted', 'success');
+    } catch (err) {
+      console.error('Failed to delete event:', err);
+      showToast('Could not delete that event', 'error');
     }
   };
 
-  const handlePublishEvent = (id: string) => {
-    const updated = events.map(e =>
-      e.id === id ? { ...e, status: 'active' as const } : e
-    );
-    setEvents(updated);
-    localStorage.setItem('events', JSON.stringify(updated));
-    showToast('📤 Event published!', 'success');
+  const handlePublishEvent = async (id: string) => {
+    try {
+      // 'active' is what GET /api/events filters on, so this is the moment the
+      // event becomes visible in MyKampung.
+      const res = await fetch(`${API_URL}/api/events/${id}`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: 'active' }),
+      });
+      if (!res.ok) {
+        const result = await res.json().catch(() => ({}));
+        showToast(result.error || 'Could not publish that event', 'error');
+        return;
+      }
+      await loadEvents();
+      showToast('📤 Published to MyKampung!', 'success');
+    } catch (err) {
+      console.error('Failed to publish event:', err);
+      showToast('Could not publish that event', 'error');
+    }
   };
 
   const statusColors = {
@@ -391,6 +488,17 @@ export default function Events() {
                         </button>
                       )}
                       <button
+                        onClick={() => startEdit(event)}
+                        style={{
+                          padding: '8px 16px', background: 'white', color: '#FF6B35',
+                          border: '2px solid #FF6B35', borderRadius: '6px',
+                          fontSize: '13px', fontWeight: '600', cursor: 'pointer',
+                          marginRight: '8px',
+                        }}
+                      >
+                        Edit
+                      </button>
+                      <button
                         onClick={() => handleDeleteEvent(event.id)}
                         style={{
                           padding: '8px',
@@ -564,8 +672,21 @@ export default function Events() {
                   </div>
                 </div>
 
+                {editingId && (
+                  <button
+                    onClick={resetForm}
+                    style={{
+                      padding: '12px', background: 'white', color: '#666',
+                      border: '2px solid #ccc', borderRadius: '6px',
+                      fontWeight: '600', cursor: 'pointer', fontSize: '14px',
+                      marginBottom: '8px',
+                    }}
+                  >
+                    Cancel edit
+                  </button>
+                )}
                 <button
-                  onClick={handleCreateEvent}
+                  onClick={editingId ? handleSaveEdit : handleCreateEvent}
                   style={{
                     padding: '12px',
                     background: 'linear-gradient(135deg, #FF6B35 0%, #FF8C5A 100%)',
@@ -577,7 +698,7 @@ export default function Events() {
                     fontSize: '14px',
                   }}
                 >
-                  ➕ Create Event
+                  {editingId ? '💾 Save Changes' : '➕ Create Event'}
                 </button>
               </div>
             </div>

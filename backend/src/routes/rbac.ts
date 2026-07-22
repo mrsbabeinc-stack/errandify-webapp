@@ -1,7 +1,23 @@
 import express, { Request, Response } from 'express';
 import db from '../db.js';
+import { authMiddleware, requireAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
+
+/**
+ * Every route in this file was unauthenticated.
+ *
+ * The router is mounted at /api/admin, so these were reachable by anyone:
+ * GET /api/admin/roles and /permissions returned 200 to an anonymous caller,
+ * and POST /api/admin/roles created a role with no credentials at all —
+ * verified against a running server, not inferred.
+ *
+ * That is a privilege-escalation path: roles are the thing that grants
+ * administrative access, and they could be created, edited and deleted by
+ * anybody who knew the URL. Applied at router level rather than per route so a
+ * handler added later cannot be forgotten.
+ */
+router.use(authMiddleware, requireAdmin(['admin', 'super-admin']));
 
 // Get all roles
 router.get('/roles', async (req: Request, res: Response) => {
@@ -151,13 +167,22 @@ router.get('/permissions', async (req: Request, res: Response) => {
 });
 
 // Get all users
-router.get('/users', async (req: Request, res: Response) => {
+// Renamed from '/users'. admin.ts is mounted first and now serves
+// GET /api/admin/users for platform user management, which would silently
+// shadow this one — two different payloads behind one path is a trap. This
+// role-annotated list keeps its own address.
+router.get('/rbac-users', async (req: Request, res: Response) => {
   try {
     const result = await db.query(`
-      SELECT u.id, u.name, u.email, u.department,
-        ARRAY_AGG(r.name) as roles, u.created_at
+      -- users has no 'name' or 'department' column; display names live in
+      -- display_name with alias taking precedence. This query 500'd every time.
+      SELECT u.id, COALESCE(u.alias, u.display_name) AS name, u.email,
+        ARRAY_REMOVE(ARRAY_AGG(r.name), NULL) as roles, u.created_at
       FROM users u
-      LEFT JOIN user_roles ur ON u.id = ur.user_id
+      -- rbac_user_roles.user_id is varchar while users.id is integer, so this
+      -- join needs an explicit cast; without it Postgres raises
+      -- "operator does not exist: character varying = integer".
+      LEFT JOIN rbac_user_roles ur ON u.id::text = ur.user_id
       LEFT JOIN rbac_roles r ON ur.role_id = r.id
       GROUP BY u.id
       ORDER BY u.created_at DESC
@@ -176,7 +201,7 @@ router.post('/users/:userId/roles/:roleId', async (req: Request, res: Response) 
 
     // Check if already assigned
     const existing = await db.query(
-      'SELECT id FROM user_roles WHERE user_id = $1 AND role_id = $2',
+      'SELECT id FROM rbac_user_roles WHERE user_id = $1 AND role_id = $2',
       [userId, roleId]
     );
 
@@ -188,7 +213,7 @@ router.post('/users/:userId/roles/:roleId', async (req: Request, res: Response) 
     }
 
     const result = await db.query(
-      `INSERT INTO user_roles (user_id, role_id, assigned_at)
+      `INSERT INTO rbac_user_roles (user_id, role_id, assigned_at)
        VALUES ($1, $2, $3)
        RETURNING *`,
       [userId, roleId, new Date().toISOString()]
@@ -206,7 +231,7 @@ router.delete('/users/:userId/roles/:roleId', async (req: Request, res: Response
   try {
     const { userId, roleId } = req.params;
     const result = await db.query(
-      'DELETE FROM user_roles WHERE user_id = $1 AND role_id = $2 RETURNING id',
+      'DELETE FROM rbac_user_roles WHERE user_id = $1 AND role_id = $2 RETURNING id',
       [userId, roleId]
     );
 
@@ -236,7 +261,7 @@ router.post('/check-permission', async (req: Request, res: Response) => {
     // Get all roles for user
     const userRoles = await db.query(
       `SELECT r.id, r.permissions FROM rbac_roles r
-       INNER JOIN user_roles ur ON r.id = ur.role_id
+       INNER JOIN rbac_user_roles ur ON r.id = ur.role_id
        WHERE ur.user_id = $1`,
       [userId]
     );

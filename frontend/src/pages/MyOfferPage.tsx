@@ -93,7 +93,7 @@ export default function MyOfferPage() {
 
   const handleConfirmBid = async (bidId: number) => {
     try {
-      console.log('[MyOfferPage] Confirming bid:', bidId);
+      console.log('[MyOfferPage] Confirming offer:', bidId);
       const token = localStorage.getItem('token');
       const response = await axios.put(
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bids/${bidId}/confirm`,
@@ -102,12 +102,12 @@ export default function MyOfferPage() {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      console.log('[MyOfferPage] Bid confirmed successfully:', response.data);
+      console.log('[MyOfferPage] Offer confirmed successfully:', response.data);
       // Refresh bids immediately to get updated status from server
       await fetchMyBids();
       setError('');
     } catch (err: any) {
-      console.error('[MyOfferPage] Failed to confirm bid:', err);
+      console.error('[MyOfferPage] Failed to confirm offer:', err);
       setError(err.response?.data?.error || 'Failed to confirm offer');
     }
   };
@@ -156,6 +156,12 @@ export default function MyOfferPage() {
     };
     return labels[status] || status;
   };
+
+  // Rated & closed / expired errands are finished — no need to show the offer ID
+  // or when the offer was placed.
+  const isClosedOrExpired = (b: any) =>
+    ['rated', 'closed', 'completed', 'expired'].includes(b.errand?.status || b.status);
+
   // Get active job (confirmed or in_progress)
   const activeBid = bids.find(b => b.status === 'confirmed' || b.status === 'confirmed_awaiting_start' || b.status === 'in_progress');
 
@@ -208,7 +214,7 @@ export default function MyOfferPage() {
   console.log('[MyOffer] filterStatus:', filterStatus);
   console.log('[MyOffer] filteredBids count:', filteredBids.length);
   filteredBids.forEach((bid, idx) => {
-    console.log(`[MyOffer] Bid ${idx + 1}: "${bid.errand?.title}" - Bid Status: ${bid.status}, Errand Status: ${bid.errand?.status}`);
+    console.log(`[MyOffer] Offer ${idx + 1}: "${bid.errand?.title}" - Offer Status: ${bid.status}, Errand Status: ${bid.errand?.status}`);
   });
 
   if (loading) {
@@ -443,25 +449,18 @@ export default function MyOfferPage() {
                   }
                 }}
               >
-                {/* Line 1: Title, Errand ID, Status */}
-                <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '8px', flexWrap: isMobile ? 'wrap' : 'nowrap'}}>
-                  <div style={{display: 'flex', alignItems: 'center', gap: '8px', flex: isMobile ? '1 1 100%' : 1, minWidth: 0}}>
-                    <h3 style={{fontWeight: '700', color: '#FF6B35', fontSize: '14px', margin: 0, whiteSpace: isMobile ? 'normal' : 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>
-                      {bid.errand?.title || 'Errand #' + bid.errand_id}
-                    </h3>
-                    {!isMobile && (
-                      <span style={{fontSize: '11px', color: '#666', background: '#FFF0E6', padding: '4px 8px', borderRadius: '6px', fontFamily: 'monospace', whiteSpace: 'nowrap', fontWeight: '600'}}>
-                        {formatOfferId(bid)}
-                      </span>
-                    )}
-                  </div>
-                  <span style={{padding: '6px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: '700', border: '1.5px solid #FF6B35', color: '#FF6B35', background: '#FFF5F0', whiteSpace: 'nowrap'}}>
+                {/* Line 1: Title on left, Status pinned top-right (all screen sizes) */}
+                <div style={{display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px', marginBottom: '4px'}}>
+                  <h3 style={{fontWeight: '700', color: '#FF6B35', fontSize: '14px', margin: 0, flex: 1, minWidth: 0, whiteSpace: isMobile ? 'normal' : 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>
+                    {bid.errand?.title || 'Errand #' + bid.errand_id}
+                  </h3>
+                  <span style={{padding: '5px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '700', border: '1.5px solid #FF6B35', color: '#FF6B35', background: '#FFF5F0', whiteSpace: 'nowrap', flexShrink: 0}}>
                     {getStatusLabel(bid.errand?.status || bid.status)}
                   </span>
                 </div>
 
-                {/* Line 2: Posted by + Category on left, Price + ID on right */}
-                <div style={{display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px', marginBottom: '8px', fontSize: '12px'}}>
+                {/* Line 2: Posted by + Category on left, Price + Offer ID on right */}
+                <div style={{display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px', marginBottom: '4px', fontSize: '12px'}}>
                   <div style={{display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0}}>
                     <p style={{color: '#666', whiteSpace: 'nowrap', margin: 0, fontWeight: '500'}}>by {bid.errand?.asker_alias || bid.errand?.asker_name || 'Unknown'}</p>
                     {bid.errand?.category && (
@@ -470,14 +469,16 @@ export default function MyOfferPage() {
                       </span>
                     )}
                   </div>
-                  <div style={{textAlign: 'right'}}>
-                    <p style={{color: '#333', fontWeight: '700', margin: '0 0 4px 0'}}>SGD ${Number(bid.amount).toFixed(2)}</p>
-                    <p style={{color: '#999', fontFamily: 'monospace', fontSize: '10px', margin: 0}}>{bid.offer_id || `OF${bid.id}`}</p>
+                  <div style={{textAlign: 'right', flexShrink: 0}}>
+                    <p style={{color: '#333', fontWeight: '700', margin: 0}}>SGD ${Number(bid.amount).toFixed(2)}</p>
+                    {!isClosedOrExpired(bid) && (
+                      <p style={{color: '#999', fontFamily: 'monospace', fontSize: '10px', margin: '2px 0 0 0'}}>{formatOfferId(bid)}</p>
+                    )}
                   </div>
                 </div>
 
-                {/* Line 3: Date/Time + Location on left, Offer placed date on right */}
-                <div className="flex items-center justify-between gap-2 text-xs mb-1 flex-wrap">
+                {/* Line 3: Date/Time + Area on left, Offer placed date on right */}
+                <div className="flex items-center justify-between gap-2 text-xs flex-wrap">
                   <div className="flex items-center gap-2 text-gray-600 flex-wrap">
                     {bid.errand?.deadline && (
                       <>
@@ -486,42 +487,16 @@ export default function MyOfferPage() {
                       </>
                     )}
                     {(() => {
-                      const isCompleted = bid.errand?.status === 'completed' || bid.errand?.status === 'completed_confirmed' || bid.errand?.status === 'completed_unconfirmed';
-                      const isExpired = bid.errand?.status === 'expired';
-
-                      // Don't show location for expired errands
-                      if (isExpired) return null;
-
-                      // For completed: only show if area is valid and not generic
-                      if (isCompleted) {
-                        const loc = bid.errand?.location?.trim() || '';
-                        if (!loc || loc.toLowerCase() === 'singapore' || loc.toLowerCase() === 'remote') {
-                          return null;
-                        }
-                        return (
-                          <span>
-                            📍 {loc}
-                          </span>
-                        );
-                      }
-
-                      // For active: show full address or location + postal
-                      if (bid.errand?.location || bid.errand?.postal_code) {
-                        const displayText = bid.errand.full_address
-                          ? bid.errand.full_address
-                          : `${bid.errand.location || ''}${bid.errand?.postal_code ? ` ${bid.errand.postal_code}` : ''}`.trim();
-
-                        return (
-                          <span>
-                            📍 {displayText}
-                          </span>
-                        );
-                      }
-
-                      return null;
+                      // This page shows the AREA only — not the full address
+                      if (bid.errand?.status === 'expired') return null;
+                      const area = (bid.errand?.location || '').trim();
+                      if (!area || area.toLowerCase() === 'singapore' || area.toLowerCase() === 'remote') return null;
+                      return <span>📍 {area}</span>;
                     })()}
                   </div>
-                  <p className="text-gray-400 whitespace-nowrap">Offer placed {new Date(bid.created_at).toLocaleDateString()}</p>
+                  {!isClosedOrExpired(bid) && (
+                    <p className="text-gray-400 whitespace-nowrap">Offer placed {new Date(bid.created_at).toLocaleDateString()}</p>
+                  )}
                 </div>
 
                 {/* Actions */}

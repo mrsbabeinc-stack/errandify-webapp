@@ -62,6 +62,12 @@ export default function CompanySettingsStep({
     contactEmail: '',
     contactPhone: '',
     logo: null as File | null,
+    // Named human we can reach about verification
+    contactPersonName: '',
+    contactPersonRole: '',
+    // ACRA Business Profile — the document we verify against (no ACRA API)
+    acraDocument: null as File | null,
+    acraProfileDate: '',
   });
 
   const [logoPreview, setLogoPreview] = useState<string>('');
@@ -121,6 +127,8 @@ export default function CompanySettingsStep({
     if (!formData.contactEmail.trim()) newErrors.contactEmail = 'Email is required';
     if (!formData.contactEmail.includes('@')) newErrors.contactEmail = 'Valid email is required';
     if (!formData.contactPhone.trim()) newErrors.contactPhone = 'Phone is required';
+    if (!formData.contactPersonName.trim()) newErrors.contactPersonName = 'Contact person name is required';
+    if (!formData.acraDocument) newErrors.acraDocument = 'Attach your ACRA Business Profile';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -134,29 +142,53 @@ export default function CompanySettingsStep({
       return;
     }
 
+    if (!formData.acraDocument) {
+      showError('ACRA profile needed', 'Attach your ACRA Business Profile — we verify your company against it');
+      return;
+    }
+
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const formDataToSend = new FormData();
 
-      formDataToSend.append('name', companyData.companyName);
-      formDataToSend.append('uen', companyData.uen);
-      formDataToSend.append('industry', formData.industry);
-      formDataToSend.append('bio', formData.description);
-      formDataToSend.append('email', formData.contactEmail);
-      formDataToSend.append('phone', formData.contactPhone);
-      formDataToSend.append('service_categories', JSON.stringify(formData.categories));
+      const toDataUri = (f: File) =>
+        new Promise<string>((resolve, reject) => {
+          const r = new FileReader();
+          r.onload = () => resolve(r.result as string);
+          r.onerror = () => reject(new Error('Could not read that file'));
+          r.readAsDataURL(f);
+        });
 
-      if (formData.logo) {
-        formDataToSend.append('logo', formData.logo);
-      }
+      const acraDocument = await toDataUri(formData.acraDocument);
+      const logoUrl = formData.logo ? await toDataUri(formData.logo) : null;
 
+      // The API is JSON, not multipart — this previously sent FormData, which
+      // express.json() cannot parse, so registration always failed.
       const response = await fetch(`${API_URL}/api/companies`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
-        body: formDataToSend
+        body: JSON.stringify({
+          name: companyData.companyName,
+          uen: companyData.uen,
+          industry: formData.industry,
+          description: formData.description,
+          email: formData.contactEmail,
+          phone: formData.contactPhone,
+          service_categories: formData.categories,
+          // Contact person — required so we can reach a human about verification
+          contact_person_name: formData.contactPersonName,
+          contact_person_role: formData.contactPersonRole,
+          contact_person_email: formData.contactEmail,
+          contact_person_phone: formData.contactPhone,
+          // ACRA Business Profile — what an admin matches a director against
+          acraDocument,
+          acraDocumentName: formData.acraDocument.name,
+          acraDocumentMime: formData.acraDocument.type,
+          acraProfileDate: formData.acraProfileDate || null,
+        }),
       });
 
       if (!response.ok) {
@@ -164,13 +196,32 @@ export default function CompanySettingsStep({
         throw new Error(errorData.message || 'Failed to create company');
       }
 
-      const data = await response.json();
-      showSuccess('🎉 Company Created!', 'Your company is ready to go');
+      await response.json();
+
+      // Save the logo separately — it has its own owner-checked endpoint
+      if (logoUrl) {
+        try {
+          const me = await fetch(`${API_URL}/api/companies/user/my-company`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }).then((r) => r.json());
+          if (me?.data?.id) {
+            await fetch(`${API_URL}/api/companies/${me.data.id}/logo`, {
+              method: 'POST',
+              headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ logoUrl }),
+            });
+          }
+        } catch {
+          /* logo is optional — never block registration on it */
+        }
+      }
+
+      showSuccess('Company registered', "We're checking your ACRA profile — we'll let you know once you're approved");
 
       setTimeout(() => {
         onComplete();
         navigate('/company/dashboard-new');
-      }, 1500);
+      }, 1800);
     } catch (err: any) {
       console.error('Company creation error:', err);
       showError('Company Creation Failed', err.message);
@@ -189,7 +240,7 @@ export default function CompanySettingsStep({
               Complete Company Settings
             </h1>
             <p className="text-gray-600">
-              Set up your company profile to start posting tasks and managing teams
+              Set up your company profile to start posting errands and managing teams
             </p>
           </div>
 
@@ -347,6 +398,80 @@ export default function CompanySettingsStep({
               {errors.categories && (
                 <p className="text-red-600 text-sm mt-2">⚠️ {errors.categories}</p>
               )}
+            </div>
+
+            {/* ACRA Business Profile — this is what we verify against. There is
+                no ACRA lookup, so the uploaded document is the source of truth. */}
+            <div className="rounded-xl border-2 border-errandify-orange bg-errandify-orange-wash p-5">
+              <h3 className="font-extrabold text-[15px] text-errandify-orange-deep">
+                Attach your ACRA Business Profile *
+              </h3>
+              <p className="text-[13px] text-errandify-orange-deep/90 mt-1">
+                We check that a director on it matches your SingPass name. Your company is approved by our team before
+                you can post errands or make offers.
+              </p>
+
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="block text-[12.5px] font-bold text-errandify-brown mb-1.5">
+                    Business Profile (PDF or photo) *
+                  </label>
+                  <input
+                    type="file"
+                    accept="application/pdf,image/png,image/jpeg,image/webp"
+                    onChange={(e) =>
+                      setFormData({ ...formData, acraDocument: e.target.files?.[0] || null })
+                    }
+                    className="w-full text-[13px] text-errandify-brown file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[12.5px] file:font-bold file:bg-white file:text-errandify-orange-deep"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[12.5px] font-bold text-errandify-brown mb-1.5">
+                    Date printed on the profile
+                  </label>
+                  <input
+                    type="date"
+                    max={new Date().toISOString().split('T')[0]}
+                    value={formData.acraProfileDate}
+                    onChange={(e) => setFormData({ ...formData, acraProfileDate: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl border-2 border-white bg-white text-[13.5px] text-errandify-brown focus:outline-none"
+                  />
+                  <p className="text-[11.5px] text-errandify-orange-deep/80 mt-1">Must be within the last 6 months</p>
+                </div>
+              </div>
+
+              <p className="text-[11.5px] text-errandify-orange-deep/80 mt-3 leading-snug">
+                We use it only to verify your company, record the result, then delete the document — we don't keep a
+                copy of your directors' details.
+              </p>
+            </div>
+
+            {/* Contact person — a named human, not just the company line */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-bold text-errandify-brown mb-2">
+                  Contact Person Name *
+                </label>
+                <input
+                  type="text"
+                  value={formData.contactPersonName}
+                  onChange={(e) => setFormData({ ...formData, contactPersonName: e.target.value })}
+                  placeholder="Who should we speak to?"
+                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-errandify-orange focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-errandify-brown mb-2">
+                  Their Role
+                </label>
+                <input
+                  type="text"
+                  value={formData.contactPersonRole}
+                  onChange={(e) => setFormData({ ...formData, contactPersonRole: e.target.value })}
+                  placeholder="e.g. Operations Manager"
+                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-errandify-orange focus:outline-none"
+                />
+              </div>
             </div>
 
             {/* Contact Details */}

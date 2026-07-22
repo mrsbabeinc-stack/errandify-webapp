@@ -142,11 +142,11 @@ export default function HanaManualMode({
         e.preventDefault();
         // Validate all required fields (except notes which is optional)
         if (!taskData.title?.trim()) {
-          alert('What would you like help with? Please give your task a title.');
+          alert('What would you like help with? Please give your errand a title.');
           return;
         }
         if (taskData.title.trim().length < 5) {
-          alert('Give your task a bit more detail - at least 5 characters please.');
+          alert('Give your errand a bit more detail - at least 5 characters please.');
           return;
         }
         if (!taskData.description?.trim()) {
@@ -158,7 +158,7 @@ export default function HanaManualMode({
           return;
         }
         if (!taskData.category?.trim()) {
-          alert('Which category best fits your task? This helps us find the right doers.');
+          alert('Which category best fits your errand? This helps us find the right doers.');
           return;
         }
         if (!taskData.location?.trim()) {
@@ -205,7 +205,7 @@ export default function HanaManualMode({
         {/* Title Input with AI Suggestions */}
         <div className="relative">
           <label className="block text-sm font-semibold text-gray-600 mb-2">
-            Task Title *
+            Errand Title *
           </label>
           <input
             type="text"
@@ -243,7 +243,7 @@ export default function HanaManualMode({
         {/* Tips Section - Shows instantly as title is typed */}
         {taskData.title.trim() && descriptionTips && (
           <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 animate-fade-in">
-            <p className="text-xs font-semibold text-errandify-orange-700 mb-2">💡 Tips for this task:</p>
+            <p className="text-xs font-semibold text-errandify-orange-700 mb-2">💡 Tips for this errand:</p>
             <p className="text-xs text-errandify-orange-700 leading-relaxed">
               {descriptionTips}
             </p>
@@ -370,20 +370,20 @@ export default function HanaManualMode({
         {(() => {
           const errors = [];
 
-          if (!taskData.title?.trim()) errors.push('Add a task title - what do you need help with?');
-          if (!taskData.description?.trim()) errors.push('Describe your task - give more details so doers understand');
+          if (!taskData.title?.trim()) errors.push('Add a errand title - what do you need help with?');
+          if (!taskData.description?.trim()) errors.push('Describe your errand - give more details so doers understand');
           if (taskData.title?.trim() && taskData.title.trim().length < 5) errors.push('Make the title a bit longer - at least 5 characters');
           if (taskData.description?.trim() && taskData.description.trim().length < 10) errors.push('Give more details - at least 10 characters helps doers');
-          if (!taskData.category?.trim()) errors.push('Pick a category - which type of task is this?');
+          if (!taskData.category?.trim()) errors.push('Pick a category - which type of errand is this?');
           if (!taskData.location?.trim()) errors.push('Tell us where - which area do you need help in?');
-          if (!taskData.date?.trim()) errors.push('When? - Pick a date for your task');
+          if (!taskData.date?.trim()) errors.push('When? - Pick a date for your errand');
           if (taskData.date?.trim()) {
             const selectedDate = new Date(taskData.date);
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             if (selectedDate < today) errors.push('Pick a future date - we can\'t schedule for the past');
           }
-          if (!taskData.time?.trim()) errors.push('What time? - Pick a time for your task');
+          if (!taskData.time?.trim()) errors.push('What time? - Pick a time for your errand');
           if (taskData.time?.trim() && taskData.date?.trim()) {
             const selectedDateTime = new Date(taskData.date);
             const [hours, minutes] = taskData.time.split(':').map(Number);

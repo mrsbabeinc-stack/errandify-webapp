@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { generateText, generateImages } from '../../utils/aiClient';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useToast, ToastContainer } from '../../components/Toast';
@@ -47,6 +48,7 @@ export default function BlogArticles() {
   const [thumbnailPrompt, setThumbnailPrompt] = useState('');
   const [thumbnailLoading, setThumbnailLoading] = useState(false);
   const [generatedImageUrl, setGeneratedImageUrl] = useState('');
+  const [imageOptions, setImageOptions] = useState<string[]>([]);
 
   // Edit mode state
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -59,21 +61,8 @@ export default function BlogArticles() {
 
   const callQwenAPI = async (prompt: string): Promise<string> => {
     try {
-      const response = await axios.post(
-        'https://dashscope.aliyuncs.com/api/v1/services/aigc/text2text/qwen',
-        {
-          model: 'qwen-turbo',
-          input: { messages: [{ role: 'user', content: prompt }] },
-          parameters: { max_tokens: 2000, temperature: 0.7 },
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${import.meta.env.VITE_QWEN_API_KEY || 'demo'}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-      return response.data.output?.text || '';
+      const responseText = await generateText(prompt, { maxTokens: 2000, temperature: 0.7 });
+      return responseText || '';
     } catch (error) {
       console.error('Qwen API error:', error);
       return '';
@@ -138,190 +127,187 @@ CRITICAL: Ensure all text is legally safe, non-biased, and compliant with conten
     if (!thumbnailPrompt.trim()) return;
     setThumbnailLoading(true);
 
-    const prompt = `You are a professional image description writer. Create a detailed visual description for a blog thumbnail.
-Dimensions: 1200x600 pixels
-Style: Professional, modern, clean, inclusive, diverse
-Prompt: "${thumbnailPrompt}"
-
-Respond with ONLY valid JSON:
-{
-  "imageDescription": "A detailed description of the generated image (2-3 sentences, include colors, composition, subjects, diversity aspects)",
-  "imageUrl": "A placeholder description of what the image shows"
-}
-
-CRITICAL: Ensure diverse representation, inclusive imagery, no stereotypes.`;
-
-    const result = await callQwenAPI(prompt);
-
-    if (result) {
-      try {
-        const parsed = JSON.parse(result);
-
-        // Use AI-described image with Unsplash professional placeholder
-        // In production, this would call an actual image generation API
-        const keywords = thumbnailPrompt.split(' ').slice(0, 2).join('+');
-        const placeholderUrls = [
-          `https://images.unsplash.com/photo-1552664730-d307ca884978?w=1200&h=600&fit=crop&q=80`,
-          `https://images.unsplash.com/photo-1557821552-17105176677c?w=1200&h=600&fit=crop&q=80`,
-          `https://images.unsplash.com/photo-1531482615713-2afd69097998?w=1200&h=600&fit=crop&q=80`,
-          `https://images.unsplash.com/photo-1552664730-d307ca884978?w=1200&h=600&fit=crop&q=80`,
-        ];
-
-        // Use a random professional image as placeholder
-        const selectedUrl = placeholderUrls[Math.floor(Math.random() * placeholderUrls.length)];
-        setGeneratedImageUrl(selectedUrl);
-        setThumbnailUrl(selectedUrl);
-        setThumbnailAlt(parsed.imageDescription || thumbnailPrompt);
-        showToast('🎨 Thumbnail generated with AI description!', 'success');
-      } catch (error) {
-        console.error('Parse error:', error);
-        // Fallback to generic professional image
-        const fallbackUrl = `https://images.unsplash.com/photo-1552664730-d307ca884978?w=1200&h=600&fit=crop&q=80`;
-        setGeneratedImageUrl(fallbackUrl);
-        setThumbnailUrl(fallbackUrl);
-        setThumbnailAlt(thumbnailPrompt);
-        showToast('🎨 Thumbnail generated (using professional template)!', 'success');
-      }
-    } else {
-      // Fallback if API call fails
-      const fallbackUrl = `https://images.unsplash.com/photo-1552664730-d307ca884978?w=1200&h=600&fit=crop&q=80`;
-      setGeneratedImageUrl(fallbackUrl);
-      setThumbnailUrl(fallbackUrl);
+    // Real image generation.
+    //
+    // This used to ask a TEXT model to describe an image, then display a RANDOM
+    // Unsplash stock photo while announcing "Thumbnail generated with AI" — the
+    // code itself admitted "in production, this would call an actual image
+    // generation API". It does now.
+    try {
+      const images = await generateImages(
+        `Blog thumbnail for Errandify, a warm Singapore neighbourhood errand marketplace. ${thumbnailPrompt}. Inclusive, diverse representation, no stereotypes, no text overlay.`,
+        3,
+        '1024*1024'
+      );
+      setImageOptions(images.map((i) => i.url));
+      setGeneratedImageUrl(images[0].url);
+      setThumbnailUrl(images[0].url);
       setThumbnailAlt(thumbnailPrompt);
-      showToast('🎨 Thumbnail generated (using professional template)', 'success');
+      showToast(`🎨 ${images.length} options ready — pick your favourite`, 'success');
+    } catch (err: any) {
+      showToast(err.message || 'Could not generate a thumbnail', 'error');
     }
+
     setThumbnailLoading(false);
   };
 
-  useEffect(() => {
-    const saved = localStorage.getItem('blogArticles');
-    if (saved) {
-      setArticles(JSON.parse(saved));
-    } else {
-      const demoArticles: Article[] = [
-        {
-          id: 'blog_1',
-          title: '10 Tips for Getting More Errands Done',
-          content: 'Discover strategies to maximize your productivity and tackle more errands efficiently. Learn time management techniques, prioritization methods, and tools that successful errand runners use.',
-          excerpt: 'Maximize your productivity with proven strategies and time management techniques.',
-          category: 'tips',
-          author: 'Sarah Chen',
-          status: 'published',
-          views: 3421,
-          seoKeywords: 'errand tips, productivity, time management, efficiency',
-          publishedAt: new Date(Date.now() - 604800000).toISOString(),
-          createdAt: new Date(Date.now() - 864000000).toISOString(),
-        },
-        {
-          id: 'blog_2',
-          title: 'How to Become a Top-Rated Doer',
-          content: 'Building a stellar reputation on Errandify takes dedication and attention to detail. Learn how top doers maintain high ratings, communicate effectively, and build lasting relationships with askers.',
-          excerpt: 'Master the skills and strategies of top-rated service providers.',
-          category: 'guides',
-          author: 'Mike Johnson',
-          status: 'published',
-          views: 2156,
-          seoKeywords: 'doer, ratings, reputation, customer service',
-          publishedAt: new Date(Date.now() - 1296000000).toISOString(),
-          createdAt: new Date(Date.now() - 1382400000).toISOString(),
-        },
-        {
-          id: 'blog_3',
-          title: 'Maximizing Your Earnings on Errandify',
-          content: 'Increase your income potential by understanding pricing strategies, choosing high-value errands, and optimizing your availability.',
-          excerpt: 'Strategic approaches to boost your earnings on our platform.',
-          category: 'tips',
-          author: 'Lisa Wong',
-          status: 'draft',
-          views: 0,
-          seoKeywords: 'earnings, income, pricing, doer',
-          createdAt: new Date(Date.now() - 86400000).toISOString(),
-        },
-      ];
-      setArticles(demoArticles);
-      localStorage.setItem('blogArticles', JSON.stringify(demoArticles));
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
+  const authHeaders = () => ({
+    Authorization: `Bearer ${localStorage.getItem('token')}`,
+    'Content-Type': 'application/json',
+  });
+
+  // These articles used to live in localStorage, so what an admin wrote existed
+  // in one browser and the posts readers actually see could not be edited at
+  // all. Both ends now work against blog_posts.
+  const loadArticles = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/blog/admin/all`, { headers: authHeaders() });
+      if (!res.ok) throw new Error('request failed');
+      const result = await res.json();
+      setArticles(
+        (result.data || []).map((a: any) => ({
+          id: String(a.id),
+          title: a.title,
+          content: a.content || '',
+          excerpt: a.excerpt || '',
+          category: a.category || 'tips',
+          author: a.author || 'Errandify',
+          status: a.is_published ? 'published' : 'draft',
+          views: a.view_count ?? 0,
+          seoKeywords: a.seo_keywords || '',
+          thumbnailUrl: a.featured_image_url || undefined,
+          publishedAt: a.published_at || undefined,
+          createdAt: a.created_at,
+        }))
+      );
+    } catch (err) {
+      console.error('Failed to load articles:', err);
+      setArticles([]);
+      showToast('Could not load articles', 'error');
     }
+  };
+
+  useEffect(() => {
+    loadArticles();
   }, []);
 
-  const handleCreateArticle = () => {
+  const handleCreateArticle = async () => {
     if (!newTitle.trim() || !newAuthor.trim() || !newContent.trim()) {
       showToast('⚠️ Title, author, and content are required', 'error');
       return;
     }
 
-    const newArticle: Article = {
-      id: `blog_${Date.now()}`,
-      title: newTitle.slice(0, 200),
-      content: newContent.slice(0, 5000),
-      excerpt: newExcerpt.slice(0, 300),
-      category: newCategory,
-      author: newAuthor.slice(0, 100),
-      status: 'draft',
-      views: 0,
-      seoKeywords: newSeoKeywords.slice(0, 200),
-      thumbnailUrl: thumbnailUrl || undefined,
-      thumbnailAlt: thumbnailAlt.slice(0, 200),
-      createdAt: new Date().toISOString(),
-    };
+    try {
+      const res = await fetch(`${API_URL}/api/blog`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({
+          title: newTitle.slice(0, 200),
+          content: newContent.slice(0, 5000),
+          excerpt: newExcerpt.slice(0, 300),
+          category: newCategory,
+          author: newAuthor.slice(0, 100),
+          seo_keywords: newSeoKeywords.slice(0, 200),
+          featured_image_url: thumbnailUrl || null,
+          is_published: false,
+        }),
+      });
+      const result = await res.json();
+      if (!res.ok) {
+        showToast(result.error || 'Could not create that article', 'error');
+        return;
+      }
 
-    const updated = [...articles, newArticle];
-    setArticles(updated);
-    localStorage.setItem('blogArticles', JSON.stringify(updated));
-
-    setNewTitle('');
-    setNewContent('');
-    setNewExcerpt('');
-    setNewAuthor('');
-    setNewSeoKeywords('');
-    setThumbnailUrl('');
-    setThumbnailAlt('');
-    showToast('✅ Article created as draft!', 'success');
+      setNewTitle('');
+      setNewContent('');
+      setNewExcerpt('');
+      setNewAuthor('');
+      setNewSeoKeywords('');
+      setThumbnailUrl('');
+      setThumbnailAlt('');
+      showToast('✅ Article created as draft!', 'success');
+      loadArticles();
+    } catch (err) {
+      console.error('Failed to create article:', err);
+      showToast('Could not create that article', 'error');
+    }
   };
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (!editTitle.trim() || !editAuthor.trim() || !editContent.trim()) {
       showToast('⚠️ Title, author, and content are required', 'error');
       return;
     }
 
-    const updated = articles.map(a =>
-      a.id === editingId
-        ? {
-            ...a,
-            title: editTitle.slice(0, 200),
-            content: editContent.slice(0, 5000),
-            excerpt: editExcerpt.slice(0, 300),
-            category: editCategory,
-            author: editAuthor.slice(0, 100),
-            seoKeywords: editSeoKeywords.slice(0, 200),
-          }
-        : a
-    );
-
-    setArticles(updated);
-    localStorage.setItem('blogArticles', JSON.stringify(updated));
-    setEditingId(null);
-    showToast('✅ Article updated!', 'success');
-  };
-
-  const handleDeleteArticle = (id: string) => {
-    if (confirm('Delete this article?')) {
-      const updated = articles.filter(a => a.id !== id);
-      setArticles(updated);
-      localStorage.setItem('blogArticles', JSON.stringify(updated));
-      showToast('🗑️ Article deleted', 'success');
+    try {
+      const res = await fetch(`${API_URL}/api/blog/${editingId}`, {
+        method: 'PATCH',
+        headers: authHeaders(),
+        body: JSON.stringify({
+          title: editTitle.slice(0, 200),
+          content: editContent.slice(0, 5000),
+          excerpt: editExcerpt.slice(0, 300),
+          category: editCategory,
+          author: editAuthor.slice(0, 100),
+          seo_keywords: editSeoKeywords.slice(0, 200),
+        }),
+      });
+      if (!res.ok) {
+        const result = await res.json().catch(() => ({}));
+        showToast(result.error || 'Could not save that article', 'error');
+        return;
+      }
+      setEditingId(null);
+      showToast('✅ Article updated!', 'success');
+      loadArticles();
+    } catch (err) {
+      console.error('Failed to save article:', err);
+      showToast('Could not save that article', 'error');
     }
   };
 
-  const handlePublish = (id: string) => {
-    const updated = articles.map(a =>
-      a.id === id
-        ? { ...a, status: 'published' as const, publishedAt: new Date().toISOString() }
-        : a
-    );
-    setArticles(updated);
-    localStorage.setItem('blogArticles', JSON.stringify(updated));
-    showToast('📤 Article published!', 'success');
+  const handleDeleteArticle = async (id: string) => {
+    if (!confirm('Delete this article? It will disappear from the blog.')) return;
+    try {
+      const res = await fetch(`${API_URL}/api/blog/${id}`, {
+        method: 'DELETE',
+        headers: authHeaders(),
+      });
+      if (!res.ok) {
+        const result = await res.json().catch(() => ({}));
+        showToast(result.error || 'Could not delete that article', 'error');
+        return;
+      }
+      showToast('🗑️ Article deleted', 'success');
+      loadArticles();
+    } catch (err) {
+      console.error('Failed to delete article:', err);
+      showToast('Could not delete that article', 'error');
+    }
+  };
+
+  const handlePublish = async (id: string) => {
+    try {
+      // is_published is what GET /api/blog filters on, so this is the moment
+      // the article becomes readable in the app.
+      const res = await fetch(`${API_URL}/api/blog/${id}`, {
+        method: 'PATCH',
+        headers: authHeaders(),
+        body: JSON.stringify({ is_published: true }),
+      });
+      if (!res.ok) {
+        const result = await res.json().catch(() => ({}));
+        showToast(result.error || 'Could not publish that article', 'error');
+        return;
+      }
+      showToast('📤 Article published!', 'success');
+      loadArticles();
+    } catch (err) {
+      console.error('Failed to publish article:', err);
+      showToast('Could not publish that article', 'error');
+    }
   };
 
   const statusColors = {

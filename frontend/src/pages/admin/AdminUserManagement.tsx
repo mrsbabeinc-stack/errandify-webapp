@@ -27,88 +27,113 @@ export default function AdminUserManagement() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [actionReason, setActionReason] = useState('');
 
-  useEffect(() => {
-    const saved = localStorage.getItem('platformUsers');
-    if (saved) {
-      setUsers(JSON.parse(saved));
-    } else {
-      // Demo data
-      const demoUsers: User[] = [
-        {
-          id: '1',
-          email: 'jordan@example.com',
-          name: 'Jordan Smith',
-          role: 'doer',
-          status: 'active',
-          reputation: 92,
-          tier: 'trusted',
-          createdAt: '2026-01-15',
-          violations: 0,
-          lastActive: new Date().toISOString(),
-        },
-        {
-          id: '2',
-          email: 'sarah@example.com',
-          name: 'Sarah Davis',
-          role: 'asker',
-          status: 'active',
-          reputation: 78,
-          tier: 'new',
-          createdAt: '2026-06-01',
-          violations: 1,
-          lastActive: new Date(Date.now() - 86400000).toISOString(),
-        },
-      ];
-      setUsers(demoUsers);
-      localStorage.setItem('platformUsers', JSON.stringify(demoUsers));
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
+  const authHeaders = () => ({
+    Authorization: `Bearer ${localStorage.getItem('token')}`,
+    'Content-Type': 'application/json',
+  });
+
+  // This screen used to keep the user list — and every ban — in localStorage.
+  // An admin banning someone saw it succeed while the account stayed active,
+  // the ban died with the browser cache, and no other admin ever saw it. The
+  // endpoints below were already real; only the wiring was missing.
+  const loadUsers = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/admin/users`, { headers: authHeaders() });
+      if (!res.ok) throw new Error('request failed');
+      const result = await res.json();
+      setUsers(
+        (result.data || []).map((u: any) => ({
+          id: String(u.id),
+          email: u.email || '',
+          name: u.name || 'Unnamed',
+          role: u.role || 'doer',
+          status: u.status || 'active',
+          reputation: u.reputation ?? 0,
+          tier: u.tier ?? 'new',
+          createdAt: u.created_at,
+          violations: u.violations ?? 0,
+          lastActive: u.last_active_at || u.created_at,
+        }))
+      );
+    } catch (err) {
+      console.error('Failed to load users:', err);
+      setUsers([]);
+      showToast('Could not load users', 'error');
     }
+  };
+
+  useEffect(() => {
+    loadUsers();
   }, []);
+
+  // One helper for all three: they differ only by endpoint and message, and a
+  // ban that silently no-ops is exactly what this screen used to do.
+  const runUserAction = async (
+    userId: string,
+    action: 'suspend' | 'ban' | 'restore',
+    reason: string | null,
+    successMsg: string
+  ) => {
+    try {
+      const res = await fetch(`${API_URL}/api/admin/users/${userId}/${action}`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify(reason ? { reason } : {}),
+      });
+      const result = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        showToast(result.error || `Could not ${action} that user`, 'error');
+        return false;
+      }
+      showToast(successMsg, 'success');
+      setActionReason('');
+      setSelectedUser(null);
+      await loadUsers();
+      return true;
+    } catch (err) {
+      console.error(`Failed to ${action} user:`, err);
+      showToast(`Could not ${action} that user`, 'error');
+      return false;
+    }
+  };
 
   const handleSuspend = (userId: string) => {
     if (!actionReason.trim()) {
-      alert('Please provide a reason for suspension');
+      showToast('Please provide a reason for suspension', 'error');
       return;
     }
-    const updated = users.map(u =>
-      u.id === userId ? { ...u, status: 'suspended' as const } : u
-    );
-    setUsers(updated);
-    localStorage.setItem('platformUsers', JSON.stringify(updated));
-    alert(`User suspended. Reason: ${actionReason}`);
-    setActionReason('');
-    setSelectedUser(null);
+    runUserAction(userId, 'suspend', actionReason.trim(), 'User suspended');
   };
 
   const handleBan = (userId: string) => {
     if (!actionReason.trim()) {
-      alert('Please provide a reason for ban');
+      showToast('Please provide a reason for ban', 'error');
       return;
     }
-    const updated = users.map(u =>
-      u.id === userId ? { ...u, status: 'banned' as const } : u
-    );
-    setUsers(updated);
-    localStorage.setItem('platformUsers', JSON.stringify(updated));
-    alert(`User banned. Reason: ${actionReason}`);
-    setActionReason('');
-    setSelectedUser(null);
+    runUserAction(userId, 'ban', actionReason.trim(), 'User banned');
   };
 
   const handleUnban = (userId: string) => {
-    const updated = users.map(u =>
-      u.id === userId ? { ...u, status: 'active' as const } : u
-    );
-    setUsers(updated);
-    localStorage.setItem('platformUsers', JSON.stringify(updated));
-    setSelectedUser(null);
+    runUserAction(userId, 'restore', null, 'User restored');
   };
 
-  const handleChangeTier = (userId: string, newTier: 'new' | 'trusted' | 'vip') => {
-    const updated = users.map(u =>
-      u.id === userId ? { ...u, tier: newTier } : u
-    );
-    setUsers(updated);
-    localStorage.setItem('platformUsers', JSON.stringify(updated));
+  const handleChangeTier = async (userId: string, newTier: 'new' | 'trusted' | 'vip') => {
+    try {
+      const res = await fetch(`${API_URL}/api/admin/users/${userId}/tier`, {
+        method: 'PATCH',
+        headers: authHeaders(),
+        body: JSON.stringify({ tier: newTier }),
+      });
+      const result = await res.json().catch(() => ({}));
+      // The server answers 501 here: there is no tier column yet. Say so
+      // rather than showing the change and losing it on refresh.
+      showToast(result.error || 'Tiers are not available yet', 'error');
+    } catch (err) {
+      console.error('Failed to change tier:', err);
+      showToast('Tiers are not available yet', 'error');
+    }
   };
 
   const filteredUsers = users.filter(u => {

@@ -5,7 +5,7 @@
 
 import { Router, Response } from 'express';
 import Stripe from 'stripe';
-import { AuthRequest, authMiddleware } from '../middleware/auth.js';
+import { AuthRequest, authMiddleware, requireAdmin } from '../middleware/auth.js';
 import db from '../db.js';
 import {
   getCompanySubscription,
@@ -669,7 +669,7 @@ router.get('/admin/subscriptions/analytics', authMiddleware, async (req: AuthReq
  * POST /api/admin/subscriptions/:companyId/change-tier
  * Manually change a company's subscription tier (admin only)
  */
-router.post('/admin/subscriptions/:companyId/change-tier', authMiddleware, async (req: AuthRequest, res: Response) => {
+router.post('/admin/subscriptions/:companyId/change-tier', authMiddleware, requireAdmin(), async (req: AuthRequest, res: Response) => {
   try {
     const { tier } = req.body;
     const companyId = parseInt(req.params.companyId, 10);
@@ -695,7 +695,7 @@ router.post('/admin/subscriptions/:companyId/change-tier', authMiddleware, async
  * POST /api/admin/subscriptions/:companyId/cancel
  * Cancel a subscription (admin only)
  */
-router.post('/admin/subscriptions/:companyId/cancel', authMiddleware, async (req: AuthRequest, res: Response) => {
+router.post('/admin/subscriptions/:companyId/cancel', authMiddleware, requireAdmin(), async (req: AuthRequest, res: Response) => {
   try {
     const companyId = parseInt(req.params.companyId, 10);
 
@@ -715,7 +715,7 @@ router.post('/admin/subscriptions/:companyId/cancel', authMiddleware, async (req
  * POST /api/admin/subscriptions/:companyId/change-tier
  * Manually change a company's subscription tier (admin only)
  */
-router.post('/admin/subscriptions/:companyId/change-tier', authMiddleware, async (req: AuthRequest, res: Response) => {
+router.post('/admin/subscriptions/:companyId/change-tier', authMiddleware, requireAdmin(), async (req: AuthRequest, res: Response) => {
   try {
     const { tier } = req.body;
     const companyId = parseInt(req.params.companyId, 10);
@@ -743,7 +743,7 @@ router.post('/admin/subscriptions/:companyId/change-tier', authMiddleware, async
  * POST /api/admin/subscriptions/:companyId/cancel
  * Cancel a subscription (admin only)
  */
-router.post('/admin/subscriptions/:companyId/cancel', authMiddleware, async (req: AuthRequest, res: Response) => {
+router.post('/admin/subscriptions/:companyId/cancel', authMiddleware, requireAdmin(), async (req: AuthRequest, res: Response) => {
   try {
     const companyId = parseInt(req.params.companyId, 10);
 

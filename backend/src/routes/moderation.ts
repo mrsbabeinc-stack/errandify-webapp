@@ -1,5 +1,5 @@
 import { Router, Response } from 'express';
-import { AuthRequest, authMiddleware } from '../middleware/auth.js';
+import { AuthRequest, authMiddleware, requireAdmin } from '../middleware/auth.js';
 import db from '../db.js';
 import {
   moderateContent,
@@ -59,9 +59,8 @@ router.post('/flag', authMiddleware, async (req: AuthRequest, res: Response) => 
 });
 
 // GET /api/moderation/flagged - Get flagged content (admin only)
-router.get('/flagged', authMiddleware, async (req: AuthRequest, res: Response) => {
+router.get('/flagged', authMiddleware, requireAdmin(), async (req: AuthRequest, res: Response) => {
   try {
-    // TODO: Check admin role
     const { severity, status, limit } = req.query;
 
     const flagged = await getFlaggedContent(

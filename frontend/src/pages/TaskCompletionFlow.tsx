@@ -106,7 +106,7 @@ export default function TaskCompletionFlow() {
         setCurrentStep('submit');
       }
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to load task details');
+      setError(err.response?.data?.error || 'Failed to load errand details');
     } finally {
       setLoading(false);
     }
@@ -256,7 +256,7 @@ export default function TaskCompletionFlow() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      alert('✓ Doer notified. Task status returned to in progress.');
+      alert('✓ Doer notified. Errand status returned to in progress.');
       navigate('/errands');
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to request more work');
@@ -270,7 +270,7 @@ export default function TaskCompletionFlow() {
       <div className="min-h-screen bg-gradient-to-br from-orange-50 to-yellow-50 flex items-center justify-center">
         <div className="text-center">
           <div className="text-6xl mb-4 animate-bounce">✨</div>
-          <p className="text-gray-600 font-semibold">Loading task details...</p>
+          <p className="text-gray-600 font-semibold">Loading errand details...</p>
         </div>
       </div>
     );
@@ -280,7 +280,7 @@ export default function TaskCompletionFlow() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-orange-50 to-yellow-50 flex items-center justify-center p-4">
         <div className="text-center">
-          <p className="text-red-700 font-semibold mb-4">Task not found</p>
+          <p className="text-red-700 font-semibold mb-4">Errand not found</p>
           <button onClick={() => navigate('/home')} className="text-errandify-orange font-semibold">
             ← Back Home
           </button>
@@ -319,7 +319,7 @@ export default function TaskCompletionFlow() {
 
               {/* Budget */}
               <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-                <p className="text-sm text-gray-600 mb-1">Task Budget</p>
+                <p className="text-sm text-gray-600 mb-1">Errand Budget</p>
                 <p className="text-3xl font-bold text-errandify-orange">SGD ${task.budget.toFixed(2)}</p>
                 <p className="text-xs text-gray-500 mt-2">Payment releases within 24-48 hours</p>
               </div>
@@ -448,7 +448,7 @@ export default function TaskCompletionFlow() {
               )}
 
               <div className="bg-gray-50 rounded-lg p-4">
-                <h2 className="font-semibold text-errandify-brown mb-3">Task Information</h2>
+                <h2 className="font-semibold text-errandify-brown mb-3">Errand Information</h2>
                 <div className="space-y-2 text-sm">
                   <div><span className="text-gray-600">Title:</span> <span className="font-medium">{task.title}</span></div>
                   <div><span className="text-gray-600">Doer:</span> <span className="font-medium">{task.doer?.display_name || 'Unknown'}</span></div>
@@ -499,7 +499,7 @@ export default function TaskCompletionFlow() {
           {/* Header */}
           <div className="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
             <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-8 text-center">
-              <h1 className="text-3xl font-bold mb-2">🎉 Task Completed!</h1>
+              <h1 className="text-3xl font-bold mb-2">🎉 Errand Completed!</h1>
               <p className="text-lg text-purple-100 mb-4">{task.title}</p>
               <div className="inline-block bg-white/20 rounded-full px-4 py-2">
                 <p className="text-white font-semibold">Budget: SGD ${task.budget.toFixed(2)}</p>
@@ -583,7 +583,7 @@ export default function TaskCompletionFlow() {
           {/* Summary */}
           {myReview && (
             <div className="mt-8 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border-2 border-purple-200 p-6">
-              <h3 className="font-bold text-errandify-brown mb-4 text-lg">✨ Task Summary</h3>
+              <h3 className="font-bold text-errandify-brown mb-4 text-lg">✨ Errand Summary</h3>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Budget</span>

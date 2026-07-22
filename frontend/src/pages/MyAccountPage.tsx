@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import AdCarousel from '../components/AdCarousel';
+import MyCompanyInvites from '../components/company/MyCompanyInvites';
 import EventBanner from '../components/EventBanner';
 import SuccessModal from '../components/SuccessModal';
 import ErrorModal from '../components/ErrorModal';
@@ -337,7 +338,7 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
       { id: 2, type: 'posted', emoji: '📝', title: 'Posted: Home repairs', errandId: 'ERR-2846', date: 'Yesterday 10:25 PM', amount: '-$120', color: 'orange' },
       { id: 3, type: 'referral', emoji: '🎁', title: 'Referral: @SunnyLove', errandId: 'N/A', date: '2 days ago', amount: '+$50', color: 'purple' },
       { id: 4, type: 'rating', emoji: '⭐', title: 'Rating given: Clean apartment', errandId: 'ERR-2847', date: '3 days ago', amount: '5 stars', color: 'blue' },
-      { id: 5, type: 'accepted', emoji: '✅', title: 'Accepted bid: Tutoring', errandId: 'ERR-2845', date: '4 days ago', amount: 'SGD $60', color: 'green' },
+      { id: 5, type: 'accepted', emoji: '✅', title: 'Accepted offer: Tutoring', errandId: 'ERR-2845', date: '4 days ago', amount: 'SGD $60', color: 'green' },
       { id: 6, type: 'posted', emoji: '📋', title: 'Posted: Office admin', errandId: 'ERR-2844', date: '5 days ago', amount: '-$75', color: 'orange' },
     ];
   });
@@ -1025,43 +1026,28 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
     setConfirmRedeemData(null);
   };
 
+  // Text moderation runs on the BACKEND (server holds the API key and applies the
+  // hardened content-moderation rules). Never call the AI provider from the browser.
   const moderateText = async (text: string): Promise<{ approved: boolean; message?: string }> => {
     if (!text || text.length === 0) return { approved: true };
 
     try {
-      const qwenApiKey = import.meta.env.VITE_QWEN_API_KEY;
-      if (!qwenApiKey) {
-        console.warn('Qwen API key not configured - skipping text moderation');
-        return { approved: true, message: '⚠️ Text moderation not configured' };
-      }
-
       const response = await axios.post(
-        'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation',
-        {
-          model: 'qwen-plus',
-          input: {
-            messages: [
-              {
-                role: 'user',
-                content: `Review this user-generated text for appropriateness on a marketplace. Check for: hate speech, violence, explicit content, spam, scams, or offensive language. Text: "${text}". Reply with only "APPROVED" if appropriate, or "REJECTED: [reason]" if not.`,
-              },
-            ],
-          },
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${qwenApiKey}`,
-            'Content-Type': 'application/json',
-          },
-        }
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/content-filter`,
+        { title: text, description: '', notes: '' }
       );
 
-      const result = response.data.output?.choices?.[0]?.message?.content;
-      const approved = result && result.includes('APPROVED');
-      return { approved };
+      const data = response.data?.data;
+      if (data && typeof data.is_safe === 'boolean') {
+        return {
+          approved: data.is_safe,
+          message: data.is_safe ? undefined : (data.reason || 'This text contains content we can\'t accept.'),
+        };
+      }
+      return { approved: true };
     } catch (error) {
       console.error('Text moderation error:', error);
-      return { approved: true, message: '⚠️ Could not verify content' }; // Fallback: allow if API fails
+      return { approved: true, message: '⚠️ Could not verify content' }; // Fail open if the service is down
     }
   };
 
@@ -1078,59 +1064,31 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
       reader.onload = async (event) => {
         const base64Image = event.target?.result as string;
 
-        // Accept image - moderation is optional
+        // Moderate on the BACKEND *before* accepting the photo (the server holds
+        // the API key). Only a clear rejection blocks the upload — if the service
+        // is unavailable we fail open so a genuine photo is never lost.
+        try {
+          const token = localStorage.getItem('token');
+          const modRes = await axios.post(
+            `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/moderate-image`,
+            { image: base64Image },
+            { headers: { Authorization: `Bearer ${token}` }, timeout: 25000 }
+          );
+          const mod = modRes.data?.data;
+          if (mod && mod.approved === false) {
+            setModalMessage(mod.reason || "That photo isn't suitable for a profile picture. Please choose another one.");
+            setShowErrorModal(true);
+            return; // do NOT accept the image
+          }
+        } catch (error: any) {
+          console.warn('Image moderation unavailable, allowing upload:', error?.message);
+        }
+
         setProfileImage(base64Image);
         // Save to localStorage so it persists
         localStorage.setItem('profileImage', base64Image);
         setModalMessage('Your lovely face is all set! 📸');
         setShowSuccessModal(true);
-
-        // Optional: Run async moderation in background (don't block upload)
-        const qwenApiKey = import.meta.env.VITE_QWEN_API_KEY;
-        if (qwenApiKey) {
-          try {
-            const base64Data = base64Image.split(',')[1];
-            const response = await axios.post(
-              'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation',
-              {
-                model: 'qwen-vl-plus',
-                input: {
-                  messages: [
-                    {
-                      role: 'user',
-                      content: [
-                        {
-                          type: 'image',
-                          image: `data:image/jpeg;base64,${base64Data}`,
-                        },
-                        {
-                          type: 'text',
-                          text: 'Is this image appropriate for a professional profile photo? Check for: nudity, violence, hate symbols, weapons, or drugs. Reply with only "APPROVED" or "REJECTED: [reason]".',
-                        },
-                      ],
-                    },
-                  ],
-                },
-              },
-              {
-                headers: {
-                  Authorization: `Bearer ${qwenApiKey}`,
-                  'Content-Type': 'application/json',
-                },
-                timeout: 30000,
-              }
-            );
-
-            const result = response.data.output?.text || '';
-            console.log('Qwen moderation result:', result);
-
-            if (result.includes('REJECTED')) {
-              console.warn('Image moderation warning:', result);
-            }
-          } catch (error: any) {
-            console.warn('Background moderation check failed (image still uploaded):', error.message);
-          }
-        }
       };
       reader.readAsDataURL(file);
     }
@@ -1184,7 +1142,8 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
       <div className="max-w-6xl mx-auto px-4 py-6 w-full">
         {/* AD CAROUSEL + EVENT BANNER */}
         <div className="mb-4">
-          <AdCarousel />
+          <MyCompanyInvites />
+              <AdCarousel />
           <div className="mt-2">
             <EventBanner />
           </div>
@@ -2991,11 +2950,11 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                 ) : (
                   <div className="bg-blue-50 rounded-xl border-2 border-blue-200 p-6 text-center">
                     <p className="text-sm font-bold text-blue-600 mb-2">❤️ No Trusted Users Yet</p>
-                    <p className="text-xs text-gray-600 mb-4">Mark users as trusted by clicking the heart icon in chat or after completing tasks</p>
+                    <p className="text-xs text-gray-600 mb-4">Mark users as trusted by clicking the heart icon in chat or after completing errands</p>
                     <div className="bg-white rounded p-3 text-left text-xs text-blue-800 space-y-1">
                       <p className="font-semibold mb-2">How to mark as Trusted:</p>
                       <li>💬 Click ❤️ in chat messages</li>
-                      <li>✅ Click ❤️ after task completion</li>
+                      <li>✅ Click ❤️ after errand completion</li>
                       <li>👤 Click ❤️ on their profile</li>
                     </div>
                   </div>
@@ -3235,7 +3194,7 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
               <div className="grid grid-cols-2 gap-2 text-xs text-gray-800">
                 <div className="bg-green-50 p-2 rounded">
                   <p className="font-bold text-green-700">💪 I Can Help</p>
-                  <p>AI shows you tasks in these categories first. Build your reputation here!</p>
+                  <p>AI shows you errands in these categories first. Build your reputation here!</p>
                 </div>
                 <div className="bg-blue-50 p-2 rounded">
                   <p className="font-bold text-blue-700">🙋 I Need Help</p>

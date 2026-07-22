@@ -252,73 +252,66 @@ export async function checkContentWithQwen(
       return basicCheck;
     }
 
-    // For borderline cases, call Qwen
-    if (basicCheck.flags.length > 0) {
+    // Always run AI moderation for nuanced content the keyword lists can't catch.
+    // Uses the working Qwen config (QWEN_API_KEY + compatible-mode), same as suggestions.
+    const qwenApiKey = process.env.QWEN_API_KEY;
+    if (qwenApiKey) {
       try {
         const response = await axios.post(
-          `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com'}/api/v1/services/aigc/text-generation/generation`,
+          `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}/chat/completions`.replace('/v1//chat', '/v1/chat'),
           {
-            model: 'qwen-long',
-            input: {
-              messages: [
-                {
-                  role: 'user',
-                  content: `Analyze this errand posting for safety issues.
+            model: 'qwen-max',
+            messages: [
+              {
+                role: 'user',
+                content: `You are a content safety moderator for a Singapore errand marketplace where neighbours help each other with everyday tasks. Decide whether this posting is appropriate to publish.
+
+Flag as UNSAFE if it involves any of: illegal activity or requests, drugs or weapons, sexual or adult services, violence or harm to people or animals, harassment, hate or discrimination, scams / phishing / money-laundering, or clearly offensive language.
+Treat normal everyday errands (cleaning, delivery, tutoring, pet care, repairs, moving, shopping, eldercare, admin) as SAFE.
+
+Return ONLY JSON, no prose: {"is_safe": boolean, "category": "short reason keyword or none", "reason": "one short sentence the user will read explaining why"}
 
 Title: "${title}"
 Description: "${description}"
-Notes: "${notes}"
-
-Check for:
-1. Spam or phishing
-2. Inappropriate/offensive language
-3. Misleading claims
-4. Safety concerns
-
-Respond with JSON: {"is_safe": boolean, "issues": [list issues], "confidence": 0-1}`,
-                },
-              ],
-            },
-            parameters: {
-              result_format: 'text',
-            },
+Notes: "${notes}"`,
+              },
+            ],
           },
           {
             headers: {
-              Authorization: `Bearer ${process.env.DASHSCOPE_API_KEY}`,
+              Authorization: `Bearer ${qwenApiKey}`,
               'Content-Type': 'application/json',
             },
+            timeout: 4000,
           }
         );
 
-        const qwenResult = response.data?.output?.text;
-        if (qwenResult) {
-          try {
-            const parsed = JSON.parse(qwenResult);
+        const text = response.data?.choices?.[0]?.message?.content?.trim() || '';
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0]);
+          if (typeof parsed.is_safe === 'boolean') {
+            const category = String(parsed.category || '').toLowerCase();
             return {
               is_safe: parsed.is_safe,
               issues: {
-                spam: parsed.issues.includes('spam'),
-                inappropriate: parsed.issues.includes('inappropriate'),
-                misleading: parsed.issues.includes('misleading'),
+                spam: /spam|phish|scam/.test(category),
+                inappropriate: !parsed.is_safe,
+                misleading: /mislead/.test(category),
               },
-              confidence: parsed.confidence,
-              flags: parsed.issues,
-              details: {
-                qwen_result: parsed,
-                basic_check: basicCheck,
-              },
+              confidence: 0.9,
+              flags: parsed.is_safe ? [] : [category || 'inappropriate_content'],
+              details: { qwen_result: parsed, basic_check: basicCheck, reason: parsed.reason || '' },
             };
-          } catch (parseErr) {
-            console.error('Failed to parse Qwen response:', parseErr);
           }
         }
+        console.warn('[Moderation] Qwen returned unparseable result, using keyword fallback');
       } catch (qwenErr) {
-        console.error('Qwen moderation check failed:', qwenErr);
-        // Fall back to basic check
+        console.error('[Moderation] Qwen check failed, using keyword fallback:', qwenErr instanceof Error ? qwenErr.message : qwenErr);
       }
     }
 
+    // Fall back to keyword-based result if AI is unavailable
     return basicCheck;
   } catch (error) {
     console.error('Content moderation error:', error);

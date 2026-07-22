@@ -81,16 +81,16 @@ export default function RoleSelectionStep({
               I'm an Individual
             </h2>
             <p className="text-gray-600 mb-6">
-              Post tasks you need done or offer your services to earn money
+              Post errands you need done or offer your services to earn money
             </p>
             <ul className="text-sm text-gray-700 space-y-2 mb-6">
               <li className="flex items-center gap-2">
                 <span className="text-errandify-orange">✓</span>
-                Post tasks (Asker)
+                Post errands (Asker)
               </li>
               <li className="flex items-center gap-2">
                 <span className="text-errandify-orange">✓</span>
-                Do tasks (Doer)
+                Do errands (Doer)
               </li>
               <li className="flex items-center gap-2">
                 <span className="text-errandify-orange">✓</span>
@@ -119,12 +119,12 @@ export default function RoleSelectionStep({
               Register My Company
             </h2>
             <p className="text-gray-600 mb-6">
-              Manage teams, post bulk tasks, and access business analytics
+              Manage teams, post bulk errands, and access business analytics
             </p>
             <ul className="text-sm text-gray-700 space-y-2 mb-6">
               <li className="flex items-center gap-2">
                 <span className="text-errandify-orange">✓</span>
-                Post bulk tasks
+                Post bulk errands
               </li>
               <li className="flex items-center gap-2">
                 <span className="text-errandify-orange">✓</span>

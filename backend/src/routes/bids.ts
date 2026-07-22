@@ -1,12 +1,16 @@
 import { Router, Request, Response } from 'express';
 import { AuthRequest, authMiddleware } from '../middleware/auth.js';
 import db from '../db.js';
+import { getRestrictionReason } from '../services/categoryRestrictions.js';
 import axios from 'axios';
 import { getCategoryCode } from '../utils/categoryCodes.js';
 import { activityLogService } from '../services/activityLogService.js';
 import * as contentMod from '../modules/content-moderation.js';
 import { notifyUser } from '../socket.js';
 import postalCodeLookup from '../services/postalCodeToAreaLookup.js';
+import { resolveMyCompany } from '../utils/companyRole.js';
+import { checkPayoutReadiness } from '../utils/payoutReadiness.js';
+import { recordModerationEvent, decideAction, blockedMessage } from '../utils/moderationLog.js';
 
 const router = Router();
 
@@ -45,7 +49,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
 
     // Check if errand exists and is open
     const errandResult = await db.query(
-      'SELECT id, status, asker_id FROM errands WHERE id = $1',
+      'SELECT id, status, asker_id, category FROM errands WHERE id = $1',
       [task_id]
     );
 
@@ -64,15 +68,46 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ error: 'You posted this one yourself. Gotta help other neighbours instead!' });
     }
 
+    // A restricted category is closed to this doer, not merely hidden from
+    // their feed. Filtering the browse list is what they see; this is what
+    // actually stops them — a direct link, a stale page or a crafted request
+    // all arrive here, and none of them should get past it.
+    const restrictionReason = await getRestrictionReason(doerId, errand.category);
+    if (restrictionReason) {
+      console.log('[Bids] Blocked restricted-category offer from user', doerId, 'on', errand.category);
+      return res.status(403).json({ error: restrictionReason });
+    }
+
     // Moderate offer note content if provided
     if (note) {
       try {
         const moderationResult = await contentMod.checkContentWithQwen('', '', note);
-        if (!moderationResult.is_safe) {
+        const category = moderationResult.flags?.[0] || null;
+        const action = decideAction({
+          layer: 'ai',
+          isSafe: moderationResult.is_safe,
+          category,
+          flags: moderationResult.flags,
+        });
+
+        const eventId = await recordModerationEvent({
+          userId: doerId,
+          errandId: parseInt(task_id, 10) || null,
+          surface: 'offer_note',
+          layer: 'ai',
+          decision: action,
+          category,
+          flags: moderationResult.flags,
+          confidence: moderationResult.confidence ?? null,
+          content: note,
+        });
+
+        // Serious categories still block. A note the model merely dislikes now
+        // goes through and gets looked at, rather than being refused outright.
+        if (action === 'blocked') {
           return res.status(400).json({
-            error: 'Please keep your offer note friendly and respectful.',
-            message: 'We want to keep Errandify a safe and welcoming community. Let us know why you\'re a good fit for this task instead!',
-            details: moderationResult.flags
+            ...blockedMessage('Please keep your offer note friendly and respectful.', eventId),
+            message: "We want to keep Errandify a safe and welcoming community. Tell the neighbour why you're a good fit instead.",
           });
         }
       } catch (modError) {
@@ -165,10 +200,45 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       // Generate unique OFFERID
       const offerId = generateOfferId(errandCategory);
 
+      // If this offer is being made on a company's behalf, attribute it to the
+      // COMPANY — it becomes the counterparty the asker sees, and the party that
+      // gets paid. Only owner/manager of a verified company may do this; anyone
+      // else offers personally (company_id stays null).
+      let companyId: number | null = null;
+      if (req.body.actAsCompany) {
+        const m = await resolveMyCompany(doerId);
+        if (m && m.canActForCompany && m.certified) {
+          companyId = m.companyId;
+        } else if (m && !m.certified) {
+          return res.status(403).json({
+            error: 'Verify your company before making offers on its behalf.',
+            reason: 'not_verified',
+          });
+        } else if (m && !m.canActForCompany) {
+          return res.status(403).json({
+            error: 'Only the company owner or manager can make offers for the company.',
+            reason: 'wrong_role',
+          });
+        }
+      }
+
+      // Nobody should do the work and only then discover we cannot pay them.
+      // Checked here, at the offer, rather than at settlement.
+      const payout = await checkPayoutReadiness({ userId: doerId, companyId });
+      if (!payout.ready) {
+        return res.status(403).json({
+          error: payout.message,
+          title: payout.title,
+          reason: 'payout_not_ready',
+          payoutBlock: payout,
+        });
+      }
+
       // Create new bid with offer_id
       const result = await db.query(
-        'INSERT INTO bids (errand_id, doer_id, amount, note, status, offer_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-        [task_id, doerId, parseFloat(amount), note || null, 'pending', offerId]
+        `INSERT INTO bids (errand_id, doer_id, amount, note, status, offer_id, company_id)
+         VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+        [task_id, doerId, parseFloat(amount), note || null, 'pending', offerId, companyId]
       );
       bid = result.rows[0];
 
@@ -361,6 +431,24 @@ router.post('/:id/accept', authMiddleware, async (req: AuthRequest, res: Respons
     );
     console.log('[Bids] Errand update result:', { rowCount: updateResult.rowCount, errandId: bid.errand_id });
 
+    // If a COMPANY won this offer, it now owes the work — create the allocation
+    // record so a manager can assign a staff member. This belongs here (the
+    // company as doer), not when the company posts an errand: an errand the
+    // company posts is done by somebody else entirely.
+    if (bid.company_id) {
+      try {
+        await db.query(
+          `INSERT INTO company_orders (company_id, errand_id, status)
+           VALUES ($1, $2, 'open')
+           ON CONFLICT DO NOTHING`,
+          [bid.company_id, bid.errand_id]
+        );
+        console.log('[Bids] Company', bid.company_id, 'won errand', bid.errand_id, '- ready to allocate staff');
+      } catch (coErr) {
+        console.error('[Bids] Could not create company_orders row:', coErr);
+      }
+    }
+
     // Log activity for confirmation
     try {
       await activityLogService.logConfirmed(bid.errand_id);
@@ -453,16 +541,59 @@ router.post('/:id/accept', authMiddleware, async (req: AuthRequest, res: Respons
       console.warn('[Bids] Failed to notify doer of confirmation:', notifyErr);
     }
 
+    // Authorise the asker's card for this amount.
+    //
+    // This used to return a FABRICATED intent — `pi_mock_${Date.now()}` with
+    // status 'succeeded' — and the UI told the asker "Payment is held safely".
+    // Nothing was ever charged or held. Now it asks Stripe for a real
+    // manual-capture PaymentIntent (authorise now, capture on completion).
+    //
+    // If Stripe cannot be reached the offer is still accepted — the two are
+    // separate concerns and losing the acceptance would be worse — but we say
+    // so plainly instead of claiming the money is secured.
+    let stripeIntent: any = null;
+    let paymentSetupError: string | null = null;
+
+    try {
+      const { stripeService } = await import('../services/stripe.js');
+
+      // Bounded wait. Accepting an offer must not hang on a slow or unreachable
+      // payment provider — the asker is sitting in front of a spinner. If Stripe
+      // does not answer quickly we accept the offer and flag payment separately.
+      const intent: any = await Promise.race([
+        stripeService.createPaymentIntent(Number(bid.amount), bid.errand_id, bid.doer_id),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Stripe did not respond in time')), 8000)
+        ),
+      ]);
+      // Keep the id and the clock. Without the id the payment can never be
+      // captured; without the timestamp we cannot tell how much of the ~7 day
+      // authorisation window is left when setting later deadlines.
+      await db.query(
+        `UPDATE errands
+            SET payment_intent_id = $1, payment_authorised_at = NOW()
+          WHERE id = $2`,
+        [intent.intentId, bid.errand_id]
+      );
+
+      stripeIntent = {
+        id: intent.intentId,
+        clientSecret: intent.clientSecret,
+        amount: Math.round(Number(bid.amount) * 100),
+        currency: 'sgd',
+        status: intent.status || 'requires_payment_method',
+      };
+    } catch (payErr: any) {
+      console.error('[Bids] Could not set up payment for accepted offer:', payErr?.message || payErr);
+      paymentSetupError = 'Payment could not be set up yet. The offer is accepted — we will follow up to arrange payment.';
+    }
+
     res.json({
       success: true,
       data: {
         bid,
-        stripeIntent: {
-          id: `pi_mock_${Date.now()}`,
-          amount: Math.round(bid.amount * 100),
-          currency: 'sgd',
-          status: 'succeeded',
-        },
+        stripeIntent,
+        paymentSetupError,
       },
     });
   } catch (error) {
@@ -510,10 +641,13 @@ router.post('/:id/reject', authMiddleware, async (req: AuthRequest, res: Respons
     try {
       const reasonText = reason === 'other' ? custom_reason : reason;
       const errandData = await db.query(
-        'SELECT title FROM errands WHERE id = $1',
+        'SELECT title, formatted_id FROM errands WHERE id = $1',
         [bid.errand_id]
       );
-      const errandTitle = errandData.rows[0]?.title || 'Your task';
+      const errandTitle = errandData.rows[0]?.title || 'Your errand';
+      // formattedErrandId was referenced below but never defined, so every
+      // rejection notification threw a ReferenceError instead of being sent
+      const formattedErrandId = errandData.rows[0]?.formatted_id || errandTitle;
 
       await db.query(
         `INSERT INTO notifications (user_id, type, title, message, related_errand_id, created_at, is_read)
@@ -544,7 +678,7 @@ router.post('/:id/reject', authMiddleware, async (req: AuthRequest, res: Respons
 });
 
 // GET /api/users/:userId/confidence-score - Get doer confidence signals
-router.get('/user/:userId/confidence', async (req: AuthRequest, res: Response) => {
+router.get('/user/:userId/confidence', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { userId } = req.params;
     const parsedUserId = parseInt(userId, 10);
@@ -574,7 +708,7 @@ router.get('/user/:userId/confidence', async (req: AuthRequest, res: Response) =
         CEIL(COUNT(DISTINCT e.id) * 100.0 / NULLIF(COUNT(DISTINCT CASE WHEN b.id IS NOT NULL THEN b.id END), 0)) as acceptance_rate
        FROM bids b
        LEFT JOIN errands e ON b.errand_id = e.id AND b.status = 'accepted'
-       LEFT JOIN user_reviews ur ON e.doer_id = ur.reviewed_user_id
+       LEFT JOIN user_reviews ur ON b.doer_id = ur.reviewed_user_id
        WHERE b.doer_id = $1`,
       [parsedUserId]
     );
@@ -1160,6 +1294,76 @@ router.post('/mark-errand-viewed/:errandId', authMiddleware, async (req: AuthReq
   } catch (error) {
     console.error('Error marking errand bids as viewed:', error);
     res.status(500).json({ error: 'Failed to mark bids as viewed' });
+  }
+});
+
+// GET /api/bids/payout-readiness?actAsCompany=true — so the offer form can show
+// the reminder up front instead of after someone has typed out an offer.
+router.get('/payout-readiness', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const doerId = parseInt(req.userId || '0', 10);
+    let companyId: number | null = null;
+
+    if (req.query.actAsCompany === 'true') {
+      const m = await resolveMyCompany(doerId);
+      if (m && m.canActForCompany && m.certified) companyId = m.companyId;
+    }
+
+    const readiness = await checkPayoutReadiness({ userId: doerId, companyId });
+    res.json({ success: true, data: readiness });
+  } catch (error) {
+    console.error('[Bids] Payout readiness error:', error);
+    // Never block the form on our own failure to check
+    res.json({ success: true, data: { ready: true } });
+  }
+});
+
+/**
+ * GET /api/bids/:id — a single offer.
+ *
+ * ReviewCompletionPage looks the accepted offer up by id to show who did the
+ * errand; there was no such route, so the doer's name never loaded there.
+ *
+ * Registered last on purpose. Express matches in registration order, and '/:id'
+ * would otherwise swallow the literal routes above it — '/my-bids',
+ * '/payout-readiness', '/check/:errandId' and the rest would all resolve here.
+ *
+ * Visible to the two people involved: the asker who received the offer and the
+ * doer who made it. Anyone else gets 404 rather than 403, so this cannot be
+ * used to probe which offer ids exist.
+ */
+router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const bidId = parseInt(req.params.id, 10);
+    if (Number.isNaN(bidId)) return res.status(400).json({ error: 'Invalid offer id' });
+    const currentUserId = parseInt(req.userId || '0', 10);
+
+    const result = await db.query(
+      `SELECT b.id, b.errand_id, b.doer_id, b.amount, b.note, b.status, b.created_at,
+              COALESCE(u.alias, u.display_name) AS doer_name,
+              u.profile_image_url AS doer_avatar,
+              e.asker_id
+         FROM bids b
+         JOIN users u ON u.id = b.doer_id
+         JOIN errands e ON e.id = b.errand_id
+        WHERE b.id = $1`,
+      [bidId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'That offer is no longer around.' });
+    }
+
+    const row = result.rows[0];
+    if (row.asker_id !== currentUserId && row.doer_id !== currentUserId) {
+      return res.status(404).json({ error: 'That offer is no longer around.' });
+    }
+
+    const { asker_id, ...bid } = row;
+    res.json({ success: true, data: bid });
+  } catch (error) {
+    console.error('[Bids] Error fetching offer:', error);
+    res.status(500).json({ error: 'We are having trouble loading that offer. Just refresh and we will sort it!' });
   }
 });
 

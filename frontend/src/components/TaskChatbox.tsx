@@ -100,6 +100,15 @@ export default function TaskChatbox({
       console.log('Messages fetched:', messagesData);
       setMessages(messagesData);
 
+      // Opening the conversation clears its unread badge (fire and forget)
+      axios
+        .post(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/messages/tasks/${taskId}/read`,
+          {},
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
+        .catch(() => {});
+
       // Check chat status (dispute, completion time, etc.)
       if (response.data.data.chatStatus) {
         const { isDisabled, reason, isFavorited: favStatus } = response.data.data.chatStatus;
@@ -181,7 +190,7 @@ Your message doesn't meet our community standards. Please keep messages:
 • Respectful and appropriate
 • Free of illegal/harmful references
 
-📝 Try rephrasing to discuss the task instead.`;
+📝 Try rephrasing to discuss the errand instead.`;
 
         setValidationErrors([friendlyMessage]);
         setError('Message contains prohibited content');
@@ -210,7 +219,7 @@ Your message doesn't meet our community standards. Please keep messages:
 • Respectful and appropriate
 • Free of personal/romantic advances
 
-📝 Try rephrasing to discuss the task instead.`;
+📝 Try rephrasing to discuss the errand instead.`;
 
           setBlockReason(aiModeration.reason || 'Message content not appropriate for this platform');
           setValidationErrors([friendlyMessage]);
@@ -431,7 +440,7 @@ Your message doesn't meet our community standards. Please keep messages:
                 </p>
                 <p className="text-xs leading-relaxed mb-2">
                   {chatDisabledReason.includes('dispute')
-                    ? 'A dispute has been opened for this task. Both parties should not communicate here. Submit evidence or responses through the dispute resolution system instead. This helps ensure fair review.'
+                    ? 'A dispute has been opened for this errand. Both parties should not communicate here. Submit evidence or responses through the dispute resolution system instead. This helps ensure fair review.'
                     : 'The 48-hour chat window has closed. Any disputes must be raised immediately through the dispute system.'}
                 </p>
                 <button

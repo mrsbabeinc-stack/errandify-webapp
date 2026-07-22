@@ -1565,7 +1565,7 @@ The smart move: embrace the standards. Build trust. Treat workers well.
 ---
 
 **💚 SHARE THIS WITH:**
-→ Any gig worker (Grab, food delivery, tasks, etc.)
+→ Any gig worker (Grab, food delivery, errands, etc.)
 → Someone considering gig work (so they know their protections)
 → Platforms (so they understand the law)
 → Other SE Asia workers (so they know Singapore's setting the standard)
@@ -1583,7 +1583,7 @@ A: Yes. There are mechanisms for reporting violations. It's real law with real c
 A: Report it to the Ministry of Manpower. There's a formal process.
 
 **Q: Does this law apply to all gig work?**
-A: It applies to platform-based work (Grab, delivery, tasks). Independent freelancing has different rules. Check your situation.
+A: It applies to platform-based work (Grab, delivery, errands). Independent freelancing has different rules. Check your situation.
 
 **Q: Will this make gig work too expensive for platforms?**
 A: Maybe slightly. But standards prevent race-to-the-bottom. Better for everyone long-term.

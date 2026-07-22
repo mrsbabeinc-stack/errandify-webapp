@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import MockSingpassModal from './MockSingpassModal';
+import DevIdentityStub from './DevIdentityStub';
 import CompleteProfileStep from './CompleteProfileStep';
 import RoleSelectionStep from './RoleSelectionStep';
 
-type SignupStep = 'mock-singpass' | 'complete-profile' | 'role-selection';
+type SignupStep = 'dev-identity' | 'complete-profile' | 'role-selection';
 
 interface SignupFlowProps {
   onComplete: () => void;
@@ -18,10 +18,10 @@ interface MockUserData {
 }
 
 export default function SignupFlow({ onComplete, onBack }: SignupFlowProps) {
-  const [step, setStep] = useState<SignupStep>('mock-singpass');
+  const [step, setStep] = useState<SignupStep>('dev-identity');
   const [mockData, setMockData] = useState<MockUserData | null>(null);
 
-  const handleMockSingpassComplete = (data: MockUserData) => {
+  const handleDevIdentityComplete = (data: MockUserData) => {
     setMockData(data);
     setStep('complete-profile');
   };
@@ -38,9 +38,9 @@ export default function SignupFlow({ onComplete, onBack }: SignupFlowProps) {
 
   return (
     <div className="min-h-screen bg-errandify-bg">
-      {step === 'mock-singpass' && (
-        <MockSingpassModal
-          onComplete={handleMockSingpassComplete}
+      {step === 'dev-identity' && (
+        <DevIdentityStub
+          onComplete={handleDevIdentityComplete}
           onBack={onBack}
         />
       )}
@@ -48,7 +48,7 @@ export default function SignupFlow({ onComplete, onBack }: SignupFlowProps) {
         <CompleteProfileStep
           mockData={mockData}
           onComplete={handleProfileComplete}
-          onBack={() => setStep('mock-singpass')}
+          onBack={() => setStep('dev-identity')}
         />
       )}
       {step === 'role-selection' && mockData && (

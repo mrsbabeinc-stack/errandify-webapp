@@ -11,3 +11,6 @@ build/
 .next/
 out/
 coverage/
+
+# Singpass private keys — must never be committed
+backend/keys/

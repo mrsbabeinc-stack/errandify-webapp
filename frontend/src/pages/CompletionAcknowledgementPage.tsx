@@ -95,7 +95,7 @@ export default function CompletionAcknowledgementPage() {
         console.warn('Could not fetch reviews:', err);
       }
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to load task details');
+      setError(err.response?.data?.error || 'Failed to load errand details');
     } finally {
       setLoading(false);
     }
@@ -116,7 +116,7 @@ export default function CompletionAcknowledgementPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 flex items-center justify-center p-4">
         <div className="text-center">
-          <p className="text-red-700 font-semibold mb-4">Task not found</p>
+          <p className="text-red-700 font-semibold mb-4">Errand not found</p>
           <button onClick={() => navigate('/home')} className="text-errandify-orange font-semibold">
             ← Back Home
           </button>
@@ -142,7 +142,7 @@ export default function CompletionAcknowledgementPage() {
         {/* Header Card */}
         <div className="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
           <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-8 text-center">
-            <h1 className="text-3xl font-bold mb-2">🎉 Task Completed!</h1>
+            <h1 className="text-3xl font-bold mb-2">🎉 Errand Completed!</h1>
             <p className="text-lg text-purple-100 mb-4">{task.title}</p>
             <div className="inline-block bg-white/20 rounded-full px-4 py-2">
               <p className="text-white font-semibold">Budget: SGD ${task.budget.toFixed(2)}</p>
@@ -150,7 +150,7 @@ export default function CompletionAcknowledgementPage() {
           </div>
 
           <div className="p-6 text-center border-b border-gray-200">
-            <p className="text-gray-600 text-sm mb-2">Task completed with</p>
+            <p className="text-gray-600 text-sm mb-2">Errand completed with</p>
             <p className="text-xl font-bold text-errandify-brown">
               {isAsker ? task.doer?.display_name : task.asker?.display_name}
             </p>
@@ -197,7 +197,7 @@ export default function CompletionAcknowledgementPage() {
                   <ul className="text-xs space-y-1 text-gray-600">
                     <li>✓ Trust score increased</li>
                     <li>✓ Visible on your profile</li>
-                    <li>✓ Helps match with better tasks</li>
+                    <li>✓ Helps match with better errands</li>
                   </ul>
                 </div>
               </div>
@@ -262,7 +262,7 @@ export default function CompletionAcknowledgementPage() {
                   <ul className="text-xs space-y-1 text-gray-600">
                     <li>✓ Trust score increased</li>
                     <li>✓ Visible on your profile</li>
-                    <li>✓ Helps match with better tasks</li>
+                    <li>✓ Helps match with better errands</li>
                   </ul>
                 </div>
               </div>
@@ -317,7 +317,7 @@ export default function CompletionAcknowledgementPage() {
         <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
           <h3 className="font-bold text-blue-900 mb-3">📝 What's Next?</h3>
           <ul className="space-y-2 text-sm text-blue-800">
-            <li>✓ Task is now complete and closed</li>
+            <li>✓ Errand is now complete and closed</li>
             <li>✓ Both parties have rated each other</li>
             <li>✓ Ratings visible on your profile</li>
             <li>✓ Use your Errandify Points to get discounts</li>

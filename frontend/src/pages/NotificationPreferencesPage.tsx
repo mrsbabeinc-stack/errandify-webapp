@@ -47,7 +47,7 @@ export default function NotificationPreferencesPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/user/preferences`,
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/preferences`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -86,7 +86,7 @@ export default function NotificationPreferencesPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.patch(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/user/preferences`,
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/preferences`,
         { notification_preferences: preferences },
         { headers: { Authorization: `Bearer ${token}` } }
       );

@@ -137,15 +137,15 @@ export default function AdminDashboardPage() {
                   <p className="text-4xl font-bold text-errandify-orange-600">{dashboard.stats.totalUsers}</p>
                 </div>
                 <div className="bg-gradient-to-br from-green-100 to-green-50 rounded-lg p-6 border-l-4 border-green-600">
-                  <p className="text-gray-600 text-sm font-semibold mb-2">📋 Total Tasks</p>
+                  <p className="text-gray-600 text-sm font-semibold mb-2">📋 Total Errands</p>
                   <p className="text-4xl font-bold text-green-600">{dashboard.stats.totalTasks}</p>
                 </div>
                 <div className="bg-gradient-to-br from-yellow-100 to-yellow-50 rounded-lg p-6 border-l-4 border-yellow-600">
-                  <p className="text-gray-600 text-sm font-semibold mb-2">🚀 Open Tasks</p>
+                  <p className="text-gray-600 text-sm font-semibold mb-2">🚀 Open Errands</p>
                   <p className="text-4xl font-bold text-yellow-600">{dashboard.stats.openTasks}</p>
                 </div>
                 <div className="bg-gradient-to-br from-purple-100 to-purple-50 rounded-lg p-6 border-l-4 border-purple-600">
-                  <p className="text-gray-600 text-sm font-semibold mb-2">✅ Completed Tasks</p>
+                  <p className="text-gray-600 text-sm font-semibold mb-2">✅ Completed Errands</p>
                   <p className="text-4xl font-bold text-purple-600">{dashboard.stats.completedTasks}</p>
                 </div>
               </div>
@@ -165,7 +165,7 @@ export default function AdminDashboardPage() {
                   <p className="text-xs text-gray-500 mt-2">Across {dashboard.stats.totalRatings} ratings</p>
                 </div>
                 <div className="bg-white rounded-lg shadow p-6">
-                  <p className="text-gray-600 text-sm font-semibold mb-2">🎯 Bid Conversion</p>
+                  <p className="text-gray-600 text-sm font-semibold mb-2">🎯 Offer Conversion</p>
                   <p className="text-3xl font-bold text-errandify-orange-600">
                     {dashboard.stats.totalTasks > 0
                       ? Math.round((dashboard.stats.totalBids / dashboard.stats.totalTasks) * 100)
@@ -280,7 +280,7 @@ export default function AdminDashboardPage() {
                 <p className="text-gray-600">
                   Platform engagement: <strong>{
                     Math.round((dashboard.stats.completedTasks / Math.max(dashboard.stats.totalTasks, 1)) * 100)
-                  }%</strong> task completion rate
+                  }%</strong> errand completion rate
                 </p>
                 <p className="text-gray-400 text-sm mt-4">Use /api/admin/users endpoint for user management</p>
               </div>

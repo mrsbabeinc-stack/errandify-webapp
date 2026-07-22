@@ -1,5 +1,6 @@
 import db from '../db.js';
 import { QwenAI } from './qwenService.js';
+import { proposeResolution } from './hanaDisputeProposal.js';
 
 export type DisputeTier = 'auto' | 'statement_only' | 'full_investigation';
 
@@ -111,66 +112,37 @@ export async function analyzeDisputeSafety(description: string): Promise<SafetyA
   }
 }
 
-// Level 1: Auto-resolution based on hard rules
-export async function autoResolveDispute(disputeId: number): Promise<{ resolved: boolean; reason: string }> {
-  try {
-    const dispute = await db.query(
-      `SELECT id, errand_id, dispute_type, description FROM disputes WHERE id = $1`,
-      [disputeId]
-    );
+// Auto-resolution was removed deliberately.
+//
+// It used to close a dispute and set the errand to 'refunded' with no human
+// involved. The product model is that Hana only ever PROPOSES and an admin
+// makes every decision, so there must be no code path that resolves a dispute
+// on its own. See services/hanaDisputeProposal.ts.
+//
+// (It had also never actually run: it queried messages.related_errand_id,
+// errands.resolution and errands.payment_released_at, none of which exist, so
+// it threw on its first query every time.)
 
-    if (dispute.rows.length === 0) {
-      return { resolved: false, reason: 'Dispute not found' };
-    }
-
-    const d = dispute.rows[0];
-
-    // Rule 1: No chat usage = auto-refund to asker
-    const chatCount = await db.query(
-      `SELECT COUNT(*) as count FROM messages
-       WHERE related_errand_id = $1`,
-      [d.errand_id]
-    );
-
-    if (chatCount.rows[0].count === 0) {
-      // Refund asker
-      await db.query(
-        `UPDATE errands SET status = 'dispute_resolved_auto', resolution = 'refunded' WHERE id = $1`,
-        [d.errand_id]
-      );
-
-      console.log(`[Disputes] Auto-resolved dispute ${disputeId}: No communication, refunded asker`);
-      return { resolved: true, reason: 'No communication detected - refunded asker' };
-    }
-
-    // Rule 2: Payment not released after completion = auto-refund
-    const errand = await db.query(
-      `SELECT status, payment_released_at FROM errands WHERE id = $1`,
-      [d.errand_id]
-    );
-
-    if (!errand.rows[0].payment_released_at) {
-      await db.query(
-        `UPDATE errands SET status = 'dispute_resolved_auto', resolution = 'pending_payment' WHERE id = $1`,
-        [d.errand_id]
-      );
-
-      console.log(`[Disputes] Auto-resolved dispute ${disputeId}: Payment not released`);
-      return { resolved: true, reason: 'Payment not released - pending' };
-    }
-
-    return { resolved: false, reason: 'Does not match auto-resolution criteria' };
-  } catch (error) {
-    console.error('[Disputes] Auto-resolution error:', error);
-    return { resolved: false, reason: 'Error during auto-resolution' };
-  }
+/** Evidence is TEXT on the claimant side but JSONB on the defendant side, so it
+ *  can arrive as an object — calling .substring() on it throws. */
+function formatEvidence(value: unknown): string {
+  if (!value) return 'None';
+  const text = typeof value === 'string' ? value : JSON.stringify(value);
+  return text.slice(0, 300);
 }
 
 // Level 2: AI-assisted resolution
 export async function analyzeDisputeWithAI(disputeId: number): Promise<DisputeAnalysis> {
   try {
     const dispute = await db.query(
-      `SELECT id, errand_id, dispute_type, filed_by, description, evidence, defendant_response, defendant_response_evidence, response_status FROM disputes WHERE id = $1`,
+      `SELECT d.id, d.errand_id, d.dispute_type, d.filed_by_user_id, d.description,
+              d.evidence, d.defendant_response, d.defendant_response_evidence,
+              d.response_status,
+              e.asker_id, ab.doer_id
+         FROM disputes d
+         JOIN errands e ON e.id = d.errand_id
+         LEFT JOIN bids ab ON ab.id = e.accepted_bid_id
+        WHERE d.id = $1`,
       [disputeId]
     );
 
@@ -184,7 +156,10 @@ export async function analyzeDisputeWithAI(disputeId: number): Promise<DisputeAn
     }
 
     const d = dispute.rows[0];
-    const isDoerFiled = d.filed_by === 'doer';
+    // There is no disputes.filed_by — work the role out from who filed it.
+    // Selecting that column threw, which is why every analysis came back
+    // "AI analysis failed" regardless of what the model returned.
+    const isDoerFiled = Number(d.filed_by_user_id) === Number(d.doer_id);
     const perspective = isDoerFiled
       ? 'DOER CLAIM: Did asker prevent completion?'
       : 'ASKER CLAIM: Did doer deliver quality work?';
@@ -197,7 +172,7 @@ ${perspective}
 CLAIMANT'S STATEMENT:
 ${d.description}
 
-CLAIMANT'S EVIDENCE: ${d.evidence ? d.evidence.substring(0, 300) : 'None'}`;
+CLAIMANT'S EVIDENCE: ${formatEvidence(d.evidence)}`;
 
     if (d.response_status === 'received' && d.defendant_response) {
       analysisPrompt += `
@@ -205,7 +180,7 @@ CLAIMANT'S EVIDENCE: ${d.evidence ? d.evidence.substring(0, 300) : 'None'}`;
 DEFENDANT'S RESPONSE (Submitted on time):
 ${d.defendant_response}
 
-DEFENDANT'S EVIDENCE: ${d.defendant_response_evidence ? d.defendant_response_evidence.substring(0, 300) : 'None'}`;
+DEFENDANT'S EVIDENCE: ${formatEvidence(d.defendant_response_evidence)}`;
     } else if (d.response_status === 'forfeited') {
       analysisPrompt += `
 
@@ -242,9 +217,16 @@ Return JSON: {
     };
 
     try {
-      analysis = JSON.parse(response);
+      // Qwen wraps JSON in ```json fences, so a bare JSON.parse always threw and
+      // the analysis silently degraded to "Unable to analyze".
+      const cleaned = String(response)
+        .replace(/^\s*```(?:json)?/i, '')
+        .replace(/```\s*$/, '')
+        .trim();
+      const match = cleaned.match(/\{[\s\S]*\}/);
+      analysis = JSON.parse(match ? match[0] : cleaned);
     } catch (e) {
-      console.warn('[Disputes] Failed to parse AI response');
+      console.warn('[Disputes] Failed to parse AI response:', String(response).slice(0, 200));
     }
 
     return {
@@ -303,13 +285,15 @@ export async function createDispute(params: {
     // Check for safety concerns first
     const safetyAnalysis = await analyzeDisputeSafety(params.description);
 
-    // Determine if this needs priority escalation
+    // Every dispute lands with an admin. Hana looks at it first and proposes,
+    // but the decision is always a person's.
     let priority = 'normal';
-    let status = 'level_1';
+    let status = 'hana_reviewing';
 
     if (safetyAnalysis.recommendation === 'escalate_immediately') {
       priority = 'high';
-      status = 'level_2'; // Jump to human review
+      // Safety cases skip Hana entirely and go straight to a person
+      status = 'admin_review';
       console.warn(`[Disputes] SAFETY ALERT: ${safetyAnalysis.concernType} detected. Flagged phrases: ${safetyAnalysis.flaggedPhrases?.join(', ')}`);
     }
 
@@ -323,24 +307,16 @@ export async function createDispute(params: {
     const disputeId = result.rows[0].id;
     console.log(`[Disputes] Dispute created: ${disputeId} (Priority: ${priority}, Status: ${status})`);
 
-    // Classify into tier: Auto / Statement-Only / Full Investigation
+    // Still used to decide whether the other side is asked for a statement
     const tierClassification = await classifyDisputeTier(disputeId);
 
-    // Only attempt auto-resolve if not escalated for safety
-    if (status === 'level_1' && tierClassification.tier === 'auto') {
-      const autoResolve = await autoResolveDispute(disputeId);
-      if (!autoResolve.resolved) {
-        // Move to Level 2 (AI analysis)
-        await db.query(
-          `UPDATE disputes SET status = 'level_2' WHERE id = $1`,
-          [disputeId]
-        );
-      }
-    } else if (status === 'level_1') {
-      // Move to Level 2 for AI analysis + defense response
-      await db.query(
-        `UPDATE disputes SET status = 'level_2' WHERE id = $1`,
-        [disputeId]
+    // Auto-resolution is deliberately gone. It used to close disputes and set a
+    // refund outcome with no human involved, which is not the model: Hana only
+    // ever proposes. Hana runs in the background so filing stays fast, and the
+    // dispute moves to admin_review either way — including if Hana fails.
+    if (status === 'hana_reviewing') {
+      proposeResolution(disputeId).catch((err) =>
+        console.error(`[Disputes] Hana proposal failed for ${disputeId}:`, err)
       );
     }
 
@@ -425,9 +401,17 @@ export async function classifyDisputeTier(disputeId: number): Promise<{
     }
 
     // Store classification
-    const responseDeadline = defendantNeedsResponse
-      ? new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
-      : undefined;
+    // 24 hours to reply — but never past the working deadline, or the reply
+    // lands with no time left for an admin to weigh it. On a dispute raised
+    // late in the window this shortens to whatever is actually available.
+    let responseDeadline: Date | undefined;
+    if (defendantNeedsResponse) {
+      responseDeadline = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+      // No longer clamped to a payment window. The money is captured and held
+      // in Stripe, so a reply deadline is about keeping things moving, not about
+      // beating an expiry.
+    }
 
     await db.query(
       `INSERT INTO dispute_tier_classification
@@ -449,7 +433,10 @@ export async function classifyDisputeTier(disputeId: number): Promise<{
     // If defendant needs to respond, create defense request
     if (defendantNeedsResponse && responseDeadline) {
       const errand = await db.query(
-        `SELECT doer_id, asker_id FROM errands WHERE id = $1`,
+        `SELECT e.asker_id, ab.doer_id
+           FROM errands e
+           LEFT JOIN bids ab ON ab.id = e.accepted_bid_id
+          WHERE e.id = $1`,
         [d.errand_id]
       );
 

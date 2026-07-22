@@ -1,6 +1,8 @@
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import BottomNav from './BottomNav';
+import ContextSwitcher from './ContextSwitcher';
+import { clearAppContext } from '../hooks/useAppContext';
 import RoleToggle from './RoleToggle';
 import HanaCustomerService from './HanaCustomerService';
 
@@ -102,6 +104,9 @@ export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps
 
         {/* Notifications & Profile - Right */}
         <div className="absolute right-4 flex items-center gap-4">
+          {/* Which hat am I wearing — hidden for people without a company */}
+          <ContextSwitcher compact />
+
           {/* Notification Bell - Removed */}
           {/* <NotificationBell /> */}
 
@@ -136,6 +141,7 @@ export default function Layout({ userRole, onRoleChange, onLogout }: LayoutProps
                   localStorage.removeItem('token');
                   localStorage.removeItem('user');
                   localStorage.removeItem('userId');
+                  clearAppContext();
                   onLogout();
                 }}
                 className="px-3 py-1 text-sm font-semibold text-white bg-errandify-orange hover:bg-orange-600 rounded-lg transition-colors"

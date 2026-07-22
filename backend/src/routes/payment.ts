@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { AuthRequest, authMiddleware } from '../middleware/auth.js';
 import db from '../db.js';
 import { stripeService } from '../services/stripe.js';
+import { resolvePayoutRecipient, canReleasePayment } from '../utils/payoutRecipient.js';
 
 const router = Router();
 
@@ -76,75 +77,18 @@ router.post('/add-method', authMiddleware, async (req: AuthRequest, res: Respons
   }
 });
 
-// POST /api/payment/create-intent - Create Stripe PaymentIntent (dummy)
-router.post('/create-intent', authMiddleware, async (req: AuthRequest, res: Response) => {
-  try {
-    const { amount, bidId } = req.body;
-    const userId = parseInt(req.userId || '0', 10);
-
-    if (!amount || !bidId) {
-      return res.status(400).json({ error: 'amount and bidId required' });
-    }
-
-    // Auto-create dummy payment method if none exists
-    let userMethods = paymentMethods.get(userId) || [];
-    if (userMethods.length === 0) {
-      const dummyPaymentMethod: DummyPaymentMethod = {
-        id: `pm_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        userId,
-        type: 'card',
-        last4: '4242',
-        brand: 'visa',
-        expiryMonth: 12,
-        expiryYear: 2025,
-        default: true,
-      };
-      userMethods = [dummyPaymentMethod];
-      paymentMethods.set(userId, userMethods);
-    }
-
-    const dummyIntent = {
-      id: `pi_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      amount: Math.round(amount * 100), // Convert to cents
-      currency: 'sgd',
-      status: 'requires_confirmation',
-      client_secret: `pi_${Date.now()}_secret_${Math.random().toString(36).substr(2, 9)}`,
-      capture_method: 'manual',
-    };
-
-    res.json({
-      success: true,
-      data: dummyIntent,
-    });
-  } catch (error) {
-    console.error('Create payment intent error:', error);
-    res.status(500).json({ error: 'Failed to create payment intent' });
-  }
-});
-
-// POST /api/payment/confirm - Confirm payment and capture (dummy)
-router.post('/confirm', authMiddleware, async (req: AuthRequest, res: Response) => {
-  try {
-    const { intentId, paymentMethodId } = req.body;
-
-    if (!intentId) {
-      return res.status(400).json({ error: 'intentId required' });
-    }
-
-    // Dummy confirmation - always succeeds
-    res.json({
-      success: true,
-      data: {
-        intentId,
-        status: 'succeeded',
-        message: 'Payment confirmed and amount held in escrow',
-      },
-    });
-  } catch (error) {
-    console.error('Confirm payment error:', error);
-    res.status(500).json({ error: 'Failed to confirm payment' });
-  }
-});
+// The dummy /create-intent and /confirm handlers that used to sit here have
+// been removed.
+//
+// They were defined BEFORE the real Stripe implementations further down this
+// file, and Express matches the first route it finds — so every payment call
+// hit a mock that fabricated ids like `pi_${Date.now()}_${Math.random()}` and
+// always reported success. That is why no money was ever collected while the
+// UI told people "Payment is held safely".
+//
+// The real implementations below are now reachable. They have NOT been
+// exercised against Stripe from this machine (no outbound access), so treat
+// the first live run as untested.
 
 // POST /api/payment/create-intent - Create Stripe payment intent
 router.post('/create-intent', authMiddleware, async (req: AuthRequest, res: Response) => {
@@ -247,13 +191,32 @@ router.post('/refund', authMiddleware, async (req: AuthRequest, res: Response) =
 // POST /api/payment/payout - Create payout to doer
 router.post('/payout', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const { stripeAccountId, amount, taskId } = req.body;
+    const { taskId } = req.body;
+    const userId = req.userId;
 
-    if (!stripeAccountId || !amount || !taskId) {
-      return res.status(400).json({ error: 'stripeAccountId, amount, and taskId required' });
+    if (!taskId) {
+      return res.status(400).json({ error: 'taskId is required' });
     }
 
-    console.log(`[Payment] Creating payout: $${amount} to account ${stripeAccountId}`);
+    // Only the asker who posted the errand may release its payment.
+    if (!(await canReleasePayment(taskId, userId || 0))) {
+      return res.status(403).json({ error: 'Only the neighbour who posted this errand can release its payment' });
+    }
+
+    // Recipient AND amount are resolved from the accepted offer. They used to be
+    // read from the request body, which let a caller pay any Stripe account any
+    // amount. Company offers pay the company, not the staff member.
+    const payee = await resolvePayoutRecipient(taskId);
+    if (!payee.ok) {
+      return res.status(payee.status || 409).json({ error: payee.error, kind: payee.kind });
+    }
+
+    const stripeAccountId = payee.stripeAccountId as string;
+    const amount = payee.amount as number;
+
+    console.log(
+      `[Payment] Releasing $${amount} for errand ${taskId} to ${payee.kind} ${payee.recipientName} (${stripeAccountId})`
+    );
 
     const result = await stripeService.createPayout(stripeAccountId, amount, taskId);
 

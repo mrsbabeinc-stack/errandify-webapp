@@ -170,7 +170,7 @@ export const UsersSafetyPage: React.FC = () => {
                     color: '#FF6B35',
                     textTransform: 'uppercase',
                     letterSpacing: '0.5px',
-                  }}>Tasks</th>
+                  }}>Errands</th>
                   <th style={{
                     padding: '14px 16px',
                     textAlign: 'left',

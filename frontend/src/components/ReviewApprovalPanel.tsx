@@ -175,7 +175,7 @@ const ReviewApprovalPanel: React.FC<ReviewApprovalPanelProps> = ({ companyId }) 
             </div>
 
             <div className="editor-info">
-              <strong>Task:</strong>
+              <strong>Errand:</strong>
               <p>{selectedReview.errand_title}</p>
             </div>
 

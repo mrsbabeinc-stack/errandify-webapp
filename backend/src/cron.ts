@@ -280,7 +280,9 @@ export function startCrons() {
   // Advertising campaign jobs - run hourly for schedule checks
   setInterval(checkAdvertisingSchedules, 60 * 60 * 1000);
   console.log('[CRON] Advertising schedule checks scheduled to run every hour');
-  setInterval(checkDisputeAutoResolution, 6 * 60 * 60 * 1000);
+  setInterval(retryFailedHanaProposals, 6 * 60 * 60 * 1000);
+  // Hourly: money must not stay frozen because a rework stalled
+  setInterval(sweepStalledRework, 60 * 60 * 1000);
   console.log('[CRON] Dispute auto-resolution scheduled to run every 6 hours');
 
   // Offline notification cleanup - run every hour
@@ -316,22 +318,117 @@ function getNextMonthFirst(): Date {
 }
 
 /**
- * Check and auto-resolve disputes (Level 1 & escalate Level 2+)
+ * Retry Hana's proposal on disputes where it failed.
+ *
+ * This used to be an auto-resolution job calling batchProcessDisputes(), which
+ * does not exist in disputeResolutionService — so it threw every 6 hours and
+ * was swallowed by the catch. Auto-resolution is gone by design (Hana proposes,
+ * an admin decides), so the slot now does something useful instead: disputes
+ * where Hana errored are sitting with an admin WITHOUT a suggestion, and this
+ * gives them one.
  */
-export async function checkDisputeAutoResolution() {
+/**
+ * Move stalled reworks back to the admin.
+ *
+ * Two ways a rework stalls, and both leave someone's payment frozen, so neither
+ * can be allowed to sit:
+ *   - nobody answered within the consent window  -> treated as a decline
+ *   - both agreed but the deadline passed        -> recorded as not completed
+ *
+ * Either way it goes back to an admin for a compensation decision, with what
+ * happened on the record — which is useful evidence in itself.
+ */
+export async function sweepStalledRework() {
   try {
-    console.log('[CRON] Processing disputes for auto-resolution...');
+    const { default: db } = await import('./db.js');
 
-    const { batchProcessDisputes } = await import('./services/disputeResolutionService.js');
-    const result = await batchProcessDisputes();
+    const expiredConsent = await db.query(
+      `UPDATE disputes
+          SET rework_outcome = 'expired',
+              status = 'admin_review',
+              updated_at = NOW()
+        WHERE resolution_kind = 'rework'
+          AND rework_outcome IS NULL
+          AND rework_consent_deadline IS NOT NULL
+          AND rework_consent_deadline < NOW()
+        RETURNING id, errand_id`
+    );
 
-    if (result.processed > 0) {
-      console.log(`[CRON] Dispute processing: ${result.processed} processed, ${result.resolved} auto-resolved`);
+    const missedDeadline = await db.query(
+      `UPDATE disputes
+          SET rework_outcome = 'not_completed',
+              status = 'admin_review',
+              updated_at = NOW()
+        WHERE resolution_kind = 'rework'
+          AND rework_outcome = 'agreed'
+          AND rework_deadline IS NOT NULL
+          AND rework_deadline < NOW()
+        RETURNING id, errand_id`
+    );
+
+    for (const row of [...expiredConsent.rows, ...missedDeadline.rows]) {
+      const wasAgreed = missedDeadline.rows.some((r: any) => r.id === row.id);
+      try {
+        const parties = await db.query(
+          `SELECT e.asker_id, ab.doer_id, e.title
+             FROM errands e LEFT JOIN bids ab ON ab.id = e.accepted_bid_id
+            WHERE e.id = $1`,
+          [row.errand_id]
+        );
+        const p = parties.rows[0];
+        for (const uid of [p?.asker_id, p?.doer_id].filter(Boolean)) {
+          await db.query(
+            `INSERT INTO notifications (user_id, type, title, message, related_errand_id)
+             VALUES ($1, 'dispute_rework_lapsed', $2, $3, $4)`,
+            [
+              uid,
+              `We'll take it from here on "${p?.title || 'your errand'}"`,
+              wasAgreed
+                ? "The rework wasn't completed by the agreed date, so we'll look at it and decide fairly. Your payment is still held safely."
+                : "We didn't hear back about the rework, so we'll review it and decide. Your payment is still held safely.",
+              row.errand_id,
+            ]
+          );
+        }
+      } catch (e) {
+        console.warn('[CRON] Could not notify about lapsed rework:', e);
+      }
     }
+
+    const total = expiredConsent.rows.length + missedDeadline.rows.length;
+    if (total > 0) console.log(`[CRON] Returned ${total} stalled rework(s) to admin review`);
   } catch (error) {
-    console.error('[CRON] Dispute auto-resolution failed:', error);
+    console.error('[CRON] Rework sweep failed:', error);
   }
 }
+
+export async function retryFailedHanaProposals() {
+  try {
+    const { default: db } = await import('./db.js');
+    const { proposeResolution } = await import('./services/hanaDisputeProposal.js');
+
+    // Still awaiting an admin, Hana failed, and not already retried to death
+    const stuck = await db.query(
+      `SELECT id FROM disputes
+        WHERE status = 'admin_review'
+          AND hana_failed_reason IS NOT NULL
+          AND hana_proposed_at IS NULL
+          AND created_at > NOW() - INTERVAL '7 days'
+        LIMIT 25`
+    );
+
+    for (const row of stuck.rows) {
+      await proposeResolution(row.id);
+    }
+
+    if (stuck.rows.length > 0) {
+      console.log(`[CRON] Retried Hana proposals for ${stuck.rows.length} dispute(s)`);
+    }
+  } catch (error) {
+    console.error('[CRON] Hana proposal retry failed:', error);
+  }
+}
+
 
 /**
  * Check for events 7 days away and send reminders

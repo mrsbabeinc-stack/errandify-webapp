@@ -211,11 +211,15 @@ export async function getReferralStats(userId: number): Promise<ReferralStats> {
       loyalty_bonus: 0,
     };
 
+    // pg returns SUM()/COUNT() as strings, so `total += row.total_points`
+    // concatenates instead of adding: 0 + "50" + "50" === "05050".
+    // Coerce every aggregate before it is used as a number.
     let totalEarnedPoints = 0;
     for (const row of pointsResult.rows) {
       const key = `${row.reward_type}_bonus` as keyof typeof earnedBreakdown;
-      earnedBreakdown[key] = row.total_points || 0;
-      totalEarnedPoints += row.total_points || 0;
+      const points = Number(row.total_points) || 0;
+      earnedBreakdown[key] = points;
+      totalEarnedPoints += points;
     }
 
     const referralLink = `https://errandify.ai/join?ref=${referralCode}`;
@@ -223,9 +227,9 @@ export async function getReferralStats(userId: number): Promise<ReferralStats> {
     return {
       referral_code: referralCode,
       referral_link: referralLink,
-      total_referred: stats.total_referred || 0,
-      first_job_completed: stats.first_job_completed || 0,
-      pending_bonuses: stats.pending_bonuses || 0,
+      total_referred: Number(stats.total_referred) || 0,
+      first_job_completed: Number(stats.first_job_completed) || 0,
+      pending_bonuses: Number(stats.pending_bonuses) || 0,
       total_earned_points: totalEarnedPoints,
       earned_breakdown: earnedBreakdown,
     };
@@ -290,20 +294,14 @@ async function awardReferralPoints(
     [points, referrerId]
   );
 
-  // Log transaction
+  // Log transaction. Columns are (user_id, amount, reason) — the previous
+  // transaction_type/points_change/previous_balance/new_balance names do not
+  // exist on this table, so this insert threw every time and no referral EP
+  // was ever recorded. The table does not carry running balances; the balance
+  // lives on users.errandify_points, updated just above.
   await client.query(
-    `INSERT INTO ep_transactions
-     (user_id, transaction_type, points_change, previous_balance, new_balance, description, created_at)
-     SELECT
-       $1,
-       'referral_' || $2,
-       $3,
-       errandify_points - $3,
-       errandify_points,
-       'Referral ' || $2 || ' bonus',
-       NOW()
-     FROM users
-     WHERE id = $1`,
+    `INSERT INTO ep_transactions (user_id, amount, reason, created_at)
+     VALUES ($1, $3, LEFT('Referral ' || $2 || ' bonus', 100), NOW())`,
     [referrerId, rewardType, points]
   );
 }

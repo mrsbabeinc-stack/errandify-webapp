@@ -56,7 +56,7 @@ export default function TaskExecutionPage() {
       setTask(response.data.data);
       setError('');
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to load task');
+      setError(err.response?.data?.error || 'Failed to load errand');
     } finally {
       setLoading(false);
     }
@@ -77,7 +77,7 @@ export default function TaskExecutionPage() {
       setError('');
       setTimeout(() => fetchTaskStatus(), 1000);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to start task');
+      setError(err.response?.data?.error || 'Failed to start errand');
     } finally {
       setStarting(false);
     }
@@ -131,18 +131,18 @@ export default function TaskExecutionPage() {
         navigate(`/errand/${id}`);
       }, 2000);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to complete task');
+      setError(err.response?.data?.error || 'Failed to complete errand');
     } finally {
       setCompleting(false);
     }
   };
 
   if (loading) {
-    return <div className="p-6 text-center">Loading task...</div>;
+    return <div className="p-6 text-center">Loading errand...</div>;
   }
 
   if (!task) {
-    return <div className="p-6 text-center text-red-600">Task not found</div>;
+    return <div className="p-6 text-center text-red-600">Errand not found</div>;
   }
 
   const isDoer = userRole === 'doer';
@@ -158,7 +158,7 @@ export default function TaskExecutionPage() {
           onClick={() => navigate(`/errand/${id}`)}
           className="text-errandify-orange hover:underline text-sm font-semibold"
         >
-          ← Back to Task
+          ← Back to Errand
         </button>
       </div>
 
@@ -170,7 +170,7 @@ export default function TaskExecutionPage() {
           {/* Status Display */}
           <div className="bg-gray-50 p-4 rounded-lg mb-6">
             <p className="text-sm text-gray-600">
-              Task Status: <span className="font-semibold">{capitalizeStatus(task.status)}</span>
+              Errand Status: <span className="font-semibold">{capitalizeStatus(task.status)}</span>
             </p>
             {isDoer && (
               <p className="text-sm text-gray-600 mt-1">
@@ -331,7 +331,7 @@ export default function TaskExecutionPage() {
               {task.status === 'completed_unconfirmed' && (
                 <div className="border border-green-200 bg-green-50 p-6 rounded-lg">
                   <p className="text-green-700 font-semibold">
-                    ✅ Task marked complete on {new Date(task.completedAt || '').toLocaleDateString()}
+                    ✅ Errand marked complete on {new Date(task.completedAt || '').toLocaleDateString()}
                   </p>
                   {task.completionNotes && (
                     <p className="text-green-600 mt-2">{task.completionNotes}</p>

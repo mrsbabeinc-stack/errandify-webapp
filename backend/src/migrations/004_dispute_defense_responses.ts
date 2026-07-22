@@ -4,20 +4,13 @@ export async function migrate() {
   try {
     console.log('[Migration] Starting: Dispute Defense Responses');
 
-    // Add defense response columns to disputes table
-    await db.query(`
-      ALTER TABLE disputes ADD COLUMN IF NOT EXISTS
-        defendant_user_id INTEGER REFERENCES users(id),
-        defendant_response TEXT,
-        defendant_response_evidence JSONB,
-        response_deadline TIMESTAMP,
-        response_submitted_at TIMESTAMP,
-        response_status VARCHAR(50) DEFAULT 'pending', -- pending, received, forfeited
-        requires_defense BOOLEAN DEFAULT false,
-        defense_tier VARCHAR(50) DEFAULT 'auto', -- auto, statement_only, full_investigation
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    `);
+    // The defense response columns on `disputes` are added by migration 010.
+    //
+    // They used to be added here, but the statement was invalid SQL — Postgres
+    // needs a separate ADD COLUMN per column, and this listed nine under one.
+    // So this migration threw on its first statement and never reached the
+    // table below, which is why dispute_defense_requests was missing while the
+    // code queried it. Left as a no-op rather than duplicating 010.
 
     // Table: dispute_defense_requests
     // Track when and why defendant was asked to respond

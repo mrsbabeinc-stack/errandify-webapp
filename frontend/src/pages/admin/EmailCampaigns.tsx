@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { generateText, generateImages } from '../../utils/aiClient';
 import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../../components/admin/AdminLayout';
 import ScheduleCalendar from '../../components/ScheduleCalendar';
@@ -58,6 +59,8 @@ export default function EmailCampaigns() {
   const [imagePrompt, setImagePrompt] = useState('');
   const [imageLoading, setImageLoading] = useState(false);
   const [generatedImageUrl, setGeneratedImageUrl] = useState('');
+  // Several variants so the admin can pick, rather than accepting the first
+  const [imageOptions, setImageOptions] = useState<string[]>([]);
 
   useEffect(() => {
     const saved = localStorage.getItem('emailCampaigns');
@@ -175,29 +178,16 @@ export default function EmailCampaigns() {
     alert('✅ Campaign deleted!');
   };
 
+  /**
+   * Was a direct browser fetch to dashscope with a hardcoded 'Bearer sk-demo'
+   * placeholder — so it never actually worked, it just failed quietly and
+   * returned null. Now goes through the backend, which holds the real key.
+   */
   const callQwenAPI = async (prompt: string): Promise<string | null> => {
     try {
-      const response = await fetch('https://dashscope.aliyuncs.com/api/v1/services/aigc/text2text/qwen', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer sk-demo',
-        },
-        body: JSON.stringify({
-          model: 'qwen-turbo',
-          messages: [{ role: 'user', content: prompt }],
-          max_tokens: 1000,
-          temperature: 0.7,
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        return data.output?.text || data.choices?.[0]?.message?.content || null;
-      }
-      return null;
+      return await generateText(prompt, { maxTokens: 1000, temperature: 0.7 });
     } catch (error) {
-      console.log('Qwen API error:', error);
+      console.error('AI generation failed:', error);
       return null;
     }
   };
@@ -250,47 +240,40 @@ Make content warm, engaging, community-focused. Keep subject under 60 characters
     }
   };
 
+  /**
+   * Real image generation, replacing a handler that asked a TEXT model to
+   * "return only the image URL" and then fell back to one hardcoded Unsplash
+   * photo — which is why every campaign banner was the same picture.
+   *
+   * The old code also had a dangerous branch: if the model's reply happened to
+   * contain "http", it used that as the banner. A hallucinated URL would have
+   * gone straight into a live campaign.
+   */
   const handleGenerateImage = async () => {
     if (!imagePrompt.trim()) {
-      alert('Please enter image description or use Campaign Planner first');
+      alert('Describe the image you want first, or use the Campaign Planner.');
       return;
     }
 
     setImageLoading(true);
     try {
-      const prompt = `Generate a professional email banner image (1200x400px) based on this description:
-
-${imagePrompt}
-
-Requirements:
-- Warm, community-focused (kampung) atmosphere
-- Professional, suitable for email
-- Colorful and engaging
-- Show people helping each other if possible
-
-Return ONLY the image URL or base64 data URI.`;
-
-      const result = await callQwenAPI(prompt);
-
-      if (result && (result.includes('http') || result.includes('data:'))) {
-        setGeneratedImageUrl(result);
-        setImageUrl(result);
-        setImageAlt(imagePrompt);
-        alert('✅ Image generated with Qwen!');
-      } else {
-        // Use fallback image
-        const fallbackUrl = 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=1200&h=400&fit=crop';
-        setGeneratedImageUrl(fallbackUrl);
-        setImageUrl(fallbackUrl);
-        setImageAlt(imagePrompt);
-        alert('✅ Using template image (Qwen generation in progress)');
-      }
-    } catch (error) {
-      alert('Error generating image');
+      const images = await generateImages(
+        `Email banner for Errandify, a warm Singapore neighbourhood errand marketplace. ${imagePrompt}. Friendly community atmosphere, suitable for email, no text overlay.`,
+        3,
+        '1024*1024'
+      );
+      setImageOptions(images.map((i) => i.url));
+      // Preselect the first so the campaign is usable immediately
+      setGeneratedImageUrl(images[0].url);
+      setImageUrl(images[0].url);
+      setImageAlt(imagePrompt);
+    } catch (err: any) {
+      alert(err.message || 'Could not generate images.');
     } finally {
       setImageLoading(false);
     }
   };
+
 
   const statusColors: any = {
     'draft': '#2196F3',
@@ -440,9 +423,29 @@ Return ONLY the image URL or base64 data URI.`;
                         marginBottom: '8px',
                       }}
                     />
-                    <div style={{ fontSize: '11px', color: '#999' }}>
-                      Image loaded and ready to use
-                    </div>
+                    {imageOptions.length > 1 && (
+                      <>
+                        <div style={{ fontSize: '11px', color: '#666', marginBottom: '6px' }}>
+                          Pick the one you like — click to use it.
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                          {imageOptions.map((url) => (
+                            <button
+                              key={url}
+                              onClick={() => { setGeneratedImageUrl(url); setImageUrl(url); }}
+                              style={{
+                                padding: 0, lineHeight: 0, cursor: 'pointer', background: 'none',
+                                border: generatedImageUrl === url ? '3px solid #FF6B35' : '2px solid #ddd',
+                                borderRadius: '6px', overflow: 'hidden',
+                              }}
+                              title={generatedImageUrl === url ? 'Currently selected' : 'Use this one'}
+                            >
+                              <img src={url} alt="Option" style={{ width: '92px', display: 'block' }} />
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    )}
                   </div>
                 )}
               </div>

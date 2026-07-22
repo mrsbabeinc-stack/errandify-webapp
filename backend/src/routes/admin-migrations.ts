@@ -1,17 +1,14 @@
 import { Router, Response } from 'express';
-import { AuthRequest, authMiddleware } from '../middleware/auth.js';
+import { AuthRequest, authMiddleware, requireAdmin } from '../middleware/auth.js';
 import db from '../db.js';
 
 const router = Router();
 
 // POST /api/admin/migrate-notifications - Fix old notification formatting
 // This updates all old notifications to use the new format with full errand IDs and aliases
-router.post('/migrate-notifications', authMiddleware, async (req: AuthRequest, res: Response) => {
+router.post('/migrate-notifications', authMiddleware, requireAdmin(), async (req: AuthRequest, res: Response) => {
   try {
     const userId = parseInt(req.userId || '0', 10);
-
-    // TODO: Check if user is admin
-    // For now, allow any authenticated user (security: restrict to admin in production)
 
     console.log(`[Migration] Starting notification format migration for user ${userId}`);
 

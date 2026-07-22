@@ -118,7 +118,7 @@ export default function BeforeYouGetStartedPage() {
           <div className="explanation">
             <strong>⚠️ What this means:</strong>
             <ul>
-              <li>✅ You're providing companionship and help with daily tasks</li>
+              <li>✅ You're providing companionship and help with daily errands</li>
               <li>❌ NOT medical care, nursing, or professional treatment</li>
               <li>✅ Examples: keeping elderly company, helping with errands, supervised play</li>
               <li>❌ Examples: giving medication, changing medical dressings, therapy</li>

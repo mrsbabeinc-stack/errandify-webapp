@@ -58,8 +58,8 @@ export default function AdminSystemConfiguration() {
       const demoFlags: FeatureFlag[] = [
         {
           id: 'flag_1',
-          name: 'AI Task Matching',
-          description: 'Enable AI-powered task recommendations',
+          name: 'AI Errand Matching',
+          description: 'Enable AI-powered errand recommendations',
           enabled: true,
           rolloutPercentage: 100,
           lastModified: new Date(Date.now() - 604800000).toISOString(),
@@ -502,7 +502,7 @@ export default function AdminSystemConfiguration() {
               <div style={{ fontSize: '11px', color: '#999', marginTop: '4px' }}>
                 • Welcome email
                 • Password reset
-                • Task notifications
+                • Errand notifications
                 • Payment receipts
                 • Dispute alerts
                 • And more...

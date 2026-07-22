@@ -9,11 +9,11 @@ export const EPRulesFlexiblePage: React.FC = () => {
   const [rules, setRules] = useState([
     {
       id: 1,
-      name: 'Task Completion Bonus',
+      name: 'Errand Completion Bonus',
       icon: '✅',
-      category: 'Task Completion',
-      description: 'Award EP when users complete tasks',
-      triggers: ['Task Completed', 'Task Rated'],
+      category: 'Errand Completion',
+      description: 'Award EP when users complete errands',
+      triggers: ['Errand Completed', 'Errand Rated'],
       conditions: {
         minRating: 3,
         maxPerDay: 50,
@@ -45,7 +45,7 @@ export const EPRulesFlexiblePage: React.FC = () => {
       icon: '🔗',
       category: 'Referral',
       description: 'Reward users for successful referrals',
-      triggers: ['New User Signup', 'First Task'],
+      triggers: ['New User Signup', 'First Errand'],
       conditions: {
         signupBonus: 50,
         firstTaskBonus: 100,
@@ -80,12 +80,12 @@ export const EPRulesFlexiblePage: React.FC = () => {
       description: 'Double/Triple EP during peak demand hours (evening rush, weekend)',
       benefits: 'Balances supply-demand, incentivizes off-peak work',
       implementation: 'Dynamic multipliers during high-demand periods (6pm-9pm = 1.5x, weekend = 1.2x)',
-      impact: 'Better task fulfillment rate + higher earnings'
+      impact: 'Better errand fulfillment rate + higher earnings'
     },
     {
       id: 4,
       name: '🤝 Community Challenges',
-      description: 'Weekly/Monthly community-wide challenges (e.g., "100 tasks this week")',
+      description: 'Weekly/Monthly community-wide challenges (e.g., "100 errands this week")',
       benefits: 'Social engagement, sense of belonging, viral growth',
       implementation: 'Track collective metrics, unlock bonuses when reached, reward early contributors',
       impact: 'Create FOMO, boost signup 30-40%'
@@ -103,24 +103,24 @@ export const EPRulesFlexiblePage: React.FC = () => {
       name: '🎁 Surprise & Delight',
       description: 'Random bonus EP drops (1-10 EP) during user activity',
       benefits: 'Unexpected rewards increase dopamine, addiction to app',
-      implementation: 'Random 5% chance during task completion, animated confetti celebration',
+      implementation: 'Random 5% chance during errand completion, animated confetti celebration',
       impact: 'Increase DAU by 15-20%, viral sharing'
     },
     {
       id: 7,
       name: '🌍 Geographic Incentives',
-      description: 'Higher EP in areas with task shortage to attract workers',
-      benefits: 'Balance supply across regions, faster task fulfillment',
+      description: 'Higher EP in areas with errand shortage to attract workers',
+      benefits: 'Balance supply across regions, faster errand fulfillment',
       implementation: 'Real-time supply tracking, dynamic EP multipliers by postal code',
-      impact: 'Reduce task wait time, improve UX'
+      impact: 'Reduce errand wait time, improve UX'
     },
     {
       id: 8,
       name: '⚡ Quick Accept Bonus',
-      description: 'EP bonus for accepting tasks within 30 seconds of posting',
-      benefits: 'Faster task allocation, better UX for task creators',
-      implementation: 'Automatic 20% EP bonus if task accepted within 30s window',
-      impact: 'Reduce avg task fulfillment time by 40%'
+      description: 'EP bonus for accepting errands within 30 seconds of posting',
+      benefits: 'Faster errand allocation, better UX for errand creators',
+      implementation: 'Automatic 20% EP bonus if errand accepted within 30s window',
+      impact: 'Reduce avg errand fulfillment time by 40%'
     },
   ]);
 
@@ -402,7 +402,7 @@ export const EPRulesFlexiblePage: React.FC = () => {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '12px', marginBottom: '20px' }}>
               {[
                 { metric: 'User Retention', value: '+35%', desc: 'Streaks & achievements keep users engaged' },
-                { metric: 'Task Completion', value: '+42%', desc: 'Quality rewards incentivize better work' },
+                { metric: 'Errand Completion', value: '+42%', desc: 'Quality rewards incentivize better work' },
                 { metric: 'DAU Growth', value: '+25%', desc: 'Gamification & surprises drive daily visits' },
                 { metric: 'Referral Rate', value: '+180%', desc: 'Referral rewards accelerate organic growth' },
                 { metric: 'Avg Session Time', value: '+40%', desc: 'Progression systems extend engagement' },
@@ -517,8 +517,8 @@ export const EPRulesFlexiblePage: React.FC = () => {
                     style={{ width: '100%', padding: '10px', border: '1px solid #ffb88c', borderRadius: '6px', fontSize: '12px', boxSizing: 'border-box' }}
                   >
                     <option value="">Select trigger...</option>
-                    <option>Task Completed</option>
-                    <option>Task Rated</option>
+                    <option>Errand Completed</option>
+                    <option>Errand Rated</option>
                     <option>Daily Streak</option>
                     <option>Community Milestone</option>
                     <option>Referral Success</option>

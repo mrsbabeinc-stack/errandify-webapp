@@ -94,30 +94,37 @@ export async function lookupAddress(postalCode: string): Promise<AddressLookupRe
         return fallbackResult;
       }
 
-      // If not in local database, use postal code sector mapping
-      const area = getPlanningAreaFromPostalCode(normalized);
-      if (area) {
-        console.log('[AddressProvider] ✅ Fallback: Using postal code sector mapping:', area);
-        const fallbackResult: AddressLookupResult = {
-          postal_code: normalized,
-          formatted_address: `Singapore ${normalized}`,
-          area: area,
-          latitude: 0,
-          longitude: 0,
-          provider: 'postal_code_lookup',
-          confidence: 0.8,
-        };
-        return fallbackResult;
-      }
     } catch (dbErr) {
       console.warn('[AddressProvider] Database lookup failed:', dbErr instanceof Error ? dbErr.message : '');
     }
 
-    console.log('[AddressProvider] All providers failed for', normalized);
-    return null;
+    // Last-resort fallback — ALWAYS return something (never fail).
+    // Sector map gives the general area; the address degrades to "Singapore <postal>".
+    // Not cached, so a real provider result can still replace it on a later lookup.
+    const area = getPlanningAreaFromPostalCode(normalized);
+    console.log('[AddressProvider] Using guaranteed fallback for', normalized, '(area:', area || 'unknown', ')');
+    return {
+      postal_code: normalized,
+      formatted_address: `Singapore ${normalized}`,
+      area: area || 'Singapore',
+      latitude: 0,
+      longitude: 0,
+      provider: 'postal_code_lookup',
+      confidence: area ? 0.8 : 0.4,
+    };
   } catch (err) {
     console.error('[AddressProvider] Lookup error:', err);
-    return null;
+    // Even on an unexpected error, never fail — return a safe minimal result
+    const safe = normalizePostalCode(postalCode) || postalCode;
+    return {
+      postal_code: safe,
+      formatted_address: `Singapore ${safe}`,
+      area: 'Singapore',
+      latitude: 0,
+      longitude: 0,
+      provider: 'error_fallback',
+      confidence: 0.3,
+    };
   }
 }
 

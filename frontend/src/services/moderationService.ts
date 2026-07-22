@@ -18,30 +18,33 @@ const qwenModeration = async (text: string): Promise<ModerationResult> => {
 
     console.log('[Qwen Moderation] Analyzing post...');
 
-    const response = await axios.post(`${apiUrl}/api/moderation/qwen`, {
-      text,
-      task: 'content_moderation',
-      categories: [
-        'spam',
-        'scam',
-        'harassment',
-        'safety',
-        'off_topic',
-        'quality',
-        'relevance'
-      ],
+    // /api/moderation/qwen never existed. Because this service fails open on
+    // error (see the catch below), every post was silently auto-approved and
+    // nothing was ever moderated. /api/ai/content-filter is the real endpoint
+    // and runs the same Qwen check server-side.
+    const response = await axios.post(`${apiUrl}/api/ai/content-filter`, {
+      title: text,
     });
 
     const result = response.data.data;
 
-    if (result.flagged) {
+    if (!result.is_safe) {
       console.log('[Qwen Moderation] Post flagged:', result.reason);
       return {
         flagged: true,
-        reason: result.reason,
-        category: result.violatedCategory,
+        // `issues` comes back as an object keyed by issue type
+        // ({ spam: true, inappropriate: false, ... }), not an array, so it is
+        // reduced to the names that are actually true.
+        reason:
+          result.reason ||
+          Object.entries(result.issues || {})
+            .filter(([, v]) => v)
+            .map(([k]) => k)
+            .join('; ') ||
+          'Content flagged for review',
+        category: (result.flags || [])[0],
         confidence: result.confidence,
-        action: result.action || 'flag',
+        action: 'flag',
       };
     }
 

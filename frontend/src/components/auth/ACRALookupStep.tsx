@@ -15,13 +15,20 @@ interface ACRALookupStepProps {
   onBack: () => void;
 }
 
+/**
+ * Previously populated from an ACRA API lookup. There is no lookup — the company
+ * uploads its ACRA Business Profile and an Errandify admin matches a director on
+ * it to the SingPass-verified person. Only the UEN is known at this point, so
+ * every other field is optional and the old "verified" result screen is skipped.
+ */
 interface ACRAData {
-  companyName: string;
-  businessType: string;
-  ownerName: string;
-  address: string;
-  ownerVerified: boolean;
-  singpassName: string;
+  uen?: string;
+  companyName?: string;
+  businessType?: string;
+  ownerName?: string;
+  address?: string;
+  ownerVerified?: boolean;
+  singpassName?: string;
 }
 
 type ACRAStep = 'lookup' | 'verification-result' | 'company-settings';
@@ -40,38 +47,32 @@ export default function ACRALookupStep({
   const [acraData, setACRAData] = useState<ACRAData | null>(null);
   const [error, setError] = useState('');
 
+  /**
+   * There is no ACRA API lookup. The company uploads its ACRA Business Profile
+   * and an Errandify admin matches a director on that document against the
+   * SingPass-verified person. This step just validates the UEN format and
+   * collects the file — the real check happens at review.
+   */
   const handleUENLookup = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/api/acra-lookup?uen=${uen}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'UEN not found');
+      const clean = uen.trim().toUpperCase();
+      if (!/^[0-9]{8,9}[A-Z]$/.test(clean) && !/^[A-Z]\d{2}[A-Z]{2}\d{4}[A-Z]$/.test(clean)) {
+        throw new Error('That does not look like a UEN. It is usually 9–10 characters ending in a letter.');
       }
 
-      const data = await response.json();
-      setACRAData(data.data);
-      setStep('verification-result');
-
-      if (data.data.ownerVerified) {
-        showSuccess('✓ Owner Verified!', 'Your identity matches ACRA records');
-      } else {
-        showError('Name Mismatch', 'Your SingPass name does not match ACRA owner');
-      }
+      // Straight to company settings — there is no lookup result to show, and
+      // displaying a fabricated "verified" screen would be misleading.
+      setACRAData({ uen: clean });
+      setStep('company-settings');
+      showSuccess('UEN noted', 'Next, fill in your details and attach your ACRA Business Profile');
     } catch (err: any) {
-      const errorMsg = err.message || 'Failed to lookup UEN';
+      const errorMsg = err.message || 'Please check your UEN';
       setError(errorMsg);
-      showError('UEN Lookup Failed', errorMsg);
+      showError('Check your UEN', errorMsg);
     } finally {
       setLoading(false);
     }
@@ -330,7 +331,9 @@ export default function ACRALookupStep({
   }
 
   // COMPANY SETTINGS STEP
-  if (step === 'company-settings' && acraData && acraData.ownerVerified) {
+  // No longer gated on a fake ownerVerified — the real check is the admin
+  // reviewing the uploaded ACRA profile after registration.
+  if (step === 'company-settings' && acraData) {
     return (
       <CompanySettingsStep
         companyData={{

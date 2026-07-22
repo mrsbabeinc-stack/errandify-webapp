@@ -10,7 +10,7 @@ interface StatusBadgeProps {
 export default function StatusBadge({ status, size = 'md', showTimer, expiresAt }: StatusBadgeProps) {
   const getStatusConfig = (status: string) => {
     const configs: Record<string, { label: string; emoji: string; bg: string; text: string; border: string }> = {
-      open: { label: 'Open for Bids', emoji: '🔓', bg: 'bg-blue-50', text: 'text-blue-800', border: 'border-blue-300' },
+      open: { label: 'Open for Offers', emoji: '🔓', bg: 'bg-blue-50', text: 'text-blue-800', border: 'border-blue-300' },
       pending: { label: 'Pending Review', emoji: '⏳', bg: 'bg-gray-50', text: 'text-gray-800', border: 'border-gray-300' },
       accepted: { label: 'Accepted - Confirm', emoji: '✅', bg: 'bg-blue-50', text: 'text-blue-800', border: 'border-blue-300' },
       confirmed: { label: 'Confirmed', emoji: '🟢', bg: 'bg-green-50', text: 'text-green-800', border: 'border-green-300' },

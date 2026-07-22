@@ -178,7 +178,7 @@ const JoinUsPage: React.FC = () => {
     {
       icon: '🎯',
       title: 'Simplifying Life',
-      description: 'Life is busy. We make it easier to get help when you need it, and simpler to help others. One small task, one big impact.',
+      description: 'Life is busy. We make it easier to get help when you need it, and simpler to help others. One small errand, one big impact.',
     },
   ];
 

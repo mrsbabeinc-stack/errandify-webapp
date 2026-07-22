@@ -140,7 +140,7 @@ const AppealDashboardPage: React.FC = () => {
                 <dt>Dispute ID:</dt>
                 <dd>#{selectedAppeal.dispute_id}</dd>
 
-                <dt>Task ID:</dt>
+                <dt>Errand ID:</dt>
                 <dd>#{selectedAppeal.task_id}</dd>
 
                 <dt>Amount:</dt>

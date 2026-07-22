@@ -1,23 +1,17 @@
 import { Router, Request, Response } from 'express';
+import { AuthRequest, authMiddleware, requireAdmin } from '../middleware/auth.js';
 import db from '../db.js';
 import jwt from 'jsonwebtoken';
 import { config } from '../config.js';
 
 const router = Router();
 
-// Middleware to extract user ID from token
-const extractUserId = (req: Request): number | null => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader?.startsWith('Bearer ')) return null;
+// Every route below was PUBLIC — anyone could create, read, resolve or comment
+// on any case without logging in, on a router mounted as "Admin case management".
+const adminOnly: any = [authMiddleware, requireAdmin(['admin', 'super-admin', 'support_l2', 'support_l3'])];
 
-  try {
-    const token = authHeader.substring(7);
-    const decoded: any = jwt.verify(token, config.jwtSecret);
-    return decoded.userId;
-  } catch {
-    return null;
-  }
-};
+// (extractUserId removed — authMiddleware now handles this, and it also
+// enforces bans and suspensions, which the local helper did not.)
 
 // Case type classification for money ($$$) vs rest
 const MONEY_CASE_TYPES = new Set(['dispute', 'refund_request', 'quality_issue', 'cancellation']);
@@ -125,9 +119,9 @@ const autoTagDescription = (description: string): string[] => {
 };
 
 // POST /api/cases - Create a new case
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const userId = extractUserId(req);
+    const userId = parseInt(req.userId || '0', 10);
     if (!userId) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
@@ -142,8 +136,48 @@ router.post('/', async (req: Request, res: Response) => {
       description
     } = req.body;
 
-    // Validate required fields
-    if (!case_type || !severity || !complainant_user_id || !respondent_user_id || !subject || !description) {
+    // Cases and disputes are split by money.
+    //
+    // Anything where someone wants funds moved — a contested payment, a refund,
+    // work quality, a cancellation fee — belongs in the dispute system, which
+    // holds the payment, gets Hana's proposal, runs the appeal window and
+    // settles. Letting those in here would create a second, weaker path to the
+    // same outcome and leave the money untouched.
+    if (MONEY_CASE_TYPES.has(case_type)) {
+      return res.status(400).json({
+        error:
+          "This one is about payment, so it belongs in a dispute — that way the money is held safely while it's sorted out. The report form routes these automatically; if you are seeing this, the client sent it to the wrong place.",
+        redirectTo: 'dispute',
+        errandId: errand_id || null,
+      });
+    }
+
+    if (!REST_CASE_TYPES.has(case_type)) {
+      return res.status(400).json({ error: 'Unknown case type.' });
+    }
+
+    // The complainant is whoever is logged in — never taken from the body, or
+    // anyone could file a case as someone else. The respondent is derived from
+    // the errand, which also stops a user naming an unrelated person.
+    const complainantId = userId;
+    let respondentId: number | null = null;
+
+    if (errand_id) {
+      const parties = await db.query(
+        `SELECT e.asker_id, ab.doer_id
+           FROM errands e
+           LEFT JOIN bids ab ON ab.id = e.accepted_bid_id
+          WHERE e.id = $1`,
+        [errand_id]
+      );
+      const p = parties.rows[0];
+      if (p) {
+        respondentId = Number(p.asker_id) === complainantId ? p.doer_id : p.asker_id;
+      }
+    }
+
+    // Not every case has a counterparty — an app bug is between the user and us
+    if (!case_type || !subject || !description) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
@@ -162,10 +196,10 @@ router.post('/', async (req: Request, res: Response) => {
       RETURNING *`,
       [
         case_type,
-        severity,
+        severity || 'medium',
         'open',
-        complainant_user_id,
-        respondent_user_id,
+        complainantId,
+        respondentId,
         errand_id || null,
         subject,
         description,
@@ -179,8 +213,13 @@ router.post('/', async (req: Request, res: Response) => {
 
     res.status(201).json({
       success: true,
+      // case_id is the human-facing reference the toast shows ("CASE-000002").
+      // It was set by the trigger but never returned, so the confirmation read
+      // "Case  created" with a gap where the reference should be.
+      case_id: caseRecord.case_id,
       case: {
         id: caseRecord.id,
+        case_id: caseRecord.case_id,
         case_type: caseRecord.case_type,
         severity: caseRecord.severity,
         status: caseRecord.status,
@@ -198,7 +237,7 @@ router.post('/', async (req: Request, res: Response) => {
 });
 
 // GET /api/cases - List all cases
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', adminOnly, async (req: AuthRequest, res: Response) => {
   try {
     const { status = 'all', severity = 'all', limit = 20, offset = 0 } = req.query;
 
@@ -240,7 +279,33 @@ router.get('/', async (req: Request, res: Response) => {
 });
 
 // GET /api/cases/:id - Get single case with messages
-router.get('/:id', async (req: Request, res: Response) => {
+// GET /api/cases/my-cases — the cases this person raised.
+//
+// This route did not exist. The frontend called it, '/:id' matched with
+// id="my-cases", and the handler 500'd trying to parse that as a number.
+// It must stay ABOVE '/:id' or Express will swallow it again.
+router.get('/my-cases', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = parseInt(req.userId || '0', 10);
+    const result = await db.query(
+      `SELECT c.id, c.case_id, c.case_type, c.severity, c.status, c.subject,
+              c.description, c.created_at, c.resolved_at, c.final_decision,
+              e.formatted_id, e.title AS errand_title
+         FROM cases c
+         LEFT JOIN errands e ON e.id = c.errand_id
+        WHERE c.complainant_user_id = $1 OR c.respondent_user_id = $1
+        ORDER BY c.created_at DESC
+        LIMIT 100`,
+      [userId]
+    );
+    res.json({ success: true, cases: result.rows });
+  } catch (error) {
+    console.error('[Cases] my-cases error:', error);
+    res.status(500).json({ error: 'Could not load your cases' });
+  }
+});
+
+router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
 
@@ -276,9 +341,9 @@ router.get('/:id', async (req: Request, res: Response) => {
 });
 
 // POST /api/cases/:id/resolve - Resolve a case
-router.post('/:id/resolve', async (req: Request, res: Response) => {
+router.post('/:id/resolve', adminOnly, async (req: AuthRequest, res: Response) => {
   try {
-    const userId = extractUserId(req);
+    const userId = parseInt(req.userId || '0', 10);
     if (!userId) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
@@ -340,9 +405,9 @@ router.post('/:id/resolve', async (req: Request, res: Response) => {
 });
 
 // POST /api/cases/:id/message - Add message to case
-router.post('/:id/message', async (req: Request, res: Response) => {
+router.post('/:id/message', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const userId = extractUserId(req);
+    const userId = parseInt(req.userId || '0', 10);
     if (!userId) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
@@ -372,7 +437,7 @@ router.post('/:id/message', async (req: Request, res: Response) => {
 });
 
 // GET /api/cases/stats/summary - Case statistics
-router.get('/stats/summary', async (req: Request, res: Response) => {
+router.get('/stats/summary', adminOnly, async (req: AuthRequest, res: Response) => {
   try {
     const stats = await db.query(`
       SELECT
@@ -392,9 +457,9 @@ router.get('/stats/summary', async (req: Request, res: Response) => {
 });
 
 // PATCH /api/cases/:id - Update case status or resolution
-router.patch('/:id', async (req: Request, res: Response) => {
+router.patch('/:id', adminOnly, async (req: AuthRequest, res: Response) => {
   try {
-    const userId = extractUserId(req);
+    const userId = parseInt(req.userId || '0', 10);
     if (!userId) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
@@ -482,7 +547,7 @@ router.patch('/:id', async (req: Request, res: Response) => {
 });
 
 // POST /api/cases/demo/create-samples - Create sample test cases (dev only)
-router.post('/demo/create-samples', async (req: Request, res: Response) => {
+router.post('/demo/create-samples', adminOnly, async (req: AuthRequest, res: Response) => {
   try {
     const sampleCases = [
       {
@@ -604,6 +669,109 @@ router.post('/demo/create-samples', async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Create sample cases error:', error);
     res.status(500).json({ error: 'Failed to create sample cases' });
+  }
+});
+
+/**
+ * Cases <-> disputes.
+ *
+ * A case and a dispute are related when they concern the same errand; there is
+ * no join column between the two tables and none is added here, because
+ * errand_id already expresses exactly that relationship on both sides.
+ *
+ * Callers pass the human reference (CASE-000123) rather than the numeric id —
+ * that is what the admin tables render and hold — so both forms are accepted.
+ */
+async function resolveCase(idOrCaseId: string) {
+  const numeric = /^\d+$/.test(idOrCaseId);
+  const result = await db.query(
+    numeric ? 'SELECT * FROM cases WHERE id = $1' : 'SELECT * FROM cases WHERE case_id = $1',
+    [numeric ? parseInt(idOrCaseId, 10) : idOrCaseId]
+  );
+  return result.rows[0] || null;
+}
+
+/** GET /api/cases/:id/disputes — disputes raised over this case's errand. */
+router.get('/:id/disputes', adminOnly, async (req: AuthRequest, res: Response) => {
+  try {
+    const c = await resolveCase(req.params.id);
+    if (!c) return res.status(404).json({ error: 'Case not found' });
+
+    // A case with no errand cannot have a related dispute; return empty rather
+    // than matching every dispute whose errand_id is also null.
+    if (!c.errand_id) return res.json({ success: true, data: [] });
+
+    const result = await db.query(
+      `SELECT d.id, d.errand_id, d.status, d.reason, d.dispute_type, d.priority,
+              d.created_at, d.resolved_at, d.resolution,
+              d.settlement_doer_amount, d.settlement_asker_amount,
+              e.title AS errand_title,
+              COALESCE(u.alias, u.display_name) AS raised_by_name
+         FROM disputes d
+         LEFT JOIN errands e ON e.id = d.errand_id
+         LEFT JOIN users u ON u.id = d.raised_by_id
+        WHERE d.errand_id = $1
+        ORDER BY d.created_at DESC`,
+      [c.errand_id]
+    );
+
+    res.json({ success: true, data: result.rows });
+  } catch (error) {
+    console.error('[Cases] Linked disputes fetch failed:', error);
+    res.status(500).json({ error: 'Could not load linked disputes' });
+  }
+});
+
+/**
+ * POST /api/cases/:id/resolve-from-dispute — close a case using the verdict
+ * already reached on its dispute.
+ *
+ * This records the dispute's outcome against the case; it does not move money.
+ * Settlement is the dispute module's job and has already happened by the time
+ * this is called — duplicating it here would risk paying twice.
+ */
+router.post('/:id/resolve-from-dispute', adminOnly, async (req: AuthRequest, res: Response) => {
+  try {
+    const c = await resolveCase(req.params.id);
+    if (!c) return res.status(404).json({ error: 'Case not found' });
+
+    const { dispute_id, resolution_type, doer_amount, asker_amount, notes } = req.body || {};
+    const KINDS = ['full_payment', 'split', 'full_refund', 'escalate'];
+    if (!KINDS.includes(resolution_type)) {
+      return res.status(400).json({ error: 'Unknown resolution type' });
+    }
+
+    if (dispute_id) {
+      const d = await db.query('SELECT id, errand_id FROM disputes WHERE id = $1', [dispute_id]);
+      if (d.rows.length === 0) return res.status(404).json({ error: 'Dispute not found' });
+      // The dispute must concern the same errand, or this would let one case be
+      // closed using an unrelated dispute's verdict.
+      if (c.errand_id && d.rows[0].errand_id !== c.errand_id) {
+        return res.status(409).json({ error: 'That dispute is not about this case\'s errand' });
+      }
+    }
+
+    // Escalation is not a resolution — the case stays open and under review.
+    const nextStatus = resolution_type === 'escalate' ? 'escalated' : 'resolved';
+    const decision = [resolution_type, notes].filter(Boolean).join(' — ');
+
+    const updated = await db.query(
+      `UPDATE cases
+          SET status = $1::varchar,
+              final_decision = $2::text,
+              refund_amount = COALESCE($3::numeric, refund_amount),
+              resolved_at = CASE WHEN $1::varchar = 'resolved' THEN NOW() ELSE resolved_at END,
+              updated_at = NOW()
+        WHERE id = $4
+        RETURNING id, case_id, status, final_decision, refund_amount, resolved_at`,
+      [nextStatus, decision, asker_amount ?? null, c.id]
+    );
+
+    console.log('[Cases]', updated.rows[0].case_id, 'closed from dispute', dispute_id, '->', nextStatus);
+    res.json({ success: true, data: updated.rows[0] });
+  } catch (error) {
+    console.error('[Cases] Resolve-from-dispute failed:', error);
+    res.status(500).json({ error: 'Could not update the case' });
   }
 });
 

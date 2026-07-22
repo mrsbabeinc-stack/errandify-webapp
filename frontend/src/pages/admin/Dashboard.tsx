@@ -39,7 +39,7 @@ export const AdminDashboard: React.FC = () => {
       period: '📊 WEEKLY',
       insights: [
         { id: 3, category: 'GROWTH', title: 'Signup Velocity +23%', desc: 'Up from 71/day last week → 87/day now', action: 'Analyze', color: '#FF6B35', bg: '#FFF8F5', icon: '📈' },
-        { id: 4, category: 'ENGAGEMENT', title: 'Task Completion Rate 87%', desc: 'Users completing tasks at high rate (healthy)', action: 'Maintain', color: '#FF6B35', bg: '#FFF8F5', icon: '⭐' },
+        { id: 4, category: 'ENGAGEMENT', title: 'Errand Completion Rate 87%', desc: 'Users completing errands at high rate (healthy)', action: 'Maintain', color: '#FF6B35', bg: '#FFF8F5', icon: '⭐' },
         { id: 5, category: 'MONETIZATION', title: 'ARPU Growth +$3.50', desc: 'Avg Revenue Per User: $28.50 → $32.00', action: 'Celebrate', color: '#FF6B35', bg: '#FFF8F5', icon: '🎯' },
       ]
     },

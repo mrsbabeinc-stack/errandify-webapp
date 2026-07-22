@@ -207,61 +207,40 @@ export default function CreateErrandPage() {
             console.log('[CreateErrand] Full address:', prefilledData.fullAddress);
           }
 
-          // Set AI suggestions from prefilled data if available
-          if (prefilledData.suggestedDescription || prefilledData.suggestedNotes || prefilledData.suggestedCertifications) {
-            console.log('[CreateErrand] Setting AI suggestions from prefilled data');
-            setAiSuggestions({
-              suggestedCategory: '',
-              suggestedDescription: prefilledData.suggestedDescription || '',
-              correctedTitle: '',
-              hasCorrections: false,
-              suggestedBudget: null,
-              suggestedNotes: prefilledData.suggestedNotes || '',
-              certifications: { required: prefilledData.suggestedCertifications || [], optional: [] },
-              skills: [],
-              blocked: false,
-              error: '',
-            });
-          } else if (newFormData.title) {
-            // If suggestedDescription came from Hana (AI tips), use it directly without refetching
-            if (prefilledData.suggestedDescription) {
-              console.log('[CreateErrand] Using AI tips from Hana:', prefilledData.suggestedDescription);
-              setAiSuggestions((prev) => ({
-                ...prev,
-                suggestedDescription: prefilledData.suggestedDescription,
-              }));
-            } else {
-              // Fetch suggestions for any title to get AI category recommendation (even if category is empty)
-              console.log('[CreateErrand] Fetching AI suggestions for title:', newFormData.title, 'category:', newFormData.category);
-              try {
-                const response = await axios.post(
-                  `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/suggestions`,
-                  {
-                    title: newFormData.title,
-                    description: newFormData.description,
-                    category: newFormData.category,
-                    date: newFormData.deadline,
-                    time: newFormData.time
-                  }
-                );
-                if (response.data.success) {
-                  console.log('[CreateErrand] Got suggestions:', response.data.data);
-                  setAiSuggestions({
-                    suggestedCategory: response.data.data.category,
-                    suggestedDescription: response.data.data.description,
-                    correctedTitle: response.data.data.correctedTitle || '',
-                    hasCorrections: response.data.data.hasCorrections,
-                    suggestedBudget: response.data.data.suggestedBudget || null,
-                    suggestedNotes: response.data.data.notes || '',
-                    certifications: response.data.data.certifications ? { required: response.data.data.certifications, optional: [] } : { required: [], optional: [] },
-                    skills: [],
-                    blocked: false,
-                    error: '',
-                  });
+          // Populate AI suggestions (skills + certifications) from the reliable
+          // /suggestions endpoint, which separates them correctly. Hana's own
+          // description/notes tips are kept as overrides when present.
+          if (newFormData.title) {
+            console.log('[CreateErrand] Fetching AI suggestions for prefilled title:', newFormData.title);
+            try {
+              const response = await axios.post(
+                `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/suggestions`,
+                {
+                  title: newFormData.title,
+                  description: newFormData.description,
+                  category: newFormData.category,
+                  date: newFormData.deadline,
+                  time: newFormData.time,
                 }
-              } catch (err) {
-                console.error('Error fetching suggestions:', err);
+              );
+              if (response.data.success) {
+                const d = response.data.data;
+                console.log('[CreateErrand] Got suggestions — skills:', d.skills, 'certifications:', d.certifications);
+                setAiSuggestions({
+                  suggestedCategory: d.category || '',
+                  suggestedDescription: prefilledData.suggestedDescription || d.description || '',
+                  correctedTitle: d.correctedTitle || '',
+                  hasCorrections: d.hasCorrections || false,
+                  suggestedBudget: d.suggestedBudget || null,
+                  suggestedNotes: prefilledData.suggestedNotes || d.notes || '',
+                  certifications: d.certifications || { required: [], optional: [] },
+                  skills: d.skills || [],
+                  blocked: false,
+                  error: '',
+                });
               }
+            } catch (err) {
+              console.error('Error fetching suggestions:', err);
             }
           }
         } catch (err) {
@@ -979,7 +958,7 @@ export default function CreateErrandPage() {
               timeout: 20000,
             }
           );
-          console.log('[DEBUG] AI task analysis completed');
+          console.log('[DEBUG] AI errand analysis completed');
         } catch (aiErr) {
           console.warn('[DEBUG] AI analysis skipped:', aiErr);
         }
@@ -1001,12 +980,12 @@ export default function CreateErrandPage() {
               navigate(-1);
             } else {
               // Regular user - go to My Errands
-              navigate('/my-errands');
+              navigate('/errands');
             }
           }, 2000);
         } else {
           console.log('[DEBUG] No errandId found, redirecting to home');
-          navigate('/my-errands');
+          navigate('/errands');
         }
       } else {
         console.error('[DEBUG] *** API RETURNED success:false ***:', response.data);
@@ -1055,7 +1034,7 @@ export default function CreateErrandPage() {
             ← Back
           </button>
           <h1 style={{fontSize: '28px', fontWeight: '700', color: '#333', margin: '0 0 4px 0'}}>📋 Create Your Errand</h1>
-          <p style={{fontSize: '14px', color: '#666', margin: 0}}>Post a task and let doers help you</p>
+          <p style={{fontSize: '14px', color: '#666', margin: 0}}>Post a errand and let doers help you</p>
         </div>
 
         {/* Error Display */}
@@ -1112,7 +1091,7 @@ export default function CreateErrandPage() {
                   name="description"
                   value={formData.description}
                   onChange={handleChange}
-                  placeholder="Add details about your task above"
+                  placeholder="Add details about your errand above"
                   rows={2}
                   maxLength={150}
                   className="w-full px-3 py-2 rounded-lg border-2 bg-gray-50 focus:outline-none focus:bg-white transition-colors resize-none text-sm font-medium placeholder:text-gray-400"
@@ -1182,8 +1161,8 @@ export default function CreateErrandPage() {
           <div style={{padding: '16px', backgroundColor: '#FFF9F5', borderRadius: '8px', borderLeft: '4px solid #FF6B35'}}>
             <h3 style={{fontSize: '16px', fontWeight: '700', color: '#FF6B35', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', margin: '-16px -16px 16px -16px', padding: '12px 16px', backgroundColor: 'rgba(255, 107, 53, 0.05)', borderRadius: '6px 6px 0 0'}}>💰 When & how much</h3>
 
-            <div className="grid grid-cols-3 gap-3">
-              <div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div className="col-span-2 sm:col-span-1">
                 <label className="block text-sm font-semibold mb-1.5" style={{color: '#333'}}>
                   Pay (SGD) *
                 </label>
@@ -1490,7 +1469,7 @@ export default function CreateErrandPage() {
                       </p>
                       {formData.location && (
                         <p className="mt-1" style={{color: '#E55A24'}}>
-                          ℹ️ Task location: <span className="font-semibold">{formData.location}</span> — Make sure this is different from your current location if the doer needs to travel.
+                          ℹ️ Errand location: <span className="font-semibold">{formData.location}</span> — Make sure this is different from your current location if the doer needs to travel.
                         </p>
                       )}
                     </div>

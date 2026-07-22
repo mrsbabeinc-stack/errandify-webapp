@@ -12,7 +12,7 @@ export const ErrandPerfReport: React.FC = () => {
             ⏱️ Errand Performance
           </h1>
           <p style={{ fontSize: '14px', color: '#666' }}>
-            Task completion metrics and performance analytics
+            Errand completion metrics and performance analytics
           </p>
         </div>
 

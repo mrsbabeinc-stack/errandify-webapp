@@ -105,7 +105,7 @@ const DisputeReviewPage: React.FC = () => {
     <div className="dispute-review">
       <div className="review-header">
         <h1>Review Dispute #{dispute.id}</h1>
-        <p className="task-ref">Task #{dispute.task_id}</p>
+        <p className="task-ref">Errand #{dispute.task_id}</p>
       </div>
 
       <div className="review-content">

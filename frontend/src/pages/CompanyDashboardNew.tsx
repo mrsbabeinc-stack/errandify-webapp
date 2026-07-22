@@ -12,7 +12,10 @@ import AskerPostErrand from '../components/AskerPostErrand';
 import AskerBidsReceived from '../components/AskerBidsReceived';
 import AskerReviews from '../components/AskerReviews';
 import ErrandsPage from './ErrandsPage';
-import DoerBrowsePage from './DoerBrowsePage';
+import CompanyMyBizErrandsPage from './company/CompanyMyBizErrandsPage';
+import CompanyBrowseErrandsPage from './company/CompanyBrowseErrandsPage';
+import CompanyVerification from '../components/company/CompanyVerification';
+import CompanyTeam from '../components/company/CompanyTeam';
 import DoerAllocateErrands from '../components/DoerAllocateErrands';
 import DoerMyOffers from '../components/DoerMyOffers';
 import DoerActiveErrands from '../components/DoerActiveErrands';
@@ -360,7 +363,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                       📦 Allocate Errands
                     </a>
                     <a href="#" className={`nav-item ${activeSection === 'active-tasks' ? 'active' : ''}`} onClick={() => setActiveSection('active-tasks')}>
-                      🚀 Staff Active Tasks
+                      🚀 Staff Active Errands
                     </a>
                     <a href="#" className={`nav-item ${activeSection === 'doer-completed' ? 'active' : ''}`} onClick={() => setActiveSection('doer-completed')}>
                       ✅ Completed
@@ -730,6 +733,13 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
             <div className="section-content">
               <h2>MyBiz Profile</h2>
 
+              {/* ACRA verification — earns the "Verified business" badge */}
+              {company?.id && (
+                <div style={{ marginBottom: '16px' }}>
+                  <CompanyVerification companyId={company.id} />
+                </div>
+              )}
+
               <div className="mybiz-container">
                 {/* Company Info Card */}
                 <div className="mybiz-card">
@@ -813,13 +823,27 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
 
           {activeSection === 'errands' && (
             <div className="section-content">
-              <ErrandsPage userRole="asker" />
+              {/* The COMPANY's errands — was <ErrandsPage userRole="asker" />,
+                  which showed the signed-in person's own personal errands. */}
+              {company?.id ? (
+                <CompanyMyBizErrandsPage companyId={company.id} />
+              ) : (
+                <div className="p-6 text-center text-gray-500 text-sm">Loading your company…</div>
+              )}
             </div>
           )}
 
           {activeSection === 'staff' && (
             <div className="section-content">
               <h2>My Staff</h2>
+
+              {/* Invite by NRIC + real team list from company_staff */}
+              {company?.id && (
+                <div style={{ marginBottom: '18px' }}>
+                  <CompanyTeam companyId={company.id} myRole={(company as any)?.my_role} />
+                </div>
+              )}
+
               <div className="staff-container">
                 <div className="staff-actions">
                   <button className="btn-primary">+ Add Staff Member</button>
@@ -833,7 +857,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                         <p className="role">Senior Doer</p>
                       </div>
                       <div className="staff-stats">
-                        <span className="stat">✅ 45 tasks</span>
+                        <span className="stat">✅ 45 errands</span>
                         <span className="stat">⭐ 4.8</span>
                       </div>
                     </div>
@@ -856,7 +880,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                         <p className="role">Doer</p>
                       </div>
                       <div className="staff-stats">
-                        <span className="stat">✅ 28 tasks</span>
+                        <span className="stat">✅ 28 errands</span>
                         <span className="stat">⭐ 4.6</span>
                       </div>
                     </div>
@@ -879,7 +903,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                         <p className="role">Doer</p>
                       </div>
                       <div className="staff-stats">
-                        <span className="stat">✅ 12 tasks</span>
+                        <span className="stat">✅ 12 errands</span>
                         <span className="stat">⭐ 4.9</span>
                       </div>
                     </div>
@@ -915,8 +939,8 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
 
           {activeSection === 'active-tasks' && (
             <div className="section-content">
-              <h2>🚀 Staff Active Tasks</h2>
-              <p style={{fontSize: '14px', color: '#666', marginBottom: '20px'}}>View all allocated tasks assigned to your staff members</p>
+              <h2>🚀 Staff Active Errands</h2>
+              <p style={{fontSize: '14px', color: '#666', marginBottom: '20px'}}>View all allocated errands assigned to your staff members</p>
               <ManagerStaffAllocations companyId={company?.id || 3} defaultFilter="all" />
             </div>
           )}
@@ -1050,7 +1074,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                     <div className="section-header">
                       <h3>
                         {selectedChart === 'revenue' && '📈 Revenue Trend (Last 30 Days)'}
-                        {selectedChart === 'completion' && '✅ Task Completion Rate'}
+                        {selectedChart === 'completion' && '✅ Errand Completion Rate'}
                         {selectedChart === 'rating' && '⭐ Customer Ratings Trend'}
                         {selectedChart === 'staff' && '👥 Team Performance Metrics'}
                       </h3>
@@ -1477,7 +1501,13 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
           {/* DOER SECTION - Browse Errands */}
           {activeSection === 'doer-browse' && (
             <div className="section-content">
-              <DoerBrowsePage userRole="doer" />
+              {/* Company marketplace — NOT the personal DoerBrowsePage, which mixed
+                  the person's own errands into the company workspace. */}
+              {company?.id ? (
+                <CompanyBrowseErrandsPage companyId={company.id} />
+              ) : (
+                <div className="p-6 text-center text-gray-500 text-sm">Loading your company…</div>
+              )}
             </div>
           )}
 
@@ -2084,7 +2114,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                           SGD {company?.subscription_tier === 'gold' ? '38' : company?.subscription_tier === 'platinum' ? '76' : '19'}
                         </p>
                         <p style={{margin: 0, fontSize: '12px', color: '#666', fontWeight: '600'}}>
-                          vs Free tier at 20% commission on SGD 950 tasks
+                          vs Free tier at 20% commission on SGD 950 errands
                         </p>
                       </div>
                       <div style={{background: 'white', borderRadius: '12px', padding: '16px', border: '1px solid #FFD9B3'}}>

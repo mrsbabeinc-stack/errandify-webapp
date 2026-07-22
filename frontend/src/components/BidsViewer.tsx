@@ -71,9 +71,9 @@ const BidsViewerComponent = forwardRef<{ refreshBids: () => Promise<void> }, Bid
         }
       );
       let bidsData = response.data.data;
-      console.log('[BidsViewer] Fetched bids:', bidsData);
+      console.log('[BidsViewer] Fetched offers:', bidsData);
       if (bidsData.length > 0) {
-        console.log('[BidsViewer] First bid structure:', JSON.stringify(bidsData[0], null, 2));
+        console.log('[BidsViewer] First offer structure:', JSON.stringify(bidsData[0], null, 2));
         // Fix field name casing if needed
         bidsData = bidsData.map(bid => ({
           ...bid,
@@ -118,7 +118,7 @@ const BidsViewerComponent = forwardRef<{ refreshBids: () => Promise<void> }, Bid
       }
     } catch (err: any) {
       if (err.response?.status !== 403) {
-        setError(err.response?.data?.error || 'Failed to load bids');
+        setError(err.response?.data?.error || 'Failed to load offers');
       }
     } finally {
       setIsLoading(false);
@@ -137,10 +137,17 @@ const BidsViewerComponent = forwardRef<{ refreshBids: () => Promise<void> }, Bid
       );
 
       const stripeIntent = response.data.data.stripeIntent;
-      console.log('Stripe intent created:', stripeIntent);
+      const paymentSetupError = response.data.data.paymentSetupError;
 
-      // In dummy mode, auto-confirm payment
-      if (stripeIntent) {
+      // Only claim the money is secured if a real payment intent came back.
+      // This used to auto-confirm a fabricated 'succeeded' intent and tell the
+      // asker "Payment is held safely" when nothing had been charged.
+      if (paymentSetupError) {
+        setSuccessMessage(
+          "Your offer is confirmed. We're still setting up the payment — we'll be in touch shortly."
+        );
+        setShowSuccessMessage(true);
+      } else if (stripeIntent) {
         await axios.post(
           `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payment/confirm`,
           { intentId: stripeIntent.id },
@@ -156,7 +163,7 @@ const BidsViewerComponent = forwardRef<{ refreshBids: () => Promise<void> }, Bid
       onBidAccepted();
       fetchBids();
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to accept bid');
+      setError(err.response?.data?.error || 'Failed to accept offer');
     }
   };
 
@@ -184,7 +191,7 @@ const BidsViewerComponent = forwardRef<{ refreshBids: () => Promise<void> }, Bid
       setRejectingBidId(null);
       fetchBids();
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to reject bid');
+      setError(err.response?.data?.error || 'Failed to reject offer');
     }
   };
 
@@ -223,7 +230,7 @@ const BidsViewerComponent = forwardRef<{ refreshBids: () => Promise<void> }, Bid
   if (isLoading) {
     return (
       <div className="bg-white rounded-xl p-3 border border-orange-100 shadow-sm">
-        <p className="text-gray-600 text-xs">Loading bids...</p>
+        <p className="text-gray-600 text-xs">Loading offers...</p>
       </div>
     );
   }
@@ -231,7 +238,7 @@ const BidsViewerComponent = forwardRef<{ refreshBids: () => Promise<void> }, Bid
   if (bids.length === 0) {
     return (
       <div className="bg-white rounded-xl p-3 border border-orange-100 shadow-sm">
-        <p className="text-gray-600 text-sm">No offers yet. Doers will see your errand and bid soon!</p>
+        <p className="text-gray-600 text-sm">No offers yet. Doers will see your errand and offer soon!</p>
       </div>
     );
   }

@@ -22,17 +22,24 @@ interface QwenImageRequest {
 }
 
 export const qwenService = {
-  // Qwen 3.7 Plus / 3.6 Plus - Customer service, chat, content moderation
-  // Accepts text, video, and images
+  // Customer service, chat, content moderation.
+  //
+  // This used to POST to the old DashScope native endpoint
+  // (/api/v1/services/aigc/text-generation/generation) asking for a model named
+  // "qwen-3.7-plus", which does not exist. Every call threw, which is why AI
+  // dispute analysis always came back "AI analysis failed". Switched to the
+  // compatible-mode endpoint and qwen-max — the same pair the content
+  // moderation and suggestions paths already use successfully.
   async chat(
     messages: Array<{ role: 'user' | 'assistant'; content: string }>,
     options?: { temperature?: number; maxTokens?: number }
   ) {
+    const base = process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1';
     try {
       const response = await axios.post(
-        'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation',
+        `${base}/chat/completions`,
         {
-          model: 'qwen-3.7-plus', // or qwen-3.6-plus
+          model: 'qwen-max',
           messages,
           temperature: options?.temperature ?? 0.7,
           max_tokens: options?.maxTokens ?? 2048,
@@ -42,12 +49,13 @@ export const qwenService = {
             Authorization: `Bearer ${config.qwen.apiKey}`,
             'Content-Type': 'application/json',
           },
+          timeout: 30000,
         }
       );
 
-      return response.data.output?.text || '';
-    } catch (error) {
-      console.error('Qwen chat error:', error);
+      return response.data?.choices?.[0]?.message?.content || '';
+    } catch (error: any) {
+      console.error('Qwen chat error:', error?.response?.data || error?.message || error);
       throw error;
     }
   },

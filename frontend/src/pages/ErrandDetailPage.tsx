@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import { CaseReportModal } from '../components/CaseReportModal';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import BidSubmissionModal from '../components/BidSubmissionModal';
@@ -66,6 +67,8 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
+  // Report an Issue — only offered to the two people actually on this errand
+  const [reportOpen, setReportOpen] = useState(false);
   const [showBidModal, setShowBidModal] = useState(false);
   const [showSessionSelector, setShowSessionSelector] = useState(false);
   const [bidSubmitted, setBidSubmitted] = useState(false);
@@ -135,7 +138,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
             setBidId(null);
           }
         } catch (err) {
-          console.error('Failed to check user bid:', err);
+          console.error('Failed to check user offer:', err);
           setUserBidAmount(null);
         }
       };
@@ -308,7 +311,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
           </button>
           <div className="bg-white rounded-xl shadow-lg p-6 text-center">
             <p className="text-lg font-bold text-errandify-brown mb-2">🕐 Errand Expired</p>
-            <p className="text-sm text-gray-600">This errand's deadline has passed and is no longer available for new bids.</p>
+            <p className="text-sm text-gray-600">This errand's deadline has passed and is no longer available for new offers.</p>
           </div>
         </div>
       </div>
@@ -1059,7 +1062,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                     disabled={!bidId}
                     onClick={async () => {
                       if (!bidId) {
-                        alert('Unable to confirm - bid ID not found. Please refresh the page.');
+                        alert('Unable to confirm - offer ID not found. Please refresh the page.');
                         return;
                       }
                       try {
@@ -1069,7 +1072,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                           {},
                           { headers: { Authorization: `Bearer ${token}` } }
                         );
-                        console.log('[ErrandDetailPage] Bid confirmed:', response.data);
+                        console.log('[ErrandDetailPage] Offer confirmed:', response.data);
                         // Refresh errand data and bid status to show updated state
                         await fetchErrandDetail();
                         // Refresh bid status to update button state
@@ -1085,7 +1088,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                               setUserBidAmount(bidResponse.data.bidAmount);
                             }
                           } catch (bidErr) {
-                            console.error('Failed to refresh bid status:', bidErr);
+                            console.error('Failed to refresh offer status:', bidErr);
                           }
                         }
                       } catch (err: any) {
@@ -1382,7 +1385,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                         {currentUser && (currentUser.id === errand.askerId || currentUser.id === errand.doerId) && errand.status === 'completed_unconfirmed' && (
                           <JobExecutionPanel
                             taskId={errand.id}
-                            taskTitle={errand.title || 'Task'}
+                            taskTitle={errand.title || 'Errand'}
                             status="completed_unconfirmed"
                             budget={errand.budget || 0}
                             doerName={errand.doerName || 'Doer'}
@@ -2036,7 +2039,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
               💌 Share & Earn Together!
             </h2>
             <p className="text-sm text-gray-600 mb-4">
-              Invite a friend to join Errandify. You both earn 50 EP when they complete their first task! 🎁
+              Invite a friend to join Errandify. You both earn 50 EP when they complete their first errand! 🎁
             </p>
 
             {/* Get user's referral code */}
@@ -2087,7 +2090,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
 Hi! I found this perfect errand on Errandify and thought of you!
 
 💰 Join with my referral code: ${currentUser.referral_code || 'REF-CODE'}
-🎁 We both earn 50 Errandify Points when you complete your first task!
+🎁 We both earn 50 Errandify Points when you complete your first errand!
 
 🔗 ${window.location.origin}/signup?ref=${currentUser.referral_code || 'unknown'}&errand=${errand.id}
 
@@ -2097,7 +2100,7 @@ Let's help each other! 🤝`}
                   <button
                     onClick={() => {
                       navigator.clipboard.writeText(
-                        `🎯 ${errand.title}\n📌 Errand ID: ${errand.errandId}\n\nHi! I found this perfect errand on Errandify and thought of you! \n\n💰 Join with my referral code: ${currentUser.referral_code || 'REF-CODE'}\n🎁 We both earn 50 Errandify Points when you complete your first task!\n\n🔗 ${window.location.origin}/signup?ref=${currentUser.referral_code || 'unknown'}&errand=${errand.id}\n\nLet's help each other! 🤝`
+                        `🎯 ${errand.title}\n📌 Errand ID: ${errand.errandId}\n\nHi! I found this perfect errand on Errandify and thought of you! \n\n💰 Join with my referral code: ${currentUser.referral_code || 'REF-CODE'}\n🎁 We both earn 50 Errandify Points when you complete your first errand!\n\n🔗 ${window.location.origin}/signup?ref=${currentUser.referral_code || 'unknown'}&errand=${errand.id}\n\nLet's help each other! 🤝`
                       );
                     }}
                     className="mt-2 w-full px-2 py-1.5 bg-green-500 text-white text-xs font-semibold rounded hover:bg-green-600 transition"
@@ -2109,7 +2112,7 @@ Let's help each other! 🤝`}
                 {/* Share Buttons */}
                 <div className="grid grid-cols-2 gap-2 mb-4">
                   <a
-                    href={`https://wa.me/?text=${encodeURIComponent(`🎯 ${errand.title}\n📌 Errand ID: ${errand.errandId}\n\nHi! I found this perfect errand on Errandify and thought of you! \n\n💰 Join with my referral code: ${currentUser.referral_code || 'REF-CODE'}\n🎁 We both earn 50 Errandify Points when you complete your first task!\n\n🔗 ${window.location.origin}/signup?ref=${currentUser.referral_code || 'unknown'}&errand=${errand.id}\n\nLet's help each other! 🤝`)}`}
+                    href={`https://wa.me/?text=${encodeURIComponent(`🎯 ${errand.title}\n📌 Errand ID: ${errand.errandId}\n\nHi! I found this perfect errand on Errandify and thought of you! \n\n💰 Join with my referral code: ${currentUser.referral_code || 'REF-CODE'}\n🎁 We both earn 50 Errandify Points when you complete your first errand!\n\n🔗 ${window.location.origin}/signup?ref=${currentUser.referral_code || 'unknown'}&errand=${errand.id}\n\nLet's help each other! 🤝`)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="px-3 py-2 bg-green-500 text-white text-xs font-semibold rounded hover:bg-green-600 transition text-center"
@@ -2119,7 +2122,7 @@ Let's help each other! 🤝`}
                   <button
                     onClick={() => {
                       const subject = `Join me on Errandify - ${errand.title}`;
-                      const body = `🎯 ${errand.title}\n📌 Errand ID: ${errand.errandId}\n\nHi! I found this perfect errand on Errandify and thought of you! \n\n💰 Join with my referral code: ${currentUser.referral_code || 'REF-CODE'}\n🎁 We both earn 50 Errandify Points when you complete your first task!\n\n🔗 ${window.location.origin}/signup?ref=${currentUser.referral_code || 'unknown'}&errand=${errand.id}\n\nLet's help each other! 🤝`;
+                      const body = `🎯 ${errand.title}\n📌 Errand ID: ${errand.errandId}\n\nHi! I found this perfect errand on Errandify and thought of you! \n\n💰 Join with my referral code: ${currentUser.referral_code || 'REF-CODE'}\n🎁 We both earn 50 Errandify Points when you complete your first errand!\n\n🔗 ${window.location.origin}/signup?ref=${currentUser.referral_code || 'unknown'}&errand=${errand.id}\n\nLet's help each other! 🤝`;
                       window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
                     }}
                     className="px-3 py-2 bg-blue-600 text-white text-xs font-semibold rounded hover:bg-blue-700 transition"
@@ -2298,6 +2301,31 @@ Let's help each other! 🤝`}
             </div>
           </div>
         </div>
+      )}
+
+      {/* Report an Issue — deliberately understated so it does not invite
+          complaints, but always findable when something has gone wrong. */}
+      {errand && currentUser &&
+        (currentUser.id === errand.askerId || currentUser.id === errand.doerId) && (
+          <div className="max-w-3xl mx-auto px-4 pb-8 pt-2 text-center">
+            <button
+              onClick={() => setReportOpen(true)}
+              className="text-[12.5px] font-semibold text-gray-500 underline underline-offset-2 hover:text-gray-700"
+            >
+              Something wrong with this errand?
+            </button>
+          </div>
+        )}
+
+      {errand && (
+        <CaseReportModal
+          isOpen={reportOpen}
+          onClose={() => setReportOpen(false)}
+          errandId={errand.id}
+          errandTitle={errand.title}
+          askerId={errand.askerId}
+          doerId={errand.doerId}
+        />
       )}
 
       {/* Completion Photo Zoom Modal */}

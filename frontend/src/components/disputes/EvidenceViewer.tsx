@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 interface Evidence {
   id: number;
   submittedBy: 'doer' | 'company';
@@ -45,7 +47,9 @@ export function EvidenceViewer({
     try {
       setLoading(true);
       const query = filter !== 'all' ? `?party=${filter}` : '';
-      const response = await fetch(`/api/disputes/${disputeId}/evidence${query}`);
+      const response = await fetch(`${API_URL}/api/disputes/${disputeId}/evidence${query}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
 
       if (!response.ok) throw new Error('Failed to fetch evidence');
 
@@ -87,8 +91,9 @@ export function EvidenceViewer({
         formData.append('files', file);
       });
 
-      const response = await fetch(`/api/disputes/${disputeId}/evidence`, {
+      const response = await fetch(`${API_URL}/api/disputes/${disputeId}/evidence`, {
         method: 'POST',
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         body: formData,
       });
 
@@ -144,7 +149,7 @@ export function EvidenceViewer({
       case 'FAILED':
         return (
           <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 px-3 py-1 rounded-full">
-            <AlertCircle size={14} />
+            <span className="text-lg">⚠️</span>
             Analysis failed
           </div>
         );

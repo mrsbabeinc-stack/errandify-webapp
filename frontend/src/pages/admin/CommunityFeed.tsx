@@ -4,6 +4,17 @@ import axios from 'axios';
 import { useToast, ToastContainer } from '../../components/Toast';
 import AdminLayout from '../../components/admin/AdminLayout';
 
+interface Discussion {
+  id: number;
+  title: string;
+  author: string;
+  category: string;
+  replies: number;
+  views: number;
+  status: string;
+  lastUpdated: string;
+}
+
 interface FeedPost {
   id: string;
   author: string;
@@ -22,68 +33,231 @@ export default function CommunityFeed() {
   const [newContent, setNewContent] = useState('');
   const [newType, setNewType] = useState<'announcement' | 'story' | 'tip' | 'question'>('tip');
   const [newAuthor, setNewAuthor] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState('');
+
+  const [discussions, setDiscussions] = useState<Discussion[]>([]);
+  const [newDiscTitle, setNewDiscTitle] = useState('');
+  const [newDiscAuthor, setNewDiscAuthor] = useState('');
+  const [newDiscCategory, setNewDiscCategory] = useState('general');
+  const [editingDiscId, setEditingDiscId] = useState<number | null>(null);
+  const [editDiscTitle, setEditDiscTitle] = useState('');
+
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
+  // This feed used to live in localStorage, which meant a post written here was
+  // saved to this browser only — MyKampung could never see it, and it was lost
+  // when the cache cleared. Both ends now read and write the same table.
+  const loadPosts = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/community/posts`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
+      if (!res.ok) throw new Error('request failed');
+      const result = await res.json();
+      setPosts(
+        (result.data || []).map((p: any) => ({
+          id: String(p.id),
+          author: p.author,
+          content: p.content,
+          type: p.category,
+          likes: p.likes ?? 0,
+          comments: p.comments ?? 0,
+          status: 'published',
+          createdAt: p.createdAt,
+        }))
+      );
+    } catch (err) {
+      console.error('Failed to load community feed:', err);
+      setPosts([]);
+      showToast('Could not load the community feed', 'error');
+    }
+  };
 
   useEffect(() => {
-    const saved = localStorage.getItem('communityFeed');
-    if (saved) {
-      setPosts(JSON.parse(saved));
-    } else {
-      const demoPosts: FeedPost[] = [
-        {
-          id: 'post_1',
-          author: 'Sarah Chen',
-          content: 'Just completed my 100th errand! So grateful for this platform',
-          type: 'story',
-          likes: 234,
-          comments: 45,
-          status: 'published',
-          createdAt: new Date(Date.now() - 86400000).toISOString(),
-        },
-        {
-          id: 'post_2',
-          author: 'Mike Johnson',
-          content: 'Pro tip: Always check the errand location before accepting to save time',
-          type: 'tip',
-          likes: 156,
-          comments: 23,
-          status: 'published',
-          createdAt: new Date(Date.now() - 172800000).toISOString(),
-        },
-        {
-          id: 'post_3',
-          author: 'Lisa Wong',
-          content: 'Any tips for getting more high-paying errands?',
-          type: 'question',
-          likes: 89,
-          comments: 34,
-          status: 'published',
-          createdAt: new Date(Date.now() - 259200000).toISOString(),
-        },
-      ];
-      setPosts(demoPosts);
-      localStorage.setItem('communityFeed', JSON.stringify(demoPosts));
-    }
+    loadPosts();
+    loadDiscussions();
   }, []);
 
-  const handleCreatePost = () => {
+  const authHeaders = () => ({
+    Authorization: `Bearer ${localStorage.getItem('token')}`,
+    'Content-Type': 'application/json',
+  });
+
+  const loadDiscussions = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/community/discussions/all`, { headers: authHeaders() });
+      if (!res.ok) throw new Error('request failed');
+      const result = await res.json();
+      setDiscussions(result.data || []);
+    } catch (err) {
+      console.error('Failed to load discussions:', err);
+      setDiscussions([]);
+    }
+  };
+
+  const handleCreateDiscussion = async () => {
+    if (!newDiscTitle.trim()) {
+      showToast('⚠️ A discussion needs a title', 'error');
+      return;
+    }
+    try {
+      const res = await fetch(`${API_URL}/api/community/discussions`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({
+          title: newDiscTitle.trim(),
+          author: newDiscAuthor.trim() || 'Errandify',
+          category: newDiscCategory,
+        }),
+      });
+      const result = await res.json();
+      if (!res.ok) {
+        showToast(result.error || 'Could not start that discussion', 'error');
+        return;
+      }
+      setNewDiscTitle('');
+      setNewDiscAuthor('');
+      showToast('Discussion posted to MyKampung', 'success');
+      loadDiscussions();
+    } catch (err) {
+      console.error('Failed to create discussion:', err);
+      showToast('Could not start that discussion', 'error');
+    }
+  };
+
+  const handleSaveDiscussion = async (id: number) => {
+    if (!editDiscTitle.trim()) {
+      showToast('⚠️ Title cannot be empty', 'error');
+      return;
+    }
+    try {
+      const res = await fetch(`${API_URL}/api/community/discussions/${id}`, {
+        method: 'PATCH',
+        headers: authHeaders(),
+        body: JSON.stringify({ title: editDiscTitle.trim() }),
+      });
+      if (!res.ok) {
+        const result = await res.json().catch(() => ({}));
+        showToast(result.error || 'Could not save that discussion', 'error');
+        return;
+      }
+      setEditingDiscId(null);
+      showToast('Updated on MyKampung', 'success');
+      loadDiscussions();
+    } catch (err) {
+      console.error('Failed to save discussion:', err);
+      showToast('Could not save that discussion', 'error');
+    }
+  };
+
+  const handleDeleteDiscussion = async (id: number) => {
+    if (!confirm('Delete this discussion? It will disappear from MyKampung.')) return;
+    try {
+      const res = await fetch(`${API_URL}/api/community/discussions/${id}`, {
+        method: 'DELETE',
+        headers: authHeaders(),
+      });
+      if (!res.ok) {
+        const result = await res.json().catch(() => ({}));
+        showToast(result.error || 'Could not delete that discussion', 'error');
+        return;
+      }
+      showToast('🗑️ Discussion deleted', 'success');
+      loadDiscussions();
+    } catch (err) {
+      console.error('Failed to delete discussion:', err);
+      showToast('Could not delete that discussion', 'error');
+    }
+  };
+
+  const startEdit = (post: FeedPost) => {
+    setEditingId(post.id);
+    setEditContent(post.content);
+  };
+
+  const handleSaveEdit = async (id: string) => {
+    if (!editContent.trim()) {
+      showToast('⚠️ Content cannot be empty', 'error');
+      return;
+    }
+    try {
+      const res = await fetch(`${API_URL}/api/community/posts/${id}`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ content: editContent.trim() }),
+      });
+      if (!res.ok) {
+        const result = await res.json().catch(() => ({}));
+        showToast(result.error || 'Could not save that edit', 'error');
+        return;
+      }
+      setEditingId(null);
+      showToast('Updated on MyKampung', 'success');
+      loadPosts();
+    } catch (err) {
+      console.error('Failed to edit post:', err);
+      showToast('Could not save that edit', 'error');
+    }
+  };
+
+  const handleDeletePost = async (id: string) => {
+    if (!confirm('Delete this post? It will disappear from MyKampung.')) return;
+    try {
+      const res = await fetch(`${API_URL}/api/community/posts/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
+      if (!res.ok) {
+        const result = await res.json().catch(() => ({}));
+        showToast(result.error || 'Could not delete that post', 'error');
+        return;
+      }
+      showToast('🗑️ Post deleted', 'success');
+      loadPosts();
+    } catch (err) {
+      console.error('Failed to delete post:', err);
+      showToast('Could not delete that post', 'error');
+    }
+  };
+
+  const handleCreatePost = async () => {
     if (!newContent.trim() || !newAuthor.trim()) return;
 
-    const newPost: FeedPost = {
-      id: `post_${Date.now()}`,
-      author: newAuthor,
-      content: newContent,
-      type: newType,
-      likes: 0,
-      comments: 0,
-      status: 'pending',
-      createdAt: new Date().toISOString(),
-    };
+    try {
+      const res = await fetch(`${API_URL}/api/community/posts`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          content: newContent.trim(),
+          author: newAuthor.trim(),
+          category: newType,
+        }),
+      });
 
-    const updated = [...posts, newPost];
-    setPosts(updated);
-    localStorage.setItem('communityFeed', JSON.stringify(updated));
-    setNewContent('');
-    setNewAuthor('');
+      const result = await res.json();
+      if (!res.ok) {
+        showToast(result.error || 'Could not publish that post', 'error');
+        return;
+      }
+
+      // Posts publish immediately: an admin writing here is Errandify speaking
+      // to its community, and there is no review queue in this screen to move
+      // a pending post out of. Change status via PATCH if that ever changes.
+      showToast('Published to MyKampung', 'success');
+      setNewContent('');
+      setNewAuthor('');
+      loadPosts();
+    } catch (err) {
+      console.error('Failed to create post:', err);
+      showToast('Could not publish that post', 'error');
+    }
   };
 
   const typeColors = {
@@ -181,9 +355,20 @@ export default function CommunityFeed() {
                 <div style={{ fontWeight: '600', color: '#333', marginBottom: '4px' }}>
                   {post.author}
                 </div>
-                <div style={{ fontSize: '12px', color: '#666' }}>
-                  {post.content}
-                </div>
+                {editingId === post.id ? (
+                  <textarea
+                    value={editContent}
+                    onChange={(e) => setEditContent(e.target.value)}
+                    style={{
+                      width: '100%', padding: '8px', border: '2px solid #FF6B35',
+                      borderRadius: '6px', fontSize: '12px', minHeight: '70px',
+                    }}
+                  />
+                ) : (
+                  <div style={{ fontSize: '12px', color: '#666' }}>
+                    {post.content}
+                  </div>
+                )}
               </div>
               <span style={{
                 padding: '6px 10px',
@@ -203,12 +388,191 @@ export default function CommunityFeed() {
               <span>👍 {post.likes}</span>
               <span>💬 {post.comments}</span>
             </div>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
+              {editingId === post.id ? (
+                <>
+                  <button
+                    onClick={() => handleSaveEdit(post.id)}
+                    style={{
+                      padding: '6px 12px', background: '#FF6B35', color: 'white',
+                      border: 'none', borderRadius: '6px', fontSize: '12px',
+                      fontWeight: '600', cursor: 'pointer',
+                    }}
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={() => setEditingId(null)}
+                    style={{
+                      padding: '6px 12px', background: 'white', color: '#666',
+                      border: '2px solid #ccc', borderRadius: '6px', fontSize: '12px',
+                      fontWeight: '600', cursor: 'pointer',
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => startEdit(post)}
+                    style={{
+                      padding: '6px 12px', background: 'white', color: '#FF6B35',
+                      border: '2px solid #FF6B35', borderRadius: '6px', fontSize: '12px',
+                      fontWeight: '600', cursor: 'pointer',
+                    }}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDeletePost(post.id)}
+                    style={{
+                      padding: '6px 12px', background: 'white', color: '#E53935',
+                      border: '2px solid #E53935', borderRadius: '6px', fontSize: '12px',
+                      fontWeight: '600', cursor: 'pointer',
+                    }}
+                  >
+                    Delete
+                  </button>
+                </>
+              )}
+            </div>
             <div style={{ fontSize: '11px', color: '#999' }}>
               {new Date(post.createdAt).toLocaleString()} • Status: {post.status}
             </div>
           </div>
         ))}
       </div>
+      <div style={{ marginTop: '32px', paddingTop: '24px', borderTop: '2px solid #FFD9B3' }}>
+        <div style={{ fontSize: '16px', fontWeight: '700', color: '#333', marginBottom: '4px' }}>
+          💬 Discussions
+        </div>
+        <p style={{ fontSize: '13px', color: '#666', marginBottom: '12px' }}>
+          Conversation threads shown in the MyKampung discussions tab.
+        </p>
+
+        <div style={{ display: 'grid', gap: '12px', marginBottom: '20px' }}>
+          <input
+            type="text"
+            placeholder="Discussion title"
+            value={newDiscTitle}
+            onChange={(e) => setNewDiscTitle(e.target.value)}
+            style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px' }}
+          />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <input
+              type="text"
+              placeholder="Author (defaults to Errandify)"
+              value={newDiscAuthor}
+              onChange={(e) => setNewDiscAuthor(e.target.value)}
+              style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px' }}
+            />
+            <select
+              value={newDiscCategory}
+              onChange={(e) => setNewDiscCategory(e.target.value)}
+              style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px', cursor: 'pointer' }}
+            >
+              <option value="general">General</option>
+              <option value="tips">Tips</option>
+              <option value="issues">Issues</option>
+              <option value="feedback">Feedback</option>
+            </select>
+          </div>
+          <button
+            onClick={handleCreateDiscussion}
+            style={{
+              padding: '10px',
+              background: 'linear-gradient(135deg, #FF6B35 0%, #FF8C5A 100%)',
+              color: 'white', border: 'none', borderRadius: '6px',
+              fontWeight: '600', cursor: 'pointer',
+            }}
+          >
+            + Start Discussion
+          </button>
+        </div>
+
+        {discussions.length === 0 ? (
+          <p style={{ fontSize: '13px', color: '#666' }}>No discussions yet.</p>
+        ) : (
+          <div style={{ display: 'grid', gap: '12px' }}>
+            {discussions.map(d => (
+              <div key={d.id} style={{
+                padding: '14px', background: 'white',
+                border: '2px solid #9C27B0', borderRadius: '8px',
+              }}>
+                {editingDiscId === d.id ? (
+                  <input
+                    type="text"
+                    value={editDiscTitle}
+                    onChange={(e) => setEditDiscTitle(e.target.value)}
+                    style={{
+                      width: '100%', padding: '8px', border: '2px solid #FF6B35',
+                      borderRadius: '6px', fontSize: '13px', marginBottom: '8px',
+                    }}
+                  />
+                ) : (
+                  <div style={{ fontWeight: '600', color: '#333', marginBottom: '4px' }}>
+                    {d.title}
+                  </div>
+                )}
+                <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>
+                  {d.author} • {d.category} • 💬 {d.replies} • 👁 {d.views}
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  {editingDiscId === d.id ? (
+                    <>
+                      <button
+                        onClick={() => handleSaveDiscussion(d.id)}
+                        style={{
+                          padding: '6px 12px', background: '#FF6B35', color: 'white',
+                          border: 'none', borderRadius: '6px', fontSize: '12px',
+                          fontWeight: '600', cursor: 'pointer',
+                        }}
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={() => setEditingDiscId(null)}
+                        style={{
+                          padding: '6px 12px', background: 'white', color: '#666',
+                          border: '2px solid #ccc', borderRadius: '6px', fontSize: '12px',
+                          fontWeight: '600', cursor: 'pointer',
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => { setEditingDiscId(d.id); setEditDiscTitle(d.title); }}
+                        style={{
+                          padding: '6px 12px', background: 'white', color: '#FF6B35',
+                          border: '2px solid #FF6B35', borderRadius: '6px', fontSize: '12px',
+                          fontWeight: '600', cursor: 'pointer',
+                        }}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteDiscussion(d.id)}
+                        style={{
+                          padding: '6px 12px', background: 'white', color: '#E53935',
+                          border: '2px solid #E53935', borderRadius: '6px', fontSize: '12px',
+                          fontWeight: '600', cursor: 'pointer',
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       </div>
     </AdminLayout>
   );

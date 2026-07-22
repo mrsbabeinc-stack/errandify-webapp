@@ -50,7 +50,7 @@ export default function TaskCompleteEvidencePage() {
     } else if (title.includes('cook') || title.includes('food') || title.includes('meal')) {
       return `I've prepared the meal perfectly. Everything is fresh and ready to serve!`;
     } else if (title.includes('move') || title.includes('transport')) {
-      return `I've completed the moving task. All items were handled with care safely!`;
+      return `I've completed the moving errand. All items were handled with care safely!`;
     } else if (title.includes('photography') || title.includes('photo')) {
       return `I've completed the photography session. Great shots captured and ready!`;
     } else if (title.includes('garden') || title.includes('landscape') || title.includes('plant')) {
@@ -58,7 +58,7 @@ export default function TaskCompleteEvidencePage() {
     } else if (title.includes('babysit') || title.includes('childcare')) {
       return `I've completed the childcare session. The children had a great time!`;
     } else {
-      return `I've completed the task successfully. Everything went smoothly!`;
+      return `I've completed the errand successfully. Everything went smoothly!`;
     }
   };
 
@@ -77,11 +77,11 @@ export default function TaskCompleteEvidencePage() {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      console.log('[TaskComplete] Fetched task data:', response.data.data);
+      console.log('[TaskComplete] Fetched errand data:', response.data.data);
       setTask(response.data.data);
       setError('');
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to load task');
+      setError(err.response?.data?.error || 'Failed to load errand');
     } finally {
       setLoading(false);
     }
@@ -230,7 +230,7 @@ export default function TaskCompleteEvidencePage() {
       <div className="min-h-screen bg-errandify-bg flex items-center justify-center">
         <div className="text-center">
           <p className="text-2xl mb-4">⏳</p>
-          <p className="text-lg font-semibold text-gray-700">Loading task details...</p>
+          <p className="text-lg font-semibold text-gray-700">Loading errand details...</p>
         </div>
       </div>
     );
@@ -241,8 +241,8 @@ export default function TaskCompleteEvidencePage() {
       <div className="min-h-screen bg-errandify-bg flex items-center justify-center">
         <div className="bg-white rounded-lg p-8 shadow-lg max-w-sm text-center">
           <p className="text-4xl mb-4">😕</p>
-          <p className="text-lg font-bold text-gray-800 mb-2">Oops! Task not found</p>
-          <p className="text-gray-600 mb-6">This task seems to have disappeared. Let's get you back to your offers!</p>
+          <p className="text-lg font-bold text-gray-800 mb-2">Oops! Errand not found</p>
+          <p className="text-gray-600 mb-6">This errand seems to have disappeared. Let's get you back to your offers!</p>
           <button
             onClick={() => navigate('/my-offer')}
             className="bg-gradient-to-r from-errandify-orange to-orange-600 text-white py-3 px-6 rounded-lg font-bold hover:shadow-lg transition-all"

@@ -16,7 +16,10 @@ export interface PaymentValidationResult {
 export async function validatePaymentRelease(errandId: number, requesterId: number): Promise<PaymentValidationResult> {
   try {
     const errand = await db.query(
-      `SELECT id, asker_id, doer_id, status, completed_at, asker_confirmed FROM errands WHERE id = $1`,
+      `SELECT e.id, e.asker_id, ab.doer_id, e.status, e.completed_at, e.asker_confirmed
+         FROM errands e
+         LEFT JOIN bids ab ON ab.id = e.accepted_bid_id
+        WHERE e.id = $1`,
       [errandId]
     );
 
@@ -104,7 +107,11 @@ export async function releasePayment(
 export async function getPaymentStatus(errandId: number) {
   try {
     const result = await db.query(
-      `SELECT id, status, completed_at, payment_released_at, asker_confirmed, asker_id, doer_id FROM errands WHERE id = $1`,
+      `SELECT e.id, e.status, e.completed_at, e.payment_released_at, e.asker_confirmed,
+              e.asker_id, ab.doer_id
+         FROM errands e
+         LEFT JOIN bids ab ON ab.id = e.accepted_bid_id
+        WHERE e.id = $1`,
       [errandId]
     );
 

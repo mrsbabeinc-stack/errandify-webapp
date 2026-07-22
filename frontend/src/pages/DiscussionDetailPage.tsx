@@ -16,23 +16,23 @@ interface Discussion {
 const mockDiscussions: Discussion[] = [
   {
     id: 1,
-    title: 'Best practices for pricing tasks in 2026',
+    title: 'Best practices for pricing errands in 2026',
     author: 'Sarah Chen',
     category: 'tips',
     replies: 34,
     views: 512,
     lastUpdated: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-    content: 'Discussion about best pricing strategies for tasks on Errandify. Share your experiences and tips!',
+    content: 'Discussion about best pricing strategies for errands on Errandify. Share your experiences and tips!',
   },
   {
     id: 2,
-    title: 'New feature feedback: Recurring Tasks',
+    title: 'New feature feedback: Recurring Errands',
     author: 'Product Team',
     category: 'feedback',
     replies: 156,
     views: 2341,
     lastUpdated: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-    content: 'We\'ve introduced recurring tasks! Share your feedback on this new feature.',
+    content: 'We\'ve introduced recurring errands! Share your feedback on this new feature.',
   },
   {
     id: 3,

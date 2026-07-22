@@ -55,14 +55,14 @@ export const CategoryAnalysisReport: React.FC = () => {
               <div style={{ fontSize: '11px', color: '#999', marginTop: '4px' }}>This month</div>
             </div>
             <div style={{ background: '#fff', padding: '16px', borderRadius: '8px', border: '1px solid #ffb88c' }}>
-              <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>Total Tasks</div>
+              <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>Total Errands</div>
               <div style={{ fontSize: '24px', fontWeight: '700', color: '#666' }}>{selected.tasks}</div>
               <div style={{ fontSize: '11px', color: '#999', marginTop: '4px' }}>Completed this month</div>
             </div>
             <div style={{ background: '#fff', padding: '16px', borderRadius: '8px', border: '1px solid #ffb88c' }}>
-              <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>Avg Task Value</div>
+              <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>Avg Errand Value</div>
               <div style={{ fontSize: '24px', fontWeight: '700', color: '#666' }}>SGD {(selected.revenue / selected.tasks).toFixed(2)}</div>
-              <div style={{ fontSize: '11px', color: '#999', marginTop: '4px' }}>Per task average</div>
+              <div style={{ fontSize: '11px', color: '#999', marginTop: '4px' }}>Per errand average</div>
             </div>
             <div style={{ background: '#fff', padding: '16px', borderRadius: '8px', border: '1px solid #ffb88c' }}>
               <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>Growth Rate</div>

@@ -277,14 +277,14 @@ export default function AdminModerationPage() {
                   {/* Task Info */}
                   {selectedNotification.details.taskTitle && (
                     <div>
-                      <p className="text-xs text-gray-600 font-semibold mb-1">Task</p>
+                      <p className="text-xs text-gray-600 font-semibold mb-1">Errand</p>
                       <p className="text-sm">{selectedNotification.details.taskTitle}</p>
                       {selectedNotification.details.taskId && (
                         <button
                           onClick={() => window.open(`/errand/${selectedNotification.details.taskId}`, '_blank')}
                           className="text-xs text-errandify-orange hover:underline mt-1"
                         >
-                          View Task →
+                          View Errand →
                         </button>
                       )}
                     </div>

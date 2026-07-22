@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { EvidenceViewer } from '../disputes/EvidenceViewer';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 interface Dispute {
   id: number;
   errandId: string;
@@ -47,57 +49,68 @@ export function DisputeResponsePage({ disputeId, onBack, userRole }: DisputeResp
   const fetchDisputeDetails = async () => {
     try {
       setLoading(true);
+      const res = await fetch(`${API_URL}/api/disputes/${disputeId}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
 
-      // Mock disputes for testing - using dynamic dates
-      const now = new Date();
-      const t24h = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-      const t48h = new Date(now.getTime() + 48 * 60 * 60 * 1000);
-      const t72h = new Date(now.getTime() + 72 * 60 * 60 * 1000);
+      if (res.status === 403) throw new Error('You are not involved in this dispute.');
+      if (res.status === 404) throw new Error('Dispute not found.');
+      if (!res.ok) throw new Error('Could not load this dispute. Please try again.');
 
-      const mockDisputes: Record<number, Dispute> = {
-        1: {
-          id: 1,
-          errandId: 'ERR-2026-001',
-          status: 'In Review',
-          amount: 150,
-          reason: 'Incomplete task completion - not all areas cleaned',
-          raisedBy: 'doer',
-          createdAt: now.toISOString(),
-          responseDeadline: t24h.toISOString(),
-          autoResolveAt: t48h.toISOString(),
-          doerEvidenceCount: 2,
-          companyEvidenceCount: 0,
-        },
-        2: {
-          id: 2,
-          errandId: 'ERR-2026-002',
-          status: 'Resolved',
-          amount: 85,
-          reason: 'Late delivery - staff arrived after deadline',
-          raisedBy: 'doer',
-          createdAt: new Date(now.getTime() - 72 * 60 * 60 * 1000).toISOString(),
-          responseDeadline: new Date(now.getTime() - 48 * 60 * 60 * 1000).toISOString(),
-          autoResolveAt: new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString(),
-          doerEvidenceCount: 1,
-          companyEvidenceCount: 1,
-          verdict: {
-            decision: 'PARTIAL_SPLIT',
-            compensationAmount: 42.50,
-            compensationRecipient: 'doer',
-            reasoning: 'Based on the evidence submitted by both parties, we found that while the delivery was late, the service was partially completed. The doer is entitled to 50% compensation for the partial service completion. The company receives a $42.50 credit for the inconvenience caused by the late delivery.',
-            issuedAt: new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString(),
-          },
-        },
-      };
+      const d = (await res.json())?.dispute;
+      if (!d) throw new Error('Dispute not found.');
 
-      const dispute = mockDisputes[disputeId];
-      if (!dispute) {
-        throw new Error('Dispute not found');
-      }
+      // There are two verdict vocabularies in the backend: POST /:id/verdict
+      // writes APPROVE_DOER/APPROVE_COMPANY/PARTIAL_SPLIT straight into
+      // disputes.verdict_decision, while disputeVerdictService uses
+      // full_payment/refund/partial_payment against a different table. Accept
+      // either so a verdict is never silently dropped.
+      const rawDecision = d.verdict?.decision;
+      const verdictDecision =
+        rawDecision === 'APPROVE_DOER' || rawDecision === 'full_payment'
+          ? 'APPROVE_DOER'
+          : rawDecision === 'APPROVE_COMPANY' || rawDecision === 'refund'
+          ? 'APPROVE_COMPANY'
+          : rawDecision === 'PARTIAL_SPLIT' || rawDecision === 'partial_payment'
+          ? 'PARTIAL_SPLIT'
+          : undefined;
 
-      setDispute(dispute);
+      setDispute({
+        id: d.id,
+        errandId: d.errandId,
+        status: d.status,
+        amount: d.amount,
+        reason: d.reason,
+        raisedBy: d.raisedBy === 'company' ? 'company' : 'doer',
+        createdAt: d.createdAt,
+        responseDeadline: d.responseDeadline,
+        autoResolveAt: d.autoResolveAt,
+        doerEvidenceCount: 0,
+        companyEvidenceCount: 0,
+        verdict:
+          d.verdict && verdictDecision
+            ? {
+                decision: verdictDecision,
+                // The verdict stores both sides; show whichever side was paid
+                compensationAmount:
+                  d.verdict.doerAmount >= d.verdict.companyAmount
+                    ? d.verdict.doerAmount
+                    : d.verdict.companyAmount,
+                compensationRecipient:
+                  d.verdict.doerAmount >= d.verdict.companyAmount ? 'doer' : 'company',
+                reasoning: d.verdict.reasoning,
+                issuedAt: d.verdict.issuedAt,
+              }
+            : undefined,
+      });
+
+      // Whether they've already had their say comes from the server, not local state
+      setHasResponded(d.responseStatus === 'received');
+      setResponseSubmittedAt(d.responseSubmittedAt || null);
+      setError('');
     } catch (err: any) {
       setError(err.message);
+      setDispute(null);
     } finally {
       setLoading(false);
     }
@@ -113,18 +126,23 @@ export function DisputeResponsePage({ disputeId, onBack, userRole }: DisputeResp
     setError('');
 
     try {
-      const response = await fetch(`/api/disputes/${disputeId}/response`, {
+      // There is no /response endpoint — the defendant's reply goes to /defense,
+      // and the field is `response`, not `message`.
+      const response = await fetch(`${API_URL}/api/disputes/${disputeId}/defense`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
         body: JSON.stringify({
-          message: responseText,
+          response: responseText,
         }),
       });
 
-      if (!response.ok) throw new Error('Failed to submit response');
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw new Error(body.error || 'Failed to submit response');
+      }
 
       setSuccess('Response submitted successfully!');
       setHasResponded(true);
@@ -169,22 +187,24 @@ export function DisputeResponsePage({ disputeId, onBack, userRole }: DisputeResp
   }
 
   const now = new Date();
-  const deadline = new Date(dispute.responseDeadline);
-  const autoResolve = new Date(dispute.autoResolveAt);
+  // Not every dispute asks for a defense, so these can legitimately be null —
+  // without this guard the countdowns render as NaN and the form stays open.
+  const deadline = dispute.responseDeadline ? new Date(dispute.responseDeadline) : null;
+  const autoResolve = dispute.autoResolveAt ? new Date(dispute.autoResolveAt) : null;
+  const hasDeadline = !!deadline && !isNaN(deadline.getTime());
 
-  const hoursUntilDeadline = Math.max(
-    0,
-    Math.round((deadline.getTime() - now.getTime()) / (1000 * 60 * 60))
-  );
+  const hoursUntilDeadline = hasDeadline
+    ? Math.max(0, Math.round((deadline!.getTime() - now.getTime()) / (1000 * 60 * 60)))
+    : 0;
 
-  const hoursUntilAutoResolve = Math.max(
-    0,
-    Math.round((autoResolve.getTime() - now.getTime()) / (1000 * 60 * 60))
-  );
+  const hoursUntilAutoResolve =
+    autoResolve && !isNaN(autoResolve.getTime())
+      ? Math.max(0, Math.round((autoResolve.getTime() - now.getTime()) / (1000 * 60 * 60)))
+      : 0;
 
-  const isDeadlinePassed = hoursUntilDeadline <= 0;
-  const isUrgent = hoursUntilDeadline > 0 && hoursUntilDeadline <= 12;
-  const canRespond = !isDeadlinePassed;
+  const isDeadlinePassed = hasDeadline && hoursUntilDeadline <= 0;
+  const isUrgent = hasDeadline && hoursUntilDeadline > 0 && hoursUntilDeadline <= 12;
+  const canRespond = hasDeadline && !isDeadlinePassed;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -399,11 +419,19 @@ export function DisputeResponsePage({ disputeId, onBack, userRole }: DisputeResp
               </div>
             </div>
           </div>
+        ) : !hasDeadline ? (
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+            <p className="text-gray-700 font-semibold mb-2">No response requested</p>
+            <p className="text-gray-600 text-sm">
+              This dispute hasn't been sent to you for a formal response. If our team needs your
+              side of the story, you'll be notified and a deadline will appear here.
+            </p>
+          </div>
         ) : (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
             <p className="text-red-700 font-semibold mb-2">Response Window Closed</p>
             <p className="text-red-600 text-sm">
-              The deadline for responding has passed at {deadline.toLocaleString()}. The system will auto-resolve this dispute based on available evidence.
+              The deadline for responding has passed at {deadline!.toLocaleString()}. The system will auto-resolve this dispute based on available evidence.
             </p>
           </div>
         )}

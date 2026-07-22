@@ -1,11 +1,13 @@
 import { Router, Request, Response } from 'express';
-import { AuthRequest, authMiddleware } from '../middleware/auth.js';
+import { AuthRequest, authMiddleware, requireAdmin } from '../middleware/auth.js';
 import db from '../db.js';
+import { getRestrictedSlugs } from '../services/categoryRestrictions.js';
 import { lookupAddress } from '../services/providers/addressProvider.js';
 import axios from 'axios';
 import https from 'https';
 import * as biasDetector from '../modules/bias-detector.js';
 import * as contentMod from '../modules/content-moderation.js';
+import { screenUserMessage } from '../modules/hanaGuardrails.js';
 import * as privacyLogger from '../modules/privacy-logger.js';
 import * as explainability from '../modules/explainability.js';
 
@@ -523,6 +525,17 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
     input = sanitizeInput(input);
     if (!input || input.length === 0) {
       return res.status(400).json({ error: 'Invalid input format' });
+    }
+
+    // Guardrail: this endpoint only extracts errand details — reject attempts to
+    // use it as a general/injection channel.
+    const extractScreen = screenUserMessage(input);
+    if (extractScreen.blocked) {
+      console.warn('[Extract] Blocked input (', extractScreen.tag, ')');
+      return res.status(200).json({
+        success: false,
+        error: "I can only help set up an errand here. Please describe the errand you need done (what, where, when, and your budget).",
+      });
     }
 
     console.log('[Extract] Input:', input);
@@ -1252,11 +1265,76 @@ router.post('/content-filter', async (req: Request, res: Response) => {
         flags: moderationResult.flags,
         issues: moderationResult.issues,
         confidence: moderationResult.confidence,
+        reason: (moderationResult.details as any)?.reason || '',
       },
     });
   } catch (error) {
     console.error('Content filter error:', error);
     res.status(500).json({ error: 'Failed to filter' });
+  }
+});
+
+// POST /api/ai/moderate-image - server-side profile photo moderation.
+// Auth required so the server-held API key can't be used as a free vision API.
+router.post('/moderate-image', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { image } = req.body;
+    if (!image || typeof image !== 'string') {
+      return res.status(400).json({ error: 'image (base64 data URI) required' });
+    }
+    if (!/^data:image\/(png|jpe?g|webp|gif);base64,/i.test(image)) {
+      return res.status(400).json({ error: 'Unsupported image format' });
+    }
+    if (image.length > 8_000_000) {
+      return res.status(413).json({ error: 'Image too large' });
+    }
+
+    const qwenApiKey = process.env.QWEN_API_KEY;
+    if (!qwenApiKey) {
+      console.warn('[ModerateImage] QWEN_API_KEY not set — skipping image moderation');
+      return res.json({ success: true, data: { approved: true, checked: false, reason: '' } });
+    }
+
+    const response = await axios.post(
+      `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}/chat/completions`.replace('/v1//chat', '/v1/chat'),
+      {
+        model: 'qwen-vl-plus',
+        messages: [
+          {
+            role: 'user',
+            content: [
+              { type: 'image_url', image_url: { url: image } },
+              {
+                type: 'text',
+                text: 'You are moderating a profile photo for a community errand marketplace in Singapore. Reject ONLY if it clearly contains nudity or sexual content, graphic violence or gore, hate symbols, weapons, or illegal drugs. Ordinary photos of people, pets, scenery, objects, cartoons or avatars are perfectly fine. Reply with ONLY valid JSON, no prose: {"approved": true or false, "reason": "one short sentence if rejected, otherwise empty"}',
+              },
+            ],
+          },
+        ],
+      },
+      { headers: { Authorization: `Bearer ${qwenApiKey}`, 'Content-Type': 'application/json' }, timeout: 20000 }
+    );
+
+    const text = response.data?.choices?.[0]?.message?.content?.trim() || '';
+    const match = text.match(/\{[\s\S]*\}/);
+    if (match) {
+      const parsed = JSON.parse(match[0]);
+      if (typeof parsed.approved === 'boolean') {
+        console.log('[ModerateImage] approved:', parsed.approved, parsed.reason || '');
+        return res.json({
+          success: true,
+          data: { approved: parsed.approved, checked: true, reason: parsed.reason || '' },
+        });
+      }
+    }
+
+    // Unparseable reply — fail open, but mark it as unchecked rather than pretending it passed
+    console.warn('[ModerateImage] Unparseable model reply, allowing:', text.slice(0, 120));
+    return res.json({ success: true, data: { approved: true, checked: false, reason: '' } });
+  } catch (error: any) {
+    console.error('[ModerateImage] error:', error?.message);
+    // Fail open — never block a legitimate upload because the service errored
+    return res.json({ success: true, data: { approved: true, checked: false, reason: '' } });
   }
 });
 
@@ -1623,7 +1701,7 @@ router.post('/suggestions', async (req: Request, res: Response) => {
 
     // Make all Qwen calls in parallel
     console.log('[Suggestions] Making Qwen API calls...');
-    const [skillsResult, descriptionResult, notesResult] = await Promise.allSettled([
+    const [skillsResult, descriptionResult, notesResult, certsResult] = await Promise.allSettled([
       qwenApiKey ? axios.post(
         `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}/chat/completions`.replace('/v1//chat', '/v1/chat'),
         {
@@ -1638,7 +1716,6 @@ router.post('/suggestions', async (req: Request, res: Response) => {
         {
           headers: {
             'Authorization': `Bearer ${qwenApiKey}`,
-            'X-DashScope-AsyncRequest': 'false',
             'Content-Type': 'application/json',
           },
           timeout: 3000,
@@ -1658,7 +1735,6 @@ router.post('/suggestions', async (req: Request, res: Response) => {
         {
           headers: {
             'Authorization': `Bearer ${qwenApiKey}`,
-            'X-DashScope-AsyncRequest': 'false',
             'Content-Type': 'application/json',
           },
           timeout: 3000,
@@ -1678,7 +1754,25 @@ router.post('/suggestions', async (req: Request, res: Response) => {
         {
           headers: {
             'Authorization': `Bearer ${qwenApiKey}`,
-            'X-DashScope-AsyncRequest': 'false',
+            'Content-Type': 'application/json',
+          },
+          timeout: 3000,
+        }
+      ) : Promise.reject('No API key'),
+      qwenApiKey ? axios.post(
+        `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}/chat/completions`.replace('/v1//chat', '/v1/chat'),
+        {
+          model: 'qwen-max',
+          messages: [
+            {
+              role: 'user',
+              content: `You are a certification and licensing expert for a Singapore task marketplace. For the task below, list ONLY real, widely-recognised certifications, licences, or formal training that are genuinely relevant. Use Singapore-recognised names where they apply (examples: "Standard First Aid", "CPR + AED Certification", "SFA Food Handler Certificate", "WSQ Healthcare Support", "Class 3 Driving Licence", "Licensed Electrical Worker", "NEA Cleaning Business Licence").\n\nStrict rules:\n- Do NOT invent certifications. If you are unsure a certification really exists, omit it.\n- Do NOT list skills, personality traits, or generic abilities — only formal certifications, licences, or accredited training.\n- Most everyday errands need NONE — in that case return empty arrays.\n- "required" = legally or safety mandatory to do this task; "optional" = builds trust but not mandatory.\n- Maximum 3 items per list.\n\nReturn ONLY valid JSON, no prose or explanation: {"required": ["..."], "optional": ["..."]}\n\nTask: "${correctedTitle}"\nCategory: ${detectedCategory}`,
+            },
+          ],
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${qwenApiKey}`,
             'Content-Type': 'application/json',
           },
           timeout: 3000,
@@ -1781,11 +1875,44 @@ router.post('/suggestions', async (req: Request, res: Response) => {
       console.log('[Suggestions] Using contextual notes:', notes);
     }
 
+    // AI-generated certifications (real, task-specific). Parse the strict JSON the
+    // model was asked for; only trust it when it yields at least one real cert.
+    let aiCertifications: { required: string[]; optional: string[] } | null = null;
+    if (certsResult.status === 'fulfilled') {
+      try {
+        const raw = certsResult.value.data?.choices?.[0]?.message?.content?.trim() || '';
+        const jsonMatch = raw.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0]);
+          const clean = (arr: any): string[] =>
+            Array.isArray(arr)
+              ? arr.map((s: any) => String(s).trim()).filter((s: string) => s.length > 1 && s.length < 60).slice(0, 3)
+              : [];
+          const req = clean(parsed.required);
+          const opt = clean(parsed.optional);
+          if (req.length > 0 || opt.length > 0) {
+            aiCertifications = { required: req, optional: opt };
+            console.log('[Qwen] ✅ Generated certifications:', aiCertifications);
+          } else {
+            console.log('[Qwen] Certifications: AI says none needed for this task');
+          }
+        }
+      } catch (e) {
+        console.warn('[Qwen] Certification parse failed, using keyword fallback:', e instanceof Error ? e.message : '');
+      }
+    } else {
+      console.warn('[Qwen] Certification generation failed:', certsResult.reason instanceof Error ? certsResult.reason.message : JSON.stringify(certsResult.reason));
+    }
+
     // Get certifications for this category - use title-specific if available
     let certifications = { required: [] as string[], optional: [] as string[] };
 
     const categoryCerts = titleKeywordCertMap[detectedCategory];
-    if (categoryCerts) {
+    if (aiCertifications) {
+      // Prefer real AI-suggested certifications when available
+      certifications = aiCertifications;
+      console.log('[Suggestions] Using AI-generated certifications');
+    } else if (categoryCerts) {
       // Try to match keywords in the corrected title
       const titleLower = correctedTitle.toLowerCase();
       for (const [keyword, keywordCerts] of Object.entries(categoryCerts)) {
@@ -1909,7 +2036,7 @@ Return ONLY valid JSON, no markdown or code blocks.`;
 
     try {
       const response = await axios.post(
-        `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com'}/api/v1/services/aigc/text-generation/generation`,
+        `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}/chat/completions`,
         {
           model: 'qwen-max',
           messages: [
@@ -1923,13 +2050,12 @@ Return ONLY valid JSON, no markdown or code blocks.`;
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${qwenApiKey}`,
-            'X-DashScope-AsyncRequest': 'false',
           },
           timeout: 15000,
         }
       );
 
-      const analysisText = response.data?.output?.text?.trim();
+      const analysisText = response.data?.choices?.[0]?.message?.content?.trim();
       if (!analysisText) {
         throw new Error('No analysis returned');
       }
@@ -2035,7 +2161,7 @@ Format: Return as JSON with fields: doer_profile, asker_profile, skill_insights,
 
     try {
       const response = await axios.post(
-        `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com'}/api/v1/services/aigc/text-generation/generation`,
+        `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}/chat/completions`,
         {
           model: 'qwen-max',
           messages: [
@@ -2049,13 +2175,12 @@ Format: Return as JSON with fields: doer_profile, asker_profile, skill_insights,
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${qwenApiKey}`,
-            'X-DashScope-AsyncRequest': 'false',
           },
           timeout: 10000,
         }
       );
 
-      const analysisText = response.data?.output?.text?.trim();
+      const analysisText = response.data?.choices?.[0]?.message?.content?.trim();
       if (!analysisText) {
         throw new Error('No analysis returned from AI');
       }
@@ -2124,11 +2249,29 @@ Format: Return as JSON with fields: doer_profile, asker_profile, skill_insights,
 // POST /api/ai/suggest-tasks - AI suggestions for tasks user should look at
 router.post('/suggest-tasks', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const { user_preferences, user_history, available_tasks, user_role } = req.body;
+    const { user_preferences, user_history, user_role } = req.body;
+    let { available_tasks } = req.body;
     const userId = parseInt(req.userId || '0', 10);
 
     if (!available_tasks || available_tasks.length === 0) {
       return res.status(400).json({ error: 'No tasks available' });
+    }
+
+    // The candidate list arrives from the client, so it cannot be trusted to
+    // have been filtered. A screened doer must never be recommended work their
+    // account is barred from — they could not offer on it anyway, and being
+    // shown it repeatedly is its own kind of answer about their record.
+    if (user_role === 'doer') {
+      const restricted = await getRestrictedSlugs(userId);
+      if (restricted.length > 0) {
+        available_tasks = available_tasks.filter((t: any) => !restricted.includes(t?.category));
+        if (available_tasks.length === 0) {
+          return res.json({
+            success: true,
+            data: { suggestions: [], message: 'No matching errands available right now.' },
+          });
+        }
+      }
     }
 
     const qwenApiKey = process.env.QWEN_API_KEY;
@@ -2168,7 +2311,7 @@ Return ONLY valid JSON.`;
 
     try {
       const response = await axios.post(
-        `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com'}/api/v1/services/aigc/text-generation/generation`,
+        `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}/chat/completions`,
         {
           model: 'qwen-max',
           messages: [
@@ -2182,13 +2325,12 @@ Return ONLY valid JSON.`;
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${qwenApiKey}`,
-            'X-DashScope-AsyncRequest': 'false',
           },
           timeout: 15000,
         }
       );
 
-      const suggestionsText = response.data?.output?.text?.trim();
+      const suggestionsText = response.data?.choices?.[0]?.message?.content?.trim();
       if (!suggestionsText) {
         throw new Error('No suggestions returned');
       }
@@ -2233,6 +2375,98 @@ Return ONLY valid JSON.`;
       error: 'Failed to generate suggestions',
       details: error.message,
     });
+  }
+});
+
+/**
+ * POST /api/ai/generate — general text generation for admin tools.
+ *
+ * The admin comms screens (email campaigns, blog articles, event reminders,
+ * hero banners, recognition) each called dashscope.aliyuncs.com DIRECTLY from
+ * the browser with `Bearer ${VITE_QWEN_API_KEY}`. Three of them used
+ * `process.env`, which does not exist in a browser, so they threw
+ * "process is not defined" and the feature was simply dead. The rest worked
+ * only because no key was ever set — the moment one was, Vite would have baked
+ * it into the JS bundle and shipped it to every visitor.
+ *
+ * This is the one server-side door those screens go through instead. The key
+ * never leaves the server.
+ */
+router.post('/generate', authMiddleware, requireAdmin(['admin', 'super-admin']), async (req: AuthRequest, res: Response) => {
+  try {
+    const { prompt, temperature, maxTokens } = req.body || {};
+
+    if (!prompt || typeof prompt !== 'string' || !prompt.trim()) {
+      return res.status(400).json({ error: 'A prompt is required.' });
+    }
+    // Generous but bounded — these are long marketing prompts, not essays
+    if (prompt.length > 12000) {
+      return res.status(400).json({ error: 'That prompt is too long. Please shorten it.' });
+    }
+
+    const { QwenAI } = await import('../services/qwenService.js');
+    const text = await QwenAI.call([{ role: 'user', content: prompt }], {
+      temperature: typeof temperature === 'number' ? temperature : 0.8,
+      maxTokens: typeof maxTokens === 'number' ? Math.min(maxTokens, 4000) : 1500,
+    });
+
+    if (!text) {
+      return res.status(502).json({ error: 'The AI service returned nothing. Please try again.' });
+    }
+
+    res.json({ success: true, data: { text } });
+  } catch (error: any) {
+    console.error('[AI] generate error:', error?.response?.data || error?.message || error);
+    res.status(502).json({ error: 'The AI service is unavailable right now. Please try again shortly.' });
+  }
+});
+
+/**
+ * POST /api/ai/generate-image — real text-to-image, several variants to choose from.
+ */
+router.post('/generate-image', authMiddleware, requireAdmin(['admin', 'super-admin']), async (req: AuthRequest, res: Response) => {
+  try {
+    const { prompt, count, size } = req.body || {};
+    if (!prompt || typeof prompt !== 'string' || !prompt.trim()) {
+      return res.status(400).json({ error: 'Describe the image you want.' });
+    }
+
+    const { generateImages } = await import('../services/imageGeneration.js');
+    const images = await generateImages({
+      prompt: prompt.trim(),
+      count: Number(count) || 3,
+      size,
+      userId: parseInt(req.userId || '0', 10) || null,
+    });
+
+    if (images.length === 0) {
+      return res.status(502).json({ error: 'The image service did not return anything. Please try again.' });
+    }
+
+    res.json({ success: true, data: { images } });
+  } catch (error: any) {
+    console.error('[AI] generate-image error:', error?.response?.data || error?.message || error);
+    res.status(502).json({ error: 'Could not generate images right now. Please try again shortly.' });
+  }
+});
+
+// GET /api/ai/images/:id — serve a stored image. Public: these end up in emails
+// and on banners, where an Authorization header is not possible.
+router.get('/images/:id', async (req: Request, res: Response) => {
+  try {
+    const result = await db.query('SELECT data_uri FROM generated_images WHERE id = $1', [parseInt(req.params.id, 10)]);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Image not found' });
+
+    const dataUri: string = result.rows[0].data_uri;
+    const match = dataUri.match(/^data:(image\/[a-z+]+);base64,(.*)$/);
+    if (!match) return res.status(500).json({ error: 'Stored image is unreadable' });
+
+    res.setHeader('Content-Type', match[1]);
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    res.send(Buffer.from(match[2], 'base64'));
+  } catch (error) {
+    console.error('[AI] serve image error:', error);
+    res.status(500).json({ error: 'Could not load that image' });
   }
 });
 

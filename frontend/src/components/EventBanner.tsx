@@ -24,7 +24,7 @@ const SAMPLE_EVENTS: EventNotification[] = [
   },
   {
     id: '3',
-    message: '📢 New Feature: AI Task Creation with Hana is now available!',
+    message: '📢 New Feature: AI Errand Creation with Hana is now available!',
     type: 'info',
     icon: '✨',
     action: { label: 'Try Now', url: '/create-errand-hana' }

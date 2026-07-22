@@ -2,7 +2,11 @@
 import Dispute from '../models/Dispute';
 import DisputeEvidence from '../models/DisputeEvidence';
 import DisputeChat from '../models/DisputeChat';
-import { addHours } from 'date-fns';
+// date-fns was imported for addHours alone and was never installed, so any
+// module that imported this service crashed the server at startup. Local
+// helper instead of pulling in a dependency for three lines.
+const addHours = (date: Date | string | number, hours: number): Date =>
+  new Date(new Date(date).getTime() + hours * 60 * 60 * 1000);
 
 interface CreateDisputeInput {
   errandId: string;

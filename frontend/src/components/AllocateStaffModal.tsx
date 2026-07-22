@@ -87,7 +87,7 @@ const AllocateStaffModal: React.FC<AllocateStaffModalProps> = ({
       });
 
       if (response.ok) {
-        showSuccess('Task allocated successfully!', `Notifying staff member now...`);
+        showSuccess('Errand allocated successfully!', `Notifying staff member now...`);
         setTimeout(() => {
           onAllocate();
           onClose();
@@ -97,7 +97,7 @@ const AllocateStaffModal: React.FC<AllocateStaffModalProps> = ({
         showError('Allocation failed', error.error || 'Please try again');
       }
     } catch (error) {
-      console.error('Error allocating task:', error);
+      console.error('Error allocating errand:', error);
       showError('Allocation failed', 'Please try again');
     } finally {
       setAllocating(false);
@@ -114,7 +114,7 @@ const AllocateStaffModal: React.FC<AllocateStaffModalProps> = ({
 
         <div className="modal-body">
           <div className="errand-info">
-            <strong>Task:</strong>
+            <strong>Errand:</strong>
             <p>{errandTitle}</p>
           </div>
 
@@ -124,7 +124,7 @@ const AllocateStaffModal: React.FC<AllocateStaffModalProps> = ({
             </div>
           ) : recommendations.length === 0 ? (
             <div className="empty-state">
-              <p>❌ No available staff members for this task</p>
+              <p>❌ No available staff members for this errand</p>
               <p className="help-text">Try allocating again later or post to public browse</p>
             </div>
           ) : (
@@ -201,7 +201,7 @@ const AllocateStaffModal: React.FC<AllocateStaffModalProps> = ({
             onClick={handleAllocate}
             disabled={!selectedStaff || allocating}
           >
-            {allocating ? '⏳ Allocating...' : '✓ Allocate Task'}
+            {allocating ? '⏳ Allocating...' : '✓ Allocate Errand'}
           </button>
         </div>
       </div>

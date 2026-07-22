@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { generateText } from '../../utils/aiClient';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useToast, ToastContainer } from '../../components/Toast';
@@ -237,22 +238,9 @@ Provide:
 
 Be specific, actionable, and data-driven. Keep it under 200 words.`;
 
-      const response = await axios.post(
-        'https://dashscope.aliyuncs.com/api/v1/services/aigc/text2text/qwen',
-        {
-          model: 'qwen-turbo',
-          input: { messages: [{ role: 'user', content: prompt }] },
-          parameters: { max_tokens: 400, temperature: 0.7 },
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.VITE_QWEN_API_KEY || 'demo'}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const responseText = await generateText(prompt, { maxTokens: 400, temperature: 0.7 });
 
-      const insights = response.data.output?.text || 'Unable to generate insights';
+      const insights = responseText || 'Unable to generate insights';
       setAiInsights(insights);
       showToast('✅ Insights generated!', 'success');
     } catch (error) {
@@ -333,22 +321,9 @@ Generate a vivid design description for a 1200x600px banner that includes:
 
 Format as detailed, actionable design brief. Be specific about colors, placement, and visual hierarchy.`;
 
-      const response = await axios.post(
-        'https://dashscope.aliyuncs.com/api/v1/services/aigc/text2text/qwen',
-        {
-          model: 'qwen-turbo',
-          input: { messages: [{ role: 'user', content: prompt }] },
-          parameters: { max_tokens: 600, temperature: 0.8 },
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.VITE_QWEN_API_KEY || 'demo'}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const responseText = await generateText(prompt, { maxTokens: 600, temperature: 0.8 });
 
-      const bannerDesign = response.data.output?.text || 'Unable to generate banner design';
+      const bannerDesign = responseText || 'Unable to generate banner design';
       setGeneratedBannerUrl(bannerDesign);
       showToast('✅ Banner design created!', 'success');
     } catch (error) {
@@ -391,22 +366,9 @@ Focus on:
 
 Format as numbered list with bold headers. Keep it practical and specific to THIS event.`;
 
-      const response = await axios.post(
-        'https://dashscope.aliyuncs.com/api/v1/services/aigc/text2text/qwen',
-        {
-          model: 'qwen-turbo',
-          input: { messages: [{ role: 'user', content: prompt }] },
-          parameters: { max_tokens: 800, temperature: 0.75 },
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.VITE_QWEN_API_KEY || 'demo'}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const responseText = await generateText(prompt, { maxTokens: 800, temperature: 0.75 });
 
-      const tips = response.data.output?.text || 'Unable to generate tips';
+      const tips = responseText || 'Unable to generate tips';
       setConversionTips(tips);
       setSelectedEventForInsights(eventId);
       showToast('✅ Conversion tactics generated!', 'success');

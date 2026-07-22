@@ -166,7 +166,7 @@ export default function ReviewCompletionPage() {
         }
       );
 
-      alert('✓ Doer notified. Task status returned to in progress.');
+      alert('✓ Doer notified. Errand status returned to in progress.');
       navigate('/errands');
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to request more work');
@@ -187,7 +187,7 @@ export default function ReviewCompletionPage() {
     return (
       <div className="min-h-screen bg-errandify-bg flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-700 font-semibold mb-4">Task not found</p>
+          <p className="text-red-700 font-semibold mb-4">Errand not found</p>
           <button
             onClick={() => navigate('/errands')}
             className="text-errandify-orange font-semibold"
@@ -229,7 +229,7 @@ export default function ReviewCompletionPage() {
 
             {/* Task Info */}
             <div className="bg-gray-50 rounded-lg p-4">
-              <h2 className="font-semibold text-errandify-brown mb-3">Task Information</h2>
+              <h2 className="font-semibold text-errandify-brown mb-3">Errand Information</h2>
               <div className="space-y-2 text-sm">
                 <div><span className="text-gray-600">Title:</span> <span className="font-medium">{task.title}</span></div>
                 <div><span className="text-gray-600">Category:</span> <span className="font-medium">{task.category}</span></div>
@@ -349,7 +349,7 @@ export default function ReviewCompletionPage() {
             {/* Info */}
             <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
               <p className="text-xs text-blue-800">
-                ℹ️ <strong>Approve</strong> to release payment immediately. <strong>Request Changes</strong> to send the task back to in progress status.
+                ℹ️ <strong>Approve</strong> to release payment immediately. <strong>Request Changes</strong> to send the errand back to in progress status.
               </p>
             </div>
           </div>

@@ -80,9 +80,9 @@ export default function RecurringSessionsManager({
       const pendingCount = sessions.filter(s => s.status === 'pending').length;
       const assignedCount = sessions.filter(s => s.status === 'assigned').length;
 
-      const prompt = `You are Hana, a warm and helpful AI assistant. Analyze this recurring task progress and give a brief, encouraging suggestion.
+      const prompt = `You are Hana, a warm and helpful AI assistant. Analyze this recurring errand progress and give a brief, encouraging suggestion.
 
-Task: ${errand?.title}
+Errand: ${errand?.title}
 Total sessions: ${errand?.totalSessions}
 Completed: ${completedCount}
 Assigned to doers: ${assignedCount}

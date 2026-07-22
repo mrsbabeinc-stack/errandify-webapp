@@ -53,7 +53,7 @@ router.get('/export', authMiddleware, async (req: AuthRequest, res: Response) =>
     // Get all disputes
     const disputesResult = await db.query(
       `SELECT * FROM disputes
-       WHERE filed_by = $1
+       WHERE filed_by_user_id = $1
        ORDER BY created_at DESC`,
       [userId]
     );
@@ -205,7 +205,9 @@ router.post('/delete', authMiddleware, async (req: AuthRequest, res: Response) =
 
       // Keep disputes and ratings (for platform records) but anonymize
       await db.query(
-        `UPDATE disputes SET filed_by = 0 WHERE filed_by = $1`,
+        `UPDATE disputes
+            SET filed_by_user_id = NULL, raised_by_id = NULL, raised_by_staff_id = NULL
+          WHERE filed_by_user_id = $1 OR raised_by_id = $1 OR raised_by_staff_id = $1`,
         [userId]
       );
 

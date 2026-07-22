@@ -11,8 +11,14 @@ export const disputeConfig = {
     // 48-hour window for disputes after completion
     disputeWindow: 48 * 60 * 60,
 
-    // 7-day appeal window
-    appealWindow: 7 * 24 * 60 * 60,
+    // 24h appeal window after an admin decision.
+    //
+    // This was 7 days here while the code hardcoded 12h in three places and
+    // never read the config. 24h is the compromise: 12h expires overnight and
+    // costs someone their right to object, 7 days holds funds too long for a
+    // $50 errand. Settlement is blocked until this window closes, which is what
+    // makes "released, then appealed" impossible.
+    appealWindow: 24 * 60 * 60,
 
     // Admin must review within 24 hours
     adminReviewTimeout: 24 * 60 * 60,

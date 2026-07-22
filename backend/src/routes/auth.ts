@@ -5,7 +5,7 @@ import { config } from '../config.js';
 import db from '../db.js';
 import { authMiddleware, AuthRequest } from '../middleware/auth.js';
 import { generateFormattedUserId } from '../utils/idFormatter.js';
-import { singpassService } from '../services/singpass.js';
+import * as singpass from '../services/singpass.js';
 import { sendCriticalEmail } from '../services/emailNotifications.js';
 
 const router = Router();
@@ -38,13 +38,18 @@ function generateOtp(): string {
 }
 
 // GET /api/auth/singpass-authorize - Redirect to SingPass login
-router.get('/singpass-authorize', (req: Request, res: Response) => {
+router.get('/singpass-authorize', async (req: Request, res: Response) => {
   try {
-    const authorizationUrl = singpassService.getAuthorizationUrl();
-    res.json({
-      success: true,
-      redirectUrl: authorizationUrl,
-    });
+    // state and nonce must survive until the callback, so they go in an
+    // httpOnly cookie rather than back to the browser as JSON — the whole point
+    // of state is that an attacker cannot supply it.
+    const { state, nonce } = singpass.makeStateAndNonce();
+    const authorizationUrl = await singpass.buildAuthorizeUrl({ state, nonce });
+
+    res.cookie('sp_state', state, { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 10 * 60 * 1000 });
+    res.cookie('sp_nonce', nonce, { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 10 * 60 * 1000 });
+
+    res.json({ success: true, redirectUrl: authorizationUrl });
   } catch (error) {
     console.error('[Auth] SingPass authorization error:', error);
     res.status(500).json({ error: 'Failed to generate authorization URL' });
@@ -82,8 +87,28 @@ router.post('/singpass-callback', async (req: Request, res: Response) => {
         gender: 'M', // M for Male, F for Female
       };
     } else {
-      // Real SingPass code - exchange with real API
-      singpassData = await singpassService.handleOAuthCallback(code);
+      // Real Singpass. state proves the callback belongs to a flow we started;
+      // nonce proves the id_token is not a replay.
+      const cookieState = (req as any).cookies?.sp_state;
+      const cookieNonce = (req as any).cookies?.sp_nonce;
+      if (!cookieState || cookieState !== req.body.state) {
+        return res.status(400).json({ error: 'That sign-in link has expired. Please try again.' });
+      }
+      const identity = await singpass.exchangeCode(code, cookieNonce);
+
+      res.clearCookie('sp_state');
+      res.clearCookie('sp_nonce');
+
+      // Singpass Login returns identity only. Name, email and mobile come from
+      // the person filling in their profile, not from this token.
+      singpassData = {
+        nric: identity.uinfin,
+        nricHash: singpass.hashUinfin(identity.uinfin),
+        name: '',
+        email: '',
+        phone: '',
+        dateOfBirth: '',
+      } as any;
     }
 
     console.log('[Auth] SingPass data received:', {
@@ -214,16 +239,8 @@ router.post('/signup', async (req: Request, res: Response) => {
 
           // Log EP transaction for referrer
           await client.query(
-            `INSERT INTO ep_transactions
-             (user_id, transaction_type, points_change, description, created_at)
-             SELECT
-               $1,
-               'referral_join',
-               $2,
-               'Referral join bonus - ' || $3 || ' signed up',
-               NOW()
-             FROM users
-             WHERE id = $1`,
+            `INSERT INTO ep_transactions (user_id, amount, reason, created_at)
+             VALUES ($1, $2, LEFT('Referral join bonus - ' || $3 || ' signed up', 100), NOW())`,
             [referrerId, joinBonus, displayName]
           );
 
@@ -419,7 +436,15 @@ router.get('/debug/otp/:mobile', (req: any, res: Response) => {
 });
 
 // Demo login - Quick access for testing
+// SingPass is compulsory — every real account is created from a verified
+// SingPass identity with an nric_hash. This route fabricates a singpass_id for
+// local testing, so it must never exist in production or it becomes a way to
+// get an account without verifying anything.
 router.post('/demo-login', async (req: Request, res: Response) => {
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(404).json({ error: 'Not found' });
+  }
+
   try {
     const { account } = req.body;
     console.log('[Auth] Demo login attempt:', account);

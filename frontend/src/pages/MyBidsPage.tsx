@@ -67,7 +67,7 @@ export default function MyBidsPage() {
       setBids(response.data.data || []);
       setError('');
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to load bids');
+      setError(err.response?.data?.error || 'Failed to load offers');
     } finally {
       setLoading(false);
     }
@@ -113,7 +113,7 @@ export default function MyBidsPage() {
 
   const getErrandStatusLabel = (status: string) => {
     const labels: Record<string, string> = {
-      open: '📋 Open - Awaiting Bids',
+      open: '📋 Open - Awaiting Offers',
       confirmed: '🟢 Confirmed',
       in_progress: '🔄 In Progress',
       completed: '✔️ Completed - Awaiting Rating',

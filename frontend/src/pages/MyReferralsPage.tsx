@@ -44,7 +44,7 @@ export default function MyReferralsPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/user/referrals/stats`,
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/referrals/stats`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }

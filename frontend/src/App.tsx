@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { MyCasesPage } from './pages/MyCasesPage';
 import { useState, useEffect } from 'react';
 import { initPushNotifications } from './utils/pushNotifications';
 import './styles/CompanyModuleTheme.css';
@@ -12,6 +13,7 @@ import AuthPage from './pages/AuthPage';
 import SingPassSimulator from './pages/SingPassSimulator';
 import SingPassCallbackPage from './pages/SingPassCallbackPage';
 import VerificationStep from './components/auth/VerificationStep';
+import CriminalScreening from './components/CriminalScreening';
 import RoleSelectionStep from './components/auth/RoleSelectionStep';
 import ACRALookupStep from './components/auth/ACRALookupStep';
 import HomePage from './pages/HomePage';
@@ -97,6 +99,7 @@ import AdminAuditCompliance from './pages/admin/AdminAuditCompliance';
 import AdminAlertsNotifications from './pages/admin/AdminAlertsNotifications';
 import NotificationsManagement from './pages/admin/NotificationsManagement';
 import EventReminders from './pages/admin/EventReminders';
+import AdminEvents from './pages/admin/Events';
 import BlogArticles from './pages/admin/BlogArticles';
 import Recognition from './pages/admin/Recognition';
 import HanaFAQBrowser from './pages/admin/HanaFAQBrowser';
@@ -104,6 +107,8 @@ import HanaFAQCategories from './pages/admin/HanaFAQCategories';
 import HanaFAQManage from './pages/admin/HanaFAQManage';
 import NotificationSystemTest from './pages/admin/NotificationSystemTest';
 import CommunityFeed from './pages/admin/CommunityFeed';
+import AdminAnnouncements from './pages/admin/Announcements';
+import NewsManagement from './pages/admin/NewsManagement';
 import HeroBanners from './pages/admin/HeroBanners';
 import CompanyClientIntelligence from './pages/admin/CompanyClientIntelligence';
 import AccountsDashboard from './pages/admin/AccountsDashboard';
@@ -131,6 +136,10 @@ import MyCompanyDashboard from './pages/MyCompanyDashboard';
 import CompanyStaffManagement from './pages/CompanyStaffManagement';
 import CompanyPostErrandPage from './pages/CompanyPostErrandPage';
 import CompanyDashboardNew from './pages/CompanyDashboardNew';
+import CompanyWorkspacePage from './pages/CompanyWorkspacePage';
+import ChooseContextPage from './pages/ChooseContextPage';
+import StaffMyWorkPage from './pages/company/StaffMyWorkPage';
+import CompanyVerificationsAdmin from './pages/admin/CompanyVerifications';
 import StripeCheckoutDummy from './pages/StripeCheckoutDummy';
 import AdvertisingDashboard from './pages/AdvertisingDashboard';
 import CreateCampaignModal from './components/CreateCampaignModal';
@@ -247,8 +256,22 @@ export default function App() {
     const navigate = useNavigate();
     return (
       <VerificationStep
-        onComplete={() => navigate('/auth/complete-profile')}
+        onComplete={() => navigate('/auth/screening')}
         onBack={() => navigate('/auth')}
+      />
+    );
+  };
+
+  // The statutory declaration. A conviction does not stop anyone joining — it
+  // withholds the categories involving vulnerable people or home access, which
+  // POST /api/screening/declare applies. This sits between the consents and
+  // profile completion so the restrictions exist before the user can browse.
+  const CriminalScreeningRouteWrapper = () => {
+    const navigate = useNavigate();
+    return (
+      <CriminalScreening
+        onComplete={() => navigate('/auth/complete-profile')}
+        onCancel={() => navigate('/auth/verification')}
       />
     );
   };
@@ -321,12 +344,25 @@ export default function App() {
           element={<SingPassCallbackPage onLogin={handleLogin} />}
         />
 
-        {/* Verification Step - Criminal screening form (after SingPass) */}
+        {/* Verification Step - consents and declarations (after SingPass) */}
         <Route
           path="/auth/verification"
           element={
             isAuthenticated ? (
               <VerificationStepRouteWrapper />
+            ) : (
+              <Navigate to="/auth" replace />
+            )
+          }
+        />
+
+        {/* Criminal declaration - statute by statute. Applies category
+            restrictions; does not block anyone from joining. */}
+        <Route
+          path="/auth/screening"
+          element={
+            isAuthenticated ? (
+              <CriminalScreeningRouteWrapper />
             ) : (
               <Navigate to="/auth" replace />
             )
@@ -487,6 +523,7 @@ export default function App() {
 
         {/* Admin Dashboard Routes */}
         <Route path="/admin/dashboard" element={isAuthenticated && isAdmin ? <AdminDashboard /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/dashboard/verifications" element={isAuthenticated && isAdmin ? <CompanyVerificationsAdmin /> : <Navigate to="/login" replace />} />
         <Route path="/admin/dashboard/users" element={isAuthenticated && isAdmin ? <UsersSafetyPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin/dashboard/disputes" element={isAuthenticated && isAdmin ? <DisputesPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin/dashboard/operations" element={isAuthenticated && isAdmin ? <OperationsPage /> : <Navigate to="/login" replace />} />
@@ -527,10 +564,13 @@ export default function App() {
         {/* Communications Routes */}
         <Route path="/admin/comms/email" element={isAuthenticated && isAdmin ? <EmailCampaigns /> : <Navigate to="/login" replace />} />
         <Route path="/admin/comms/notifications" element={isAuthenticated && isAdmin ? <NotificationsManagement /> : <Navigate to="/login" replace />} />
-        <Route path="/admin/comms/events" element={isAuthenticated && isAdmin ? <EventReminders /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/comms/events" element={isAuthenticated && isAdmin ? <AdminEvents /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/comms/event-reminders" element={isAuthenticated && isAdmin ? <EventReminders /> : <Navigate to="/login" replace />} />
         <Route path="/admin/comms/blog" element={isAuthenticated && isAdmin ? <BlogArticles /> : <Navigate to="/login" replace />} />
         <Route path="/admin/comms/recognition" element={isAuthenticated && isAdmin ? <Recognition /> : <Navigate to="/login" replace />} />
         <Route path="/admin/comms/feed" element={isAuthenticated && isAdmin ? <CommunityFeed /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/comms/announcements" element={isAuthenticated && isAdmin ? <AdminAnnouncements /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/comms/news" element={isAuthenticated && isAdmin ? <NewsManagement /> : <Navigate to="/login" replace />} />
         <Route path="/admin/comms/banners" element={isAuthenticated && isAdmin ? <HeroBanners /> : <Navigate to="/login" replace />} />
 
         {/* Company Management Routes */}
@@ -594,6 +634,10 @@ export default function App() {
 
         {/* Stripe Checkout (Dummy for testing) */}
         <Route path="/stripe-checkout" element={<StripeCheckoutDummy />} />
+        {/* Company's own Asker/Doer workspace — kept separate from personal Home/Browse */}
+        <Route path="/company/my-work" element={isAuthenticated ? <StaffMyWorkPage /> : <Navigate to="/login" replace />} />
+        <Route path="/choose-context" element={isAuthenticated ? <ChooseContextPage /> : <Navigate to="/login" replace />} />
+        <Route path="/company/workspace" element={isAuthenticated ? <CompanyWorkspacePage /> : <Navigate to="/login" replace />} />
         <Route path="/company/staff" element={isAuthenticated ? <CompanyStaffManagement /> : <Navigate to="/login" replace />} />
         <Route path="/company/post-errand" element={isAuthenticated ? <CompanyPostErrandPage /> : <Navigate to="/login" replace />} />
 
@@ -619,6 +663,8 @@ export default function App() {
           <Route path="/home" element={<HomePage userRole={userRole as 'asker' | 'doer'} />} />
           <Route path="/errands" element={<ErrandsPage userRole={userRole as 'asker' | 'doer'} />} />
           <Route path="/errand/:id" element={<ErrandDetailPage userRole={userRole as 'asker' | 'doer'} />} />
+          {/* Where people track issues they've reported — the page existed but was never routed */}
+          <Route path="/my-cases" element={<MyCasesPage />} />
           <Route path="/errand/:id/edit" element={<EditErrandPage userRole={userRole as 'asker' | 'doer'} />} />
           <Route path="/chat" element={<ChatPage userRole={userRole as 'asker' | 'doer'} />} />
           <Route path="/notifications" element={<NotificationsPage />} />

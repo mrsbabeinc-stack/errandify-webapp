@@ -50,7 +50,7 @@ export default function DoerCompletionConfirmPage() {
       );
       setTask(response.data.data);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to load task details');
+      setError(err.response?.data?.error || 'Failed to load errand details');
     } finally {
       setLoading(false);
     }
@@ -123,7 +123,7 @@ export default function DoerCompletionConfirmPage() {
       <div className="min-h-screen bg-gradient-to-br from-orange-50 to-yellow-50 flex items-center justify-center">
         <div className="text-center">
           <div className="text-6xl mb-4 animate-bounce">🎉</div>
-          <p className="text-gray-600 font-semibold">Loading task details...</p>
+          <p className="text-gray-600 font-semibold">Loading errand details...</p>
         </div>
       </div>
     );
@@ -133,7 +133,7 @@ export default function DoerCompletionConfirmPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-orange-50 to-yellow-50 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-700 font-semibold mb-4">Task not found</p>
+          <p className="text-red-700 font-semibold mb-4">Errand not found</p>
           <button onClick={() => navigate('/my-offers')} className="text-errandify-orange font-semibold">
             ← Back to My Offers
           </button>
@@ -232,7 +232,7 @@ export default function DoerCompletionConfirmPage() {
 
             {/* Budget Info */}
             <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-              <p className="text-sm text-gray-600 mb-1">Task Budget</p>
+              <p className="text-sm text-gray-600 mb-1">Errand Budget</p>
               <p className="text-3xl font-bold text-errandify-orange">SGD ${task.budget.toFixed(2)}</p>
               <p className="text-xs text-gray-500 mt-2">Payment releases within 24-48 hours</p>
             </div>

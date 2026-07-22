@@ -131,7 +131,7 @@ const CompanyRegistrationPage: React.FC = () => {
         <div className="header-section">
           <div className="icon">🏢</div>
           <h1>Register Your Company</h1>
-          <p className="subtitle">Set up your company profile to post tasks and manage teams</p>
+          <p className="subtitle">Set up your company profile to post errands and manage teams</p>
         </div>
 
         {error && (

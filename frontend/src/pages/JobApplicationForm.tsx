@@ -336,16 +336,25 @@ const JobApplicationForm: React.FC = () => {
       setLoading(true);
       showToast('📝 Submitting application...', 'info');
 
-      // Simulate API submission
-      const applicationData = {
-        job_id: jobId,
-        ...form,
-      };
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      const response = await fetch(`${API_URL}/api/recruitment/applications`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ job_id: jobId, ...form }),
+      });
 
-      // In production: await fetch('/api/applications/submit', { method: 'POST', body: JSON.stringify(applicationData) })
+      const result = await response.json();
+
+      // Only claim success once the application is actually stored. This used
+      // to show the success screen unconditionally with no request sent at all,
+      // so applicants believed they had applied and no record existed.
+      if (!response.ok) {
+        showToast(`❌ ${result.error || 'Could not submit your application'}`, 'error');
+        return;
+      }
 
       setSubmitted(true);
-      showToast('✅ Application submitted successfully!', 'success');
+      showToast(`✅ Application submitted — reference ${result.data.application_id}`, 'success');
     } catch (error) {
       showToast('❌ Error submitting application', 'error');
     } finally {

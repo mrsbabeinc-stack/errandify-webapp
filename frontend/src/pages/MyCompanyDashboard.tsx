@@ -607,7 +607,7 @@ const MyCompanyDashboard: React.FC = () => {
           <button className="action-btn" onClick={() => navigate('/company/post-errand')}>
             <span className="btn-icon">📋</span>
             <span className="btn-text">Post Errand</span>
-            <span className="btn-desc">Create task with Hana AI</span>
+            <span className="btn-desc">Create errand with Hana AI</span>
           </button>
 
           <button className="action-btn" onClick={() => navigate('/company/staff')}>

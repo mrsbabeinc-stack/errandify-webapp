@@ -17,6 +17,17 @@ export interface DisputeVerdictData {
  * Use Qwen AI to craft a detailed verdict explanation
  * Takes the dispute details and generates human-friendly reasoning
  */
+/**
+ * REMOVED FROM USE — this had the AI decide a verdict.
+ *
+ * Errandify's rule is that AI proposes and never decides: Hana suggests, an
+ * admin rules. This function asked Qwen to produce the verdict itself, which is
+ * the opposite. It has no callers and must not gain any — use
+ * services/hanaDisputeProposal.ts to generate a SUGGESTION for an admin.
+ *
+ * Left in place rather than deleted only because the verdict-shaping prompt
+ * below is a useful reference; the guard makes it unusable as-is.
+ */
 export async function craftDisputeVerdict(
   disputeId: number,
   userRole: 'doer' | 'asker',
@@ -34,6 +45,10 @@ export async function craftDisputeVerdict(
     confidence: number;
   }
 ): Promise<DisputeVerdictData> {
+  throw new Error(
+    'craftDisputeVerdict is disabled: AI must never decide a dispute. Use hanaDisputeProposal.proposeResolution() to produce a suggestion for an admin to rule on.'
+  );
+  // eslint-disable-next-line no-unreachable
   try {
     // Build context for Qwen
     const defendantSection = defendantStatement

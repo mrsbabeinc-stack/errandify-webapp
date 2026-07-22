@@ -1,15 +1,23 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 import { DisputeResponsePage } from './company/DisputeResponsePage';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 interface Dispute {
   id: number;
   errandId: string;
-  involvedParty: string; // 'Doer' or 'Asker'
+  errandDbId?: number;
+  involvedParty: string; // 'Doer', 'Asker' or 'Staff Member'
+  staffName?: string | null;
   jobTitle: string;
   amount: number;
   dateRaised: string;
+  resolvedAt?: string | null;
   status: 'Open' | 'In Review' | 'Resolved' | 'Appealed';
   reason: string;
+  disputeType?: string;
+  filedByUs?: boolean;
 }
 
 interface CompanyDisputeCenterProps {
@@ -17,28 +25,40 @@ interface CompanyDisputeCenterProps {
 }
 
 const CompanyDisputeCenter: React.FC<CompanyDisputeCenterProps> = ({ companyId = 1 }) => {
-  const [disputes, setDisputes] = useState<Dispute[]>([
-    {
-      id: 1,
-      errandId: 'ERR-2026-001',
-      involvedParty: 'Doer',
-      jobTitle: 'Office Cleaning Service',
-      amount: 150,
-      dateRaised: '2026-07-10',
-      status: 'In Review',
-      reason: 'Incomplete task completion - not all areas cleaned'
-    },
-    {
-      id: 2,
-      errandId: 'ERR-2026-002',
-      involvedParty: 'Staff Member',
-      jobTitle: 'Delivery Service',
-      amount: 85,
-      dateRaised: '2026-07-08',
-      status: 'Resolved',
-      reason: 'Late delivery - staff arrived after deadline'
-    }
-  ]);
+  // Was a hardcoded array of two fake disputes — now the real ones this company
+  // is a party to, from the company-scoped endpoint (GET /api/disputes is
+  // admin-only because it spans the whole platform).
+  const [disputes, setDisputes] = useState<Dispute[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [loadError, setLoadError] = useState<string>('');
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      setLoading(true);
+      try {
+        const res = await axios.get(`${API_URL}/api/companies/${companyId}/disputes`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        });
+        if (cancelled) return;
+        setDisputes(res.data?.data?.disputes || []);
+        setLoadError('');
+      } catch (err: any) {
+        if (cancelled) return;
+        setLoadError(
+          err?.response?.status === 403
+            ? "Only the company owner or manager can view disputes."
+            : 'Could not load your disputes. Please try again.'
+        );
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [companyId]);
 
   const [selectedDispute, setSelectedDispute] = useState<Dispute | null>(null);
   const [showResponsePage, setShowResponsePage] = useState<boolean>(false);
@@ -48,6 +68,12 @@ const CompanyDisputeCenter: React.FC<CompanyDisputeCenterProps> = ({ companyId =
   const filteredDisputes = filterStatus === 'All'
     ? disputes
     : disputes.filter(d => d.status === filterStatus);
+
+  // created_at now arrives as an ISO timestamp rather than a pre-formatted date
+  const formatDate = (value: string) =>
+    value
+      ? new Date(value).toLocaleDateString('en-SG', { day: 'numeric', month: 'short', year: 'numeric' })
+      : '—';
 
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
@@ -70,6 +96,28 @@ const CompanyDisputeCenter: React.FC<CompanyDisputeCenterProps> = ({ companyId =
         }}
         userRole="owner"
       />
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="dispute-center-container">
+        <div className="dispute-header">
+          <h2>Dispute Center</h2>
+        </div>
+        <p style={{ padding: '24px', color: '#666' }}>Loading your disputes…</p>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="dispute-center-container">
+        <div className="dispute-header">
+          <h2>Dispute Center</h2>
+        </div>
+        <p style={{ padding: '16px', color: '#C1442E', fontWeight: 600 }}>{loadError}</p>
+      </div>
     );
   }
 
@@ -143,7 +191,7 @@ const CompanyDisputeCenter: React.FC<CompanyDisputeCenterProps> = ({ companyId =
                     </div>
                     <div className="detail-row">
                       <span className="label">Raised:</span>
-                      <span className="value">{dispute.dateRaised}</span>
+                      <span className="value">{formatDate(dispute.dateRaised)}</span>
                     </div>
                   </div>
 

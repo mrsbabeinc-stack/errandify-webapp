@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { generateText, generateImages } from '../../utils/aiClient';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useToast, ToastContainer } from '../../components/Toast';
@@ -44,24 +45,13 @@ export default function Recognition() {
   const [suggestLoading, setSuggestLoading] = useState(false);
   const [generatingImageFor, setGeneratingImageFor] = useState<string | null>(null);
   const [generatedAwardImages, setGeneratedAwardImages] = useState<{ [key: string]: string }>({});
+  // Variants per award, so the admin can choose rather than accept the first
+  const [awardImageOptions, setAwardImageOptions] = useState<Record<string, string[]>>({});
 
   const callQwenAPI = async (prompt: string): Promise<string> => {
     try {
-      const response = await axios.post(
-        'https://dashscope.aliyuncs.com/api/v1/services/aigc/text2text/qwen',
-        {
-          model: 'qwen-turbo',
-          input: { messages: [{ role: 'user', content: prompt }] },
-          parameters: { max_tokens: 1500, temperature: 0.7 },
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${import.meta.env.VITE_QWEN_API_KEY || 'demo'}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-      return response.data.output?.text || '';
+      const responseText = await generateText(prompt, { maxTokens: 1500, temperature: 0.7 });
+      return responseText || '';
     } catch (error) {
       console.error('Qwen API error:', error);
       return '';
@@ -163,25 +153,20 @@ The award image should be:
 
 Respond with ONLY a detailed visual description (2-3 sentences) of what the image looks like, as if you've already generated it.`;
 
-    const result = await callQwenAPI(prompt);
-
-    if (result) {
-      // Use professional award template from Unsplash
-      const awardImages = [
-        'https://images.unsplash.com/photo-1633356122544-f134324ef6db?w=1200&h=800&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1612872087720-bb876e2e67d1?w=1200&h=800&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200&h=800&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1523438097914-512782516a63?w=1200&h=800&fit=crop&q=80',
-      ];
-      const randomUrl = awardImages[Math.floor(Math.random() * awardImages.length)];
-
-      setGeneratedAwardImages({
-        ...generatedAwardImages,
-        [awardName]: randomUrl,
-      });
-      showToast('🎨 Award image generated!', 'success');
-    } else {
-      showToast('⚠️ Failed to generate award image', 'error');
+    // Real generation. This asked a text model to describe an image "as if
+    // you've already generated it", then showed a random Unsplash stock photo
+    // and claimed "Award image generated!". Now it actually generates one.
+    try {
+      const images = await generateImages(
+        `Award badge illustration for "${awardName}" on Errandify, a warm Singapore neighbourhood errand marketplace. Trophy or medal style with ribbons and stars, polished and celebratory, no text overlay.`,
+        3,
+        '1024*1024'
+      );
+      setAwardImageOptions({ ...awardImageOptions, [awardName]: images.map((i) => i.url) });
+      setGeneratedAwardImages({ ...generatedAwardImages, [awardName]: images[0].url });
+      showToast(`🎨 ${images.length} award designs ready — pick your favourite`, 'success');
+    } catch (err: any) {
+      showToast(err.message || 'Could not generate the award image', 'error');
     }
     setGeneratingImageFor(null);
   };
@@ -359,7 +344,7 @@ Respond with ONLY a detailed visual description (2-3 sentences) of what the imag
             </div>
             <input
               type="text"
-              placeholder="E.g., 'Completed 200 tasks, 4.9★ rating, helped 50 emergencies, earned $10K/month'"
+              placeholder="E.g., 'Completed 200 errands, 4.9★ rating, helped 50 emergencies, earned $10K/month'"
               value={userAchievements}
               onChange={(e) => setUserAchievements(e.target.value)}
               style={{ padding: '8px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '13px', width: '100%', marginBottom: '8px' }}
@@ -442,7 +427,7 @@ Respond with ONLY a detailed visual description (2-3 sentences) of what the imag
               📊 User Achievements
             </label>
             <textarea
-              placeholder="E.g., 'Completed 200 tasks with 4.9★ rating, never late, helped 50 emergency requests, earned $10K/month, top 1% earner, consistent performer for 2 years'"
+              placeholder="E.g., 'Completed 200 errands with 4.9★ rating, never late, helped 50 emergency requests, earned $10K/month, top 1% earner, consistent performer for 2 years'"
               value={userMetrics}
               onChange={(e) => setUserMetrics(e.target.value)}
               style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px', minHeight: '100px', fontFamily: 'system-ui', width: '100%' }}

@@ -101,14 +101,20 @@ router.get('/:id/l2-details', authMiddleware, async (req: AuthRequest, res: Resp
         e.ai_confidence, 
         e.ai_recommendation, 
         e.ai_reasoning,
-        u1.name as asker_name,
+        er.formatted_id,
+        er.asker_id,
+        ab.doer_id,
+        COALESCE(ab.amount, er.budget) AS amount,
+        COALESCE(u1.alias, u1.display_name) as asker_name,
         u1.email as asker_email,
-        u2.name as doer_name,
+        COALESCE(u2.alias, u2.display_name) as doer_name,
         u2.email as doer_email
        FROM disputes d
+       JOIN errands er ON er.id = d.errand_id
+       LEFT JOIN bids ab ON ab.id = er.accepted_bid_id
        LEFT JOIN dispute_escalations e ON d.id = e.dispute_id AND e.level = 2
-       JOIN users u1 ON d.asker_id = u1.id
-       JOIN users u2 ON d.doer_id = u2.id
+       LEFT JOIN users u1 ON er.asker_id = u1.id
+       LEFT JOIN users u2 ON ab.doer_id = u2.id
        WHERE d.id = $1`,
       [disputeId]
     );
@@ -232,7 +238,11 @@ router.post('/:id/appeal', authMiddleware, async (req: AuthRequest, res: Respons
 
     // Verify user is party to the dispute
     const disputeResult = await db.query(
-      'SELECT asker_id, doer_id FROM disputes WHERE id = $1',
+      `SELECT e.asker_id, ab.doer_id
+         FROM disputes d
+         JOIN errands e ON e.id = d.errand_id
+         LEFT JOIN bids ab ON ab.id = e.accepted_bid_id
+        WHERE d.id = $1`,
       [disputeId]
     );
 

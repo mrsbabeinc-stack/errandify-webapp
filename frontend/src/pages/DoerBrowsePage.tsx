@@ -168,7 +168,7 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
       try {
         setUserBids(JSON.parse(savedBids));
       } catch (e) {
-        console.error('Failed to parse user bids:', e);
+        console.error('Failed to parse user offers:', e);
       }
     }
 
@@ -257,7 +257,7 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
         {userRole === 'asker' && (
           <div style={{background: 'linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%)', border: '1px solid #90CAF9', padding: '10px', borderRadius: '8px', marginBottom: '10px', fontSize: '12px', color: '#1565C0', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '6px'}}>
             <span>💡</span>
-            <span>Switch to Doer role to browse and bid on tasks.</span>
+            <span>Switch to Doer role to browse and offer on errands.</span>
           </div>
         )}
 
@@ -522,7 +522,7 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
               ✅ Showing {filteredErrands.length} errand{filteredErrands.length !== 1 ? 's' : ''}
             </p>
             <p className="text-gray-500">
-              💡 Tap an errand card to view details and place your bid
+              💡 Tap an errand card to view details and place your offer
             </p>
           </div>
         )}

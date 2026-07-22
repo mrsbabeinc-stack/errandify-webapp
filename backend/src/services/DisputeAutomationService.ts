@@ -1,7 +1,10 @@
 // Dispute Automation Service - 3-Day Timeline Management
 // Handles reminders, auto-resolution, payment processing
 import db from '../db.js';
-import { addHours } from 'date-fns';
+// Same as DisputeService: date-fns is not installed. Local helper so importing
+// this file cannot take the server down.
+const addHours = (date: Date | string | number, hours: number): Date =>
+  new Date(new Date(date).getTime() + hours * 60 * 60 * 1000);
 
 export class DisputeAutomationService {
   // Run reminder checks every 30 minutes
@@ -91,7 +94,23 @@ export class DisputeAutomationService {
     }
   }
 
+  /**
+   * DISABLED BY DESIGN — do not re-enable without changing the product model.
+   *
+   * This closes a dispute and assigns doer/company amounts with no human
+   * involved. Errandify's model is that Hana only ever PROPOSES and an admin
+   * makes every decision, so nothing may resolve a dispute automatically.
+   * It is currently unreachable (nothing calls this service), and this guard
+   * exists so wiring it up cannot silently start settling disputes.
+   *
+   * If automated settlement is ever wanted, it needs an explicit product
+   * decision first — see services/hanaDisputeProposal.ts for the sanctioned path.
+   */
   private static async executeAutoResolution(disputeId: number, totalAmount: number) {
+    throw new Error(
+      'Automatic dispute resolution is disabled: every dispute decision must be made by an admin. Use hanaDisputeProposal.proposeResolution() to generate a suggestion instead.'
+    );
+    // eslint-disable-next-line no-unreachable
     const now = new Date();
 
     // Get evidence counts

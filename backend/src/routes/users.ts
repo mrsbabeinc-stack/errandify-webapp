@@ -297,6 +297,45 @@ router.patch('/preferences', authMiddleware, async (req: AuthRequest, res) => {
 });
 
 // Get user ratings/history
+// Public profile — safe, minimal fields only (used by Trusted Users / favorites).
+// Auth required so profiles can't be scraped anonymously; never exposes contact
+// details, NRIC, email, address or payment info.
+router.get('/:id/public-profile', authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    const userId = parseInt(req.params.id, 10);
+    if (!userId || Number.isNaN(userId)) {
+      return res.status(400).json({ error: 'Invalid user id' });
+    }
+
+    const result = await db.query(
+      `SELECT id, display_name, alias, profile_image_url, formatted_user_id
+       FROM users WHERE id = $1`,
+      [userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const u = result.rows[0];
+    res.json({
+      success: true,
+      data: {
+        id: u.id,
+        displayName: u.display_name,
+        display_name: u.display_name,
+        alias: u.alias,
+        profileImage: u.profile_image_url,
+        profile_image_url: u.profile_image_url,
+        formattedUserId: u.formatted_user_id,
+      },
+    });
+  } catch (error) {
+    console.error('Public profile fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch public profile' });
+  }
+});
+
 router.get('/:id/ratings', async (req, res) => {
   try {
     const { id } = req.params;
@@ -307,15 +346,15 @@ router.get('/:id/ratings', async (req, res) => {
       `SELECT
         r.id,
         r.rating,
-        r.comment,
+        r.review_text as comment,
         r.created_at,
         u.display_name as rater_name,
         u.alias as rater_alias,
         e.title as task_title
        FROM ratings r
        JOIN users u ON r.rater_id = u.id
-       JOIN errands e ON r.task_id = e.id
-       WHERE r.rated_user_id = $1
+       JOIN errands e ON r.errand_id = e.id
+       WHERE r.ratee_id = $1
        ORDER BY r.created_at DESC
        LIMIT 50`,
       [userId]
@@ -361,88 +400,6 @@ router.get('/:id/ratings', async (req, res) => {
   }
 });
 
-// Get notification preferences
-router.get('/preferences', authMiddleware, async (req, res) => {
-  try {
-    // Ensure notification_preferences column exists
-    await db.query(
-      `ALTER TABLE users ADD COLUMN IF NOT EXISTS notification_preferences JSONB DEFAULT '{}'`
-    );
-
-    const result = await db.query(
-      `SELECT notification_preferences FROM users WHERE id = $1`,
-      [req.userId]
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    const user = result.rows[0];
-    const defaultPreferences = {
-      bid_accepted: true,
-      task_reopened: true,
-      payment_released: true,
-      new_bid_received: true,
-      bid_rejected: false,
-      message_received: true,
-      task_completed: true,
-      review_received: true,
-      profile_viewed: false,
-      referral_activity: false,
-      platform_updates: false,
-    };
-
-    // Handle both empty object and null cases
-    let prefs = user.notification_preferences;
-    if (!prefs || Object.keys(prefs).length === 0) {
-      prefs = defaultPreferences;
-    }
-
-    res.json({
-      success: true,
-      data: {
-        notification_preferences: prefs,
-      },
-    });
-  } catch (error) {
-    console.error('Preferences fetch error:', error);
-    res.status(500).json({ error: 'Failed to fetch preferences' });
-  }
-});
-
-// Update notification preferences
-router.patch('/preferences', authMiddleware, async (req, res) => {
-  try {
-    // Ensure notification_preferences column exists
-    await db.query(
-      `ALTER TABLE users ADD COLUMN IF NOT EXISTS notification_preferences JSONB DEFAULT '{}'`
-    );
-
-    const { notification_preferences } = req.body;
-
-    if (!notification_preferences) {
-      return res.status(400).json({ error: 'notification_preferences required' });
-    }
-
-    const result = await db.query(
-      `UPDATE users SET notification_preferences = $1 WHERE id = $2 RETURNING id`,
-      [notification_preferences, req.userId]
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    res.json({
-      success: true,
-      data: { message: 'Preferences updated successfully' },
-    });
-  } catch (error) {
-    console.error('Preferences update error:', error);
-    res.status(500).json({ error: 'Failed to update preferences' });
-  }
-});
 
 // POST /api/users/category-preferences - Save user's preferred categories for AI recommendations
 router.post('/category-preferences', authMiddleware, async (req: AuthRequest, res) => {
@@ -1109,6 +1066,180 @@ router.post('/delete-account', authMiddleware, async (req: AuthRequest, res: Res
   } catch (error: any) {
     console.error('Account deletion error:', error);
     res.status(500).json({ error: 'Failed to delete account' });
+  }
+});
+
+/**
+ * Blocked and trusted users — the two lists behind /block-list and
+ * /trusted-users. Neither had a backend; both pages silently rendered
+ * hardcoded people when the call failed.
+ *
+ * Trusted reads user_favorites, which POST /users/favorite/:userId already
+ * maintains, rather than starting a second list that could disagree with it.
+ * Blocked reads blocked_users (migration 028).
+ *
+ * Field names are camelCase here because that is what both pages already
+ * destructure; renaming them would mean touching the components for no gain.
+ */
+
+/**
+ * POST /api/users/consents — record the signup agreements.
+ *
+ * Replaces a POST to /api/screenings that never existed, so no user's
+ * acceptance of the terms has ever been stored. Deliberately does not touch
+ * criminal declarations: those go to /api/screening/declare, which is what
+ * applies category restrictions.
+ */
+router.post('/consents', authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    const userId = parseInt(req.userId || '0', 10);
+    const b = req.body || {};
+
+    // The three that make the account usable at all. Without them there is
+    // nothing to record, so this is refused rather than stored half-agreed.
+    if (!b.agreed_terms || !b.agreed_privacy || !b.responsible_use) {
+      return res.status(400).json({
+        error: 'The terms, privacy policy and responsible use declarations must all be accepted',
+      });
+    }
+
+    const result = await db.query(
+      `INSERT INTO user_consents (
+         user_id, agreed_terms, agreed_privacy, responsible_use,
+         authorized_to_work, accurate_information, agreed_background_verification,
+         no_disputes, no_cancelled_accounts, ip_address, consented_at
+       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,NOW())
+       ON CONFLICT (user_id) DO UPDATE SET
+         agreed_terms = $2, agreed_privacy = $3, responsible_use = $4,
+         authorized_to_work = $5, accurate_information = $6,
+         agreed_background_verification = $7, no_disputes = $8,
+         no_cancelled_accounts = $9, ip_address = $10,
+         consented_at = NOW(), updated_at = NOW()
+       RETURNING id, consented_at`,
+      [
+        userId,
+        Boolean(b.agreed_terms), Boolean(b.agreed_privacy), Boolean(b.responsible_use),
+        Boolean(b.authorized_to_work), Boolean(b.accurate_information),
+        Boolean(b.agreed_background_verification), Boolean(b.no_disputes),
+        Boolean(b.no_cancelled_accounts), req.ip || null,
+      ]
+    );
+
+    res.json({ success: true, data: result.rows[0] });
+  } catch (error) {
+    console.error('Consent recording error:', error);
+    res.status(500).json({ error: 'Failed to record your agreement' });
+  }
+});
+
+// GET /api/users/blocked-users
+router.get('/blocked-users', authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    const userId = parseInt(req.userId || '0', 10);
+    const result = await db.query(
+      `SELECT u.id,
+              COALESCE(u.alias, u.display_name) AS "displayName",
+              u.profile_image_url AS "profileImage",
+              u.role,
+              b.created_at AS "blockedAt"
+         FROM blocked_users b
+         JOIN users u ON u.id = b.blocked_user_id
+        WHERE b.user_id = $1
+        ORDER BY b.created_at DESC`,
+      [userId]
+    );
+    res.json({ success: true, data: result.rows });
+  } catch (error) {
+    console.error('Blocked users fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch blocked users' });
+  }
+});
+
+// POST /api/users/blocked-users/:userId — block someone
+router.post('/blocked-users/:userId', authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    const userId = parseInt(req.userId || '0', 10);
+    const target = parseInt(req.params.userId, 10);
+    if (Number.isNaN(target)) return res.status(400).json({ error: 'Invalid user' });
+    if (target === userId) return res.status(400).json({ error: 'You cannot block yourself' });
+
+    const exists = await db.query('SELECT id FROM users WHERE id = $1', [target]);
+    if (exists.rows.length === 0) return res.status(404).json({ error: 'That person is no longer here' });
+
+    await db.query(
+      `INSERT INTO blocked_users (user_id, blocked_user_id, reason)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (user_id, blocked_user_id) DO NOTHING`,
+      [userId, target, req.body?.reason || null]
+    );
+    res.json({ success: true, data: { blocked: true } });
+  } catch (error) {
+    console.error('Block user error:', error);
+    res.status(500).json({ error: 'Failed to block user' });
+  }
+});
+
+// DELETE /api/users/blocked-users/:userId — unblock
+router.delete('/blocked-users/:userId', authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    const userId = parseInt(req.userId || '0', 10);
+    const target = parseInt(req.params.userId, 10);
+    if (Number.isNaN(target)) return res.status(400).json({ error: 'Invalid user' });
+
+    await db.query(
+      'DELETE FROM blocked_users WHERE user_id = $1 AND blocked_user_id = $2',
+      [userId, target]
+    );
+    res.json({ success: true, data: { blocked: false } });
+  } catch (error) {
+    console.error('Unblock user error:', error);
+    res.status(500).json({ error: 'Failed to unblock user' });
+  }
+});
+
+// GET /api/users/trusted-users
+router.get('/trusted-users', authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    const userId = parseInt(req.userId || '0', 10);
+    const result = await db.query(
+      `SELECT u.id,
+              COALESCE(u.alias, u.display_name) AS "displayName",
+              u.profile_image_url AS "profileImage",
+              COALESCE(u.average_rating, 0) AS rating,
+              u.role,
+              f.added_at AS "addedAt"
+         FROM user_favorites f
+         JOIN users u ON u.id = f.favorite_user_id
+        WHERE f.user_id = $1
+        ORDER BY f.added_at DESC`,
+      [userId]
+    );
+    // average_rating arrives from pg as a string; the page renders it as a number
+    res.json({
+      success: true,
+      data: result.rows.map((r: any) => ({ ...r, rating: Number(r.rating) || 0 })),
+    });
+  } catch (error) {
+    console.error('Trusted users fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch trusted users' });
+  }
+});
+
+// DELETE /api/users/trusted-users/:userId — remove from trusted
+router.delete('/trusted-users/:userId', authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    const userId = parseInt(req.userId || '0', 10);
+    const target = parseInt(req.params.userId, 10);
+    if (Number.isNaN(target)) return res.status(400).json({ error: 'Invalid user' });
+
+    await db.query(
+      'DELETE FROM user_favorites WHERE user_id = $1 AND favorite_user_id = $2',
+      [userId, target]
+    );
+    res.json({ success: true, data: { trusted: false } });
+  } catch (error) {
+    console.error('Remove trusted user error:', error);
+    res.status(500).json({ error: 'Failed to remove trusted user' });
   }
 });
 

@@ -7,7 +7,7 @@ export function useToastNotifications() {
     addToast({
       type: 'info',
       title: '💰 New Offer',
-      body: `${doerName} offered $${amount} for your task`,
+      body: `${doerName} offered $${amount} for your errand`,
       icon: '💰',
       actionLabel: 'View',
       actionUrl: `/errands/${errandId}`,
@@ -132,7 +132,7 @@ export function useToastNotifications() {
   const showErrandStartReminderToast = (errandTitle: string, timeUntilStart: string, errandId: number) => {
     addToast({
       type: 'warning',
-      title: '⏰ Task Starting Soon',
+      title: '⏰ Errand Starting Soon',
       body: `"${errandTitle}" is starting ${timeUntilStart}. Get ready!`,
       icon: '⏰',
       actionLabel: 'View Details',

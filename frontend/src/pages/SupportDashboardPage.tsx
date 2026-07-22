@@ -142,7 +142,7 @@ const SupportDashboardPage: React.FC = () => {
                 <tr>
                   <th>Priority</th>
                   <th>Dispute ID</th>
-                  <th>Task</th>
+                  <th>Errand</th>
                   <th>Amount</th>
                   <th>Category</th>
                   <th>Level</th>
@@ -158,7 +158,7 @@ const SupportDashboardPage: React.FC = () => {
                       <span className="priority-badge">{item.priority}</span>
                     </td>
                     <td>#{item.dispute_id}</td>
-                    <td>Task #{item.task_id}</td>
+                    <td>Errand #{item.task_id}</td>
                     <td>${item.amount}</td>
                     <td>{item.category}</td>
                     <td>L{item.level}</td>

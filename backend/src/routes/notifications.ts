@@ -170,10 +170,14 @@ export async function createNotification(
   actionUrl?: string
 ): Promise<void> {
   try {
+    // The columns are message / is_read / related_errand_id — not body / read /
+    // action_url. Every notification sent through this helper was failing on
+    // "column body does not exist" and being swallowed by the catch below, so
+    // 17 different notification types silently never arrived.
     await db.query(
-      `INSERT INTO notifications (user_id, title, body, type, read, action_url, created_at)
-       VALUES ($1, $2, $3, $4, false, $5, NOW())`,
-      [userId, title, body, type, actionUrl || null]
+      `INSERT INTO notifications (user_id, title, message, type, is_read, created_at)
+       VALUES ($1, $2, $3, $4, false, NOW())`,
+      [userId, title, body, type]
     );
 
     // TODO: Send push notification via service worker
@@ -339,13 +343,34 @@ export async function notifyDisputeRaised(
   userId: number,
   otherParty: string,
   caseId: string,
-  taskTitle: string
+  taskTitle: string,
+  /** when this person must reply by — omit for the person who raised it */
+  responseDeadline?: Date | string | null
 ) {
+  // The person on the receiving end was previously told only "our team reviews
+  // within 24-48h" — never that THEY needed to reply, by when, or that staying
+  // quiet costs them the right to appeal the outcome. That last part matters:
+  // it is a real consequence and it was going unmentioned.
+  if (responseDeadline) {
+    const by = new Date(responseDeadline).toLocaleString('en-SG', {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    });
+    await createNotification(
+      userId,
+      'dispute_raised',
+      'Someone has raised an issue with an errand',
+      `${otherParty} has raised an issue about "${taskTitle}". The payment is held safely while it's sorted out.\n\nPlease tell us your side by ${by}. If we don't hear from you we'll decide with only their account of it, and you won't be able to appeal the outcome.`,
+      null
+    );
+    return;
+  }
+
   await createNotification(
     userId,
     'dispute_raised',
-    '⚠️ Dispute Raised',
-    `${otherParty} raised a dispute (Case ${caseId}). Payment frozen. Our team reviews within 24-48h.`,
+    "We've got your issue",
+    `Thanks for letting us know about "${taskTitle}" (${caseId}). The payment is held safely while we look into it. We've asked the other person for their side and will come back to you.`,
     null
   );
 }
@@ -370,23 +395,31 @@ router.get('/ai-alerts', authMiddleware, async (req: AuthRequest, res: Response)
   try {
     const userId = parseInt(req.userId || '0', 10);
 
-    // Fetch user stats
+    // Fetch user stats. Errands have no doer_id — the doer is linked through the
+    // accepted offer (errands.accepted_bid_id -> bids.doer_id).
     const statsResult = await db.query(
       `SELECT
-        COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_this_month,
-        COUNT(CASE WHEN status = 'in_progress' THEN 1 END) as current_tasks,
-        AVG(COALESCE((SELECT AVG(rating) FROM ratings WHERE rated_user_id = u.id), 0)) as avg_rating
+        COUNT(CASE WHEN e.status IN ('completed', 'completed_confirmed', 'rated') THEN 1 END) as completed_this_month,
+        COUNT(CASE WHEN e.status = 'in_progress' THEN 1 END) as current_tasks,
+        COALESCE((SELECT AVG(rating) FROM ratings WHERE ratee_id = $1), 0) as avg_rating
       FROM errands e
-      JOIN users u ON e.doer_id = u.id
-      WHERE u.id = $1 AND DATE_TRUNC('month', e.completed_at) = DATE_TRUNC('month', NOW())`,
+      JOIN bids b ON e.accepted_bid_id = b.id
+      WHERE b.doer_id = $1
+        AND DATE_TRUNC('month', e.updated_at) = DATE_TRUNC('month', NOW())`,
       [userId]
     );
 
     const stats = statsResult.rows[0] || { completed_this_month: 0, current_tasks: 0, avg_rating: 0 };
 
-    // Fetch last errand earnings
+    // Fetch last errand earnings (the accepted offer amount is what the doer earned)
     const lastErrandResult = await db.query(
-      `SELECT amount FROM errands WHERE doer_id = $1 AND status = 'completed' ORDER BY completed_at DESC LIMIT 1`,
+      `SELECT b.amount
+       FROM errands e
+       JOIN bids b ON e.accepted_bid_id = b.id
+       WHERE b.doer_id = $1
+         AND e.status IN ('completed', 'completed_confirmed', 'rated')
+       ORDER BY e.updated_at DESC
+       LIMIT 1`,
       [userId]
     );
     const lastErrandAmount = lastErrandResult.rows[0]?.amount || 80;

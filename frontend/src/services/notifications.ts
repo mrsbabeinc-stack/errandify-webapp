@@ -104,7 +104,7 @@ class NotificationService {
     if (!errandId) return undefined;
 
     const actions: Record<string, { label: string; pathPrefix: string }> = {
-      bid_placed: { label: 'View Bids', pathPrefix: '/errand/' },
+      bid_placed: { label: 'View Offers', pathPrefix: '/errand/' },
       bid_accepted: { label: 'Start Job', pathPrefix: '/errand/' },
       task_completed: { label: 'Review Work', pathPrefix: '/errand/' },
       rating_received: { label: 'View Rating', pathPrefix: '/profile/' },

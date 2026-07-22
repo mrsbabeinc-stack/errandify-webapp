@@ -369,7 +369,7 @@ export default function ReferralTracking() {
                 <div className="p-2 bg-white rounded border-l-4 border-green-500">
                   <p className="font-bold text-green-900">🎯 Activation Bottleneck</p>
                   <p className="text-gray-700 text-xs mt-1">
-                    {((1 - conversions.filter(c => c.errandsCompleted > 0).length / conversions.length) * 100).toFixed(0)}% of referred users haven't completed their first errand yet. <strong>Action: Send onboarding messages with task recommendations within 24-48h of signup.</strong>
+                    {((1 - conversions.filter(c => c.errandsCompleted > 0).length / conversions.length) * 100).toFixed(0)}% of referred users haven't completed their first errand yet. <strong>Action: Send onboarding messages with errand recommendations within 24-48h of signup.</strong>
                   </p>
                 </div>
 

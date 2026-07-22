@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import axios from 'axios';
 import https from 'https';
 import db from '../db.js';
+import { authMiddleware, requireAdmin, AuthRequest } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -144,9 +145,13 @@ async function getErrandifyNews(limit: number, offset: number): Promise<NewsItem
  * POST /api/news/community
  * Create community news post
  */
-router.post('/community', async (req: Request, res: Response) => {
+// authMiddleware was missing here. The handler read `(req as any).user`, which
+// is always undefined on this router — nothing populates it — so `user.id`
+// threw a TypeError on every call and the endpoint could only ever 500. It was
+// also an unauthenticated write that published straight to the feed.
+router.post('/community', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const user = (req as any).user;
+    const userId = parseInt(req.userId || '0', 10);
     const { title, content, category, location, postal_code, image } = req.body;
 
     if (!title || !content) {
@@ -161,7 +166,7 @@ router.post('/community', async (req: Request, res: Response) => {
        (title, content, category, location, postal_code, posted_by, image, status, created_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
        RETURNING *`,
-      [title, content, category, location, postal_code, user.id, image, 'published']
+      [title, content, category, location, postal_code, userId, image, 'published']
     );
 
     res.json({
@@ -181,18 +186,16 @@ router.post('/community', async (req: Request, res: Response) => {
  * POST /api/news/errandify
  * Create Errandify news (admin only)
  */
-router.post('/errandify', async (req: Request, res: Response) => {
+// The hand-rolled check below read `(req as any).user`, which nothing on this
+// router populates, so `user?.role !== 'admin'` was always true and this
+// endpoint returned 403 to everyone including admins. It also would have
+// excluded super-admins had it worked. requireAdmin does both correctly.
+router.post(
+  '/errandify',
+  authMiddleware,
+  requireAdmin(['admin', 'super-admin']),
+  async (req: AuthRequest, res: Response) => {
   try {
-    const user = (req as any).user;
-
-    // Check if admin
-    if (user?.role !== 'admin') {
-      return res.status(403).json({
-        success: false,
-        error: 'Only admins can post Errandify news',
-      });
-    }
-
     const { title, content, category, image, source } = req.body;
 
     if (!title || !content) {
@@ -222,6 +225,73 @@ router.post('/errandify', async (req: Request, res: Response) => {
     });
   }
 });
+
+/**
+ * Editing and removing news.
+ *
+ * Both feeds could be written to and read from, but never corrected — a typo
+ * in a community notice was permanent and there was no way to take anything
+ * down. The table is chosen from the path so the two feeds cannot be mixed up:
+ * /community/:id can never touch an Errandify item.
+ */
+const NEWS_TABLES: Record<string, string> = {
+  community: 'community_news',
+  errandify: 'errandify_news',
+};
+
+router.patch(
+  '/:feed(community|errandify)/:id',
+  authMiddleware,
+  requireAdmin(['admin', 'super-admin']),
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const table = NEWS_TABLES[req.params.feed];
+      const id = parseInt(req.params.id, 10);
+      if (!table || Number.isNaN(id)) return res.status(400).json({ error: 'Invalid request' });
+
+      const { title, content, category, image, status } = req.body || {};
+      // Column list differs between the two tables, so only shared columns are
+      // updated here; both carry these.
+      const result = await db.query(
+        `UPDATE ${table}
+            SET title = COALESCE($1::varchar, title),
+                content = COALESCE($2::text, content),
+                category = COALESCE($3::varchar, category),
+                image = COALESCE($4::text, image),
+                status = COALESCE($5::varchar, status),
+                updated_at = NOW()
+          WHERE id = $6
+          RETURNING id, title, status`,
+        [title ?? null, content ?? null, category ?? null, image ?? null, status ?? null, id]
+      );
+      if (result.rows.length === 0) return res.status(404).json({ error: 'That item no longer exists' });
+      res.json({ success: true, data: result.rows[0] });
+    } catch (error) {
+      console.error('Failed to update news item:', error);
+      res.status(500).json({ success: false, error: 'Could not update that item' });
+    }
+  }
+);
+
+router.delete(
+  '/:feed(community|errandify)/:id',
+  authMiddleware,
+  requireAdmin(['admin', 'super-admin']),
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const table = NEWS_TABLES[req.params.feed];
+      const id = parseInt(req.params.id, 10);
+      if (!table || Number.isNaN(id)) return res.status(400).json({ error: 'Invalid request' });
+
+      const r = await db.query(`DELETE FROM ${table} WHERE id = $1 RETURNING id`, [id]);
+      if (r.rows.length === 0) return res.status(404).json({ error: 'That item no longer exists' });
+      res.json({ success: true, data: { id } });
+    } catch (error) {
+      console.error('Failed to delete news item:', error);
+      res.status(500).json({ success: false, error: 'Could not delete that item' });
+    }
+  }
+);
 
 // Mock data functions
 function getMockSGNews(): NewsItem[] {

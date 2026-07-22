@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { generateText } from './aiClient';
 
 export interface ScheduleSuggestion {
   date: string;
@@ -50,22 +51,9 @@ Respond with ONLY valid JSON:
   "engagementScore": 78
 }`;
 
-      const response = await axios.post(
-        'https://dashscope.aliyuncs.com/api/v1/services/aigc/text2text/qwen',
-        {
-          model: 'qwen-turbo',
-          input: { messages: [{ role: 'user', content: prompt }] },
-          parameters: { max_tokens: 1500, temperature: 0.7 },
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${import.meta.env.VITE_QWEN_API_KEY || 'demo'}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const responseText = await generateText(prompt, { maxTokens: 1500, temperature: 0.7 });
 
-      const result = response.data.output?.text || '';
+      const result = responseText || '';
       if (!result) return null;
 
       const parsed = JSON.parse(result);

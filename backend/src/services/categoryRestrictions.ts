@@ -1,0 +1,67 @@
+import db from '../db.js';
+
+/**
+ * Category restrictions for screened users.
+ *
+ * Someone who declares a conviction can use Errandify, but the categories that
+ * involve vulnerable people or home access are closed to them. This is the one
+ * place that decides which, so browse, recommendations and offer submission
+ * cannot drift apart — a category hidden from a list but still accepting offers
+ * would be no protection at all.
+ *
+ * Restrictions are matched on restricted_categories.category_slug, which is the
+ * same vocabulary as errands.category. The display labels ('Childcare') are not
+ * usable for this: they never equal a slug ('childcare-education'). See
+ * migration 037.
+ */
+
+/** Slugs this user may not work in. Empty for everyone unrestricted. */
+export async function getRestrictedSlugs(userId: number): Promise<string[]> {
+  if (!userId) return [];
+  const result = await db.query(
+    `SELECT DISTINCT rc.category_slug
+       FROM user_category_restrictions ucr
+       JOIN restricted_categories rc ON rc.id = ucr.restricted_category_id
+      WHERE ucr.user_id = $1
+        AND ucr.is_active = true
+        AND (ucr.restriction_end IS NULL OR ucr.restriction_end > NOW())
+        AND rc.category_slug IS NOT NULL`,
+    [userId]
+  );
+  return result.rows.map((r: any) => r.category_slug);
+}
+
+/**
+ * Whether this user may take on work in a category.
+ * Unknown or unmapped categories are allowed — a category nobody has marked
+ * restricted is not restricted.
+ */
+export async function isCategoryAllowed(userId: number, category?: string | null): Promise<boolean> {
+  if (!category) return true;
+  const restricted = await getRestrictedSlugs(userId);
+  return !restricted.includes(category);
+}
+
+/**
+ * The human-readable reason a category is closed, for telling someone why their
+ * offer was refused. Returns null when nothing blocks them.
+ */
+export async function getRestrictionReason(
+  userId: number,
+  category?: string | null
+): Promise<string | null> {
+  if (!category || !userId) return null;
+  const result = await db.query(
+    `SELECT rc.category_name, rc.reason
+       FROM user_category_restrictions ucr
+       JOIN restricted_categories rc ON rc.id = ucr.restricted_category_id
+      WHERE ucr.user_id = $1
+        AND rc.category_slug = $2
+        AND ucr.is_active = true
+        AND (ucr.restriction_end IS NULL OR ucr.restriction_end > NOW())
+      LIMIT 1`,
+    [userId, category]
+  );
+  if (result.rows.length === 0) return null;
+  return `${result.rows[0].category_name} work isn't available on your account. ${result.rows[0].reason}`;
+}

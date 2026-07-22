@@ -75,7 +75,7 @@ export default function HanaTaskCreationPage({ userRole }: HanaTaskCreationPageP
 
       if (filterResponse.data.data.status === 'FLAG') {
         setShowReview(false);
-        setError('This task needs review before it goes live. Our team will check it shortly.');
+        setError('This errand needs review before it goes live. Our team will check it shortly.');
         return;
       }
 
@@ -101,7 +101,7 @@ export default function HanaTaskCreationPage({ userRole }: HanaTaskCreationPageP
 
       navigate(`/errand/${response.data.data.id}`);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to create task');
+      setError(err.response?.data?.error || 'Failed to create errand');
     } finally {
       setIsSubmitting(false);
     }
@@ -118,7 +118,7 @@ export default function HanaTaskCreationPage({ userRole }: HanaTaskCreationPageP
           >
             ← Back
           </button>
-          <h1 className="text-lg font-bold text-errandify-brown">Create Task with Hana</h1>
+          <h1 className="text-lg font-bold text-errandify-brown">Create Errand with Hana</h1>
           <div className="w-12"></div>
         </div>
       </div>

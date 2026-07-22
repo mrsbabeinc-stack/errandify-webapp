@@ -26,87 +26,145 @@ export default function AdminErrandManagement() {
   const [cancelReason, setCancelReason] = useState('');
   const [compensationAmount, setCompensationAmount] = useState('0');
 
-  useEffect(() => {
-    const saved = localStorage.getItem('platformErrands');
-    if (saved) {
-      setErrands(JSON.parse(saved));
-    } else {
-      const demoErrands: Errand[] = [
-        {
-          id: 'errand_1',
-          title: 'Grocery Shopping at NTUC',
-          askerName: 'John Lee',
-          doerName: 'Jordan Smith',
-          status: 'in-progress',
-          budget: 85.50,
-          createdAt: new Date().toISOString(),
-          deadline: new Date(Date.now() + 86400000).toISOString(),
-          category: 'Shopping',
-        },
-        {
-          id: 'errand_2',
-          title: 'Photo Editing Assignment',
-          askerName: 'Sarah Davis',
-          status: 'open',
-          budget: 120.00,
-          createdAt: new Date(Date.now() - 3600000).toISOString(),
-          deadline: new Date(Date.now() + 172800000).toISOString(),
-          category: 'Design',
-        },
-        {
-          id: 'errand_3',
-          title: 'House Cleaning Service',
-          askerName: 'Mike Johnson',
-          doerName: 'Alex Wong',
-          status: 'disputed',
-          budget: 150.00,
-          createdAt: new Date(Date.now() - 86400000).toISOString(),
-          deadline: new Date(Date.now() - 3600000).toISOString(),
-          category: 'Cleaning',
-        },
-      ];
-      setErrands(demoErrands);
-      localStorage.setItem('platformErrands', JSON.stringify(demoErrands));
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
+  const authHeaders = () => ({
+    Authorization: `Bearer ${localStorage.getItem('token')}`,
+    'Content-Type': 'application/json',
+  });
+
+  // Errands used to be kept in localStorage, so Cancel, Extend and Force
+  // Complete changed nothing: the errand stayed live for both the asker and
+  // the doer, and the admin's "cancellation" vanished with their cache.
+  const loadErrands = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/admin/errands`, { headers: authHeaders() });
+      if (!res.ok) throw new Error('request failed');
+      const result = await res.json();
+      setErrands(
+        (result.data || []).map((e: any) => ({
+          id: String(e.id),
+          title: e.title,
+          askerName: e.askerName || 'Unknown',
+          doerName: e.doerName || undefined,
+          status: e.status,
+          budget: e.budget ?? 0,
+          createdAt: e.created_at,
+          deadline: e.deadline,
+          category: e.category || '',
+        }))
+      );
+    } catch (err) {
+      console.error('Failed to load errands:', err);
+      setErrands([]);
+      showToast('Could not load errands', 'error');
     }
+  };
+
+  useEffect(() => {
+    loadErrands();
   }, []);
 
-  const handleCancelErrand = (errandId: string) => {
+  const handleCancelErrand = async (errandId: string) => {
     if (!cancelReason.trim()) {
-      alert('Please provide a cancellation reason');
+      showToast('Please provide a cancellation reason', 'error');
       return;
     }
+    try {
+      const compensation = parseFloat(compensationAmount) || 0;
+      const res = await fetch(`${API_URL}/api/admin/errands/${errandId}/cancel`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ reason: cancelReason.trim(), compensationAmount: compensation }),
+      });
+      const result = await res.json().catch(() => ({}));
 
-    const updated = errands.map(e =>
-      e.id === errandId ? { ...e, status: 'cancelled' as const } : e
-    );
-    setErrands(updated);
-    localStorage.setItem('platformErrands', JSON.stringify(updated));
+      // 501 means the errand WAS cancelled but compensation could not be
+      // issued — payouts do not exist yet. That is a partial success and has
+      // to read as one, not as "compensation issued".
+      if (res.status === 501) {
+        showToast(result.error || 'Cancelled, but compensation was not issued', 'error');
+      } else if (!res.ok) {
+        showToast(result.error || 'Could not cancel that errand', 'error');
+        return;
+      } else {
+        showToast('Errand cancelled', 'success');
+      }
 
-    if (compensationAmount && parseFloat(compensationAmount) > 0) {
-      alert(`Errand cancelled. Compensation: $${compensationAmount} issued to user`);
+      setCancelReason('');
+      setCompensationAmount('0');
+      setSelectedErrand(null);
+      await loadErrands();
+    } catch (err) {
+      console.error('Failed to cancel errand:', err);
+      showToast('Could not cancel that errand', 'error');
     }
-
-    setCancelReason('');
-    setCompensationAmount('0');
-    setSelectedErrand(null);
   };
 
-  const handleReassign = (errandId: string) => {
-    alert('Reassignment feature would open a modal to select new doer');
+  const handleReassign = async (errandId: string) => {
+    // The server answers 501: the doer comes from the accepted offer, so
+    // reassigning needs an offer-transfer flow that does not exist yet.
+    try {
+      const res = await fetch(`${API_URL}/api/admin/errands/${errandId}/reassign`, {
+        method: 'PATCH',
+        headers: authHeaders(),
+        body: JSON.stringify({}),
+      });
+      const result = await res.json().catch(() => ({}));
+      showToast(result.error || 'Reassignment is not available yet', 'error');
+    } catch (err) {
+      console.error('Failed to reassign:', err);
+      showToast('Reassignment is not available yet', 'error');
+    }
   };
 
-  const handleExtendDeadline = (errandId: string) => {
-    alert('Extension feature would open a date picker for new deadline');
+  const handleExtendDeadline = async (errandId: string) => {
+    const input = prompt('New deadline (YYYY-MM-DD):');
+    if (!input) return;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(input.trim())) {
+      showToast('Please use the format YYYY-MM-DD', 'error');
+      return;
+    }
+    try {
+      const res = await fetch(`${API_URL}/api/admin/errands/${errandId}/extend`, {
+        method: 'PATCH',
+        headers: authHeaders(),
+        body: JSON.stringify({ newDeadline: input.trim() }),
+      });
+      const result = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        showToast(result.error || 'Could not extend that deadline', 'error');
+        return;
+      }
+      showToast('Deadline extended', 'success');
+      setSelectedErrand(null);
+      await loadErrands();
+    } catch (err) {
+      console.error('Failed to extend deadline:', err);
+      showToast('Could not extend that deadline', 'error');
+    }
   };
 
-  const handleForceComplete = (errandId: string) => {
-    const updated = errands.map(e =>
-      e.id === errandId ? { ...e, status: 'completed' as const } : e
-    );
-    setErrands(updated);
-    localStorage.setItem('platformErrands', JSON.stringify(updated));
-    setSelectedErrand(null);
-    alert('Errand marked as completed');
+  const handleForceComplete = async (errandId: string) => {
+    if (!confirm('Mark this errand complete? This does not release any payment.')) return;
+    try {
+      const res = await fetch(`${API_URL}/api/admin/errands/${errandId}/complete`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({}),
+      });
+      const result = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        showToast(result.error || 'Could not complete that errand', 'error');
+        return;
+      }
+      showToast('Errand marked as completed', 'success');
+      setSelectedErrand(null);
+      await loadErrands();
+    } catch (err) {
+      console.error('Failed to complete errand:', err);
+      showToast('Could not complete that errand', 'error');
+    }
   };
 
   const filteredErrands = errands.filter(e => {

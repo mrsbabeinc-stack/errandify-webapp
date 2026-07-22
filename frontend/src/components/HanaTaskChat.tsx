@@ -69,7 +69,7 @@ export default function HanaTaskChat({
     const greeting: Message = {
       id: '1',
       role: 'hana',
-      content: "Hello! 🌸 I'm Hana. Let's create your task together! What do you need done?",
+      content: "Hello! 🌸 I'm Hana. Let's create your errand together! What do you need done?",
       timestamp: new Date(),
     };
     setMessages([greeting]);
@@ -201,7 +201,7 @@ export default function HanaTaskChat({
 💰 SGD $${taskData.budget}
 ${taskData.notes ? `📌 ${taskData.notes}` : ''}
 
-Ready to post this task?`;
+Ready to post this errand?`;
 
     addHanaMessage(summary);
     setCurrentStep('review');
@@ -220,7 +220,7 @@ Ready to post this task?`;
       );
 
       if (filterResponse.data.data.status === 'FLAG') {
-        addHanaMessage('⚠️ This task needs review before it goes live. Our team will check it shortly.');
+        addHanaMessage('⚠️ This errand needs review before it goes live. Our team will check it shortly.');
         setCurrentStep('start');
         return;
       }
@@ -243,7 +243,7 @@ Ready to post this task?`;
         }
       );
 
-      addHanaMessage(`✅ Task posted successfully! You can view it or continue creating more tasks.`);
+      addHanaMessage(`✅ Errand posted successfully! You can view it or continue creating more errands.`);
       setCurrentStep('start');
       setTaskData({
         title: '',
@@ -260,7 +260,7 @@ Ready to post this task?`;
         onTaskCreated(response.data.data.id);
       }
     } catch (err: any) {
-      addHanaMessage(`❌ Error: ${err.response?.data?.error || 'Failed to create task'}`);
+      addHanaMessage(`❌ Error: ${err.response?.data?.error || 'Failed to create errand'}`);
     } finally {
       setLoading(false);
     }
@@ -364,7 +364,7 @@ Ready to post this task?`;
                   disabled={loading}
                   className="flex-1 px-4 py-2 bg-errandify-orange text-white rounded-lg font-bold hover:bg-opacity-90 disabled:opacity-50 text-sm"
                 >
-                  {loading ? 'Posting...' : '✓ Post Task'}
+                  {loading ? 'Posting...' : '✓ Post Errand'}
                 </button>
                 <button
                   onClick={() => {
@@ -385,7 +385,7 @@ Ready to post this task?`;
                   onClick={initializeChat}
                   className="flex-1 px-4 py-2 bg-errandify-orange text-white rounded-lg font-bold hover:bg-opacity-90 text-sm"
                 >
-                  + Create New Task
+                  + Create New Errand
                 </button>
                 <button
                   onClick={handleManualSwitch}
@@ -408,7 +408,7 @@ Ready to post this task?`;
         ) : (
           <div className="p-4 bg-white border-t border-gray-200">
             <div className="text-center py-8 text-gray-500">
-              <p className="mb-4">Switch to manual form mode to fill in task details</p>
+              <p className="mb-4">Switch to manual form mode to fill in errand details</p>
               <button
                 onClick={() => {
                   setShowManualForm(false);

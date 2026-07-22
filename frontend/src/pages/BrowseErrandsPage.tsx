@@ -146,7 +146,7 @@ export default function BrowseErrandsPage() {
 
     const amount = parseFloat(bidAmounts[errandId] || '0');
     if (isNaN(amount) || amount < 8) {
-      alert('Bid must be at least $8');
+      alert('Offer must be at least $8');
       return;
     }
 
@@ -181,8 +181,8 @@ export default function BrowseErrandsPage() {
         await fetchRecurringInfo(parentErrandId);
       }
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Failed to place bid');
-      console.error('Bid error:', err);
+      alert(err.response?.data?.error || 'Failed to place offer');
+      console.error('Offer error:', err);
     }
   };
 
@@ -325,7 +325,7 @@ export default function BrowseErrandsPage() {
                   {/* Bid Amount Input */}
                   <div className="mb-3">
                     <label className="text-sm font-semibold text-gray-700 block mb-1">
-                      Your Bid Per Session
+                      Your Offer Per Session
                     </label>
                     <div className="flex gap-2">
                       <span className="text-lg font-semibold text-gray-600">$</span>
@@ -333,7 +333,7 @@ export default function BrowseErrandsPage() {
                         type="number"
                         value={bidAmounts[errand.id] || ''}
                         onChange={(e) => setBidAmounts(prev => ({ ...prev, [errand.id]: e.target.value }))}
-                        placeholder="Enter bid amount"
+                        placeholder="Enter offer amount"
                         min="8"
                         step="5"
                         className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
@@ -347,7 +347,7 @@ export default function BrowseErrandsPage() {
                     disabled={!bidAmounts[errand.id] || (selectedSessions[errand.id]?.length || 0) === 0}
                     className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors text-sm disabled:bg-gray-400 disabled:cursor-not-allowed"
                   >
-                    ✅ Bid for {selectedSessions[errand.id]?.length || 0} Session(s)
+                    ✅ Offer for {selectedSessions[errand.id]?.length || 0} Session(s)
                   </button>
                 </div>
               )}

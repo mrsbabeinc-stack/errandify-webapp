@@ -693,4 +693,71 @@ async function callQwen(prompt: string, language: string = 'en'): Promise<string
   }
 }
 
+// GET /api/messages/unread-count - real unread counts for the chat badge.
+// Replaces the localStorage-only count, which was per-device and never synced.
+// A message is unread if someone else sent it and it has no read_at.
+router.get('/unread-count', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = parseInt(req.userId || '0', 10);
+
+    // Only count errands the user is actually part of (asker, or doer via the
+    // accepted offer) so this can't leak other people's conversations.
+    const result = await db.query(
+      `SELECT m.task_id, COUNT(*)::int AS unread
+         FROM task_messages m
+         JOIN errands e ON e.id = m.task_id
+         LEFT JOIN bids b ON e.accepted_bid_id = b.id
+        WHERE m.sender_id <> $1
+          AND m.read_at IS NULL
+          AND (e.asker_id = $1 OR b.doer_id = $1)
+        GROUP BY m.task_id`,
+      [userId]
+    );
+
+    const perErrand: Record<string, number> = {};
+    let total = 0;
+    for (const row of result.rows) {
+      perErrand[row.task_id] = row.unread;
+      total += row.unread;
+    }
+
+    res.json({ success: true, data: { total, perErrand } });
+  } catch (error) {
+    console.error('[Messages] Unread count error:', error);
+    res.status(500).json({ error: 'Failed to fetch unread count' });
+  }
+});
+
+// POST /api/messages/tasks/:taskId/read - mark this conversation as read for me
+router.post('/tasks/:taskId/read', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = parseInt(req.userId || '0', 10);
+    const taskId = parseInt(req.params.taskId, 10);
+
+    // Verify participation before mutating anything
+    const check = await db.query(
+      `SELECT 1
+         FROM errands e
+         LEFT JOIN bids b ON e.accepted_bid_id = b.id
+        WHERE e.id = $1 AND (e.asker_id = $2 OR b.doer_id = $2)`,
+      [taskId, userId]
+    );
+    if (check.rows.length === 0) {
+      return res.status(403).json({ error: 'Not a participant in this conversation' });
+    }
+
+    const upd = await db.query(
+      `UPDATE task_messages
+          SET read_at = NOW()
+        WHERE task_id = $1 AND sender_id <> $2 AND read_at IS NULL`,
+      [taskId, userId]
+    );
+
+    res.json({ success: true, data: { marked: upd.rowCount || 0 } });
+  } catch (error) {
+    console.error('[Messages] Mark read error:', error);
+    res.status(500).json({ error: 'Failed to mark messages read' });
+  }
+});
+
 export default router;

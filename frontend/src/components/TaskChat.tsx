@@ -45,6 +45,15 @@ export default function TaskChat({ taskId, taskTitle }: TaskChatProps) {
       );
       setMessages(response.data.data || []);
       setError('');
+
+      // Opening the conversation clears its unread badge (fire and forget)
+      axios
+        .post(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/messages/tasks/${taskId}/read`,
+          {},
+          { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+        )
+        .catch(() => {});
     } catch (err) {
       console.error('Failed to fetch messages:', err);
     } finally {
@@ -97,7 +106,7 @@ export default function TaskChat({ taskId, taskTitle }: TaskChatProps) {
     <div className="border border-gray-200 rounded-lg overflow-hidden flex flex-col h-[500px] bg-white">
       {/* Header */}
       <div className="bg-gradient-to-r from-errandify-orange to-orange-600 text-white p-4">
-        <h3 className="font-bold text-lg">💬 Task Chat</h3>
+        <h3 className="font-bold text-lg">💬 Errand Chat</h3>
         <p className="text-sm text-orange-100">{taskTitle}</p>
       </div>
 
@@ -111,7 +120,7 @@ export default function TaskChat({ taskId, taskTitle }: TaskChatProps) {
           <div className="flex items-center justify-center h-full text-gray-500 text-center">
             <div>
               <p className="text-lg mb-2">No messages yet</p>
-              <p className="text-sm">Start communicating about this task!</p>
+              <p className="text-sm">Start communicating about this errand!</p>
             </div>
           </div>
         ) : (

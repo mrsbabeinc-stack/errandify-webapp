@@ -18,6 +18,11 @@ interface Dispute {
   resolved_at?: string;
   resolution?: string;
   case_id?: string;
+  has_appeal?: boolean;
+  title?: string;
+  formatted_id?: string;
+  amount?: number | string;
+  settlement_status?: string;
 }
 
 interface SafetyAnalysis {
@@ -44,15 +49,34 @@ export const DisputesPage: React.FC = () => {
   const { toasts, showToast, removeToast } = useToast();
   const [disputes, setDisputes] = useState<Dispute[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<'all' | 'level_1' | 'level_2' | 'level_3' | 'resolved'>('all');
+  const [filter, setFilter] = useState<'all' | 'hana_reviewing' | 'admin_review' | 'resolved' | 'closed'>('all');
   const [selectedDispute, setSelectedDispute] = useState<Dispute | null>(null);
   const [linkedCaseContext, setLinkedCaseContext] = useState<LinkedCaseContext | null>(null);
   const [showReviewModal, setShowReviewModal] = useState(false);
-  const [resolution, setResolution] = useState<'approve' | 'reject' | 'partial'>('approve');
+  // Deliberately starts unset. It used to default to 'approve', so an admin who
+  // never touched the radio was one click from paying the doer in full.
+  const [resolution, setResolution] = useState<'' | 'approve' | 'reject' | 'partial'>('');
+  // True while the form still holds exactly what Hana suggested, so the admin
+  // can see they are confirming her words rather than their own.
+  const [prefilledFromHana, setPrefilledFromHana] = useState(false);
+  // Only used for a partial split; must add up to the errand total
+  // A dispute can end three ways. Monetary keeps the existing decision cards;
+  // rework defers with a deadline both sides must agree to; non-monetary closes
+  // it without money changing hands.
+  const [resolutionKind, setResolutionKind] = useState<'monetary' | 'rework' | 'non_monetary'>('monetary');
+  const [reworkDays, setReworkDays] = useState('3');
+  const [nonMonetaryOutcome, setNonMonetaryOutcome] = useState('');
+  const [doerAmount, setDoerAmount] = useState('');
+  const [askerAmount, setAskerAmount] = useState('');
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [safetyAnalysis, setSafetyAnalysis] = useState<SafetyAnalysis | null>(null);
+  // Hana's suggestion for this dispute. Advisory only — the admin decides.
+  const [hanaProposal, setHanaProposal] = useState<any>(null);
+  const [hanaFailedReason, setHanaFailedReason] = useState<string | null>(null);
+  // The shared 6-day authorisation clock every stage spends from
+  const [authWindow, setAuthWindow] = useState<any>(null);
 
   useEffect(() => {
     fetchDisputes();
@@ -69,7 +93,12 @@ export const DisputesPage: React.FC = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      setDisputes(response.data.data?.disputes || response.data.data || []);
+      // GET /api/disputes returns { disputes, count } at the top level. This
+      // read only looked under data.data, so the list silently rendered empty
+      // even when the API had returned rows.
+      setDisputes(
+        response.data?.disputes || response.data?.data?.disputes || response.data?.data || []
+      );
       setError('');
     } catch (err) {
       console.error('Failed to fetch disputes:', err);
@@ -100,7 +129,7 @@ export const DisputesPage: React.FC = () => {
           errand_id: 125,
           filed_by_user_id: 12,
           dispute_type: 'payment_not_released',
-          description: 'Payment was promised but not released after task completion.',
+          description: 'Payment was promised but not released after errand completion.',
           status: 'level_2',
           priority: 'high',
           created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
@@ -151,6 +180,70 @@ export const DisputesPage: React.FC = () => {
     }
   };
 
+  const fetchHanaProposal = async (disputeId: number) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/disputes/${disputeId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const proposal = response.data?.dispute?.hanaProposal || null;
+      setHanaProposal(proposal);
+      setHanaFailedReason(response.data?.dispute?.hanaFailedReason || null);
+      setAuthWindow(response.data?.dispute?.authorisationWindow || null);
+
+      // Drop Hana's suggestion straight into the form so the admin is editing a
+      // draft rather than a blank page. Only for actions that map to a decision
+      // — if Hana said she needs more information, she has no opinion to prefill
+      // and the admin should start clean.
+      const actionToDecision: Record<string, 'approve' | 'reject' | 'partial'> = {
+        pay_doer_in_full: 'approve',
+        refund_asker_in_full: 'reject',
+        split_payment: 'partial',
+      };
+
+      // Hana's six actions already span all three kinds, so her answer sets the
+      // whole form — not just which card is ticked.
+      const actionToKind: Record<string, 'monetary' | 'rework' | 'non_monetary'> = {
+        pay_doer_in_full: 'monetary',
+        refund_asker_in_full: 'monetary',
+        split_payment: 'monetary',
+        redo_the_work: 'rework',
+        no_action_needed: 'non_monetary',
+      };
+      const suggestedKind = proposal ? actionToKind[proposal.action] : undefined;
+      if (suggestedKind) {
+        setResolutionKind(suggestedKind);
+        if (suggestedKind === 'non_monetary') setNonMonetaryOutcome('no_action_needed');
+      }
+      const suggested = proposal ? actionToDecision[proposal.action] : undefined;
+      if (suggested) {
+        setResolution(suggested);
+        setNotes(proposal.proposal || '');
+        // A prefilled 'partial' with empty amounts is not usable — seed an even
+        // split so the form is complete, exactly as picking Partial by hand does.
+        if (suggested === 'partial') {
+          const total = Number(response.data?.dispute?.amount ?? 0);
+          const half = Math.round((total / 2) * 100) / 100;
+          setDoerAmount(half.toFixed(2));
+          setAskerAmount((total - half).toFixed(2));
+        } else {
+          setDoerAmount('');
+          setAskerAmount('');
+        }
+        setPrefilledFromHana(true);
+      } else {
+        setResolution('');
+        setNotes('');
+        setPrefilledFromHana(false);
+      }
+    } catch (err) {
+      console.error('Failed to fetch Hana proposal:', err);
+      setHanaProposal(null);
+      setHanaFailedReason(null);
+    }
+  };
+
   const fetchLinkedCaseContext = async (disputeId: number) => {
     try {
       const caseContext = await CaseDisputeService.getCaseContextForDispute(disputeId);
@@ -163,9 +256,38 @@ export const DisputesPage: React.FC = () => {
     }
   };
 
+  // The errand total the split has to add up to
+  const errandTotal = Number(selectedDispute?.amount ?? 0);
+  const splitSum = (parseFloat(doerAmount) || 0) + (parseFloat(askerAmount) || 0);
+  const splitBalances = Math.abs(splitSum - errandTotal) <= 0.01;
+
   const handleResolveDispute = async () => {
-    if (!selectedDispute || !notes.trim()) {
-      setError('Please provide resolution notes');
+    if (!selectedDispute) return;
+
+    // Only a monetary resolution needs a payment decision. A rework or a
+    // non-monetary close has no amounts to agree.
+    if (resolutionKind === 'monetary') {
+      if (!resolution) {
+        setError('Choose a decision first — Approve, Refund or Partial.');
+        return;
+      }
+      if (resolution === 'partial' && !splitBalances) {
+        setError(
+          `The split must add up to $${errandTotal.toFixed(2)}. Right now it comes to $${splitSum.toFixed(2)}.`
+        );
+        return;
+      }
+    }
+    if (resolutionKind === 'non_monetary' && !nonMonetaryOutcome) {
+      setError('Choose what the outcome was.');
+      return;
+    }
+    if (!notes.trim()) {
+      setError(
+        resolutionKind === 'rework'
+          ? 'Explain what needs putting right — both people will read this.'
+          : 'Please provide resolution notes'
+      );
       return;
     }
 
@@ -177,9 +299,20 @@ export const DisputesPage: React.FC = () => {
       await axios.post(
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/disputes/${selectedDispute.id}/resolve`,
         {
-          resolution,
+          resolutionKind,
           notes,
-          releasePayment: resolution === 'approve',
+          // Canonical vocabulary — the backend also tolerates the short forms,
+          // but sending what it stores keeps the two in step.
+          ...(resolutionKind === 'monetary' && {
+            resolution:
+              resolution === 'approve' ? 'approved' : resolution === 'reject' ? 'rejected' : 'partial',
+            ...(resolution === 'partial' && {
+              doerAmount: parseFloat(doerAmount),
+              askerAmount: parseFloat(askerAmount),
+            }),
+          }),
+          ...(resolutionKind === 'rework' && { reworkDays: parseInt(reworkDays, 10) || 3 }),
+          ...(resolutionKind === 'non_monetary' && { nonMonetaryOutcome }),
         },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -204,8 +337,10 @@ export const DisputesPage: React.FC = () => {
       setShowReviewModal(false);
       setSelectedDispute(null);
       setLinkedCaseContext(null);
-      setResolution('approve');
+      setResolution('');
       setNotes('');
+      setDoerAmount('');
+      setAskerAmount('');
       setSafetyAnalysis(null);
       fetchDisputes();
     } catch (err: any) {
@@ -217,14 +352,14 @@ export const DisputesPage: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'level_1':
+      case 'hana_reviewing':
         return 'bg-blue-100 text-blue-800';
-      case 'level_2':
+      case 'admin_review':
         return 'bg-yellow-100 text-yellow-800';
-      case 'level_3':
-        return 'bg-orange-100 text-orange-800';
       case 'resolved':
         return 'bg-green-100 text-green-800';
+      case 'closed':
+        return 'bg-gray-100 text-gray-700';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -292,21 +427,21 @@ export const DisputesPage: React.FC = () => {
         {/* Stats */}
         <div className="grid grid-cols-4 gap-4 mb-6">
           <div className="bg-white rounded-lg p-4 border-l-4 border-blue-500 shadow-sm">
-            <p className="text-xs text-gray-600 font-semibold">Level 1</p>
+            <p className="text-xs text-gray-600 font-semibold">Hana reviewing</p>
             <p className="text-2xl font-bold text-blue-600">
-              {disputes.filter((d) => d.status === 'level_1').length}
+              {disputes.filter((d) => d.status === 'hana_reviewing').length}
             </p>
           </div>
           <div className="bg-white rounded-lg p-4 border-l-4 border-yellow-500 shadow-sm">
-            <p className="text-xs text-gray-600 font-semibold">Level 2</p>
+            <p className="text-xs text-gray-600 font-semibold">Waiting on you</p>
             <p className="text-2xl font-bold text-yellow-600">
-              {disputes.filter((d) => d.status === 'level_2').length}
+              {disputes.filter((d) => d.status === 'admin_review').length}
             </p>
           </div>
           <div className="bg-white rounded-lg p-4 border-l-4 border-orange-500 shadow-sm">
-            <p className="text-xs text-gray-600 font-semibold">Appeals (L3)</p>
+            <p className="text-xs text-gray-600 font-semibold">Appeals</p>
             <p className="text-2xl font-bold text-orange-600">
-              {disputes.filter((d) => d.status === 'level_3').length}
+              {disputes.filter((d) => d.has_appeal).length}
             </p>
           </div>
           <div className="bg-white rounded-lg p-4 border-l-4 border-green-500 shadow-sm">
@@ -319,7 +454,7 @@ export const DisputesPage: React.FC = () => {
 
         {/* Filters */}
         <div className="flex gap-2 mb-6 bg-white rounded-lg p-2 shadow-sm">
-          {(['all', 'level_1', 'level_2', 'level_3', 'resolved'] as const).map((f) => (
+          {(['all', 'hana_reviewing', 'admin_review', 'resolved', 'closed'] as const).map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
@@ -331,13 +466,13 @@ export const DisputesPage: React.FC = () => {
             >
               {f === 'all'
                 ? 'All'
-                : f === 'level_1'
-                ? '🔵 L1 Auto'
-                : f === 'level_2'
-                ? '⏳ L2 Review'
-                : f === 'level_3'
-                ? '📢 L3 Appeals'
-                : '✅ Resolved'}
+                : f === 'hana_reviewing'
+                ? '🌸 Hana reviewing'
+                : f === 'admin_review'
+                ? '⏳ Waiting on you'
+                : f === 'resolved'
+                ? '✅ Resolved'
+                : '📦 Closed'}
             </button>
           ))}
         </div>
@@ -378,13 +513,15 @@ export const DisputesPage: React.FC = () => {
                             dispute.status
                           )}`}
                         >
-                          {dispute.status === 'level_1'
-                            ? '🔵 L1'
-                            : dispute.status === 'level_2'
-                            ? '⏳ L2'
-                            : dispute.status === 'level_3'
-                            ? '📢 L3'
-                            : '✅ Resolved'}
+                          {dispute.status === 'hana_reviewing'
+                            ? '🌸 Hana reviewing'
+                            : dispute.status === 'admin_review'
+                            ? '⏳ Waiting on you'
+                            : dispute.status === 'resolved'
+                            ? '✅ Resolved'
+                            : dispute.status === 'closed'
+                            ? '📦 Closed'
+                            : dispute.status}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-500">
@@ -397,6 +534,7 @@ export const DisputesPage: React.FC = () => {
                               setSelectedDispute(dispute);
                               setShowReviewModal(true);
                               fetchSafetyAnalysis(dispute.id);
+                              fetchHanaProposal(dispute.id);
                               fetchLinkedCaseContext(dispute.id);
                             }}
                             className="text-orange-600 hover:text-orange-800 font-semibold text-sm"
@@ -427,8 +565,10 @@ export const DisputesPage: React.FC = () => {
                 onClick={() => {
                   setShowReviewModal(false);
                   setSelectedDispute(null);
-                  setResolution('approve');
+                  setResolution('');
                   setNotes('');
+                  setDoerAmount('');
+                  setAskerAmount('');
                   setError('');
                 }}
                 className="text-2xl hover:opacity-80"
@@ -528,6 +668,67 @@ export const DisputesPage: React.FC = () => {
 
               <hr className="my-4" />
 
+              {/* The payment clock. Shown first because it bounds everything below:
+                  a rework cannot outlive it, and neither can the appeal window. */}
+              {authWindow && (
+                <div
+                  className={`rounded-lg p-3 border-2 ${
+                    authWindow.expired
+                      ? 'bg-red-50 border-red-300'
+                      : authWindow.critical
+                      ? 'bg-amber-50 border-amber-300'
+                      : 'bg-gray-50 border-gray-200'
+                  }`}
+                >
+                  <p
+                    className={`text-sm font-semibold ${
+                      authWindow.expired
+                        ? 'text-red-900'
+                        : authWindow.critical
+                        ? 'text-amber-900'
+                        : 'text-gray-800'
+                    }`}
+                  >
+                    {authWindow.expired ? '⏱️' : authWindow.critical ? '⚠️' : '⏳'} {authWindow.summary}
+                  </p>
+                  {!authWindow.expired && (
+                    <p className="text-xs text-gray-600 mt-1">
+                      {authWindow.settleNow
+                        ? 'Anything that waits on the other side is off the table now — decide and settle so the payment can still be taken.'
+                        : 'The card was authorised on day 1. Anything needing agreement has to be wrapped up by day 5, leaving day 6 to settle it.'}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Hana's proposal — a suggestion for the admin, never a decision */}
+              {hanaProposal ? (
+                <div className="bg-orange-50 border-2 border-orange-200 rounded-lg p-4 space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-bold text-orange-900">🌸 Hana suggests</p>
+                    <span className="text-[11px] font-bold text-orange-700 bg-orange-100 px-2 py-0.5 rounded-full">
+                      {Math.round((hanaProposal.confidence || 0) * 100)}% confident
+                    </span>
+                  </div>
+                  <p className="text-sm font-bold text-orange-900">
+                    {String(hanaProposal.action || '').replace(/_/g, ' ')}
+                  </p>
+                  <p className="text-sm text-orange-800 bg-white border border-orange-200 rounded-lg p-3">
+                    {hanaProposal.proposal}
+                  </p>
+                  <p className="text-xs text-orange-700">{hanaProposal.reasoning}</p>
+                  <p className="text-[11px] text-orange-600 italic pt-1">
+                    A suggestion only — nothing happens until you decide below.
+                  </p>
+                </div>
+              ) : hanaFailedReason ? (
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                  <p className="text-xs text-gray-600">
+                    Hana couldn't review this one, so there's no suggestion. Over to you.
+                  </p>
+                </div>
+              ) : null}
+
               {/* AI Analysis */}
               {safetyAnalysis && safetyAnalysis.hasConcern ? (
                 <div className="bg-red-50 border-2 border-red-300 rounded-lg p-4 space-y-2">
@@ -556,6 +757,139 @@ export const DisputesPage: React.FC = () => {
 
             {/* Resolution */}
               <div className="space-y-4">
+                {prefilledFromHana && (
+                  <div className="bg-orange-50 border border-orange-200 rounded-lg px-3 py-2 flex items-start justify-between gap-3">
+                    <p className="text-xs text-orange-800">
+                      🌸 Prefilled with Hana's suggestion. Change anything you disagree with —
+                      nothing is decided until you confirm.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setResolution('');
+                        setNotes('');
+                        setPrefilledFromHana(false);
+                      }}
+                      className="text-xs font-bold text-orange-700 underline whitespace-nowrap"
+                    >
+                      Start blank
+                    </button>
+                  </div>
+                )}
+
+                {/* How does this dispute end? Everything below follows from this. */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-800 mb-3">
+                    How are we settling this? *
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    {[
+                      { key: 'monetary', label: '💰 Money moves', desc: 'Pay, refund or split' },
+                      {
+                        key: 'rework',
+                        label: '🔧 Rework it',
+                        desc: authWindow?.settleNow ? 'No time left for this' : 'Put it right instead',
+                        disabled: !!authWindow?.settleNow,
+                      },
+                      { key: 'non_monetary', label: '🤝 No money changes', desc: 'Warning, apology, nothing' },
+                    ].map((k) => (
+                      <button
+                        key={k.key}
+                        type="button"
+                        disabled={(k as any).disabled}
+                        onClick={() => {
+                          setResolutionKind(k.key as any);
+                          setPrefilledFromHana(false);
+                          setError('');
+                        }}
+                        className={`text-left p-3 border-2 rounded-lg transition ${
+                          (k as any).disabled
+                            ? 'bg-gray-100 border-gray-200 opacity-50 cursor-not-allowed'
+                            : resolutionKind === k.key
+                            ? 'bg-orange-50 border-orange-500'
+                            : 'bg-white border-gray-200 hover:border-gray-300'
+                        }`}
+                      >
+                        <div className="font-semibold text-sm text-gray-800">{k.label}</div>
+                        <div className="text-xs text-gray-600 mt-0.5">{k.desc}</div>
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    {resolutionKind === 'monetary'
+                      ? 'The payment is released or split when you confirm.'
+                      : resolutionKind === 'rework'
+                      ? 'Both people must agree. The payment stays held until the work is put right — if they decline or miss the date, it comes back to you to decide compensation.'
+                      : 'The payment goes through as originally agreed and the hold is lifted.'}
+                  </p>
+                </div>
+
+                {resolutionKind === 'rework' && (
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-3">
+                    <label className="block text-sm font-semibold text-gray-800">
+                      How long do they have?
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        min="1"
+                        max="3"
+                        value={reworkDays}
+                        onChange={(e) => {
+                          setReworkDays(e.target.value);
+                          setPrefilledFromHana(false);
+                        }}
+                        className="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      />
+                      <span className="text-sm text-gray-700">days from now</span>
+                    </div>
+                    <p className="text-xs text-gray-600">
+                      Three days maximum — and shorter if the card authorisation is
+                      close to expiring, since the payment has to still be capturable
+                      when the work is done. Both people get 24 hours to agree; if
+                      either says no, or nobody answers, it comes straight back to you.
+                    </p>
+                  </div>
+                )}
+
+                {resolutionKind === 'non_monetary' && (
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-2">
+                    <label className="block text-sm font-semibold text-gray-800 mb-1">
+                      What was the outcome? *
+                    </label>
+                    {[
+                      { key: 'sorted_between_parties', label: 'Sorted between themselves' },
+                      { key: 'apology_given', label: 'Apology given' },
+                      { key: 'guidance_given', label: 'Guidance given to one party' },
+                      { key: 'warning_issued', label: 'Warning issued' },
+                      { key: 'no_action_needed', label: 'No action needed' },
+                    ].map((o) => (
+                      <label
+                        key={o.key}
+                        className={`flex items-center gap-3 p-2.5 border-2 rounded-lg cursor-pointer transition ${
+                          nonMonetaryOutcome === o.key
+                            ? 'bg-orange-50 border-orange-500'
+                            : 'bg-white border-gray-200 hover:border-gray-300'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="nonMonetaryOutcome"
+                          value={o.key}
+                          checked={nonMonetaryOutcome === o.key}
+                          onChange={(e) => {
+                            setNonMonetaryOutcome(e.target.value);
+                            setPrefilledFromHana(false);
+                          }}
+                        />
+                        <span className="text-sm text-gray-800">{o.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+
+                {resolutionKind === 'monetary' && (
+                <>
                 <div>
                   <label className="block text-sm font-semibold text-gray-800 mb-3">
                     Your Decision *
@@ -579,7 +913,21 @@ export const DisputesPage: React.FC = () => {
                           name="resolution"
                           value={opt.value}
                           checked={resolution === opt.value}
-                          onChange={(e) => setResolution(e.target.value as any)}
+                          onChange={(e) => {
+                            const next = e.target.value as 'approve' | 'reject' | 'partial';
+                            setResolution(next);
+                            setPrefilledFromHana(false);
+                            if (next === 'partial') {
+                              // Start from an even split — the commonest outcome,
+                              // and it makes the total obvious
+                              const half = errandTotal / 2;
+                              setDoerAmount(half.toFixed(2));
+                              setAskerAmount((errandTotal - half).toFixed(2));
+                            } else {
+                              setDoerAmount('');
+                              setAskerAmount('');
+                            }
+                          }}
                           className="mt-1"
                         />
                         <div>
@@ -591,14 +939,71 @@ export const DisputesPage: React.FC = () => {
                   </div>
                 </div>
 
+                {resolution === 'partial' && (
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-3">
+                    <p className="text-sm font-semibold text-gray-800">
+                      Split of ${errandTotal.toFixed(2)}
+                    </p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-700 mb-1">To doer ($)</label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={doerAmount}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            setDoerAmount(v);
+                            // Keep the other side in step so the total always balances
+                            const n = parseFloat(v);
+                            if (isFinite(n)) setAskerAmount(Math.max(0, errandTotal - n).toFixed(2));
+                            setPrefilledFromHana(false);
+                            setError('');
+                          }}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-700 mb-1">To asker ($)</label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={askerAmount}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            setAskerAmount(v);
+                            const n = parseFloat(v);
+                            if (isFinite(n)) setDoerAmount(Math.max(0, errandTotal - n).toFixed(2));
+                            setPrefilledFromHana(false);
+                            setError('');
+                          }}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        />
+                      </div>
+                    </div>
+                    <p className={`text-xs font-semibold ${splitBalances ? 'text-green-700' : 'text-red-600'}`}>
+                      {splitBalances
+                        ? `✓ Adds up to $${errandTotal.toFixed(2)}`
+                        : `Currently $${splitSum.toFixed(2)} — must be $${errandTotal.toFixed(2)}`}
+                    </p>
+                  </div>
+                )}
+                </>
+                )}
+
                 <div>
                   <label className="block text-sm font-semibold text-gray-800 mb-2">
-                    Explain Your Decision (Both Parties Will See This) *
+                    {resolutionKind === 'rework'
+                      ? 'What needs putting right? (Both Parties Will See This) *'
+                      : 'Explain Your Decision (Both Parties Will See This) *'}
                   </label>
                   <textarea
                     value={notes}
                     onChange={(e) => {
                       setNotes(e.target.value);
+                      setPrefilledFromHana(false);
                       setError('');
                     }}
                     placeholder={`Example: "Based on the photos you provided, the work wasn't completed as promised. The asker has clear evidence. However, we appreciate your effort. Next time, communicate if something changes."`}
@@ -622,8 +1027,10 @@ export const DisputesPage: React.FC = () => {
                   onClick={() => {
                     setShowReviewModal(false);
                     setSelectedDispute(null);
-                    setResolution('approve');
+                    setResolution('');
                     setNotes('');
+                    setDoerAmount('');
+                    setAskerAmount('');
                     setError('');
                   }}
                   disabled={isSubmitting}

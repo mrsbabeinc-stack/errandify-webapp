@@ -5,11 +5,21 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
+// Fail fast if the JWT secret is missing or left at the insecure default —
+// otherwise anyone who reads the repo could forge tokens (including admin).
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET || JWT_SECRET === 'your-secret-key' || JWT_SECRET.length < 32) {
+  throw new Error(
+    'FATAL: JWT_SECRET is missing, too short, or set to the insecure default. ' +
+    'Set a strong random JWT_SECRET (>=32 chars) in backend/.env before starting the server.'
+  );
+}
+
 export const config = {
   port: process.env.PORT || 3000,
   nodeEnv: process.env.NODE_ENV || 'development',
   databaseUrl: process.env.DATABASE_URL || 'postgresql://localhost/errandify',
-  jwtSecret: process.env.JWT_SECRET || 'your-secret-key',
+  jwtSecret: JWT_SECRET,
   stripe: {
     secretKey: process.env.STRIPE_SECRET_KEY || '',
     publishableKey: process.env.STRIPE_PUBLISHABLE_KEY || '',

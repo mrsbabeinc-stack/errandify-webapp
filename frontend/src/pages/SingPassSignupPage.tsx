@@ -70,12 +70,26 @@ export default function SingPassSignupPage() {
     }
   };
 
-  const handleSingPassLogin = () => {
+  const handleSingPassLogin = async () => {
     setLoading(true);
-    // In production, this redirects to SingPass
-    // For now, mock SingPass flow
-    const mockSingPassUrl = `${window.location.origin}?code=mock_singpass_code_123`;
-    window.location.href = mockSingPassUrl;
+    // Ask the server where to send them, then hand over to Singpass.
+    //
+    // This used to redirect to our OWN origin with a fabricated code, so the
+    // user never left the app and nothing was ever verified. Real sign-in
+    // happens on Singpass's screen, on Singpass's domain — we only redirect.
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/auth/singpass-authorize`,
+        { credentials: 'include' }
+      );
+      const data = await res.json();
+      if (!data?.redirectUrl) throw new Error('No authorization URL returned');
+      window.location.href = data.redirectUrl;
+    } catch (err) {
+      console.error('Singpass authorize failed:', err);
+      setLoading(false);
+      alert('We could not reach Singpass just now. Please try again in a moment.');
+    }
   };
 
   const handleProfileSubmit = async (e: React.FormEvent) => {
@@ -314,7 +328,7 @@ export default function SingPassSignupPage() {
                     onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
                     className="w-4 h-4"
                   />
-                  <span className="text-sm">🙋 Asker (Post tasks, hire doers)</span>
+                  <span className="text-sm">🙋 Asker (Post errands, hire doers)</span>
                 </label>
                 <label className="flex items-center gap-2">
                   <input
@@ -325,7 +339,7 @@ export default function SingPassSignupPage() {
                     onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
                     className="w-4 h-4"
                   />
-                  <span className="text-sm">💪 Doer (Find & complete tasks)</span>
+                  <span className="text-sm">💪 Doer (Find & complete errands)</span>
                 </label>
                 <label className="flex items-center gap-2">
                   <input

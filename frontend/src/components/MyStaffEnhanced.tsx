@@ -219,7 +219,7 @@ const MyStaffEnhanced: React.FC<MyStaffEnhancedProps> = ({ companyId }) => {
               {/* Stats */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
                 <div style={{ background: '#F5F5F5', padding: '10px', borderRadius: '8px', fontSize: '13px' }}>
-                  <span style={{ color: '#666' }}>Tasks Completed:</span>
+                  <span style={{ color: '#666' }}>Errands Completed:</span>
                   <strong style={{ color: '#FF6B35', marginLeft: '8px' }}>✅ {member.task_count}</strong>
                 </div>
                 <div style={{ background: '#F5F5F5', padding: '10px', borderRadius: '8px', fontSize: '13px' }}>

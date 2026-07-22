@@ -83,7 +83,7 @@ export default function RecommendedTasks() {
               onClick={() => navigate(`/errand/${task.id}`)}
               className="w-full bg-errandify-orange text-white py-2 rounded font-semibold text-sm hover:bg-opacity-90"
             >
-              View & Bid
+              View & Offer
             </button>
           </div>
         ))}

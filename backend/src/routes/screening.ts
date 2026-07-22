@@ -1,5 +1,5 @@
 import { Router, Response } from 'express';
-import { AuthRequest, authMiddleware } from '../middleware/auth.js';
+import { AuthRequest, authMiddleware, requireAdmin } from '../middleware/auth.js';
 import db from '../db.js';
 
 const router = Router();
@@ -251,9 +251,12 @@ router.get('/categories/accessible', authMiddleware, async (req: AuthRequest, re
       `SELECT DISTINCT category FROM errands WHERE category IS NOT NULL ORDER BY category`
     );
 
-    // Get user's restrictions
+    // Get user's restrictions. category_slug, not category_name: the labels
+    // ('Childcare') never equal the slugs stored on errands
+    // ('childcare-education'), so comparing them let every category through.
+    // See migration 037.
     const restrictionsResult = await db.query(
-      `SELECT rc.category_name
+      `SELECT rc.category_name, rc.category_slug
        FROM user_category_restrictions ucr
        JOIN restricted_categories rc ON ucr.restricted_category_id = rc.id
        WHERE ucr.user_id = $1
@@ -262,17 +265,22 @@ router.get('/categories/accessible', authMiddleware, async (req: AuthRequest, re
       [userId]
     );
 
-    const restrictedCategories = restrictionsResult.rows.map((r) => r.category_name);
+    const restrictedSlugs = new Set(
+      restrictionsResult.rows.map((r) => r.category_slug).filter(Boolean)
+    );
     const accessibleCategories = allCategoriesResult.rows
-      .filter((cat) => !restrictedCategories.includes(cat.category))
+      .filter((cat) => !restrictedSlugs.has(cat.category))
       .map((cat) => cat.category);
 
     res.json({
       success: true,
       data: {
         accessible: accessibleCategories,
-        restricted: restrictedCategories,
-        totalRestricted: restrictedCategories.length,
+        // Slugs are what a caller compares an errand against; the labels stay
+        // alongside them so this is still readable to a person.
+        restricted: Array.from(restrictedSlugs),
+        restrictedLabels: restrictionsResult.rows.map((r) => r.category_name),
+        totalRestricted: restrictedSlugs.size,
       },
     });
   } catch (error) {
@@ -285,13 +293,12 @@ router.get('/categories/accessible', authMiddleware, async (req: AuthRequest, re
 router.patch(
   '/restrictions/:categoryId',
   authMiddleware,
+  requireAdmin(),
   async (req: AuthRequest, res: Response) => {
     try {
       const userId = parseInt(req.body.userId, 10);
       const categoryId = parseInt(req.params.categoryId, 10);
       const { reason, restrictionEnd } = req.body;
-
-      // TODO: Add admin check
 
       const result = await db.query(
         `INSERT INTO user_category_restrictions (user_id, restricted_category_id, reason, restriction_end)

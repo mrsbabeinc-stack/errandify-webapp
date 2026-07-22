@@ -70,7 +70,7 @@ export default function EditErrandPage({ userRole }: EditErrandPageProps) {
 
       // Check if there are any bids - if so, lock editing
       if (errand.acceptedBidId || errand.bidCount > 0) {
-        throw new Error('You cannot edit this errand. It has received bids. Cancel the errand if you need to make changes.');
+        throw new Error('You cannot edit this errand. It has received offers. Cancel the errand if you need to make changes.');
       }
 
       setFormData({

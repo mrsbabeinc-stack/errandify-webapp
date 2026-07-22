@@ -262,7 +262,7 @@ export const PartnerTiers: React.FC = () => {
               <div className="tier-requirements">
                 <h4>Key Requirements</h4>
                 <ul>
-                  <li>Min {tier.requirements.minTasks} tasks</li>
+                  <li>Min {tier.requirements.minTasks} errands</li>
                   <li>Min {tier.requirements.minRating} rating</li>
                   <li>Min {tier.requirements.minAccountAgeMonths} mo account age</li>
                   <li>Max {tier.requirements.maxDisputeRate}% disputes</li>
@@ -325,7 +325,7 @@ export const PartnerTiers: React.FC = () => {
 
                 <div className="company-details">
                   <div className="detail-item">
-                    <span className="label">Tasks:</span>
+                    <span className="label">Errands:</span>
                     <span className="value">
                       {company.progress.tasksCompleted} / {company.progress.minTasksRequired}
                     </span>
@@ -369,7 +369,7 @@ export const PartnerTiers: React.FC = () => {
                 <h3>Requirements</h3>
                 <div className="requirements-grid">
                   <div className="requirement-item">
-                    <span className="label">Min Tasks Completed</span>
+                    <span className="label">Min Errands Completed</span>
                     <span className="value">{selectedTier.requirements.minTasks}</span>
                   </div>
                   <div className="requirement-item">
@@ -444,7 +444,7 @@ export const PartnerTiers: React.FC = () => {
               <div className="detail-section">
                 <h3>Progress Towards {selectedCompanyStatus.nextTierName}</h3>
                 <div className="requirement-item">
-                  <span className="label">Tasks Completed</span>
+                  <span className="label">Errands Completed</span>
                   <div className="sub-progress">
                     <div className="progress-bar">
                       <div

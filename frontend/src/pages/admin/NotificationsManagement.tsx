@@ -84,8 +84,8 @@ export default function NotificationsManagement() {
         },
         {
           id: 'n_2',
-          title: 'New Feature: AI Task Matching',
-          message: 'Get matched with perfect tasks using our smart AI. Earn more with less effort!',
+          title: 'New Feature: AI Errand Matching',
+          message: 'Get matched with perfect errands using our smart AI. Earn more with less effort!',
           type: 'announcement',
           groupId: 'g_2',
           channels: ['push', 'inapp'],
@@ -115,7 +115,7 @@ export default function NotificationsManagement() {
         {
           id: 'g_2',
           name: 'Doers',
-          description: 'Active task takers',
+          description: 'Active errand takers',
           channels: ['push', 'inapp'],
           userCount: 8750,
           createdAt: new Date(Date.now() - 2592000000).toISOString(),
@@ -147,8 +147,8 @@ export default function NotificationsManagement() {
       const suggestions: Record<string, string> = {
         'system maintenance': 'Our platform is undergoing scheduled maintenance to bring you better performance and features. We\'ll be back soon!',
         'new feature': 'Exciting news! We\'ve just launched something amazing. Check it out and let us know what you think!',
-        'complete profile': 'Help us help you better. Complete your profile to get more personalized task matches.',
-        'earn bonus': 'Limited time offer! Earn extra bonus points on your next 5 tasks. The clock is ticking!',
+        'complete profile': 'Help us help you better. Complete your profile to get more personalized errand matches.',
+        'earn bonus': 'Limited time offer! Earn extra bonus points on your next 5 errands. The clock is ticking!',
         'thank you': 'Thanks for being amazing! Your efforts make Errandify a better place for everyone.',
       };
 

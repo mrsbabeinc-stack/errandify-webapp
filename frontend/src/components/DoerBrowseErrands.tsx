@@ -261,7 +261,7 @@ const DoerBrowseErrands: React.FC<DoerBrowseErrandsProps> = ({ userRole = 'staff
               ) : isStaff ? (
                 <div className="staff-message">
                   <p>✅ This errand has been assigned to you</p>
-                  <p style={{ fontSize: '12px', marginTop: '8px' }}>View progress in "Active Tasks"</p>
+                  <p style={{ fontSize: '12px', marginTop: '8px' }}>View progress in "Active Errands"</p>
                 </div>
               ) : (
                 <button

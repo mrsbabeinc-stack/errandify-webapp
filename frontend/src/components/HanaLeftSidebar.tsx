@@ -141,7 +141,7 @@ const HanaLeftSidebar: React.FC = () => {
         addMessage('hana', errandHelp, 'errand-context');
       } else {
         const fallback = language === 'en'
-          ? "Try asking about posting, bidding, payment, safety, or disputes!"
+          ? "Try asking about posting, offering, payment, safety, or disputes!"
           : language === 'zh'
           ? "尝试提问发布、出价、付款、安全或纠纷相关的问题！"
           : "嘗試提問發佈、出價、付款、安全或爭議相關嘅問題！";

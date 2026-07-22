@@ -1459,22 +1459,40 @@ body {
 @media (max-width: 1024px) {
   .hero-banner {
     flex-direction: column;
-    gap: 16px;
-    text-align: center;
+    gap: 10px;
+    text-align: left;
+    padding: 14px 16px !important;
+  }
+
+  .hero-banner h2,
+  .hero-banner h3 {
+    font-size: 17px !important;
+    line-height: 1.25 !important;
+  }
+
+  .hero-banner p {
+    font-size: 12.5px !important;
   }
 
   .hero-badge {
     margin-left: 0;
+    align-self: flex-start;
   }
 
+  /* Arrows were ~40px circles floating in ~150px of whitespace above the fold */
   .carousel-controls {
-    gap: 12px;
+    gap: 10px;
+    padding: 8px 0 0 0 !important;
   }
 
   .carousel-btn {
-    width: 32px;
-    height: 32px;
-    font-size: 12px;
+    width: 26px !important;
+    height: 26px !important;
+    font-size: 10px !important;
+  }
+
+  .hero-carousel {
+    margin-bottom: 10px !important;
   }
 
   .footer-content {
@@ -1577,37 +1595,42 @@ body {
   border-color: var(--primary-orange);
 }
 
+/* Filters carry their own priority colour, so "High 1" reads as urgent and
+   "Low 1" reads as quiet — previously every pill was the same loud orange. */
 .filter-btn.high {
-  --badge-color: #DC3545;
+  --badge-color: #D8452F;
 }
 
 .filter-btn.high.active {
-  background: #DC3545;
+  background: #D8452F;
+  color: #fff;
 }
 
 .filter-btn.medium {
-  --badge-color: #FFC107;
+  --badge-color: #C98A16;
 }
 
 .filter-btn.medium.active {
-  background: #FFC107;
-  color: #333;
+  background: #F0A81E;
+  color: #3B2A08;
 }
 
 .filter-btn.low {
-  --badge-color: #17A2B8;
+  --badge-color: #806350;
 }
 
 .filter-btn.low.active {
-  background: #17A2B8;
+  background: #E3D2C4;
+  color: #4A3221;
 }
 
 .filter-btn.done {
-  --badge-color: #28A745;
+  --badge-color: #1B7D6C;
 }
 
 .filter-btn.done.active {
-  background: #28A745;
+  background: #2FA48F;
+  color: #fff;
 }
 
 .count-badge {
@@ -1636,10 +1659,10 @@ body {
 .action-items-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  max-height: 400px;
-  overflow-y: auto;
-  padding-right: 8px;
+  gap: 8px;
+  /* No inner scrollbox. It previously capped at 400px with ~1076px of content,
+     so the list scrolled inside an already-scrolling page — the main reason the
+     dashboard felt messy. The list now flows with the page. */
 }
 
 .action-items-list::-webkit-scrollbar {
@@ -1678,25 +1701,27 @@ body {
   transform: translateX(2px);
 }
 
+/* Kampung state colours. Only High carries a tinted background — Medium and Low
+   are quiet so urgency is visible at a glance instead of everything shouting. */
 .action-item.high-priority {
-  border-left-color: #DC3545;
-  background: linear-gradient(90deg, rgba(220, 53, 69, 0.05) 0%, white 20%);
+  border-left-color: #D8452F;
+  background: linear-gradient(90deg, rgba(216, 69, 47, 0.06) 0%, white 22%);
 }
 
 .action-item.medium-priority {
-  border-left-color: #FFC107;
-  background: linear-gradient(90deg, rgba(255, 193, 7, 0.05) 0%, white 20%);
+  border-left-color: #F0A81E;
+  background: white;
 }
 
 .action-item.low-priority {
-  border-left-color: #17A2B8;
-  background: linear-gradient(90deg, rgba(23, 162, 184, 0.05) 0%, white 20%);
+  border-left-color: #E3D2C4;
+  background: white;
 }
 
 .action-item.completed {
-  border-left-color: #28A745;
-  background: linear-gradient(90deg, rgba(40, 167, 69, 0.05) 0%, white 20%);
-  opacity: 0.8;
+  border-left-color: #2FA48F;
+  background: white;
+  opacity: 0.65;
 }
 
 .priority-badge {
@@ -1715,24 +1740,25 @@ body {
   flex-shrink: 0 !important;
 }
 
+/* Tinted chips rather than solid blocks — only High reads as an alarm. */
 .action-item.high-priority .priority-badge {
-  background: #DC3545 !important;
-  color: white !important;
+  background: #FCE9E6 !important;
+  color: #A8392A !important;
 }
 
 .action-item.medium-priority .priority-badge {
-  background: #FFA500 !important;
-  color: white !important;
+  background: #FDF0D8 !important;
+  color: #8A6210 !important;
 }
 
 .action-item.low-priority .priority-badge {
-  background: #17A2B8 !important;
-  color: white !important;
+  background: #F8F1EB !important;
+  color: #806350 !important;
 }
 
 .action-item.completed .priority-badge {
-  background: #28A745 !important;
-  color: white !important;
+  background: #E2F3EF !important;
+  color: #1B7D6C !important;
 }
 
 .item-content {
@@ -1787,18 +1813,55 @@ body {
 }
 
 @media (max-width: 768px) {
+  /* Compact row on phones. Stacking made 217px cards; a 3-column flex row
+     squeezed the text to 123px and wrapped to 4 lines (160px). Here the text
+     column keeps the space and the redundant description is dropped, so a card
+     is title + due + action on one line (~64px). */
   .action-item {
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: row;
+    align-items: center;
+    gap: 9px !important;
+    padding: 10px 12px !important;
   }
 
-  .item-action {
-    width: 100%;
-    text-align: center;
+  .action-item .item-content {
+    flex: 1 1 auto;
+    min-width: 0;
   }
 
-  .priority-badge {
-    margin-bottom: 8px;
+  /* Priority is already carried by the coloured left border, so the badge is
+     redundant at phone width — hiding it gives the title ~50px back. */
+  .action-item .priority-badge {
+    display: none !important;
+  }
+
+  .action-item {
+    border-left-width: 5px !important;
+  }
+
+  .action-item .item-action {
+    width: auto;
+    flex: 0 0 auto;
+    padding: 8px 11px !important;
+    font-size: 11.5px !important;
+    white-space: nowrap;
+  }
+
+  .item-content h4 {
+    font-size: 13px;
+    margin: 0 0 2px 0 !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* The description repeats what the title already says — the detail screen has it */
+  .item-content p {
+    display: none !important;
+  }
+
+  .item-content .due-date {
+    font-size: 11px;
   }
 }
 
@@ -3681,3 +3744,107 @@ body {
 .commitment-note strong {
   color: #FF6B35;
 }
+
+/* ===========================================================================
+   PRIORITY FILTER PILLS — specificity fix
+   `button[class*="btn"]` (0,1,1) was painting every pill solid orange, so
+   High / Medium / Low / Done all looked identical and urgency was invisible.
+   `.priority-filters .filter-btn` (0,2,0) wins cleanly without !important.
+   =========================================================================== */
+.priority-filters {
+  gap: 6px;
+}
+
+.priority-filters .filter-btn {
+  background: #fff;
+  border: 1px solid #F0E4DA;
+  color: #806350;
+  padding: 6px 11px;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 999px;
+  line-height: 1.3;
+}
+
+.priority-filters .filter-btn .count-badge {
+  background: #F8F1EB;
+  color: #806350;
+  font-size: 10.5px;
+  min-width: 18px;
+}
+
+.priority-filters .filter-btn.active { background: #FF6B35; border-color: #FF6B35; color: #fff; }
+.priority-filters .filter-btn.high.active { background: #D8452F; border-color: #D8452F; color: #fff; }
+.priority-filters .filter-btn.medium.active { background: #F0A81E; border-color: #F0A81E; color: #3B2A08; }
+.priority-filters .filter-btn.low.active { background: #E3D2C4; border-color: #E3D2C4; color: #4A3221; }
+.priority-filters .filter-btn.done.active { background: #2FA48F; border-color: #2FA48F; color: #fff; }
+.priority-filters .filter-btn.active .count-badge { background: rgba(255,255,255,.32); color: inherit; }
+
+/* Carousel arrows were caught by the same broad selector */
+.hero-carousel .carousel-btn {
+  background: #fff;
+  border: 1px solid #F0E4DA;
+  color: #806350;
+}
+
+/* ===========================================================================
+   COMPACT DASHBOARD — applies at every width, not just phones.
+   Follow-ups were the biggest space consumer: 5 items filled the screen.
+   =========================================================================== */
+.action-items-list .action-item {
+  padding: 9px 12px !important;
+  gap: 10px !important;
+  border-radius: 10px !important;
+  border-left-width: 4px !important;
+  box-shadow: none !important;
+  border: 1px solid #F0E4DA;
+}
+
+.action-items-list .action-item .item-content h4 {
+  font-size: 13px !important;
+  margin: 0 0 1px 0 !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The description restates the title; the due date is the useful part */
+.action-items-list .action-item .item-content p {
+  display: none !important;
+}
+
+.action-items-list .action-item .item-content .due-date {
+  font-size: 11px !important;
+}
+
+.action-items-list .action-item .item-action {
+  padding: 7px 12px !important;
+  font-size: 11.5px !important;
+  border-radius: 999px !important;
+  white-space: nowrap;
+}
+
+.action-items-list .action-item .priority-badge {
+  padding: 3px 8px !important;
+  font-size: 9.5px !important;
+}
+
+.action-items-section {
+  margin-bottom: 16px !important;
+}
+
+.action-items-header {
+  margin-bottom: 10px !important;
+}
+
+.action-items-section h2 {
+  font-size: 16px !important;
+  margin-bottom: 8px !important;
+}
+
+/* Trim the welcome banner's filler copy at every width */
+.hero-banner {
+  padding: 14px 18px !important;
+}
+.hero-banner h2, .hero-banner h3 { font-size: 18px !important; line-height: 1.25 !important; }
+.hero-banner p { font-size: 13px !important; margin: 2px 0 0 0 !important; }

@@ -204,7 +204,7 @@ router.post('/:id/complete', authMiddleware, async (req: AuthRequest, res: Respo
           assignment.doer_id,
           'task_needs_revision',
           'Needs Revision',
-          `${errand.errand_id}: Your work on "${errand.title}" needs revision: ${notes || 'Please redo the work'}`,
+          `${errand.errand_id}: Your work on "${errand.title}" needs revision: ${notes || 'Please rework it'}`,
           null
         ).catch(console.error);
       }
