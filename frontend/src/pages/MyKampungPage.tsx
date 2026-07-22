@@ -119,15 +119,12 @@ export default function MyKampungPage() {
         setNewsItems(apiNews);
         console.log('After setNewsItems, api had:', apiNews.length, 'items');
       } catch (err) {
-        console.log('News API not available, using mock data', err);
-        setMockNewsData();
+        console.error('Could not load news:', err);
+        setNewsItems([]);
       }
 
-      // If no token, still show news but skip other API calls
-      if (!token) {
-        setMockData();
-        return;
-      }
+      // Signed-out visitors see the public feeds only; the rest needs a token.
+      if (!token) return;
 
       // Try to fetch from API endpoints
       try {
@@ -180,349 +177,39 @@ export default function MyKampungPage() {
         console.log('Blog API not available');
       }
 
-      // If all APIs failed, use mock data
-      if (posts.length === 0 && discussions.length === 0 && announcements.length === 0) {
-        setMockData();
-      }
+      // Empty is a real answer here. This used to fall back to invented posts,
+      // discussions, events and award nominations attributed to named people —
+      // so the page always looked busy and nothing on it was true.
     } catch (err) {
       console.error('Failed to fetch community data:', err);
-      setMockData();
     } finally {
       setLoading(false);
     }
   };
 
-  const setMockNewsData = () => {
-    setNewsItems([
-      {
-        id: 'community-1',
-        type: 'community',
-        title: '🏘️ Block 456 Neighborhood Cleanup This Saturday 9am',
-        content: 'Join us for a community cleanup at Bishan Park. Bring gloves and bags. Light refreshments provided! Meet at block entrance.',
-        category: 'event',
-        location: 'Bishan',
-        postal_code: '570456',
-        created_at: new Date(2026, 5, 20, 14, 30, 0).toISOString(),
-      },
-      {
-        id: 'community-2',
-        type: 'community',
-        title: '🐕 Lost Golden Retriever - $200 Reward!',
-        content: 'Missing since Tuesday 3pm near Bishan Park MRT. Answers to "Max". Very friendly. Please call 9876-5432 if spotted. Reward offered.',
-        category: 'lost_found',
-        location: 'Bishan Park',
-        postal_code: '570450',
-        created_at: new Date(2026, 5, 19, 10, 15, 0).toISOString(),
-      },
-      {
-        id: 'community-3',
-        type: 'community',
-        title: '🏪 New Hawker Stall Alert: Handmade Noodles Opening Friday',
-        content: 'Exciting news! Traditional handmade noodle stall opening at Blk 789 Hawker Centre this Friday. Opening special: 30% off first 100 customers. From 11am-9pm.',
-        category: 'business',
-        location: 'Bishan',
-        postal_code: '570789',
-        created_at: new Date(2026, 5, 18, 9, 45, 0).toISOString(),
-      },
-      {
-        id: 'community-4',
-        type: 'community',
-        title: '⚠️ Condo Maintenance Notice: Water Shut-off Tomorrow 2-6pm',
-        content: 'All residents: Water supply will be shut off tomorrow 2-6pm for pipe maintenance. No water from taps during this period. Plan accordingly.',
-        category: 'announcement',
-        location: 'Bishan Heights Condo',
-        postal_code: '570456',
-        created_at: new Date(2026, 5, 17, 11, 20, 0).toISOString(),
-      },
-      {
-        id: 'community-5',
-        type: 'community',
-        title: '👥 Badminton Group Looking for Members - Wednesday Nights',
-        content: 'Casual badminton group meets every Wednesday 7-9pm at Block 123 Sports Hall. All levels welcome. $3 court rental per person. New players always welcome!',
-        category: 'event',
-        location: 'Bishan',
-        postal_code: '570123',
-        created_at: new Date(2026, 5, 16, 15, 0, 0).toISOString(),
-      },
-      {
-        id: 'errandify-1',
-        type: 'errandify',
-        title: '✨ New Feature: Recurring Errands Now Live!',
-        content: 'Schedule errands to repeat daily, weekly, or monthly! Perfect for ongoing needs like cleaning, pet care, and more. Enable auto-booking with your trusted doers.',
-        category: 'feature',
-        created_at: new Date(2026, 5, 20, 10, 0, 0).toISOString(),
-      },
-      {
-        id: 'errandify-2',
-        type: 'errandify',
-        title: '🎯 Summer Challenge: Earn 500 Bonus Points!',
-        content: 'Complete 5 errands in June and earn 500 bonus Errandify Points! Redeemable for discounts on any future errands. Challenge ends June 30. Start now!',
-        category: 'campaign',
-        created_at: new Date(2026, 5, 18, 14, 30, 0).toISOString(),
-      },
-      {
-        id: 'errandify-3',
-        type: 'errandify',
-        title: '⭐ User Spotlight: Wei Ming - From 50 to 200 Errands!',
-        content: 'Meet Wei Ming, one of our top doers who just completed 200 errands! Read how he built a 4.9★ rating, earns $8K/month, and manages work-life balance.',
-        category: 'spotlight',
-        created_at: new Date(2026, 5, 15, 11, 45, 0).toISOString(),
-      },
-      {
-        id: 'sg-1',
-        type: 'singapore',
-        title: 'HDB Launches 5,000 New BTO Flats Across Multiple Towns',
-        content: 'Housing & Development Board opens applications for 5,000 Build-to-Order units in Jurong West, Tengah, and Ang Mo Kio with flexible payment schemes for first-time homebuyers.',
-        category: 'housing',
-        source: 'HDB Official',
-        url: 'https://www.hdb.gov.sg/',
-        created_at: new Date(2026, 5, 20, 14, 30, 0).toISOString(),
-      },
-      {
-        id: 'sg-2',
-        type: 'singapore',
-        title: 'Singapore Tech Job Market Booms: 15,000 New Positions',
-        content: 'Tech companies posting record job openings as Singapore positions itself as a digital hub. Average salaries for software engineers reach $120K+ annually.',
-        category: 'jobs',
-        source: 'Ministry of Manpower',
-        url: 'https://www.mom.gov.sg/',
-        created_at: new Date(2026, 5, 19, 10, 15, 0).toISOString(),
-      },
-    ]);
-  };
-
-  const setMockData = () => {
-    setPosts([
-      {
-        id: 1,
-        author: 'Sarah Johnson',
-        authorRole: 'doer',
-        authorRating: 4.8,
-        content: 'Just hit 100 completed errands! Thanks to everyone in the Errandify community for the support. The tips here really helped me grow my doer rating.',
-        category: 'success_story',
-        likes: 245,
-        comments: 18,
-        createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-        isLiked: false,
-      },
-      {
-        id: 2,
-        author: 'David Lim',
-        authorRole: 'asker',
-        authorRating: 4.5,
-        content: '💡 Pro tip: When posting errands, be as specific as possible about what you need. Clear instructions lead to better outcomes and happier doers!',
-        category: 'tip',
-        likes: 189,
-        comments: 12,
-        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-        isLiked: false,
-      },
-      {
-        id: 3,
-        author: 'Maya Patel',
-        authorRole: 'doer',
-        authorRating: 4.9,
-        content: 'Has anyone here used the recurring errands feature? Would love to hear about your experience and how it helped your workflow!',
-        category: 'question',
-        likes: 76,
-        comments: 24,
-        createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-        isLiked: false,
-      },
-      {
-        id: 4,
-        author: 'Ahmad Hassan',
-        authorRole: 'doer',
-        authorRating: 4.7,
-        content: 'Looking for doers with experience in home maintenance. I have several errands but my current team is fully booked. Any recommendations?',
-        category: 'help_needed',
-        likes: 45,
-        comments: 8,
-        createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-        isLiked: false,
-      },
-    ]);
-
-    setDiscussions([
-      {
-        id: 1,
-        title: 'Best practices for pricing errands in 2026',
-        author: 'Sarah Chen',
-        category: 'tips',
-        replies: 34,
-        views: 512,
-        lastUpdated: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        id: 2,
-        title: 'New feature feedback: Recurring Errands',
-        author: 'Product Team',
-        category: 'feedback',
-        replies: 156,
-        views: 2341,
-        lastUpdated: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        id: 3,
-        title: 'Common issues with payment processing',
-        author: 'Support Team',
-        category: 'issues',
-        replies: 67,
-        views: 845,
-        lastUpdated: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        id: 4,
-        title: 'General discussion: Growing the Errandify community',
-        author: 'Community Manager',
-        category: 'general',
-        replies: 89,
-        views: 1203,
-        lastUpdated: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-      },
-    ]);
-
-    setAnnouncements([
-      {
-        id: 1,
-        title: '🎉 New Feature: Recurring Errands!',
-        content: 'Schedule errands to repeat daily, weekly, or monthly. Great for ongoing needs like house cleaning, pet care, and more!',
-        type: 'feature',
-        icon: '✨',
-        createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-        isPinned: true,
-      },
-      {
-        id: 2,
-        title: '⚠️ Scheduled Maintenance',
-        content: 'Backend updates on Saturday 2-4am SGT. There may be brief interruptions. Thank you for your patience!',
-        type: 'maintenance',
-        icon: '🔧',
-        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-        isPinned: true,
-      },
-      {
-        id: 3,
-        title: '💡 Pro Tip: Boost Your Doer Rating',
-        content: 'Complete errands on time and communicate well with askers. A 5-star rating opens more opportunities!',
-        type: 'tip',
-        icon: '💡',
-        createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-        isPinned: false,
-      },
-    ]);
-
-    setEvents([
-      {
-        id: 1,
-        title: 'Doer Success Workshop',
-        description: 'Learn strategies to maximize earnings and build a strong reputation on Errandify.',
-        date: '2026-06-25',
-        time: '7:00 PM',
-        location: 'Online (Zoom)',
-        attendees: 234,
-        type: 'workshop',
-        isAttending: false,
-      },
-      {
-        id: 2,
-        title: 'Monthly Networking Meetup',
-        description: 'Meet fellow Errandify users and share experiences over coffee.',
-        date: '2026-06-27',
-        time: '6:30 PM',
-        location: 'East Coast Park',
-        attendees: 45,
-        type: 'meetup',
-        isAttending: false,
-      },
-      {
-        id: 3,
-        title: 'Summer Errand Challenge',
-        description: 'Complete 10 errands in July and win exciting prizes!',
-        date: '2026-07-01',
-        time: 'All Month',
-        location: 'Platform-wide',
-        attendees: 1250,
-        type: 'competition',
-        isAttending: true,
-      },
-    ]);
-
-    // Use real, SEO-optimized blog posts from blogPosts data
-    setBlogPosts(blogPostsData);
-
-    // Don't reset news - keep the real API data if it loaded
-    // setMockNewsData();
-
-    // Mock recognition data
-    setRecognitions([
-      {
-        id: 1,
-        name: 'Ahmad Hassan',
-        title: '⭐ Super Nanny',
-        description: 'Exceptional childcare provider. Reliable, caring, and goes above and beyond for families.',
-        category: 'childcare',
-        rating: 4.9,
-        nominatedBy: 'Priya Sharma',
-        nominationDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-        testimonial: 'Ahmad takes such great care of our kids. We feel completely at ease leaving them with him.',
-        votes: 47,
-      },
-      {
-        id: 2,
-        name: 'David Kim',
-        title: '🔨 Master Handyman',
-        description: 'Skilled at repairs and renovations. Professional, efficient, and delivers quality work.',
-        category: 'handyman',
-        rating: 4.8,
-        nominatedBy: 'Wei Liu',
-        nominationDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-        testimonial: 'Fixed our entire kitchen in record time. Quality work, fair pricing, highly recommend!',
-        votes: 63,
-      },
-      {
-        id: 3,
-        name: 'Sarah Johnson',
-        title: '🚚 Super Mover',
-        description: 'Efficient moving assistance. Handles items with care and completes jobs on time.',
-        category: 'moving',
-        rating: 4.9,
-        nominatedBy: 'James Chen',
-        nominationDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-        testimonial: 'Moving can be stressful but Sarah made it easy. Professional and so helpful!',
-        votes: 52,
-      },
-      {
-        id: 4,
-        name: 'Mdm Lim',
-        title: '✨ Cleaning Excellence',
-        description: 'Detail-oriented cleaning service. Transforms homes with care and attention.',
-        category: 'cleaning',
-        rating: 4.9,
-        nominatedBy: 'Rachel Wong',
-        nominationDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-        testimonial: 'Been using Mdm Lim for months. Our home has never looked better!',
-        votes: 81,
-      },
-      {
-        id: 5,
-        name: 'Rajesh Kumar',
-        title: '📚 Excellent Tutor',
-        description: 'Patient teacher. Makes learning enjoyable and helps students achieve their best.',
-        category: 'tutoring',
-        rating: 4.9,
-        nominatedBy: 'Sophia Petrov',
-        nominationDate: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-        testimonial: 'My daughter went from struggling to loving math! Rajesh is amazing.',
-        votes: 38,
-      },
-    ]);
-  };
-
-  const handleLikePost = (postId: number) => {
+  const handleLikePost = async (postId: number) => {
+    // Optimistic, then reconciled with the server's count. This used to update
+    // local state only, so a like vanished on refresh and nobody else ever saw
+    // it — POST /api/community/posts/:id/like existed the whole time.
+    const previous = posts;
     setPosts(posts.map(p =>
       p.id === postId ? { ...p, isLiked: !p.isLiked, likes: p.isLiked ? p.likes - 1 : p.likes + 1 } : p
     ));
+
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/community/posts/${postId}/like`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const { likes, isLiked } = res.data.data;
+      setPosts(current => current.map(p => (p.id === postId ? { ...p, likes, isLiked } : p)));
+    } catch (err) {
+      // Put it back rather than leaving a like the server never recorded.
+      console.error('Could not save that like:', err);
+      setPosts(previous);
+    }
   };
 
   const handlePostComment = async (postId: number) => {
@@ -546,7 +233,9 @@ export default function MyKampungPage() {
         id: Math.max(...posts.map(p => p.id), 0) + 1,
         author: 'You',
         authorRole: 'doer',
-        authorRating: 4.8,
+        // No invented rating here. This used to hardcode 4.8 for whoever was
+        // posting, which showed the author a score they had not earned.
+        authorRating: undefined as unknown as number,
         content: newPostText,
         category: 'tip',
         likes: 0,
@@ -972,7 +661,14 @@ export default function MyKampungPage() {
                           {post.category === 'success_story' ? '🏆' : post.category === 'tip' ? '💡' : post.category === 'question' ? '❓' : '🤝'}
                         </span>
                       </div>
-                      <p className="text-xs text-gray-600">⭐ {post.authorRating.toFixed(1)} • {formatDate(post.createdAt)}</p>
+                      {/* Posts written in admin have no author rating, and the
+                          API returns null for them. Calling .toFixed() on that
+                          threw and took the whole page down with it — show the
+                          star only when there is a real rating behind it. */}
+                      <p className="text-xs text-gray-600">
+                        {typeof post.authorRating === 'number' ? `⭐ ${post.authorRating.toFixed(1)} • ` : ''}
+                        {formatDate(post.createdAt)}
+                      </p>
                     </div>
                   </div>
 
@@ -1156,7 +852,10 @@ export default function MyKampungPage() {
                 <div className="space-y-2">
                   {filteredNews.length === 0 ? (
                     <div className="bg-white rounded p-4 text-center border border-gray-200 text-xs text-gray-500">
-                      No news found (Total items: {newsItems.length}, Filter: {newsTypeFilter})
+                      {/* This read "No news found (Total items: 0, Filter: singapore)" —
+                          internal counters and filter keys are debugging output, not
+                          something to show a neighbour reading the app. */}
+                      No news here yet. Check back soon!
                     </div>
                   ) : (
                     filteredNews.map((item: any) => {
