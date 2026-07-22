@@ -31,6 +31,8 @@ export default function VerificationStep({ onComplete, onBack }: VerificationSte
   const [overThreshold, setOverThreshold] = useState<'yes' | 'no' | 'unsure' | null>(null);
   const [convictedOn, setConvictedOn] = useState('');
   const [applicantNote, setApplicantNote] = useState('');
+  // The serious-offence list is disclosure-on-demand, not part of the question.
+  const [showSeriousList, setShowSeriousList] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -244,15 +246,37 @@ export default function VerificationStep({ onComplete, onBack }: VerificationSte
                       after the offence type, so someone who answered
                       "shoplifting" was then asked whether it was homicide. Up
                       front it reads as triage. After their answer it read as an
-                      accusation. */}
+                      accusation.
+
+                      The offences are NOT named in the question itself. Opening
+                      with "rape, homicide, kidnapping" is the first thing a
+                      person sees after admitting a conviction, and for someone
+                      who shoplifted once it lands as an accusation of something
+                      monstrous. The list still has to be available — the
+                      question is unanswerable without it — so it sits behind a
+                      disclosure that most people will never need to open. Same
+                      accuracy, none of the confrontation. */}
                   <div>
                     <p className="text-sm font-semibold text-errandify-brown mb-1">
-                      Was it one of these — rape, homicide, kidnapping or gang robbery?
+                      Was it one of the offences Singapore law treats as most serious?
                     </p>
-                    <p className="text-xs text-gray-600 mb-2">
-                      Singapore law treats these differently from other offences. For almost
-                      everyone the answer is no.
+                    <p className="text-xs text-gray-600 mb-1">
+                      For almost everyone the answer is no.
                     </p>
+                    <button
+                      type="button"
+                      onClick={() => setShowSeriousList((v) => !v)}
+                      className="text-xs text-errandify-orange underline mb-2"
+                    >
+                      {showSeriousList ? 'Hide the list' : 'Which offences are these?'}
+                    </button>
+                    {showSeriousList && (
+                      <div className="bg-gray-50 rounded-lg p-3 mb-2 text-xs text-gray-600">
+                        The Registration of Criminals Act lists a small set of offences separately —
+                        rape, homicide, kidnapping and gang robbery among them. Unlike other
+                        convictions, these do not become spent with time.
+                      </div>
+                    )}
                     <div className="flex gap-2 items-center">
                       {(['yes', 'no'] as const).map((v) => (
                         <button
