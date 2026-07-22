@@ -144,20 +144,50 @@ export async function resolveOutcome(input: ScreeningInput): Promise<ScreeningOu
   };
 }
 
-/** Applies the outcome across every restricted category. */
-export async function applyRestrictions(userId: number, outcome: ScreeningOutcome): Promise<number> {
+/**
+ * Applies the outcome to the categories the offence actually bears on.
+ *
+ * This used to have no WHERE clause, so one conviction closed all of them and a
+ * shoplifting record barred someone from pet sitting. The scoping now comes
+ * from services/offenceScope, and anything outside that list is left open —
+ * including on re-declaration, which is what lets a correction give access back.
+ */
+export async function applyRestrictions(
+  userId: number,
+  outcome: ScreeningOutcome,
+  slugs: string[]
+): Promise<number> {
+  if (slugs.length === 0) {
+    await clearRestrictions(userId);
+    return 0;
+  }
+
   const result = await db.query(
     `INSERT INTO user_category_restrictions (user_id, restricted_category_id, reason, restriction_end, is_active)
      SELECT $1, id, $2, $3::timestamp, true
        FROM restricted_categories
+      WHERE category_slug = ANY($4::text[])
      ON CONFLICT (user_id, restricted_category_id) DO UPDATE
        SET is_active = true,
            reason = EXCLUDED.reason,
            restriction_end = EXCLUDED.restriction_end,
            updated_at = NOW()
      RETURNING id`,
-    [userId, `${outcome.reason} (${outcome.basis})`, outcome.restrictionEnd]
+    [userId, `${outcome.reason} (${outcome.basis})`, outcome.restrictionEnd, slugs]
   );
+
+  // A category no longer in scope must actually reopen. Without this a
+  // re-declaration could only ever add restrictions, and correcting a mistake
+  // would leave the wrong ones in place.
+  await db.query(
+    `DELETE FROM user_category_restrictions ucr
+      USING restricted_categories rc
+      WHERE ucr.restricted_category_id = rc.id
+        AND ucr.user_id = $1
+        AND NOT (rc.category_slug = ANY($2::text[]))`,
+    [userId, slugs]
+  );
+
   return result.rows.length;
 }
 

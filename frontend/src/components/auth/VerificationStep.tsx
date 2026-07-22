@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { OFFENCE_OPTIONS, type OffenceType } from '../../constants/offenceOptions';
 import { useToastNotification } from '../../utils/toastNotification';
 
 interface VerificationStepProps {
@@ -26,6 +27,7 @@ export default function VerificationStep({ onComplete, onBack }: VerificationSte
   // cannot be swept up in that.
   const [hasConviction, setHasConviction] = useState<boolean | null>(null);
   const [thirdSchedule, setThirdSchedule] = useState<'yes' | 'no' | 'unsure' | null>(null);
+  const [offenceType, setOffenceType] = useState<OffenceType | null>(null);
   const [overThreshold, setOverThreshold] = useState<'yes' | 'no' | 'unsure' | null>(null);
   const [convictedOn, setConvictedOn] = useState('');
   const [applicantNote, setApplicantNote] = useState('');
@@ -54,6 +56,7 @@ export default function VerificationStep({ onComplete, onBack }: VerificationSte
 
     if (hasConviction === null) newErrors.hasConviction = 'Required';
     if (hasConviction === true) {
+      if (!offenceType) newErrors.offenceType = 'Required';
       if (!thirdSchedule) newErrors.thirdSchedule = 'Required';
       if (!overThreshold) newErrors.overThreshold = 'Required';
     }
@@ -105,6 +108,7 @@ export default function VerificationStep({ onComplete, onBack }: VerificationSte
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           hasUnspentConviction: Boolean(hasConviction),
+          offenceType: hasConviction ? offenceType : null,
           thirdScheduleOffence: hasConviction ? tri(thirdSchedule) : null,
           exceededSentenceThreshold: hasConviction ? tri(overThreshold) : null,
           convictedOn: hasConviction && canStillSpend ? convictedOn || null : null,
@@ -145,21 +149,19 @@ export default function VerificationStep({ onComplete, onBack }: VerificationSte
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-8">
-            {/* Criminal background is no longer asked here. A conviction does not
-                bar someone from Errandify — they join, and the categories that
-                involve vulnerable people or home access are withheld from them.
-                That declaration is made on its own screen straight after this
-                one, statute by statute, and is what applies the restrictions.
-                Asking "I have no criminal record" here contradicted it: it
-                turned a restriction into a wall, and the answer went nowhere. */}
-            {/* The criminal declaration is deliberately NOT here.
-                It gates 7 of 16 categories, so asking it of everyone at signup
-                collects a criminal disclosure from people whose work could
-                never be affected by it — someone doing delivery or tech
-                support. That is both poor data minimisation under PDPA and a
-                discouraging thing to put in front of a new user.
-                It is now asked at the point someone chooses work it applies
-                to. See components/SensitiveWorkDeclaration.tsx. */}
+            {/* The criminal declaration IS asked here, as one question, and
+                three earlier comments claiming otherwise have been removed —
+                they described a design that was proposed and not adopted, while
+                sitting directly above the code that does the opposite.
+
+                Asked at signup rather than at the point of the work: meeting it
+                mid-offer means someone browses, writes an offer, and is refused
+                at the moment of trying. One neutral question up front, before
+                anyone has invested anything, is the kinder order even though it
+                collects slightly more than strict minimisation would.
+
+                A conviction does not bar anyone from Errandify. It closes the
+                categories the offence bears on, usually temporarily. */}
             {/* Two sections used to sit here and both are gone.
                 "Background Verification Agreement" asked everyone to consent to
                 screening. Screening now only happens for work involving
@@ -212,9 +214,42 @@ export default function VerificationStep({ onComplete, onBack }: VerificationSte
               {hasConviction === true && (
                 <div className="mt-5 space-y-4 border-t border-errandify-orange/20 pt-4">
                   <p className="text-sm text-gray-700">
-                    Thanks for telling us. Two questions so we get this right — answering yes to
-                    either does not remove you from Errandify.
+                    Thanks for telling us. A few questions so we get this right — answering yes to
+                    any of them does not remove you from Errandify.
                   </p>
+
+                  {/* Asked so we can restrict less, not more. Without it every
+                      conviction closed all seven categories, so a shoplifting
+                      record barred someone from childcare and eldercare too.
+                      Now each category is closed only by offences that bear on
+                      it, and most people find one or two closed instead of the
+                      lot. Worth the extra tap for that reason and no other. */}
+                  <div>
+                    <p className="text-sm font-semibold text-errandify-brown mb-1">
+                      What kind of offence was it?
+                    </p>
+                    <p className="text-xs text-gray-600 mb-2">
+                      Pick the closest. This is what lets us keep the rest of Errandify open to you
+                      rather than restricting everything.
+                    </p>
+                    <div className="space-y-1.5">
+                      {OFFENCE_OPTIONS.map((o) => (
+                        <button
+                          key={o.value}
+                          type="button"
+                          onClick={() => setOffenceType(o.value)}
+                          className={`w-full text-left px-3 py-2 rounded-lg border-2 text-sm bg-white ${
+                            offenceType === o.value
+                              ? 'border-errandify-orange text-errandify-orange font-semibold'
+                              : 'border-gray-200 text-gray-700'
+                          }`}
+                        >
+                          {o.label}
+                        </button>
+                      ))}
+                    </div>
+                    {errors.offenceType && <p className="text-red-600 text-xs mt-1">Please pick one</p>}
+                  </div>
 
                   <div>
                     <p className="text-sm font-semibold text-errandify-brown mb-2">

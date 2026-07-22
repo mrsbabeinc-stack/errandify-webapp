@@ -2,6 +2,7 @@ import { Router, Response } from 'express';
 import { AuthRequest, authMiddleware, requireAdmin } from '../middleware/auth.js';
 import db from '../db.js';
 import { resolveOutcome, applyRestrictions, clearRestrictions, isUnrestricted } from '../services/screeningResolver.js';
+import { categoriesClosedBy, needsHumanScoping, OFFENCE_OPTIONS, type OffenceType } from '../services/offenceScope.js';
 import { sendNotification } from '../utils/notificationHelper.js';
 
 const router = Router();
@@ -33,6 +34,7 @@ router.post('/declare', authMiddleware, async (req: AuthRequest, res: Response) 
       exceededSentenceThreshold,
       otherDisqualification,
       convictedOn,
+      offenceType,
       applicantNote,
       understoodRestrictions,
       // legacy shapes still accepted
@@ -62,6 +64,9 @@ router.post('/declare', authMiddleware, async (req: AuthRequest, res: Response) 
     const usedLegacy = hasUnspentConviction === undefined;
     const unspent = usedLegacy ? legacyDeclared : Boolean(hasUnspentConviction);
 
+    const offence: OffenceType | null =
+      OFFENCE_OPTIONS.some((o) => o.value === offenceType) ? offenceType : null;
+
     const outcome = await resolveOutcome({
       hasUnspentConviction: unspent,
       thirdScheduleOffence: usedLegacy ? null : (thirdScheduleOffence ?? null),
@@ -70,17 +75,28 @@ router.post('/declare', authMiddleware, async (req: AuthRequest, res: Response) 
       convictedOn: convictedOn || null,
     });
 
+    // An offence we cannot scope is not an offence we can bar on. "Drugs" and
+    // "something else" tell us nothing about these specific categories, so they
+    // go to a person rather than to a blanket restriction — which is the
+    // reasoning this whole change exists to remove.
+    const reviewStatus =
+      unspent && needsHumanScoping(offence, usedLegacy ? null : thirdScheduleOffence)
+        ? 'pending_review'
+        : outcome.reviewStatus;
+
     const result = await db.query(
       `INSERT INTO screening_declarations (
         user_id, has_unspent_conviction, third_schedule_offence,
         exceeded_sentence_threshold, other_disqualification, convicted_on,
-        any_conviction, understood_restrictions, ip_address, review_status, applicant_note
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+        any_conviction, understood_restrictions, ip_address, review_status,
+        applicant_note, offence_type
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
       ON CONFLICT (user_id) DO UPDATE SET
         has_unspent_conviction = $2, third_schedule_offence = $3,
         exceeded_sentence_threshold = $4, other_disqualification = $5,
         convicted_on = $6, any_conviction = $7, understood_restrictions = $8,
-        review_status = $10, applicant_note = $11, consent_timestamp = NOW()
+        review_status = $10, applicant_note = $11, offence_type = $12,
+        consent_timestamp = NOW()
       RETURNING id`,
       [
         userId,
@@ -92,8 +108,9 @@ router.post('/declare', authMiddleware, async (req: AuthRequest, res: Response) 
         unspent,
         Boolean(understoodRestrictions),
         req.ip || null,
-        outcome.reviewStatus,
+        reviewStatus,
         (applicantNote || '').trim() || null,
+        offence,
       ]
     );
 
@@ -105,25 +122,21 @@ router.post('/declare', authMiddleware, async (req: AuthRequest, res: Response) 
       [userId, unspent]
     );
 
+    // Only the categories this offence actually bears on. Everything else stays
+    // open, including categories an earlier blanket declaration had closed.
+    const closed = isUnrestricted(outcome)
+      ? []
+      : categoriesClosedBy(offence, usedLegacy ? null : thirdScheduleOffence);
+
     if (isUnrestricted(outcome)) {
       // Nothing to restrict — and this also lifts anything from an earlier
       // declaration, so a record that has since spent stops biting.
       await clearRestrictions(userId);
     } else {
-      const n = await applyRestrictions(userId, outcome);
-      console.log(`[Screening] user ${userId}: ${outcome.tier} (${outcome.basis}) — ${n} categories, ends ${outcome.restrictionEnd?.toISOString() ?? 'never'}`);
+      const n = await applyRestrictions(userId, outcome, closed);
+      console.log(`[Screening] user ${userId}: ${outcome.tier} (${outcome.basis}) offence=${offence ?? 'unknown'} — ${n} categories, ends ${outcome.restrictionEnd?.toISOString() ?? 'never'}`);
     }
 
-    // Name the categories rather than counting them. "Seven categories are
-    // restricted" tells someone nothing about whether they have lost the work
-    // they actually came here to do — a concrete list is reassuring where a
-    // number is alarming.
-    const cats = await db.query(
-      `SELECT DISTINCT rc.category_slug
-         FROM restricted_categories rc
-        WHERE rc.category_slug IS NOT NULL`
-    );
-    const closed = cats.rows.map((r: any) => r.category_slug);
     const allCats = await db.query('SELECT DISTINCT category FROM errands WHERE category IS NOT NULL');
     const open = allCats.rows
       .map((r: any) => r.category)
@@ -138,14 +151,14 @@ router.post('/declare', authMiddleware, async (req: AuthRequest, res: Response) 
         hasUnspentConviction: unspent,
         tier: outcome.tier,
         restrictionEnd: outcome.restrictionEnd,
-        needsReview: outcome.reviewStatus === 'pending_review',
+        needsReview: reviewStatus === 'pending_review',
         basis: outcome.basis,
         // Tone matters here: most people reading these have done nothing, and
         // the ones who have are looking for work, not being sentenced again.
         // Say what happens, say it is not personal, and never imply removal.
         message: isUnrestricted(outcome)
           ? "Thanks — you're all set. Nothing is restricted."
-          : outcome.reviewStatus === 'pending_review'
+          : reviewStatus === 'pending_review'
           ? "Thanks for telling us. Someone will look at this and come back to you. In the meantime these categories are paused — everything else is unaffected."
           : outcome.tier === 'until_spent'
           ? "Thanks. These categories open up once your record becomes spent, and that happens automatically — you won't need to ask. Everything else is unaffected."
