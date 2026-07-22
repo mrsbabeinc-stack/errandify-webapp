@@ -895,54 +895,58 @@ router.get('/deletion-eligibility', authMiddleware, async (req: AuthRequest, res
 
     const pendingErrands = parseInt(errandsResult.rows[0]?.count || 0);
 
-    // Check for payment holds (money held in escrow)
-    const holdsResult = await db.query(
-      `SELECT COUNT(*) as count, COALESCE(SUM(amount), 0) as total_held
-       FROM payment_holds
-       WHERE user_id = $1 AND status IN ('HOLD', 'PENDING_REVIEW')`,
-      [userId]
-    );
-
-    const pendingHolds = parseInt(holdsResult.rows[0]?.count || 0);
-    const totalHeld = parseFloat(holdsResult.rows[0]?.total_held || 0);
+    // Escrow holds are NOT checked, because nothing holds money yet.
+    //
+    // This used to read a payment_holds table that has never existed. The query
+    // threw, the catch below turned it into a 500, and GET
+    // /deletion-eligibility failed for every user — so nobody could delete
+    // their account at all. A data-deletion right that returns a server error
+    // is worse than one that is merely incomplete, and under PDPA it is not
+    // optional.
+    //
+    // There is no escrow to check: no capture_method anywhere, and the real
+    // payment-intent route is shadowed by a mock. When escrow lands, restore a
+    // blocker here — an account must not be deletable while it is holding
+    // someone else's money.
+    const pendingHolds = 0;
+    const totalHeld = 0;
 
     // Check for pending disputes
+    // disputes has none of asker_id, doer_id or reporter_id — the party columns
+    // are raised_by_id and filed_by_user_id, and the counterparty is reached
+    // through the errand. The old query named three columns that do not exist,
+    // so it threw and took the whole endpoint down with it.
     const disputesResult = await db.query(
-      `SELECT COUNT(*) as count FROM disputes
-       WHERE (asker_id = $1 OR doer_id = $1 OR reporter_id = $1)
-       AND status IN ('open', 'pending_review', 'under_investigation')`,
+      `SELECT COUNT(*) as count
+         FROM disputes d
+         JOIN errands e ON e.id = d.errand_id
+         LEFT JOIN bids ab ON ab.id = e.accepted_bid_id
+        WHERE (d.raised_by_id = $1 OR d.filed_by_user_id = $1
+               OR e.asker_id = $1 OR ab.doer_id = $1)
+          AND d.status IN ('open', 'pending_review', 'under_investigation')`,
       [userId]
     );
 
     const pendingDisputes = parseInt(disputesResult.rows[0]?.count || 0);
 
-    // Check for outstanding payments (user owes platform fees, subscription, etc.)
-    const paymentsResult = await db.query(
-      `SELECT COUNT(*) as count, COALESCE(SUM(amount), 0) as total_owed
-       FROM transactions
-       WHERE user_id = $1 AND status IN ('pending', 'overdue')
-       AND type IN ('ADVERTISING', 'SUBSCRIPTION', 'PLATFORM_FEE')`,
-      [userId]
-    );
+    // Same story: there is no `transactions` table. Platform fees, subscription
+    // dues and advertising spend have no shared ledger, so there is nothing to
+    // read. Restore this when one exists.
+    const outstandingPayments = 0;
+    const totalOwed = 0;
 
-    const outstandingPayments = parseInt(paymentsResult.rows[0]?.count || 0);
-    const totalOwed = parseFloat(paymentsResult.rows[0]?.total_owed || 0);
-
-    // Check for pending withdrawals
-    const withdrawalsResult = await db.query(
-      `SELECT COUNT(*) as count, COALESCE(SUM(amount), 0) as total_pending
-       FROM wallet_transactions
-       WHERE user_id = $1 AND type = 'WITHDRAWAL' AND status = 'pending'`,
-      [userId]
-    );
-
-    const pendingWithdrawals = parseInt(withdrawalsResult.rows[0]?.count || 0);
-    const totalWithdrawalPending = parseFloat(withdrawalsResult.rows[0]?.total_pending || 0);
+    // wallet_transactions is a plain ledger — it records movements, and has no
+    // status column, so a withdrawal cannot be "pending" in it. The filter was
+    // on a column that does not exist.
+    const pendingWithdrawals = 0;
+    const totalWithdrawalPending = 0;
 
     // Check for active company (if user is company owner)
     const companyResult = await db.query(
+      // The column is owner_user_id, not owner_id — the old name threw and was
+      // the last of four non-existent columns/tables in this one handler.
       `SELECT COUNT(*) as count FROM companies
-       WHERE owner_id = $1`,
+       WHERE owner_user_id = $1`,
       [userId]
     );
 
@@ -1047,15 +1051,10 @@ router.post('/delete-account', authMiddleware, async (req: AuthRequest, res: Res
       return res.status(400).json({ error: 'Cannot delete account with active errands' });
     }
 
-    const holdsResult = await db.query(
-      `SELECT COUNT(*) as count FROM payment_holds
-       WHERE user_id = $1 AND status IN ('HOLD', 'PENDING_REVIEW')`,
-      [userId]
-    );
-
-    if (parseInt(holdsResult.rows[0]?.count || 0) > 0) {
-      return res.status(400).json({ error: 'Cannot delete account with active payment holds' });
-    }
+    // No escrow exists, so there are no holds to block on — see the note in
+    // GET /deletion-eligibility. This query read a table that has never
+    // existed, which meant delete-account threw before it could delete
+    // anything. Restore the block when escrow lands.
 
     // Mark user as deleted (soft delete)
     await db.query(
