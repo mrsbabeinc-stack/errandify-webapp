@@ -256,16 +256,16 @@ export default function App() {
     const navigate = useNavigate();
     return (
       <VerificationStep
-        onComplete={() => navigate('/auth/screening')}
+        onComplete={() => navigate('/auth/complete-profile')}
         onBack={() => navigate('/auth')}
       />
     );
   };
 
-  // The statutory declaration. A conviction does not stop anyone joining — it
-  // withholds the categories involving vulnerable people or home access, which
-  // POST /api/screening/declare applies. This sits between the consents and
-  // profile completion so the restrictions exist before the user can browse.
+  // Kept routed but no longer part of the signup chain: the declaration is now
+  // asked inside VerificationStep, as one declaration rather than two screens.
+  // This remains reachable so a user can re-declare later (e.g. once a record
+  // becomes spent) without going through signup again.
   const CriminalScreeningRouteWrapper = () => {
     const navigate = useNavigate();
     return (

@@ -345,4 +345,106 @@ router.patch(
   }
 );
 
+/**
+ * Admin review of declarations the resolver could not decide.
+ *
+ * A declaration becomes pending_review when the applicant answered "I'm not
+ * sure", left the conviction date out, or arrived from an older client. Those
+ * people are restricted meanwhile, so an unattended queue quietly bars someone
+ * indefinitely — this is the screen that stops that happening.
+ */
+const screeningAdmin: any = [authMiddleware, requireAdmin(['admin', 'super-admin'])];
+
+/** GET /api/screening/reviews — the queue. */
+router.get('/reviews', screeningAdmin, async (req: AuthRequest, res: Response) => {
+  try {
+    const status = (req.query.status as string) || 'pending_review';
+    const result = await db.query(
+      `SELECT sd.id, sd.user_id,
+              COALESCE(u.alias, u.display_name) AS name,
+              u.email,
+              sd.has_unspent_conviction AS "hasUnspentConviction",
+              sd.third_schedule_offence AS "thirdScheduleOffence",
+              sd.exceeded_sentence_threshold AS "exceededSentenceThreshold",
+              sd.other_disqualification AS "otherDisqualification",
+              to_char(sd.convicted_on, 'YYYY-MM-DD') AS "convictedOn",
+              sd.review_status AS "reviewStatus",
+              sd.review_note AS "reviewNote",
+              sd.consent_timestamp AS "declaredAt",
+              (SELECT COUNT(*) FROM user_category_restrictions r
+                WHERE r.user_id = sd.user_id AND r.is_active = true)::int AS "restrictedCount"
+         FROM screening_declarations sd
+         JOIN users u ON u.id = sd.user_id
+        WHERE sd.review_status = $1
+        ORDER BY sd.consent_timestamp ASC`,
+      [status]
+    );
+    res.json({ success: true, data: result.rows });
+  } catch (error) {
+    console.error('[Screening] Review queue failed:', error);
+    res.status(500).json({ error: 'Could not load the review queue' });
+  }
+});
+
+/**
+ * POST /api/screening/reviews/:id/:action — clear or bar.
+ *
+ * cleared — the admin is satisfied the record is spent or does not disqualify;
+ *           restrictions are lifted entirely.
+ * barred  — the record cannot become spent; restrictions become permanent.
+ *
+ * A note is required either way. A decision that bars someone from work, or
+ * lets them near vulnerable people, should not be recorded without a reason
+ * attached to whoever made it.
+ */
+router.post('/reviews/:id/:action', screeningAdmin, async (req: AuthRequest, res: Response) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const action = req.params.action;
+    if (Number.isNaN(id)) return res.status(400).json({ error: 'Invalid declaration id' });
+    if (!['clear', 'bar'].includes(action)) return res.status(400).json({ error: 'Unknown action' });
+
+    const note = (req.body?.note || '').trim();
+    if (!note) return res.status(400).json({ error: 'Please record why you reached this decision' });
+
+    const decl = await db.query(
+      'SELECT user_id, review_status FROM screening_declarations WHERE id = $1',
+      [id]
+    );
+    if (decl.rows.length === 0) return res.status(404).json({ error: 'Declaration not found' });
+    if (decl.rows[0].review_status !== 'pending_review') {
+      return res.status(409).json({ error: `Already ${decl.rows[0].review_status}` });
+    }
+
+    const userId = decl.rows[0].user_id;
+    const cleared = action === 'clear';
+
+    await db.query(
+      `UPDATE screening_declarations
+          SET review_status = $1, review_note = $2, reviewed_by = $3, reviewed_at = NOW()
+        WHERE id = $4`,
+      [cleared ? 'cleared' : 'barred', note, parseInt(req.userId || '0', 10), id]
+    );
+
+    if (cleared) {
+      await db.query('DELETE FROM user_category_restrictions WHERE user_id = $1', [userId]);
+    } else {
+      // Barred means the record does not spend, so no end date.
+      await db.query(
+        `INSERT INTO user_category_restrictions (user_id, restricted_category_id, reason, restriction_end, is_active)
+         SELECT $1, id, $2, NULL, true FROM restricted_categories
+         ON CONFLICT (user_id, restricted_category_id) DO UPDATE
+           SET is_active = true, reason = EXCLUDED.reason, restriction_end = NULL, updated_at = NOW()`,
+        [userId, `Admin review: ${note}`]
+      );
+    }
+
+    console.log(`[Screening] declaration ${id} ${cleared ? 'cleared' : 'barred'} by ${req.userId}`);
+    res.json({ success: true, data: { id, reviewStatus: cleared ? 'cleared' : 'barred' } });
+  } catch (error) {
+    console.error('[Screening] Review decision failed:', error);
+    res.status(500).json({ error: 'Could not record that decision' });
+  }
+});
+
 export default router;
