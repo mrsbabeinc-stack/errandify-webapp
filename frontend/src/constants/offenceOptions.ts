@@ -22,6 +22,26 @@ export type OffenceType =
   | 'drugs'
   | 'other';
 
+/**
+ * Whether the Third Schedule question is worth asking for this offence type.
+ *
+ * That question names rape, homicide, kidnapping and gang robbery. Asking it of
+ * someone who has just answered "shoplifting" or "a driving offence" is not
+ * merely redundant — it reads as an accusation, which is exactly the tone this
+ * declaration is trying not to take.
+ *
+ * Skipping it is safe because it is not the only thing that stops a record
+ * spending. RCA s7C(b) — a sentence over 3 months or a fine over $2,000 — also
+ * does, and any Third Schedule offence would comfortably exceed it. So the
+ * sentence question, which is asked of everyone, remains the backstop.
+ */
+export const ASKS_THIRD_SCHEDULE: OffenceType[] = [
+  'violence',
+  'sexual',
+  'against_child',
+  'against_vulnerable',
+];
+
 export const OFFENCE_OPTIONS: { value: OffenceType; label: string }[] = [
   { value: 'dishonesty', label: 'Dishonesty — theft, shoplifting, fraud' },
   { value: 'violence', label: 'Violence' },

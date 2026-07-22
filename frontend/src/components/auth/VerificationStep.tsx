@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { OFFENCE_OPTIONS, type OffenceType } from '../../constants/offenceOptions';
+import { OFFENCE_OPTIONS, ASKS_THIRD_SCHEDULE, type OffenceType } from '../../constants/offenceOptions';
 import { useToastNotification } from '../../utils/toastNotification';
 
 interface VerificationStepProps {
@@ -34,6 +34,9 @@ export default function VerificationStep({ onComplete, onBack }: VerificationSte
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Whether the Third Schedule question applies to the offence they picked.
+  const asksThirdSchedule = !!offenceType && ASKS_THIRD_SCHEDULE.includes(offenceType);
+
   const handleCheckboxChange = (field: keyof typeof formData) => {
     setFormData(prev => ({
       ...prev,
@@ -57,7 +60,7 @@ export default function VerificationStep({ onComplete, onBack }: VerificationSte
     if (hasConviction === null) newErrors.hasConviction = 'Required';
     if (hasConviction === true) {
       if (!offenceType) newErrors.offenceType = 'Required';
-      if (!thirdSchedule) newErrors.thirdSchedule = 'Required';
+      if (asksThirdSchedule && !thirdSchedule) newErrors.thirdSchedule = 'Required';
       if (!overThreshold) newErrors.overThreshold = 'Required';
     }
 
@@ -101,7 +104,7 @@ export default function VerificationStep({ onComplete, onBack }: VerificationSte
       }
 
       const tri = (v: string | null) => (v === 'yes' ? true : v === 'no' ? false : null);
-      const canStillSpend = thirdSchedule === 'no' && overThreshold === 'no';
+      const canStillSpend = (!asksThirdSchedule || thirdSchedule === 'no') && overThreshold === 'no';
 
       const scRes = await fetch(`${API_URL}/api/screening/declare`, {
         method: 'POST',
@@ -109,7 +112,7 @@ export default function VerificationStep({ onComplete, onBack }: VerificationSte
         body: JSON.stringify({
           hasUnspentConviction: Boolean(hasConviction),
           offenceType: hasConviction ? offenceType : null,
-          thirdScheduleOffence: hasConviction ? tri(thirdSchedule) : null,
+          thirdScheduleOffence: hasConviction ? (asksThirdSchedule ? tri(thirdSchedule) : false) : null,
           exceededSentenceThreshold: hasConviction ? tri(overThreshold) : null,
           convictedOn: hasConviction && canStillSpend ? convictedOn || null : null,
           applicantNote: hasConviction ? applicantNote : null,
@@ -251,7 +254,12 @@ export default function VerificationStep({ onComplete, onBack }: VerificationSte
                     {errors.offenceType && <p className="text-red-600 text-xs mt-1">Please pick one</p>}
                   </div>
 
-                  <div>
+                  {/* Only where it could plausibly apply. Asking someone who
+                      just answered "shoplifting" whether it was rape or
+                      homicide reads as an accusation, not a question. The
+                      sentence threshold below is asked of everyone and is the
+                      real backstop — see ASKS_THIRD_SCHEDULE. */}
+                  <div className={asksThirdSchedule ? '' : 'hidden'}>
                     <p className="text-sm font-semibold text-errandify-brown mb-2">
                       Was it a serious offence — rape, homicide, kidnapping or gang robbery?
                     </p>
