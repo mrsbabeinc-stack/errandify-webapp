@@ -1,7 +1,7 @@
 import { Router, Response } from 'express';
 import { AuthRequest, authMiddleware, requireAdmin } from '../middleware/auth.js';
 import db from '../db.js';
-import { resolveOutcome, applyRestrictions, clearRestrictions } from '../services/screeningResolver.js';
+import { resolveOutcome, applyRestrictions, clearRestrictions, isUnrestricted } from '../services/screeningResolver.js';
 
 const router = Router();
 
@@ -27,12 +27,14 @@ router.post('/declare', authMiddleware, async (req: AuthRequest, res: Response) 
   try {
     const userId = parseInt(req.userId || '0', 10);
     const {
-      hasConviction,
-      offenceTypes,
-      sentenceCompletedOn,
-      underMonitoring,
+      hasUnspentConviction,
+      thirdScheduleOffence,
+      exceededSentenceThreshold,
+      otherDisqualification,
+      convictedOn,
       understoodRestrictions,
-      // legacy shape
+      // legacy shapes still accepted
+      hasConviction,
       cypaConviction,
       womensCharterConviction,
       penalCodeConviction,
@@ -42,65 +44,53 @@ router.post('/declare', authMiddleware, async (req: AuthRequest, res: Response) 
 
     if (!understoodRestrictions) {
       return res.status(400).json({
-        error: 'Please confirm you understand the restrictions before continuing',
+        error: 'Please confirm your declaration before continuing',
       });
     }
 
-    // Older clients send the five booleans; translate them so the same
-    // declaration still produces the same protection.
-    const LEGACY_MAP: Array<[boolean, string]> = [
-      [Boolean(cypaConviction), 'against_child'],
-      [Boolean(womensCharterConviction), 'sexual'],
-      [Boolean(penalCodeConviction), 'violence'],
-      [Boolean(elderAbuseConviction), 'against_vulnerable_adult'],
-      [Boolean(dishonestyConviction), 'dishonesty'],
-    ];
-    const legacyTypes = LEGACY_MAP.filter(([on]) => on).map(([, t]) => t);
-    const usedLegacy = hasConviction === undefined;
+    // Older clients sent "any conviction ever". That is a broader question than
+    // the law asks, so those answers are treated conservatively: an unspent
+    // conviction whose s7C position is unknown, which routes to review rather
+    // than being silently downgraded to "no conviction".
+    const legacyDeclared =
+      hasConviction === true ||
+      Boolean(cypaConviction || womensCharterConviction || penalCodeConviction ||
+              elderAbuseConviction || dishonestyConviction);
 
-    const types: string[] = Array.isArray(offenceTypes) && offenceTypes.length
-      ? offenceTypes
-      : legacyTypes;
-    const declared = usedLegacy ? legacyTypes.length > 0 : Boolean(hasConviction);
+    const usedLegacy = hasUnspentConviction === undefined;
+    const unspent = usedLegacy ? legacyDeclared : Boolean(hasUnspentConviction);
 
-    if (declared && types.length === 0) {
-      return res.status(400).json({
-        error: 'Please tell us what kind of offence it was so we can assess it correctly',
-      });
-    }
-
-    const outcome = declared
-      ? await resolveOutcome(types, sentenceCompletedOn || null, Boolean(underMonitoring))
-      : null;
+    const outcome = await resolveOutcome({
+      hasUnspentConviction: unspent,
+      thirdScheduleOffence: usedLegacy ? null : (thirdScheduleOffence ?? null),
+      exceededSentenceThreshold: usedLegacy ? null : (exceededSentenceThreshold ?? null),
+      otherDisqualification: usedLegacy ? null : (otherDisqualification ?? null),
+      convictedOn: convictedOn || null,
+    });
 
     const result = await db.query(
       `INSERT INTO screening_declarations (
-        user_id, cypa_conviction, womens_charter_conviction, penal_code_conviction,
-        elder_abuse_conviction, dishonesty_conviction, any_conviction,
-        understood_restrictions, ip_address,
-        offence_types, sentence_completed_on, under_monitoring, review_status
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+        user_id, has_unspent_conviction, third_schedule_offence,
+        exceeded_sentence_threshold, other_disqualification, convicted_on,
+        any_conviction, understood_restrictions, ip_address, review_status
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
       ON CONFLICT (user_id) DO UPDATE SET
-        cypa_conviction = $2, womens_charter_conviction = $3, penal_code_conviction = $4,
-        elder_abuse_conviction = $5, dishonesty_conviction = $6, any_conviction = $7,
-        understood_restrictions = $8, offence_types = $10,
-        sentence_completed_on = $11, under_monitoring = $12, review_status = $13,
-        consent_timestamp = NOW()
+        has_unspent_conviction = $2, third_schedule_offence = $3,
+        exceeded_sentence_threshold = $4, other_disqualification = $5,
+        convicted_on = $6, any_conviction = $7, understood_restrictions = $8,
+        review_status = $10, consent_timestamp = NOW()
       RETURNING id`,
       [
         userId,
-        types.includes('against_child'),
-        types.includes('sexual'),
-        types.includes('violence') || types.includes('kidnapping'),
-        types.includes('against_vulnerable_adult'),
-        types.includes('dishonesty'),
-        declared,
+        unspent,
+        usedLegacy ? null : (thirdScheduleOffence ?? null),
+        usedLegacy ? null : (exceededSentenceThreshold ?? null),
+        usedLegacy ? null : (otherDisqualification ?? null),
+        convictedOn || null,
+        unspent,
         Boolean(understoodRestrictions),
         req.ip || null,
-        JSON.stringify(types),
-        sentenceCompletedOn || null,
-        Boolean(underMonitoring),
-        outcome ? outcome.reviewStatus : 'auto',
+        outcome.reviewStatus,
       ]
     );
 
@@ -109,32 +99,34 @@ router.post('/declare', authMiddleware, async (req: AuthRequest, res: Response) 
           SET screening_completed = true, screening_completed_date = NOW(),
               criminal_conviction = $2
         WHERE id = $1`,
-      [userId, declared]
+      [userId, unspent]
     );
 
-    if (declared && outcome) {
-      const n = await applyRestrictions(userId, outcome);
-      console.log(`[Screening] user ${userId}: ${outcome.tier} — ${n} categories, ends ${outcome.restrictionEnd?.toISOString() ?? 'never'}`);
-    } else {
-      // A clean declaration should lift anything left from an earlier one.
+    if (isUnrestricted(outcome)) {
+      // Nothing to restrict — and this also lifts anything from an earlier
+      // declaration, so a record that has since spent stops biting.
       await clearRestrictions(userId);
+    } else {
+      const n = await applyRestrictions(userId, outcome);
+      console.log(`[Screening] user ${userId}: ${outcome.tier} (${outcome.basis}) — ${n} categories, ends ${outcome.restrictionEnd?.toISOString() ?? 'never'}`);
     }
 
     res.json({
       success: true,
       data: {
         screeningId: result.rows[0].id,
-        anyConviction: declared,
-        tier: outcome?.tier ?? null,
-        restrictionEnd: outcome?.restrictionEnd ?? null,
-        needsReview: outcome?.reviewStatus === 'pending_review',
-        message: !declared
-          ? 'Thank you for confirming. You can access all categories.'
-          : outcome?.reviewStatus === 'pending_review'
-          ? 'Your declaration has been recorded and is with our team for review. Some categories are unavailable while we look at it.'
-          : outcome?.tier === 'temporary'
-          ? 'Your declaration has been recorded. Some categories are unavailable until your restriction period ends.'
-          : 'Your declaration has been recorded. Some categories are unavailable on your account.',
+        hasUnspentConviction: unspent,
+        tier: outcome.tier,
+        restrictionEnd: outcome.restrictionEnd,
+        needsReview: outcome.reviewStatus === 'pending_review',
+        basis: outcome.basis,
+        message: isUnrestricted(outcome)
+          ? 'Thank you. You can access all categories.'
+          : outcome.reviewStatus === 'pending_review'
+          ? 'Your declaration is with our team for review. Some categories are unavailable while we look at it.'
+          : outcome.tier === 'until_spent'
+          ? 'Thank you. Some categories are unavailable until your record becomes spent.'
+          : 'Thank you. Some categories are unavailable on your account.',
       },
     });
   } catch (error) {

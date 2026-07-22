@@ -1,126 +1,146 @@
 import db from '../db.js';
 
 /**
- * Turns a declaration into restrictions.
+ * Turns a declaration into restrictions, following the Registration of
+ * Criminals Act 1949 rather than a policy of our own invention.
  *
- * The rule used to be: any conviction bars every category, permanently. That
- * is stricter than the law requires and gave people no way back. This applies
- * the tiered model instead — see migration 042 for the policy table.
+ * The Act already does the tiering:
  *
- * Three outcomes:
- *   lifetime  — every restricted category, no end date
- *   temporary — every restricted category, expiring at
- *               sentence_completed_on + debarment_months
- *   review    — restrictions applied in full, and a human decides
+ *   s7B  a record becomes SPENT after a five-year crime-free period
+ *   s7C  unless it is a Third Schedule offence (a), the sentence exceeded
+ *        3 months / $2,000 (b), or (c)/(d) apply — in which case it never
+ *        becomes spent
  *
- * It fails safe in every direction it can be uncertain: an unknown offence
- * type, a temporary rule with no period set, or a missing sentence date all
- * produce restrictions plus a review, never open access. The strictest tier
- * among the declared offences wins.
+ * So the restriction simply tracks the record:
+ *   never spendable  → permanent restriction
+ *   will spend       → restriction ends at conviction + five years
+ *   already spent    → nothing to declare, nothing to restrict
+ *
+ * The five years runs from CONVICTION, per s7B. An earlier version of this
+ * counted from sentence completion, which is a later date and over-restricted.
+ *
+ * It still fails safe: anything unanswered or unclear produces restrictions
+ * plus a human review, never open access.
+ *
+ * Not legal advice. The exception permitting spent records to be considered for
+ * roles "from which the person may be disqualified under any written law" has
+ * not been assessed against Errandify's categories — mirroring the statute is
+ * the safer default until a Singapore lawyer confirms.
  */
 
-export type Tier = 'lifetime' | 'temporary' | 'review';
+export type Tier = 'permanent' | 'until_spent' | 'review';
+
+export interface ScreeningInput {
+  hasUnspentConviction: boolean;
+  thirdScheduleOffence?: boolean | null;
+  exceededSentenceThreshold?: boolean | null;
+  otherDisqualification?: boolean | null;
+  convictedOn?: string | null;
+}
 
 export interface ScreeningOutcome {
   tier: Tier;
   restrictionEnd: Date | null;
   reviewStatus: 'auto' | 'pending_review';
   reason: string;
+  basis: string;
 }
 
-const SEVERITY: Record<Tier, number> = { review: 1, temporary: 2, lifetime: 3 };
+async function policy(key: string, fallback: number): Promise<number> {
+  const r = await db.query('SELECT value_int FROM screening_policy WHERE key = $1', [key]);
+  const v = r.rows[0]?.value_int;
+  return typeof v === 'number' ? v : fallback;
+}
 
-export async function resolveOutcome(
-  offenceTypes: string[],
-  sentenceCompletedOn: string | null,
-  underMonitoring: boolean
-): Promise<ScreeningOutcome> {
-  if (!offenceTypes || offenceTypes.length === 0) {
-    // Declared a conviction but named no offence — cannot be tiered.
+export async function resolveOutcome(input: ScreeningInput): Promise<ScreeningOutcome> {
+  const {
+    hasUnspentConviction,
+    thirdScheduleOffence,
+    exceededSentenceThreshold,
+    otherDisqualification,
+    convictedOn,
+  } = input;
+
+  // A spent record is treated in law as no record at all.
+  if (!hasUnspentConviction) {
+    return {
+      tier: 'until_spent',
+      restrictionEnd: null,
+      reviewStatus: 'auto',
+      reason: 'No unspent conviction declared',
+      basis: 'RCA s7B',
+    };
+  }
+
+  // s7C(a), (b), (c), (d) — any one means the record never becomes spent.
+  const disqualified =
+    thirdScheduleOffence === true ||
+    exceededSentenceThreshold === true ||
+    otherDisqualification === true;
+
+  if (disqualified) {
+    const which = [
+      thirdScheduleOffence === true ? 's7C(a) Third Schedule offence' : null,
+      exceededSentenceThreshold === true ? 's7C(b) sentence above the threshold' : null,
+      otherDisqualification === true ? 's7C(c)/(d)' : null,
+    ].filter(Boolean).join('; ');
+
+    return {
+      tier: 'permanent',
+      restrictionEnd: null,
+      reviewStatus: 'auto',
+      reason: 'Conviction record cannot become spent',
+      basis: `RCA ${which}`,
+    };
+  }
+
+  // Not disqualified, so the record will spend — but only if we know when the
+  // clock started. "Don't know" on any s7C question is not a no.
+  const unanswered =
+    thirdScheduleOffence === null || thirdScheduleOffence === undefined ||
+    exceededSentenceThreshold === null || exceededSentenceThreshold === undefined;
+
+  if (unanswered) {
     return {
       tier: 'review',
       restrictionEnd: null,
       reviewStatus: 'pending_review',
-      reason: 'Conviction declared without an offence type',
+      reason: 'Could not determine whether the record can become spent',
+      basis: 'RCA s7C — unanswered',
     };
   }
 
-  const rules = await db.query(
-    'SELECT offence_type, tier, debarment_months FROM debarment_rules WHERE offence_type = ANY($1::text[])',
-    [offenceTypes]
-  );
-
-  // An offence type we have no rule for must not slip through as harmless.
-  const known = new Set(rules.rows.map((r: any) => r.offence_type));
-  const unknown = offenceTypes.filter((t) => !known.has(t));
-  if (unknown.length > 0) {
+  if (!convictedOn) {
     return {
       tier: 'review',
       restrictionEnd: null,
       reviewStatus: 'pending_review',
-      reason: `No debarment rule for: ${unknown.join(', ')}`,
+      reason: 'Conviction date not provided, so the crime-free period cannot be counted',
+      basis: 'RCA s7B',
     };
   }
 
-  // Strictest tier wins when several offences are declared.
-  let worst: Tier = 'review';
-  for (const r of rules.rows) {
-    if (SEVERITY[r.tier as Tier] > SEVERITY[worst]) worst = r.tier as Tier;
-  }
+  const years = await policy('crime_free_years', 5);
+  const end = new Date(convictedOn);
+  end.setFullYear(end.getFullYear() + years);
 
-  if (worst === 'lifetime') {
+  // A date already past means the record has spent — nothing to restrict.
+  if (end.getTime() <= Date.now()) {
     return {
-      tier: 'lifetime',
+      tier: 'until_spent',
       restrictionEnd: null,
       reviewStatus: 'auto',
-      reason: 'Offence carries a permanent restriction',
-    };
-  }
-
-  if (worst === 'temporary') {
-    // Longest applicable period governs.
-    const months = rules.rows
-      .filter((r: any) => r.tier === 'temporary')
-      .map((r: any) => r.debarment_months);
-
-    if (months.some((m: any) => m === null || m === undefined)) {
-      return {
-        tier: 'review',
-        restrictionEnd: null,
-        reviewStatus: 'pending_review',
-        reason: 'Debarment period not configured for this offence — needs a decision',
-      };
-    }
-    if (!sentenceCompletedOn) {
-      // The period runs from completion of sentence; without that date there
-      // is nothing to count from.
-      return {
-        tier: 'review',
-        restrictionEnd: null,
-        reviewStatus: 'pending_review',
-        reason: 'Sentence completion date not provided',
-      };
-    }
-
-    const longest = Math.max(...months.map((m: any) => Number(m)));
-    const end = new Date(sentenceCompletedOn);
-    end.setMonth(end.getMonth() + longest);
-
-    return {
-      tier: 'temporary',
-      restrictionEnd: end,
-      reviewStatus: 'auto',
-      reason: `Restricted for ${longest} months from completion of sentence`,
+      reason: `Crime-free period of ${years} years has elapsed — record is spent`,
+      basis: 'RCA s7B',
     };
   }
 
   return {
-    tier: 'review',
-    restrictionEnd: null,
-    reviewStatus: 'pending_review',
-    reason: underMonitoring
-      ? 'Under a monitoring or rehabilitation programme — needs a decision'
-      : 'Offence cannot be assessed automatically',
+    tier: 'until_spent',
+    restrictionEnd: end,
+    reviewStatus: 'auto',
+    reason: `Restricted until the ${years}-year crime-free period completes`,
+    basis: 'RCA s7B',
   };
 }
 
@@ -136,12 +156,17 @@ export async function applyRestrictions(userId: number, outcome: ScreeningOutcom
            restriction_end = EXCLUDED.restriction_end,
            updated_at = NOW()
      RETURNING id`,
-    [userId, outcome.reason, outcome.restrictionEnd]
+    [userId, `${outcome.reason} (${outcome.basis})`, outcome.restrictionEnd]
   );
   return result.rows.length;
 }
 
-/** Clears restrictions — used when a declaration reports no conviction. */
+/** Clears restrictions — used when there is nothing left to restrict. */
 export async function clearRestrictions(userId: number): Promise<void> {
   await db.query('DELETE FROM user_category_restrictions WHERE user_id = $1', [userId]);
+}
+
+/** True when the outcome should not restrict anything at all. */
+export function isUnrestricted(outcome: ScreeningOutcome): boolean {
+  return outcome.tier === 'until_spent' && outcome.restrictionEnd === null;
 }
