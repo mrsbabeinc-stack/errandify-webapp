@@ -1063,9 +1063,32 @@ router.post('/companies/:companyId/errands/:errandId/allocate', authMiddleware, 
 
     // ...and not away. Checked at SAVE time, not just when the picker rendered —
     // a stale screen must not be able to assign someone who's on leave.
-    if (staff.rows[0].status === 'on_leave') {
+    //
+    // company_staff.status is a standing flag that nothing sets, so on its own
+    // it caught nobody: approving leave writes a date range to company_leave
+    // and never touched this column. The two modules agreed on the fact and
+    // disagreed on where it lived, so allocation happily assigned staff whose
+    // leave had been approved for that exact day. The date range is the real
+    // answer, and it is what the leave screens and /api/leave/check already use.
+    const away = await db.query(
+      `SELECT to_char(cl.start_date, 'DD Mon') AS from_date,
+              to_char(cl.end_date,   'DD Mon') AS to_date
+         FROM company_leave cl, errands e
+        WHERE cl.staff_user_id = $1
+          AND cl.company_id = $2
+          AND cl.status = 'approved'
+          AND e.id = $3
+          AND e.deadline IS NOT NULL
+          AND e.deadline::date BETWEEN cl.start_date AND cl.end_date
+        LIMIT 1`,
+      [staffUserId, companyId, errandId]
+    );
+    if (away.rows.length > 0 || staff.rows[0].status === 'on_leave') {
+      const when = away.rows[0]
+        ? ` (away ${away.rows[0].from_date}–${away.rows[0].to_date})`
+        : '';
       return res.status(409).json({
-        error: `${staff.rows[0].display_name} is on leave and can't take this errand.`,
+        error: `${staff.rows[0].display_name} is on approved leave when this errand is due${when}.`,
         reason: 'staff_on_leave',
       });
     }
