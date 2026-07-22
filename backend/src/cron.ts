@@ -289,6 +289,21 @@ export function startCrons() {
   setInterval(cleanupOfflineNotifications, 60 * 60 * 1000);
   console.log('[CRON] Offline notification cleanup scheduled to run every hour');
 
+  // Retention purge — enforces docs/DATA_RETENTION.md.
+  //
+  // PDPC 18.5 expects data to be reviewed against the retention policy
+  // regularly. Daily is more often than a seven-year period needs, but it means
+  // the dry-run log is always current, so anyone can see what the policy would
+  // remove without waiting a year to find out.
+  //
+  // Dry run unless RETENTION_PURGE_ENABLED=true. It deletes rows permanently and
+  // runs unattended, so it must be switched on deliberately.
+  setInterval(runRetentionPurgeJob, 24 * 60 * 60 * 1000);
+  setTimeout(runRetentionPurgeJob, 60 * 1000); // once shortly after boot, for visibility
+  console.log(
+    `[CRON] Retention purge scheduled daily (${process.env.RETENTION_PURGE_ENABLED === 'true' ? 'LIVE' : 'DRY RUN'})`
+  );
+
   // Subscription management - run on 1st of month at 00:00 UTC
   const nextMonthFirst = getNextMonthFirst();
   const msUntilMonthFirst = nextMonthFirst.getTime() - new Date().getTime();
@@ -738,5 +753,18 @@ export async function processPendingSubscriptionDowngrades() {
     console.log('[CRON] ✅ Pending downgrades processed');
   } catch (error) {
     console.error('[CRON] Downgrade processing failed:', error);
+  }
+}
+
+/**
+ * Removes anonymised accounts whose retention period has expired.
+ * See services/retentionPurge.ts — dry run unless explicitly enabled.
+ */
+export async function runRetentionPurgeJob() {
+  try {
+    const { runRetentionPurge } = await import('./services/retentionPurge.js');
+    await runRetentionPurge();
+  } catch (error) {
+    console.error('[CRON] Retention purge failed:', error);
   }
 }
