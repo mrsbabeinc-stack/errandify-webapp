@@ -19,6 +19,16 @@ export default function VerificationStep({ onComplete, onBack }: VerificationSte
     authorizedToWork: false,
   });
 
+  // Deliberately NOT a checkbox. The five above are "tick to agree"; a sixth
+  // negative one ("I have no conviction") gets ticked on autopilot by someone
+  // who does have one, turning carelessness into a false declaration that our
+  // own wording says justifies removing their account. A choice with no default
+  // cannot be swept up in that.
+  const [hasConviction, setHasConviction] = useState<boolean | null>(null);
+  const [thirdSchedule, setThirdSchedule] = useState<'yes' | 'no' | 'unsure' | null>(null);
+  const [overThreshold, setOverThreshold] = useState<'yes' | 'no' | 'unsure' | null>(null);
+  const [convictedOn, setConvictedOn] = useState('');
+  const [applicantNote, setApplicantNote] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -41,6 +51,12 @@ export default function VerificationStep({ onComplete, onBack }: VerificationSte
     if (!formData.agreePrivacy) newErrors.agreePrivacy = 'Required';
     if (!formData.responsibleUse) newErrors.responsibleUse = 'Required';
     if (!formData.authorizedToWork) newErrors.authorizedToWork = 'Required';
+
+    if (hasConviction === null) newErrors.hasConviction = 'Required';
+    if (hasConviction === true) {
+      if (!thirdSchedule) newErrors.thirdSchedule = 'Required';
+      if (!overThreshold) newErrors.overThreshold = 'Required';
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -80,6 +96,24 @@ export default function VerificationStep({ onComplete, onBack }: VerificationSte
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || 'Failed to record your agreement');
       }
+
+      const tri = (v: string | null) => (v === 'yes' ? true : v === 'no' ? false : null);
+      const canStillSpend = thirdSchedule === 'no' && overThreshold === 'no';
+
+      const scRes = await fetch(`${API_URL}/api/screening/declare`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          hasUnspentConviction: Boolean(hasConviction),
+          thirdScheduleOffence: hasConviction ? tri(thirdSchedule) : null,
+          exceededSentenceThreshold: hasConviction ? tri(overThreshold) : null,
+          convictedOn: hasConviction && canStillSpend ? convictedOn || null : null,
+          applicantNote: hasConviction ? applicantNote : null,
+          understoodRestrictions: true,
+        })
+      });
+      const sc = await scRes.json().catch(() => ({}));
+      if (!scRes.ok) throw new Error(sc.error || 'Could not record your declaration');
 
       showSuccess('✓ All set', 'Thanks for confirming.');
       localStorage.setItem('verification_completed', 'true');
@@ -138,6 +172,152 @@ export default function VerificationStep({ onComplete, onBack }: VerificationSte
                 cancelled account. Optional, unverifiable, and framed as
                 suspicion of someone who has not done anything yet. We already
                 know both facts for our own accounts. */}
+            {/* Deliberately styled UNLIKE the five checkboxes above. It is a
+                different kind of question and should not be sweepable by
+                someone ticking down a list. No default, cannot be skipped.
+                Phrased as "last 5 years" rather than "unspent": five years is
+                the actual statutory clock (RCA s7B) and is a question anyone
+                can answer without a glossary. The follow-ups handle the
+                exceptions, which is what they are for. */}
+            <div className="border-2 border-errandify-orange/30 rounded-xl p-5 bg-orange-50/30">
+              <p className="text-base font-semibold text-errandify-brown mb-1">
+                Have you been convicted of a criminal offence in the last 5 years?
+              </p>
+              <p className="text-xs text-gray-600 mb-4">
+                Some errands involve children, older people, or being in someone's home. Singapore
+                law asks us to check this before those. It does not affect anything else you do here.
+              </p>
+
+              <div className="flex gap-3 mb-1">
+                {[{ v: false, label: 'No' }, { v: true, label: 'Yes' }].map((o) => (
+                  <button
+                    key={String(o.v)}
+                    type="button"
+                    disabled={loading}
+                    onClick={() => setHasConviction(o.v)}
+                    className={`flex-1 px-4 py-3 rounded-lg border-2 font-semibold transition-all ${
+                      hasConviction === o.v
+                        ? 'border-errandify-orange bg-white text-errandify-orange'
+                        : 'border-gray-300 bg-white text-gray-600 hover:border-errandify-orange'
+                    }`}
+                  >
+                    {o.label}
+                  </button>
+                ))}
+              </div>
+              {errors.hasConviction && (
+                <p className="text-red-600 text-xs mt-2">Please choose one</p>
+              )}
+
+              {hasConviction === true && (
+                <div className="mt-5 space-y-4 border-t border-errandify-orange/20 pt-4">
+                  <p className="text-sm text-gray-700">
+                    Thanks for telling us. Two questions so we get this right — answering yes to
+                    either does not remove you from Errandify.
+                  </p>
+
+                  <div>
+                    <p className="text-sm font-semibold text-errandify-brown mb-2">
+                      Was it a serious offence — rape, homicide, kidnapping or gang robbery?
+                    </p>
+                    <div className="flex gap-2 items-center">
+                      {(['yes', 'no'] as const).map((v) => (
+                        <button
+                          key={v}
+                          type="button"
+                          onClick={() => setThirdSchedule(v)}
+                          className={`px-5 py-2 rounded-lg border-2 text-sm font-semibold bg-white ${
+                            thirdSchedule === v ? 'border-errandify-orange text-errandify-orange' : 'border-gray-200 text-gray-600'
+                          }`}
+                        >
+                          {v === 'yes' ? 'Yes' : 'No'}
+                        </button>
+                      ))}
+                      {/* Secondary on purpose — an equal third button invites a
+                          shrug, but removing it forces a guess. */}
+                      <button
+                        type="button"
+                        onClick={() => setThirdSchedule('unsure')}
+                        className={`text-xs underline ml-1 ${
+                          thirdSchedule === 'unsure' ? 'text-errandify-orange' : 'text-gray-500'
+                        }`}
+                      >
+                        I'm not certain
+                      </button>
+                    </div>
+                    {errors.thirdSchedule && <p className="text-red-600 text-xs mt-1">Please answer this</p>}
+                  </div>
+
+                  <div>
+                    <p className="text-sm font-semibold text-errandify-brown mb-2">
+                      Was the sentence more than 3 months in prison, or a fine over $2,000?
+                    </p>
+                    <div className="flex gap-2 items-center">
+                      {(['yes', 'no'] as const).map((v) => (
+                        <button
+                          key={v}
+                          type="button"
+                          onClick={() => setOverThreshold(v)}
+                          className={`px-5 py-2 rounded-lg border-2 text-sm font-semibold bg-white ${
+                            overThreshold === v ? 'border-errandify-orange text-errandify-orange' : 'border-gray-200 text-gray-600'
+                          }`}
+                        >
+                          {v === 'yes' ? 'Yes' : 'No'}
+                        </button>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => setOverThreshold('unsure')}
+                        className={`text-xs underline ml-1 ${
+                          overThreshold === 'unsure' ? 'text-errandify-orange' : 'text-gray-500'
+                        }`}
+                      >
+                        I'm not certain
+                      </button>
+                    </div>
+                    {errors.overThreshold && <p className="text-red-600 text-xs mt-1">Please answer this</p>}
+                  </div>
+
+                  {thirdSchedule === 'no' && overThreshold === 'no' && (
+                    <div>
+                      <p className="text-sm font-semibold text-errandify-brown mb-1">When were you convicted?</p>
+                      <p className="text-xs text-gray-500 mb-2">This tells us when the restriction lifts.</p>
+                      <input
+                        type="date"
+                        value={convictedOn}
+                        onChange={(e) => setConvictedOn(e.target.value)}
+                        max={new Date().toISOString().split('T')[0]}
+                        className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg bg-white"
+                      />
+                    </div>
+                  )}
+
+                  <div>
+                    <p className="text-sm font-semibold text-errandify-brown mb-1">
+                      Anything you'd like us to know? <span className="font-normal text-gray-500">(optional)</span>
+                    </p>
+                    <p className="text-xs text-gray-500 mb-2">
+                      Goes only to the person reviewing. Never shown on your profile.
+                    </p>
+                    <textarea
+                      value={applicantNote}
+                      onChange={(e) => setApplicantNote(e.target.value)}
+                      rows={3}
+                      maxLength={1000}
+                      className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg bg-white text-sm"
+                    />
+                  </div>
+
+                  {(thirdSchedule === 'unsure' || overThreshold === 'unsure') && (
+                    <p className="text-xs text-gray-700 bg-white rounded-lg p-3 border border-gray-200">
+                      That's fine — someone will look at this and come back to you. You don't need to
+                      find the paperwork yourself.
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+
             {/* Section 4: Terms & Agreements */}
             <div className="pb-8">
               <h2 className="text-xl font-bold text-errandify-brown mb-6">

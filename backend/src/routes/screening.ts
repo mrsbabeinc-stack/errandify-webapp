@@ -32,6 +32,7 @@ router.post('/declare', authMiddleware, async (req: AuthRequest, res: Response) 
       exceededSentenceThreshold,
       otherDisqualification,
       convictedOn,
+      applicantNote,
       understoodRestrictions,
       // legacy shapes still accepted
       hasConviction,
@@ -72,13 +73,13 @@ router.post('/declare', authMiddleware, async (req: AuthRequest, res: Response) 
       `INSERT INTO screening_declarations (
         user_id, has_unspent_conviction, third_schedule_offence,
         exceeded_sentence_threshold, other_disqualification, convicted_on,
-        any_conviction, understood_restrictions, ip_address, review_status
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+        any_conviction, understood_restrictions, ip_address, review_status, applicant_note
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
       ON CONFLICT (user_id) DO UPDATE SET
         has_unspent_conviction = $2, third_schedule_offence = $3,
         exceeded_sentence_threshold = $4, other_disqualification = $5,
         convicted_on = $6, any_conviction = $7, understood_restrictions = $8,
-        review_status = $10, consent_timestamp = NOW()
+        review_status = $10, applicant_note = $11, consent_timestamp = NOW()
       RETURNING id`,
       [
         userId,
@@ -91,6 +92,7 @@ router.post('/declare', authMiddleware, async (req: AuthRequest, res: Response) 
         Boolean(understoodRestrictions),
         req.ip || null,
         outcome.reviewStatus,
+        (applicantNote || '').trim() || null,
       ]
     );
 
@@ -111,10 +113,27 @@ router.post('/declare', authMiddleware, async (req: AuthRequest, res: Response) 
       console.log(`[Screening] user ${userId}: ${outcome.tier} (${outcome.basis}) — ${n} categories, ends ${outcome.restrictionEnd?.toISOString() ?? 'never'}`);
     }
 
+    // Name the categories rather than counting them. "Seven categories are
+    // restricted" tells someone nothing about whether they have lost the work
+    // they actually came here to do — a concrete list is reassuring where a
+    // number is alarming.
+    const cats = await db.query(
+      `SELECT DISTINCT rc.category_slug
+         FROM restricted_categories rc
+        WHERE rc.category_slug IS NOT NULL`
+    );
+    const closed = cats.rows.map((r: any) => r.category_slug);
+    const allCats = await db.query('SELECT DISTINCT category FROM errands WHERE category IS NOT NULL');
+    const open = allCats.rows
+      .map((r: any) => r.category)
+      .filter((c: string) => !closed.includes(c));
+
     res.json({
       success: true,
       data: {
         screeningId: result.rows[0].id,
+        restrictedCategories: isUnrestricted(outcome) ? [] : closed,
+        openCategories: isUnrestricted(outcome) ? allCats.rows.map((r: any) => r.category) : open,
         hasUnspentConviction: unspent,
         tier: outcome.tier,
         restrictionEnd: outcome.restrictionEnd,
