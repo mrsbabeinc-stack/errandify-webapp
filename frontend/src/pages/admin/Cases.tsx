@@ -90,90 +90,12 @@ export const CasesPage: React.FC = () => {
       setCases(data.cases || []);
     } catch (error) {
       console.error('Fetch cases error:', error);
-      // Mock data for demo
-      const mockCases: Case[] = [
-        {
-          id: 1,
-          case_id: 'D26-A1B2',
-          case_type: 'dispute',
-          severity: 'high',
-          status: 'open',
-          subject: 'Payment not released after errand completion',
-          asker_id: 5,
-          doer_id: 12,
-          asker_alias: 'Alex_S',
-          doer_alias: 'ProHelper_John',
-          asker_online: true,
-          doer_online: false,
-          errand_id: 123,
-          tags: ['payment', 'urgent'],
-          ai_confidence: 0.92,
-          created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-          dispute_claim: "I waited 35 minutes at the location but the customer didn't open the door. I took GPS proof and 3 photos showing I was there on time. The job couldn't be completed because they weren't available.",
-          dispute_defense: "No response from customer yet",
-          ai_recommendation: "APPROVE - Strong evidence of genuine attempt",
-          ai_analysis: "Doer provided GPS location data, 3 photos, and documented 35-minute wait time. This shows professional effort and genuine attempt to complete the work. Customer unavailability is not doer's fault. Confidence: 92%",
-        },
-        {
-          id: 2,
-          case_id: 'D26-C3D4',
-          case_type: 'complaint',
-          severity: 'medium',
-          status: 'open',
-          subject: 'Low quality work delivery',
-          asker_id: 8,
-          doer_id: 15,
-          asker_alias: 'Sarah_M',
-          doer_alias: 'ServicePro_Lee',
-          asker_online: true,
-          doer_online: true,
-          errand_id: 124,
-          tags: ['quality', 'service'],
-          ai_confidence: 0.85,
-          created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-          dispute_claim: "The cleaning was incomplete. They missed several rooms and the bathroom wasn't properly cleaned. I expected full service.",
-          dispute_defense: "I cleaned all accessible areas. Some rooms were locked and I couldn't access them. I completed the main living areas.",
-          ai_recommendation: "PARTIAL - Incomplete work, but communication issue",
-          ai_analysis: "Asker claims incomplete work. Doer mentions locked rooms. Both have valid points. Suggests partial refund (60% to doer, 40% to asker). Confidence: 85%",
-        },
-        {
-          id: 3,
-          case_id: 'D26-E5F6',
-          case_type: 'safety_concern',
-          severity: 'critical',
-          status: 'open',
-          subject: 'Inappropriate behavior during service',
-          asker_id: 3,
-          doer_id: 20,
-          asker_alias: 'Sam_K',
-          doer_alias: 'Helper_Mike',
-          asker_online: false,
-          doer_online: false,
-          errand_id: 125,
-          tags: ['safety', 'urgent'],
-          ai_confidence: 0.95,
-          created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-        },
-        {
-          id: 4,
-          case_id: 'D26-G7H8',
-          case_type: 'refund_request',
-          severity: 'low',
-          status: 'resolved',
-          subject: 'Requesting partial refund',
-          asker_id: 10,
-          doer_id: 18,
-          asker_alias: 'Chen_B',
-          doer_alias: 'Quick_Tasks_Linda',
-          asker_online: true,
-          doer_online: true,
-          errand_id: 126,
-          tags: ['refund'],
-          ai_confidence: 0.78,
-          created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-        },
-      ];
-      setCases(mockCases);
+      // A failed request used to fall through to a hardcoded mockCases array
+      // and then call setError(''), so a dead endpoint rendered as a healthy
+      // screen full of invented rows. That is how a broken route survives for
+      // months: nobody can see it is broken. Show the failure instead.
+      setCases([]);
+      showToast('Could not load cases — this is a problem on our side, not an empty list', 'error');
     } finally {
       setLoading(false);
     }

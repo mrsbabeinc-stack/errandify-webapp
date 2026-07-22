@@ -58,57 +58,12 @@ export const MyCasesPage: React.FC = () => {
       setCases(data.cases || []);
     } catch (error) {
       console.error('Fetch cases error:', error);
-      // Mock data for demo
-      const mockCases: UserCase[] = [
-        {
-          id: 1,
-          case_id: 'D26-A1B2',
-          case_type: 'dispute',
-          status: 'in_progress',
-          severity: 'high',
-          subject: 'Payment not released after errand completion',
-          description: 'I waited 35 minutes at the location but the customer did not open the door.',
-          created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-          updated_at: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
-          errand_id: 123,
-          other_party_alias: 'Alex_S',
-          other_party_online: true,
-        },
-        {
-          id: 2,
-          case_id: 'D26-C3D4',
-          case_type: 'quality_issue',
-          status: 'resolved',
-          severity: 'medium',
-          subject: 'Cleaning was incomplete',
-          description: 'Several rooms were not cleaned properly.',
-          created_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-          updated_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-          errand_id: 124,
-          other_party_alias: 'ServicePro_Lee',
-          other_party_online: false,
-          resolution: {
-            type: 'partial_refund',
-            amount: 15.50,
-            reasoning: 'Partial refund approved for incomplete work',
-          },
-        },
-        {
-          id: 3,
-          case_id: 'D26-E5F6',
-          case_type: 'payment_enquiry',
-          status: 'open',
-          severity: 'low',
-          subject: 'Where is my payment?',
-          description: 'Payment was supposed to arrive yesterday.',
-          created_at: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
-          updated_at: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-          errand_id: 125,
-          other_party_alias: null,
-          other_party_online: false,
-        },
-      ];
-      setCases(mockCases);
+      // A failed request used to fall through to a hardcoded mockCases array
+      // and then call setError(''), so a dead endpoint rendered as a healthy
+      // screen full of invented rows. That is how a broken route survives for
+      // months: nobody can see it is broken. Show the failure instead.
+      setCases([]);
+      showToast('Could not load your cases — this is a problem on our side, not an empty list', 'error');
     } finally {
       setLoading(false);
     }

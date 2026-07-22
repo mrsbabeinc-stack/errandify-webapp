@@ -58,106 +58,12 @@ export const SOSAlertsPage: React.FC = () => {
       setAlerts(data.alerts || []);
     } catch (error) {
       console.error('Fetch SOS alerts error:', error);
-      // Mock data for demo
-      const mockAlerts: SOSAlert[] = [
-        {
-          case_id: 'D26-SOS001',
-          sos_type: 'safety',
-          user_id: 5,
-          user_name: 'John Chen',
-          errand_id: 123,
-          severity: 'critical',
-          case_type: 'safety_concern',
-          location: {
-            latitude: 1.3521,
-            longitude: 103.8198,
-            accuracy_meters: 25,
-            timestamp: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
-            maps_url: 'https://www.google.com/maps?q=1.3521,103.8198',
-          },
-          device_info: {
-            screen_width: 375,
-            screen_height: 812,
-            orientation: 'portrait',
-            time_zone: 'Asia/Singapore',
-            language: 'en-SG',
-          },
-          browser_info: {
-            user_agent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_5 like Mac OS X)',
-            device_type: 'mobile',
-            browser: 'Safari',
-            timestamp: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
-          },
-          submitted_at: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
-          response_required_by: new Date(Date.now() + 3 * 60 * 1000).toISOString(),
-          status: 'pending',
-        },
-        {
-          case_id: 'D26-SOS002',
-          sos_type: 'medical',
-          user_id: 12,
-          user_name: 'Sarah Wong',
-          errand_id: 124,
-          severity: 'critical',
-          case_type: 'safety_concern',
-          location: {
-            latitude: 1.3565,
-            longitude: 103.8240,
-            accuracy_meters: 15,
-            timestamp: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
-            maps_url: 'https://www.google.com/maps?q=1.3565,103.8240',
-          },
-          device_info: {
-            screen_width: 412,
-            screen_height: 915,
-            orientation: 'portrait',
-            time_zone: 'Asia/Singapore',
-            language: 'en-SG',
-          },
-          browser_info: {
-            user_agent: 'Mozilla/5.0 (Linux; Android 12)',
-            device_type: 'mobile',
-            browser: 'Chrome',
-            timestamp: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
-          },
-          submitted_at: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
-          response_required_by: new Date(Date.now() + 0 * 60 * 1000).toISOString(),
-          status: 'acknowledged',
-        },
-        {
-          case_id: 'D26-SOS003',
-          sos_type: 'lost',
-          user_id: 8,
-          user_name: 'Mike Lee',
-          errand_id: 125,
-          severity: 'high',
-          case_type: 'task_enquiry',
-          location: {
-            latitude: 1.3487,
-            longitude: 103.8318,
-            accuracy_meters: 42,
-            timestamp: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
-            maps_url: 'https://www.google.com/maps?q=1.3487,103.8318',
-          },
-          device_info: {
-            screen_width: 1024,
-            screen_height: 768,
-            orientation: 'landscape',
-            time_zone: 'Asia/Singapore',
-            language: 'en-US',
-          },
-          browser_info: {
-            user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-            device_type: 'web',
-            browser: 'Chrome',
-            timestamp: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
-          },
-          submitted_at: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
-          response_required_by: new Date(Date.now() + 0 * 60 * 1000).toISOString(),
-          status: 'acknowledged',
-        },
-      ];
-      setAlerts(mockAlerts);
+      // A failed request used to fall through to a hardcoded mockAlerts array
+      // and then call setError(''), so a dead endpoint rendered as a healthy
+      // screen full of invented rows. That is how a broken route survives for
+      // months: nobody can see it is broken. Show the failure instead.
+      setAlerts([]);
+      showToast('Could not load SOS alerts — this is a problem on our side, not an empty list', 'error');
     } finally {
       setLoading(false);
     }

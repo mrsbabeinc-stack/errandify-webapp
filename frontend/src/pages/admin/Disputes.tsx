@@ -102,62 +102,12 @@ export const DisputesPage: React.FC = () => {
       setError('');
     } catch (err) {
       console.error('Failed to fetch disputes:', err);
-      // Mock data for demo
-      const mockDisputes: Dispute[] = [
-        {
-          id: 1,
-          errand_id: 123,
-          filed_by_user_id: 5,
-          dispute_type: 'work_not_completed',
-          description: 'Doer did not complete the cleaning in two rooms as agreed.',
-          status: 'level_1',
-          priority: 'normal',
-          created_at: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
-        },
-        {
-          id: 2,
-          errand_id: 124,
-          filed_by_user_id: 8,
-          dispute_type: 'low_quality',
-          description: 'Cleaning quality was poor, many areas were missed.',
-          status: 'level_2',
-          priority: 'normal',
-          created_at: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
-        },
-        {
-          id: 3,
-          errand_id: 125,
-          filed_by_user_id: 12,
-          dispute_type: 'payment_not_released',
-          description: 'Payment was promised but not released after errand completion.',
-          status: 'level_2',
-          priority: 'high',
-          created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-        },
-        {
-          id: 4,
-          errand_id: 126,
-          filed_by_user_id: 15,
-          dispute_type: 'safety_concern',
-          description: 'Doer behaved inappropriately during the errand.',
-          status: 'level_3',
-          priority: 'critical',
-          created_at: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(),
-        },
-        {
-          id: 5,
-          errand_id: 127,
-          filed_by_user_id: 3,
-          dispute_type: 'work_not_completed',
-          description: 'Only partial work was completed.',
-          status: 'resolved',
-          priority: 'normal',
-          created_at: new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString(),
-          resolved_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-        },
-      ];
-      setDisputes(mockDisputes);
-      setError('');
+      // A failed request used to fall through to a hardcoded mockDisputes array
+      // and then call setError(''), so a dead endpoint rendered as a healthy
+      // screen full of invented rows. That is how a broken route survives for
+      // months: nobody can see it is broken. Show the failure instead.
+      setDisputes([]);
+      setError('Could not load disputes. This is a problem on our side, not an empty list.');
     } finally {
       setLoading(false);
     }
