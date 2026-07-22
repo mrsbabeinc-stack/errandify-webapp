@@ -2,6 +2,7 @@ import { Router, Response } from 'express';
 import { AuthRequest, authMiddleware, requireAdmin } from '../middleware/auth.js';
 import db from '../db.js';
 import { resolveOutcome, applyRestrictions, clearRestrictions, isUnrestricted } from '../services/screeningResolver.js';
+import { sendNotification } from '../utils/notificationHelper.js';
 
 const router = Router();
 
@@ -427,7 +428,10 @@ router.get('/reviews', screeningAdmin, async (req: AuthRequest, res: Response) =
  * lets them near vulnerable people, should not be recorded without a reason
  * attached to whoever made it.
  */
-router.post('/reviews/:id/:action', screeningAdmin, async (req: AuthRequest, res: Response) => {
+// Constrained to clear|bar. As a bare ':action' this swallowed
+// /reviews/:id/ask and /reviews/:id/reopen and answered "Unknown action" —
+// Express matches in registration order and this was registered first.
+router.post('/reviews/:id/:action(clear|bar)', screeningAdmin, async (req: AuthRequest, res: Response) => {
   try {
     const id = parseInt(req.params.id, 10);
     const action = req.params.action;
@@ -442,7 +446,9 @@ router.post('/reviews/:id/:action', screeningAdmin, async (req: AuthRequest, res
       [id]
     );
     if (decl.rows.length === 0) return res.status(404).json({ error: 'Declaration not found' });
-    if (decl.rows[0].review_status !== 'pending_review') {
+    // info_requested is still an open case — asking a question should not
+    // prevent deciding it once the answer arrives.
+    if (!['pending_review', 'info_requested'].includes(decl.rows[0].review_status)) {
       return res.status(409).json({ error: `Already ${decl.rows[0].review_status}` });
     }
 
@@ -469,11 +475,142 @@ router.post('/reviews/:id/:action', screeningAdmin, async (req: AuthRequest, res
       );
     }
 
+    await db.query(
+      `INSERT INTO screening_decision_log (declaration_id, user_id, action, note, decided_by)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [id, userId, cleared ? 'cleared' : 'barred', note, parseInt(req.userId || '0', 10)]
+    );
+
+    // Tell them. Being asked a question and then never hearing back is the
+    // part of this that would feel worst from the other side.
+    sendNotification({
+      userId,
+      type: 'screening_update',
+      title: cleared ? 'Your declaration has been reviewed' : 'About your declaration',
+      message: cleared
+        ? 'All categories are now open to you. Thanks for your patience.'
+        : 'Some categories remain unavailable. If you think this is wrong, reply to this and we will take another look.',
+    }).catch((e) => console.error('[Screening] notify failed:', e));
+
     console.log(`[Screening] declaration ${id} ${cleared ? 'cleared' : 'barred'} by ${req.userId}`);
     res.json({ success: true, data: { id, reviewStatus: cleared ? 'cleared' : 'barred' } });
   } catch (error) {
     console.error('[Screening] Review decision failed:', error);
     res.status(500).json({ error: 'Could not record that decision' });
+  }
+});
+
+/**
+ * POST /api/screening/reviews/:id/ask — ask the applicant for one more fact.
+ *
+ * A reviewer could previously only clear or bar, so a case turning on a single
+ * missing number got a permanent decision instead of a question. This sends
+ * them the question, keeps the case open, and stops the ageing clock: the age
+ * badge should measure our delay, not theirs, or every case eventually turns
+ * red and the badge stops meaning anything.
+ */
+router.post('/reviews/:id/ask', screeningAdmin, async (req: AuthRequest, res: Response) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (Number.isNaN(id)) return res.status(400).json({ error: 'Invalid declaration id' });
+
+    const question = (req.body?.question || '').trim();
+    if (!question) return res.status(400).json({ error: 'Please write the question you want to ask' });
+
+    const d = await db.query(
+      'SELECT user_id, review_status FROM screening_declarations WHERE id = $1',
+      [id]
+    );
+    if (d.rows.length === 0) return res.status(404).json({ error: 'Declaration not found' });
+    if (!['pending_review', 'info_requested'].includes(d.rows[0].review_status)) {
+      return res.status(409).json({ error: `Already ${d.rows[0].review_status}` });
+    }
+
+    await db.query(
+      `UPDATE screening_declarations
+          SET review_status = 'info_requested', info_request = $1, info_requested_at = NOW()
+        WHERE id = $2`,
+      [question, id]
+    );
+    await db.query(
+      `INSERT INTO screening_decision_log (declaration_id, user_id, action, note, decided_by)
+       VALUES ($1, $2, 'info_requested', $3, $4)`,
+      [id, d.rows[0].user_id, question, parseInt(req.userId || '0', 10)]
+    );
+
+    // Fire and forget — a mail or push failure must not lose the request.
+    sendNotification({
+      userId: d.rows[0].user_id,
+      type: 'screening_update',
+      title: 'We need one more detail',
+      message: question,
+    }).catch((e) => console.error('[Screening] notify failed:', e));
+
+    res.json({ success: true, data: { id, reviewStatus: 'info_requested' } });
+  } catch (error) {
+    console.error('[Screening] Info request failed:', error);
+    res.status(500).json({ error: 'Could not send that question' });
+  }
+});
+
+/**
+ * POST /api/screening/reviews/:id/reopen — undo a decision.
+ *
+ * People are cleared and barred wrongly. An audit trail that cannot be
+ * corrected only records the mistake permanently, so a decision can be put back
+ * into the queue with a reason. The original decision stays in the log.
+ */
+router.post('/reviews/:id/reopen', screeningAdmin, async (req: AuthRequest, res: Response) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (Number.isNaN(id)) return res.status(400).json({ error: 'Invalid declaration id' });
+    const note = (req.body?.note || '').trim();
+    if (!note) return res.status(400).json({ error: 'Please record why you are reopening this' });
+
+    const d = await db.query(
+      'SELECT user_id, review_status FROM screening_declarations WHERE id = $1',
+      [id]
+    );
+    if (d.rows.length === 0) return res.status(404).json({ error: 'Declaration not found' });
+    if (!['cleared', 'barred'].includes(d.rows[0].review_status)) {
+      return res.status(409).json({ error: 'Only a decided case can be reopened' });
+    }
+
+    await db.query(
+      `UPDATE screening_declarations SET review_status = 'pending_review' WHERE id = $1`,
+      [id]
+    );
+    await db.query(
+      `INSERT INTO screening_decision_log (declaration_id, user_id, action, note, decided_by)
+       VALUES ($1, $2, 'reopened', $3, $4)`,
+      [id, d.rows[0].user_id, note, parseInt(req.userId || '0', 10)]
+    );
+
+    res.json({ success: true, data: { id, reviewStatus: 'pending_review' } });
+  } catch (error) {
+    console.error('[Screening] Reopen failed:', error);
+    res.status(500).json({ error: 'Could not reopen that case' });
+  }
+});
+
+/** GET /api/screening/reviews/:id/history — every action taken on a case. */
+router.get('/reviews/:id/history', screeningAdmin, async (req: AuthRequest, res: Response) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (Number.isNaN(id)) return res.status(400).json({ error: 'Invalid declaration id' });
+    const result = await db.query(
+      `SELECT l.id, l.action, l.note, l.created_at AS "createdAt",
+              COALESCE(u.alias, u.display_name) AS "decidedBy"
+         FROM screening_decision_log l
+         LEFT JOIN users u ON u.id = l.decided_by
+        WHERE l.declaration_id = $1
+        ORDER BY l.created_at DESC`,
+      [id]
+    );
+    res.json({ success: true, data: result.rows });
+  } catch (error) {
+    console.error('[Screening] History failed:', error);
+    res.status(500).json({ error: 'Could not load the history' });
   }
 });
 

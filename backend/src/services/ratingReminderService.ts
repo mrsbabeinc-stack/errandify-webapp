@@ -122,7 +122,6 @@ export async function sendPendingRatingReminders(): Promise<void> {
           title: `💫 Don't Forget to Rate ${askerName}!`,
           message: `You completed "${taskTitle}". Rate ${askerName} and earn +5 bonus points!`,
           relatedErrandId: errandId,
-          relatedUserId: askerId,
           data: { taskTitle, askerName, errandId },
         });
 

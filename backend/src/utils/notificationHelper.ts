@@ -17,7 +17,8 @@ export type NotificationType =
   | 'errand_reopened'
   | 'payment_released'
   | 'dispute_opened'
-  | 'dispute_resolved';
+  | 'dispute_resolved'
+  | 'screening_update';
 
 export interface NotificationPayload {
   userId: number;
@@ -25,7 +26,7 @@ export interface NotificationPayload {
   title: string;
   message: string;
   relatedErrandId?: number;
-  relatedUserId?: number;
+  relatedBidId?: number;
   data?: Record<string, any>;
 }
 
@@ -54,8 +55,13 @@ export async function sendNotification(payload: NotificationPayload): Promise<vo
 async function createInAppNotification(payload: NotificationPayload): Promise<void> {
   try {
     await db.query(
+      // related_user_id does not exist on this table — the columns are
+      // related_errand_id and related_bid_id. Every call through this helper
+      // threw on that column and the error was swallowed by the catch below,
+      // so no notification it sent has ever been stored. Affects rating
+      // reminders and push as well as screening.
       `INSERT INTO notifications
-       (user_id, type, title, message, related_errand_id, related_user_id, is_read, created_at)
+       (user_id, type, title, message, related_errand_id, related_bid_id, is_read, created_at)
        VALUES ($1, $2, $3, $4, $5, $6, false, NOW())`,
       [
         payload.userId,
@@ -63,7 +69,7 @@ async function createInAppNotification(payload: NotificationPayload): Promise<vo
         payload.title,
         payload.message,
         payload.relatedErrandId || null,
-        payload.relatedUserId || null,
+        payload.relatedBidId || null,
       ]
     );
   } catch (error) {
@@ -87,7 +93,7 @@ async function sendPushNotificationAsync(payload: NotificationPayload): Promise<
       data: {
         type: payload.type,
         errandId: payload.relatedErrandId,
-        userId: payload.relatedUserId,
+          bidId: payload.relatedBidId,
         ...payload.data,
       },
       url: getPushNotificationUrl(payload),
