@@ -22,13 +22,6 @@ export default function VerificationStep({ onComplete, onBack }: VerificationSte
     authorizedToWork: false,
   });
 
-  // The criminal declaration lives in this same form now. It used to be a
-  // separate screen straight after, which read as two declarations when it is
-  // one — and meant a user could complete signup having answered only half.
-  const [hasUnspent, setHasUnspent] = useState<boolean | null>(null);
-  const [thirdSchedule, setThirdSchedule] = useState<'yes' | 'no' | 'unsure' | null>(null);
-  const [overThreshold, setOverThreshold] = useState<'yes' | 'no' | 'unsure' | null>(null);
-  const [convictedOn, setConvictedOn] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -52,14 +45,6 @@ export default function VerificationStep({ onComplete, onBack }: VerificationSte
     if (!formData.agreePrivacy) newErrors.agreePrivacy = 'Required';
     if (!formData.responsibleUse) newErrors.responsibleUse = 'Required';
     if (!formData.authorizedToWork) newErrors.authorizedToWork = 'Required';
-
-    // The screening question is part of this declaration, so it is required
-    // here rather than on a screen the user might never reach.
-    if (hasUnspent === null) newErrors.hasUnspent = 'Required';
-    if (hasUnspent === true) {
-      if (!thirdSchedule) newErrors.thirdSchedule = 'Required';
-      if (!overThreshold) newErrors.overThreshold = 'Required';
-    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -103,35 +88,7 @@ export default function VerificationStep({ onComplete, onBack }: VerificationSte
         throw new Error(errorData.error || 'Failed to record your agreement');
       }
 
-      // Same submit, same declaration. Anything the resolver cannot decide
-      // comes back needsReview and an admin picks it up.
-      const tri = (v: string | null) => (v === 'yes' ? true : v === 'no' ? false : null);
-      const canStillSpend = thirdSchedule === 'no' && overThreshold === 'no';
-
-      const screeningRes = await fetch(`${API_URL}/api/screening/declare`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          hasUnspentConviction: Boolean(hasUnspent),
-          thirdScheduleOffence: hasUnspent ? tri(thirdSchedule) : null,
-          exceededSentenceThreshold: hasUnspent ? tri(overThreshold) : null,
-          convictedOn: hasUnspent && canStillSpend ? convictedOn || null : null,
-          understoodRestrictions: true,
-        })
-      });
-
-      const screening = await screeningRes.json().catch(() => ({}));
-      if (!screeningRes.ok) {
-        throw new Error(screening.error || 'Failed to record your declaration');
-      }
-      if (screening?.data?.needsReview) {
-        showSuccess('Declaration received', 'Our team will review it. Some categories are unavailable meanwhile.');
-      }
-
-      showSuccess('✓ Verification Complete', 'Your identity has been verified');
+      showSuccess('✓ All set', 'Thanks for confirming.');
       localStorage.setItem('verification_completed', 'true');
 
       setTimeout(() => {
@@ -168,134 +125,14 @@ export default function VerificationStep({ onComplete, onBack }: VerificationSte
                 one, statute by statute, and is what applies the restrictions.
                 Asking "I have no criminal record" here contradicted it: it
                 turned a restriction into a wall, and the answer went nowhere. */}
-            {/* Criminal declaration — part of this same form. Scoped to UNSPENT
-                convictions only: under the Registration of Criminals Act s7B a
-                spent record means the person is treated as having none, so
-                asking "ever" would collect more than the law asks for. */}
-            <div className="border-b-2 border-gray-200 pb-8">
-              <h2 className="text-xl font-bold text-errandify-brown mb-2">
-                Criminal Record Declaration
-              </h2>
-
-              <div className="bg-gray-50 rounded-lg p-3 mb-4 text-xs text-gray-600">
-                <p className="font-semibold text-gray-700 mb-1">What does “spent” mean?</p>
-                <p>
-                  Most convictions become <strong>spent</strong> after five years without further
-                  offending, and once spent you are treated as having no conviction. You do not
-                  need to declare a spent record. Serious offences and longer sentences never
-                  become spent.
-                </p>
-              </div>
-
-              <p className="text-sm font-semibold text-errandify-brown mb-3">
-                Do you have any unspent criminal conviction? *
-              </p>
-              <div className="flex gap-3 mb-2">
-                {[
-                  { v: false, label: 'No' },
-                  { v: true, label: 'Yes' },
-                ].map((o) => (
-                  <button
-                    key={String(o.v)}
-                    type="button"
-                    onClick={() => setHasUnspent(o.v)}
-                    className={`flex-1 px-4 py-3 rounded-lg border-2 font-semibold ${
-                      hasUnspent === o.v
-                        ? 'border-errandify-orange bg-orange-50 text-errandify-orange'
-                        : 'border-gray-300 text-gray-600'
-                    }`}
-                  >
-                    {o.label}
-                  </button>
-                ))}
-              </div>
-              {errors.hasUnspent && <p className="text-red-600 text-xs mb-2">Please answer this</p>}
-              <p className="text-xs text-gray-500 mb-4">
-                A conviction does not stop you joining. It may make some categories unavailable,
-                in many cases only until your record becomes spent.
-              </p>
-
-              {/* Only shown to the few who answer yes. "Not sure" is safe — it
-                  goes to a person rather than resolving against the applicant. */}
-              {hasUnspent === true && (
-                <div className="space-y-4 bg-orange-50/50 rounded-lg p-4">
-                  <div>
-                    <p className="text-sm font-semibold text-errandify-brown mb-1">
-                      Was it a serious offence such as rape, homicide, kidnapping or gang robbery? *
-                    </p>
-                    <p className="text-xs text-gray-500 mb-2">These never become spent.</p>
-                    <div className="flex gap-2">
-                      {(['yes', 'no', 'unsure'] as const).map((v) => (
-                        <button
-                          key={v}
-                          type="button"
-                          onClick={() => setThirdSchedule(v)}
-                          className={`flex-1 px-3 py-2 rounded-lg border-2 text-sm font-semibold ${
-                            thirdSchedule === v
-                              ? 'border-errandify-orange bg-white text-errandify-orange'
-                              : 'border-gray-200 text-gray-600 bg-white'
-                          }`}
-                        >
-                          {v === 'yes' ? 'Yes' : v === 'no' ? 'No' : "I'm not sure"}
-                        </button>
-                      ))}
-                    </div>
-                    {errors.thirdSchedule && <p className="text-red-600 text-xs mt-1">Please answer this</p>}
-                  </div>
-
-                  <div>
-                    <p className="text-sm font-semibold text-errandify-brown mb-1">
-                      Was the sentence more than 3 months in prison, or a fine over $2,000? *
-                    </p>
-                    <p className="text-xs text-gray-500 mb-2">
-                      Sentences above this also prevent a record becoming spent.
-                    </p>
-                    <div className="flex gap-2">
-                      {(['yes', 'no', 'unsure'] as const).map((v) => (
-                        <button
-                          key={v}
-                          type="button"
-                          onClick={() => setOverThreshold(v)}
-                          className={`flex-1 px-3 py-2 rounded-lg border-2 text-sm font-semibold ${
-                            overThreshold === v
-                              ? 'border-errandify-orange bg-white text-errandify-orange'
-                              : 'border-gray-200 text-gray-600 bg-white'
-                          }`}
-                        >
-                          {v === 'yes' ? 'Yes' : v === 'no' ? 'No' : "I'm not sure"}
-                        </button>
-                      ))}
-                    </div>
-                    {errors.overThreshold && <p className="text-red-600 text-xs mt-1">Please answer this</p>}
-                  </div>
-
-                  {thirdSchedule === 'no' && overThreshold === 'no' && (
-                    <div>
-                      <p className="text-sm font-semibold text-errandify-brown mb-1">
-                        When were you convicted?
-                      </p>
-                      <p className="text-xs text-gray-500 mb-2">
-                        The five-year period runs from this date.
-                      </p>
-                      <input
-                        type="date"
-                        value={convictedOn}
-                        onChange={(e) => setConvictedOn(e.target.value)}
-                        max={new Date().toISOString().split('T')[0]}
-                        className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg"
-                      />
-                    </div>
-                  )}
-
-                  {(thirdSchedule === 'unsure' || overThreshold === 'unsure') && (
-                    <p className="text-xs text-gray-600 bg-white rounded p-2">
-                      That is fine — our team will review your declaration and come back to you.
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-
+            {/* The criminal declaration is deliberately NOT here.
+                It gates 7 of 16 categories, so asking it of everyone at signup
+                collects a criminal disclosure from people whose work could
+                never be affected by it — someone doing delivery or tech
+                support. That is both poor data minimisation under PDPA and a
+                discouraging thing to put in front of a new user.
+                It is now asked at the point someone chooses work it applies
+                to. See components/SensitiveWorkDeclaration.tsx. */}
             {/* Section 2: Background Verification */}
             <div className="border-b-2 border-gray-200 pb-8">
               <h2 className="text-xl font-bold text-errandify-brown mb-6">

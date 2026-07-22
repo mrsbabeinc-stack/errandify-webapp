@@ -63,5 +63,12 @@ export async function getRestrictionReason(
     [userId, category]
   );
   if (result.rows.length === 0) return null;
-  return `${result.rows[0].category_name} work isn't available on your account. ${result.rows[0].reason}`;
+  // Read by someone who has just tried to make an offer. Explain the rule,
+  // not the person — and point at the rest of the platform rather than
+  // leaving them at a dead end.
+  return (
+    `${result.rows[0].category_name} errands aren't open to you at the moment. ` +
+    `These categories need a background check because of who they involve. ` +
+    `Everything else on Errandify is available as normal.`
+  );
 }

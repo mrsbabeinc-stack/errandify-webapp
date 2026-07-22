@@ -120,13 +120,16 @@ router.post('/declare', authMiddleware, async (req: AuthRequest, res: Response) 
         restrictionEnd: outcome.restrictionEnd,
         needsReview: outcome.reviewStatus === 'pending_review',
         basis: outcome.basis,
+        // Tone matters here: most people reading these have done nothing, and
+        // the ones who have are looking for work, not being sentenced again.
+        // Say what happens, say it is not personal, and never imply removal.
         message: isUnrestricted(outcome)
-          ? 'Thank you. You can access all categories.'
+          ? "Thanks — you're all set. Nothing is restricted."
           : outcome.reviewStatus === 'pending_review'
-          ? 'Your declaration is with our team for review. Some categories are unavailable while we look at it.'
+          ? "Thanks for telling us. Someone will look at this and come back to you. In the meantime these categories are paused — everything else is unaffected."
           : outcome.tier === 'until_spent'
-          ? 'Thank you. Some categories are unavailable until your record becomes spent.'
-          : 'Thank you. Some categories are unavailable on your account.',
+          ? "Thanks. These categories open up once your record becomes spent, and that happens automatically — you won't need to ask. Everything else is unaffected."
+          : "Thanks. These particular categories aren't available, but the rest of Errandify is open to you as normal.",
       },
     });
   } catch (error) {
