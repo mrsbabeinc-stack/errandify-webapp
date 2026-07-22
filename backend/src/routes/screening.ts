@@ -1,110 +1,140 @@
 import { Router, Response } from 'express';
 import { AuthRequest, authMiddleware, requireAdmin } from '../middleware/auth.js';
 import db from '../db.js';
+import { resolveOutcome, applyRestrictions, clearRestrictions } from '../services/screeningResolver.js';
 
 const router = Router();
 
 // POST /api/screening/declare - User submits criminal screening declaration during signup
+/**
+ * POST /api/screening/declare — the criminal declaration.
+ *
+ * Progressive: the form asks everyone one question, and only asks the specific
+ * ones of people who answer yes. This accepts both shapes —
+ *
+ *   { hasConviction: false }
+ *   { hasConviction: true, offenceTypes: [...], sentenceCompletedOn, underMonitoring }
+ *
+ * — and still accepts the five original statutory booleans, so an older client
+ * keeps working. Those map onto offence types rather than being dropped: the
+ * specific declaration a person made is what gets stored.
+ *
+ * The outcome is tiered by services/screeningResolver (migration 042), not a
+ * blanket permanent ban. Anything it cannot decide becomes pending_review with
+ * restrictions applied meanwhile — uncertainty never grants access.
+ */
 router.post('/declare', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const userId = parseInt(req.userId || '0', 10);
     const {
+      hasConviction,
+      offenceTypes,
+      sentenceCompletedOn,
+      underMonitoring,
+      understoodRestrictions,
+      // legacy shape
       cypaConviction,
       womensCharterConviction,
       penalCodeConviction,
       elderAbuseConviction,
       dishonestyConviction,
-      understoodRestrictions,
     } = req.body;
 
-    // Validate required fields
-    if (
-      cypaConviction === undefined ||
-      womensCharterConviction === undefined ||
-      penalCodeConviction === undefined ||
-      elderAbuseConviction === undefined ||
-      dishonestyConviction === undefined ||
-      !understoodRestrictions
-    ) {
+    if (!understoodRestrictions) {
       return res.status(400).json({
-        error: 'All screening questions must be answered and restrictions acknowledged',
+        error: 'Please confirm you understand the restrictions before continuing',
       });
     }
 
-    // Calculate if user has any conviction
-    const anyConviction =
-      cypaConviction ||
-      womensCharterConviction ||
-      penalCodeConviction ||
-      elderAbuseConviction ||
-      dishonestyConviction;
+    // Older clients send the five booleans; translate them so the same
+    // declaration still produces the same protection.
+    const LEGACY_MAP: Array<[boolean, string]> = [
+      [Boolean(cypaConviction), 'against_child'],
+      [Boolean(womensCharterConviction), 'sexual'],
+      [Boolean(penalCodeConviction), 'violence'],
+      [Boolean(elderAbuseConviction), 'against_vulnerable_adult'],
+      [Boolean(dishonestyConviction), 'dishonesty'],
+    ];
+    const legacyTypes = LEGACY_MAP.filter(([on]) => on).map(([, t]) => t);
+    const usedLegacy = hasConviction === undefined;
 
-    // Insert screening declaration
+    const types: string[] = Array.isArray(offenceTypes) && offenceTypes.length
+      ? offenceTypes
+      : legacyTypes;
+    const declared = usedLegacy ? legacyTypes.length > 0 : Boolean(hasConviction);
+
+    if (declared && types.length === 0) {
+      return res.status(400).json({
+        error: 'Please tell us what kind of offence it was so we can assess it correctly',
+      });
+    }
+
+    const outcome = declared
+      ? await resolveOutcome(types, sentenceCompletedOn || null, Boolean(underMonitoring))
+      : null;
+
     const result = await db.query(
       `INSERT INTO screening_declarations (
-        user_id,
-        cypa_conviction,
-        womens_charter_conviction,
-        penal_code_conviction,
-        elder_abuse_conviction,
-        dishonesty_conviction,
-        any_conviction,
-        understood_restrictions,
-        ip_address
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        user_id, cypa_conviction, womens_charter_conviction, penal_code_conviction,
+        elder_abuse_conviction, dishonesty_conviction, any_conviction,
+        understood_restrictions, ip_address,
+        offence_types, sentence_completed_on, under_monitoring, review_status
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
       ON CONFLICT (user_id) DO UPDATE SET
-        cypa_conviction = $2,
-        womens_charter_conviction = $3,
-        penal_code_conviction = $4,
-        elder_abuse_conviction = $5,
-        dishonesty_conviction = $6,
-        any_conviction = $7,
-        understood_restrictions = $8,
+        cypa_conviction = $2, womens_charter_conviction = $3, penal_code_conviction = $4,
+        elder_abuse_conviction = $5, dishonesty_conviction = $6, any_conviction = $7,
+        understood_restrictions = $8, offence_types = $10,
+        sentence_completed_on = $11, under_monitoring = $12, review_status = $13,
         consent_timestamp = NOW()
       RETURNING id`,
       [
         userId,
-        cypaConviction,
-        womensCharterConviction,
-        penalCodeConviction,
-        elderAbuseConviction,
-        dishonestyConviction,
-        anyConviction,
-        understoodRestrictions,
+        types.includes('against_child'),
+        types.includes('sexual'),
+        types.includes('violence') || types.includes('kidnapping'),
+        types.includes('against_vulnerable_adult'),
+        types.includes('dishonesty'),
+        declared,
+        Boolean(understoodRestrictions),
         req.ip || null,
+        JSON.stringify(types),
+        sentenceCompletedOn || null,
+        Boolean(underMonitoring),
+        outcome ? outcome.reviewStatus : 'auto',
       ]
     );
 
-    // Mark screening as completed
     await db.query(
       `UPDATE users
-       SET screening_completed = true,
-           screening_completed_date = NOW(),
-           criminal_conviction = $2
-       WHERE id = $1`,
-      [userId, anyConviction]
+          SET screening_completed = true, screening_completed_date = NOW(),
+              criminal_conviction = $2
+        WHERE id = $1`,
+      [userId, declared]
     );
 
-    // If user declared any conviction, automatically apply restrictions
-    if (anyConviction) {
-      await db.query(
-        `INSERT INTO user_category_restrictions (user_id, restricted_category_id, reason)
-         SELECT $1, id, 'Criminal conviction declared during signup'
-         FROM restricted_categories
-         ON CONFLICT (user_id, restricted_category_id) DO UPDATE
-         SET is_active = true`,
-        [userId]
-      );
+    if (declared && outcome) {
+      const n = await applyRestrictions(userId, outcome);
+      console.log(`[Screening] user ${userId}: ${outcome.tier} — ${n} categories, ends ${outcome.restrictionEnd?.toISOString() ?? 'never'}`);
+    } else {
+      // A clean declaration should lift anything left from an earlier one.
+      await clearRestrictions(userId);
     }
 
     res.json({
       success: true,
       data: {
         screeningId: result.rows[0].id,
-        anyConviction,
-        message: anyConviction
-          ? 'Your declaration has been recorded. You have been restricted from certain category tasks for safety reasons.'
-          : 'Thank you for confirming. You can access all task categories.',
+        anyConviction: declared,
+        tier: outcome?.tier ?? null,
+        restrictionEnd: outcome?.restrictionEnd ?? null,
+        needsReview: outcome?.reviewStatus === 'pending_review',
+        message: !declared
+          ? 'Thank you for confirming. You can access all categories.'
+          : outcome?.reviewStatus === 'pending_review'
+          ? 'Your declaration has been recorded and is with our team for review. Some categories are unavailable while we look at it.'
+          : outcome?.tier === 'temporary'
+          ? 'Your declaration has been recorded. Some categories are unavailable until your restriction period ends.'
+          : 'Your declaration has been recorded. Some categories are unavailable on your account.',
       },
     });
   } catch (error) {
