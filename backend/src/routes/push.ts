@@ -16,11 +16,14 @@ router.post('/subscribe', authMiddleware, async (req: AuthRequest, res: Response
 
     // Save subscription to database
     await db.query(
-      `INSERT INTO push_subscriptions (user_id, endpoint, auth, p256dh, created_at)
+      // The columns are auth_key and p256dh_key. Written as auth/p256dh, this
+      // threw on every subscribe, so no browser push subscription has ever been
+      // stored — which means web push has never delivered anything to anyone.
+      `INSERT INTO push_subscriptions (user_id, endpoint, auth_key, p256dh_key, created_at)
        VALUES ($1, $2, $3, $4, NOW())
        ON CONFLICT (user_id, endpoint) DO UPDATE SET
-       auth = $3,
-       p256dh = $4,
+       auth_key = $3,
+       p256dh_key = $4,
        updated_at = NOW()`,
       [
         userId,

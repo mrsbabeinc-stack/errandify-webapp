@@ -94,7 +94,7 @@ router.post('/verify', authMiddleware, async (req: AuthRequest, res: Response) =
     const photoUrl = `https://${bucket}.${region}.aliyuncs.com/${key}`;
 
     const photoResult = await db.query(
-      `INSERT INTO task_photos (errand_id, doer_id, photo_url, key, caption, uploaded_at)
+      `INSERT INTO task_photos (task_id, uploaded_by, photo_url, key, caption, uploaded_at)
        VALUES ($1, $2, $3, $4, $5, NOW())
        RETURNING id, uploaded_at`,
       [errandId, userId, photoUrl, key, caption || null]
@@ -141,7 +141,7 @@ router.get('/:errandId/photos', authMiddleware, async (req: AuthRequest, res: Re
     const photosResult = await db.query(
       `SELECT id, photo_url as url, key, caption, uploaded_at as uploadedAt, doer_id
        FROM task_photos
-       WHERE errand_id = $1
+       WHERE task_id = $1
        ORDER BY uploaded_at DESC`,
       [errandId]
     );

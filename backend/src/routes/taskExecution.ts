@@ -98,7 +98,7 @@ router.post('/:id/upload-photo', authMiddleware, async (req: AuthRequest, res: R
 
     // Save photo
     const photoResult = await db.query(
-      `INSERT INTO task_photos (errand_id, doer_id, photo_url, caption, uploaded_at)
+      `INSERT INTO task_photos (task_id, uploaded_by, photo_url, caption, uploaded_at)
        VALUES ($1, $2, $3, $4, NOW())
        RETURNING id, uploaded_at`,
       [taskId, doerId, photoUrl, caption || null]
@@ -238,10 +238,10 @@ router.get('/:id/status', authMiddleware, async (req: AuthRequest, res: Response
          e.id, e.title, e.status, e.completed_at, e.completion_notes,
          ea.doer_id, ea.status as assignment_status,
          u.display_name as doer_name,
-         (SELECT COUNT(*) FROM task_photos WHERE errand_id = e.id) as photo_count,
+         (SELECT COUNT(*) FROM task_photos WHERE task_id = e.id) as photo_count,
          (SELECT json_agg(json_build_object(
            'id', id, 'url', photo_url, 'caption', caption, 'uploadedAt', uploaded_at
-         )) FROM task_photos WHERE errand_id = e.id) as photos
+         )) FROM task_photos WHERE task_id = e.id) as photos
        FROM errands e
        LEFT JOIN errand_assignments ea ON e.id = ea.errand_id
        LEFT JOIN users u ON ea.doer_id = u.id
@@ -310,7 +310,7 @@ router.get('/:id/photos', authMiddleware, async (req: AuthRequest, res: Response
     const photosResult = await db.query(
       `SELECT id, photo_url as url, caption, uploaded_at as uploadedAt, doer_id
        FROM task_photos
-       WHERE errand_id = $1
+       WHERE task_id = $1
        ORDER BY uploaded_at DESC`,
       [taskId]
     );
