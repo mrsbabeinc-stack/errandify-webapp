@@ -50,7 +50,7 @@ export default function EditErrandPage({ userRole }: EditErrandPageProps) {
       const currentUserId = typeof user.id === 'string' ? parseInt(user.id, 10) : user.id;
 
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || window.location.origin}/api/errands/${id}`,
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -107,7 +107,7 @@ export default function EditErrandPage({ userRole }: EditErrandPageProps) {
       }
 
       await axios.put(
-        `${import.meta.env.VITE_API_URL || window.location.origin}/api/errands/${id}`,
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${id}`,
         {
           title: formData.title,
           description: formData.description,

@@ -16,7 +16,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
     try {
       // Demo login with predefined accounts
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || window.location.origin}/api/auth/demo-login`,
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/auth/demo-login`,
         { account }
       );
 

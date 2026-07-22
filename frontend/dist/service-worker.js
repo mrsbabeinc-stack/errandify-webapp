@@ -1,7 +1,7 @@
 // Service Worker for Push Notifications
 // Handles background sync, push events, and offline notifications
 
-const CACHE_NAME = 'errandify-v1';
+const CACHE_NAME = 'errandify-v39-payment-workflow';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -187,8 +187,21 @@ function openIndexedDB() {
 }
 
 // Fetch event - Network first strategy with fallback to cache
+// BUT: Always fetch CSS, JS, and HTML from network to ensure fresh styles
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') {
+    return;
+  }
+
+  const url = new URL(event.request.url);
+
+  // Always fetch CSS, JS, and HTML from network (no caching)
+  if (url.pathname.endsWith('.css') ||
+      url.pathname.endsWith('.js') ||
+      url.pathname.endsWith('.html') ||
+      url.pathname.endsWith('/') ||
+      url.pathname === '/create-errand') {
+    event.respondWith(fetch(event.request));
     return;
   }
 

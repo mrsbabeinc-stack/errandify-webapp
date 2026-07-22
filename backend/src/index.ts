@@ -535,13 +535,9 @@ const authLimiter = rateLimit({
 app.use('/api/auth', authLimiter);
 app.use('/api', apiLimiter);
 
-app.get("/health", async (req, res) => {
-  const dbStatus = await getDbStatus();
-  res.json({
-    status: "ok",
-    database: dbStatus,
-    timestamp: new Date().toISOString()
-  });
+// Health check
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok' });
 });
 
 // Serve static frontend files

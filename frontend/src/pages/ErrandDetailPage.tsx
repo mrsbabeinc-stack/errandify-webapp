@@ -235,7 +235,7 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
       }
 
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || window.location.origin}/api/errands/${id}`,
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -589,58 +589,10 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
       return;
     }
 
-  const hasValidCancelReason = () => {
-    if (cancelReasonType === 'custom') {
-      return customCancelReason.trim().length > 0;
-    } else if (selectedCancelReason) {
-      return true;
-    }
-    return false;
-  };
-
-  const confirmCancelErrand = async () => {
     try {
-      // Determine final reason
-      let finalReason = '';
-      if (cancelReasonType === 'custom') {
-        finalReason = customCancelReason.trim();
-      } else if (selectedCancelReason) {
-        finalReason = selectedCancelReason;
-      }
-
-      // Validate that a reason is provided
-      if (!finalReason) {
-        alert('Please select or enter a reason for cancellation.');
-        return;
-      }
-
-      console.log('[Cancel] Submitting cancel request:', { id, finalReason, cancelReasonType });
-
       const token = localStorage.getItem('token');
       await axios.post(
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${id}/complete`,
-        {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      alert('You did it! The asker will rate you soon. Great work!');
-      fetchErrandDetail();
-    } catch (error: any) {
-      console.error('Failed to complete errand:', error);
-      alert(error.response?.data?.error || 'Failed to complete errand. Please try again.');
-    }
-  };
-
-  const handleCompleteErrand = async () => {
-    if (!window.confirm('Mark this errand as completed?')) {
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem('token');
-      await axios.post(
-        `${import.meta.env.VITE_API_URL || window.location.origin}/api/errands/${id}/complete`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },

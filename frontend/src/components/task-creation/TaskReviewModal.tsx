@@ -31,16 +31,6 @@ export default function TaskReviewModal({
       <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
         <h2 className="text-2xl font-bold text-errandify-brown mb-6">Review Your Errand</h2>
 
-        {/* Tips for Doers */}
-        {taskData.category && (
-          <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-6">
-            <p className="text-xs font-semibold text-errandify-orange mb-2">💡 What doers should know:</p>
-            <p className="text-xs text-errandify-orange leading-relaxed">
-              {getTaskSpecificTips(taskData.title, taskData.category)}
-            </p>
-          </div>
-        )}
-
         {/* Task Summary */}
         <div className="space-y-4 mb-6 bg-gray-50 p-4 rounded-lg">
           <div>

@@ -32,7 +32,7 @@ export default function ReviewPage() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || window.location.origin}/api/jobs/${jobId}`,
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/jobs/${jobId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setJob(response.data.data);

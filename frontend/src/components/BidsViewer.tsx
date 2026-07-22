@@ -65,7 +65,7 @@ const BidsViewerComponent = forwardRef<{ refreshBids: () => Promise<void> }, Bid
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || window.location.origin}/api/bids/task/${taskId}`,
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bids/task/${taskId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -129,7 +129,7 @@ const BidsViewerComponent = forwardRef<{ refreshBids: () => Promise<void> }, Bid
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || window.location.origin}/api/bids/${bidId}/accept`,
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bids/${bidId}/accept`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -149,7 +149,7 @@ const BidsViewerComponent = forwardRef<{ refreshBids: () => Promise<void> }, Bid
         setShowSuccessMessage(true);
       } else if (stripeIntent) {
         await axios.post(
-          `${import.meta.env.VITE_API_URL || window.location.origin}/api/payment/confirm`,
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/payment/confirm`,
           { intentId: stripeIntent.id },
           {
             headers: { Authorization: `Bearer ${token}` },
@@ -215,38 +215,6 @@ const BidsViewerComponent = forwardRef<{ refreshBids: () => Promise<void> }, Bid
         // Add to favorites
         await axios.post(
           `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/favorites/${doerId}`,
-          {},
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        setFavorites(prev => new Set(prev).add(doerId));
-      }
-    } catch (err) {
-      console.error('Failed to toggle favorite:', err);
-    }
-  };
-
-  const handleToggleFavorite = async (doerId: number) => {
-    try {
-      const token = localStorage.getItem('token');
-      if (favorites.has(doerId)) {
-        // Remove from favorites
-        await axios.delete(
-          `${import.meta.env.VITE_API_URL || window.location.origin}/api/users/favorites/${doerId}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        setFavorites(prev => {
-          const next = new Set(prev);
-          next.delete(doerId);
-          return next;
-        });
-      } else {
-        // Add to favorites
-        await axios.post(
-          `${import.meta.env.VITE_API_URL || window.location.origin}/api/users/favorites/${doerId}`,
           {},
           {
             headers: { Authorization: `Bearer ${token}` },

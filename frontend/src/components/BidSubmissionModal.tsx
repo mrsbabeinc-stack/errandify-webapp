@@ -103,7 +103,7 @@ export default function BidSubmissionModal({
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || window.location.origin}/api/bids`,
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/bids`,
         {
           task_id: taskId,
           amount: parseFloat(bidAmount),

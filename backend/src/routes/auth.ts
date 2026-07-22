@@ -576,32 +576,6 @@ router.post('/demo-login', async (req: Request, res: Response) => {
       [demoUser.mobile]
     );
 
-    return res.json({
-      success: true,
-      message: 'Demo login successful',
-      data: {
-        accessToken: token,
-        user: {
-          id: mockUserId,
-          name: demoUser.name,
-          email: demoUser.email,
-          mobile: demoUser.mobile,
-          role: demoUser.defaultRole,
-          gender: demoUser.gender,
-          bio: demoUser.bio,
-          certificates: demoUser.certificates,
-          isDemo: true,
-        }
-      }
-    });
-
-    // Old database code (kept for reference, now skipped for demo mode)
-    /*
-    let result = await db.query(
-      'SELECT id, display_name, mobile, role, chas_card_color, formatted_user_id FROM users WHERE mobile = $1',
-      [demoUser.mobile]
-    );*/
-
     let user;
     if (result.rows.length === 0) {
       // Create demo user with CHAS data
