@@ -1,7 +1,19 @@
 import express, { Request, Response } from 'express';
 import db from '../db.js';
 
+import { authMiddleware, requireAdmin } from '../middleware/auth.js';
+
 const router = express.Router();
+
+/**
+ * Every route in this file was unauthenticated while mounted at /api/admin.
+ * GET /api/admin/staff returned full staff records — including NRIC,
+ * email and phone — to an anonymous caller. Verified against a running server.
+ *
+ * Applied at router level rather than per route so a handler added later
+ * cannot be forgotten — the same fix as routes/rbac.ts.
+ */
+router.use(authMiddleware, requireAdmin(['admin', 'super-admin']));
 
 // Get all staff
 router.get('/staff', async (req: Request, res: Response) => {

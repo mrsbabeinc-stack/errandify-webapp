@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { sendEmail } from '../services/email.js';
+import { authMiddleware } from '../middleware/auth.js';
 import {
   templateEventConfirmation,
   templateEventReminder7Days,
@@ -9,6 +10,20 @@ import {
 } from '../templates/emailTemplates';
 
 const router = Router();
+
+/**
+ * NOT CURRENTLY MOUNTED — index.ts has `// app.use('/api/email', emailRoutes)`
+ * behind a TODO, so none of this is reachable today.
+ *
+ * The guard is here anyway because of what happens when that line is
+ * uncommented: every route below sends Errandify-branded email to whatever
+ * address arrives in `req.body.email`. Unmounted and unguarded, that is one
+ * edit away from an open mail relay usable for phishing from this domain.
+ *
+ * Whoever mounts this should also rate-limit it — auth stops strangers, not a
+ * logged-in account sending thousands.
+ */
+router.use(authMiddleware);
 
 /**
  * Send event confirmation email

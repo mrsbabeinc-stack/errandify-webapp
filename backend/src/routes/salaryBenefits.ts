@@ -1,7 +1,19 @@
 import express, { Request, Response } from 'express';
 import db from '../db.js';
 
+import { authMiddleware, requireAdmin } from '../middleware/auth.js';
+
 const router = express.Router();
+
+/**
+ * Every route in this file was unauthenticated while mounted at /api/admin.
+ * Salary, allowance and benefit records were readable and writable with no
+ * credentials at all.
+ *
+ * Applied at router level rather than per route so a handler added later
+ * cannot be forgotten — the same fix as routes/rbac.ts.
+ */
+router.use(authMiddleware, requireAdmin(['admin', 'super-admin']));
 
 // Get staff salary info
 router.get('/salary/:staffId', async (req: Request, res: Response) => {
