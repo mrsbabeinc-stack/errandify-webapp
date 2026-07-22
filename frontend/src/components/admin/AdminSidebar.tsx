@@ -12,6 +12,7 @@ interface MenuItem {
 const menuItems: MenuItem[] = [
   { id: 'home', label: 'Dashboard', icon: '🏠', path: '/admin/dashboard' },
   { id: 'users-safety', label: 'Safety Monitoring', icon: '👥', path: '/admin/dashboard/users' },
+  { id: 'screening-reviews', label: 'Screening Reviews', icon: '⚖️', path: '/admin/safety/screening-reviews' },
   {
     id: 'management',
     label: 'User & Admin Management',

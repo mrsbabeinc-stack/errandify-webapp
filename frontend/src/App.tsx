@@ -109,6 +109,7 @@ import NotificationSystemTest from './pages/admin/NotificationSystemTest';
 import CommunityFeed from './pages/admin/CommunityFeed';
 import AdminAnnouncements from './pages/admin/Announcements';
 import NewsManagement from './pages/admin/NewsManagement';
+import ScreeningReviews from './pages/admin/ScreeningReviews';
 import HeroBanners from './pages/admin/HeroBanners';
 import CompanyClientIntelligence from './pages/admin/CompanyClientIntelligence';
 import AccountsDashboard from './pages/admin/AccountsDashboard';
@@ -571,6 +572,7 @@ export default function App() {
         <Route path="/admin/comms/feed" element={isAuthenticated && isAdmin ? <CommunityFeed /> : <Navigate to="/login" replace />} />
         <Route path="/admin/comms/announcements" element={isAuthenticated && isAdmin ? <AdminAnnouncements /> : <Navigate to="/login" replace />} />
         <Route path="/admin/comms/news" element={isAuthenticated && isAdmin ? <NewsManagement /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/safety/screening-reviews" element={isAuthenticated && isAdmin ? <ScreeningReviews /> : <Navigate to="/login" replace />} />
         <Route path="/admin/comms/banners" element={isAuthenticated && isAdmin ? <HeroBanners /> : <Navigate to="/login" replace />} />
 
         {/* Company Management Routes */}

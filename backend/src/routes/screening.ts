@@ -390,11 +390,19 @@ router.get('/reviews', screeningAdmin, async (req: AuthRequest, res: Response) =
               sd.exceeded_sentence_threshold AS "exceededSentenceThreshold",
               sd.other_disqualification AS "otherDisqualification",
               to_char(sd.convicted_on, 'YYYY-MM-DD') AS "convictedOn",
+              sd.applicant_note AS "applicantNote",
               sd.review_status AS "reviewStatus",
               sd.review_note AS "reviewNote",
               sd.consent_timestamp AS "declaredAt",
-              (SELECT COUNT(*) FROM user_category_restrictions r
-                WHERE r.user_id = sd.user_id AND r.is_active = true)::int AS "restrictedCount"
+              -- DISTINCT slug, not row count. restricted_categories holds 11
+              -- rows mapping onto 7 errand categories, so counting rows told
+              -- the reviewer someone had lost 11 of 16 categories when they had
+              -- lost 7. Materially misleading for a decision about a person.
+              (SELECT COUNT(DISTINCT rc2.category_slug)
+                 FROM user_category_restrictions r
+                 JOIN restricted_categories rc2 ON rc2.id = r.restricted_category_id
+                WHERE r.user_id = sd.user_id AND r.is_active = true
+                  AND rc2.category_slug IS NOT NULL)::int AS "restrictedCount"
          FROM screening_declarations sd
          JOIN users u ON u.id = sd.user_id
         WHERE sd.review_status = $1
