@@ -31,7 +31,10 @@ const LeaveBalance: React.FC<LeaveBalanceProps> = ({ staffId, companyId }) => {
       const token = localStorage.getItem('token');
 
       const response = await fetch(
-        `${API_URL}/api/company/staff/${staffId}/leave-balance?company_id=${companyId}`,
+        // Was /api/company/staff/:id/leave-balance, which does not exist —
+        // the route is /balance/:staff_id on the router mounted at /api/leave.
+        // The component rendered "Unable to load leave balance" permanently.
+        `${API_URL}/api/leave/balance/${staffId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }

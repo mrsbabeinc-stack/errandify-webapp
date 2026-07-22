@@ -34,46 +34,35 @@ router.post('/request', authMiddleware, async (req: AuthRequest, res: Response) 
       });
     }
 
-    // Get staff info
-    const staffRes = await db.query(
-      'SELECT display_name FROM users WHERE id = $1',
-      [staff_id]
+    // The applicant must actually belong to this company. Without this, any
+    // signed-in user could file leave against any company by passing its id.
+    const member = await db.query(
+      `SELECT cs.id, COALESCE(u.alias, u.display_name) AS staff_name
+         FROM company_staff cs
+         JOIN users u ON u.id = cs.user_id
+        WHERE cs.user_id = $1 AND cs.company_id = $2`,
+      [staff_id, company_id]
     );
 
-    if (!staffRes.rows.length) {
-      return res.status(404).json({ success: false, error: 'Staff member not found' });
+    if (!member.rows.length) {
+      return res.status(403).json({ success: false, error: 'You are not staff of this company' });
     }
 
-    const staff_name = staffRes.rows[0].display_name;
-
-    // Calculate days
-    const start = new Date(start_date);
-    const end = new Date(end_date || start_date);
-    let dayCount = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-
-    if (period === 'morning' || period === 'afternoon') {
-      dayCount = 0.5;
-    }
-
-    // Insert leave request
     const leaveRes = await db.query(
-      `INSERT INTO leave_requests (
-        company_id, staff_id, staff_name, leave_type,
-        start_date, end_date, period, reason, notes,
-        days_count, is_recurring, recurring_pattern, status
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'pending')
-      RETURNING *`,
-      [
-        company_id, staff_id, staff_name, leave_type,
-        start_date, end_date || start_date, period, reason || '', notes || '',
-        dayCount, is_recurring || false, recurring_pattern ? JSON.stringify(recurring_pattern) : null
-      ]
+      `INSERT INTO company_leave
+         (company_id, staff_user_id, leave_type, start_date, end_date, reason, status)
+       VALUES ($1, $2, $3, $4, $5, $6, 'pending')
+       RETURNING id, company_id, staff_user_id, leave_type, status,
+                 to_char(start_date, 'YYYY-MM-DD') AS start_date,
+                 to_char(end_date,   'YYYY-MM-DD') AS end_date`,
+      [company_id, staff_id, leave_type, start_date, end_date || start_date,
+       [reason, notes].filter(Boolean).join(' — ') || null]
     );
 
     res.json({
       success: true,
       message: '✅ Leave request submitted',
-      data: leaveRes.rows[0]
+      data: { ...leaveRes.rows[0], staff_name: member.rows[0].staff_name, period }
     });
   } catch (error) {
     console.error('Leave request error:', error);
@@ -90,12 +79,24 @@ router.get('/requests', authMiddleware, async (req: AuthRequest, res: Response) 
       return res.status(400).json({ success: false, error: 'company_id required' });
     }
 
-    const leaves = await LeaveService.getLeaveRequests(parseInt(company_id as string), {
-      status: status as string,
-      staffId: staff_id ? parseInt(staff_id as string) : undefined
-    });
+    const result = await db.query(
+      `SELECT cl.id, cl.company_id, cl.staff_user_id, cl.leave_type, cl.status,
+              cl.reason, cl.approved_by, cl.approved_at, cl.created_at,
+              to_char(cl.start_date, 'YYYY-MM-DD') AS start_date,
+              to_char(cl.end_date,   'YYYY-MM-DD') AS end_date,
+              (cl.end_date - cl.start_date + 1) AS days_count,
+              COALESCE(u.alias, u.display_name) AS staff_name
+         FROM company_leave cl
+         JOIN users u ON u.id = cl.staff_user_id
+        WHERE cl.company_id = $1
+          AND ($2::text IS NULL OR cl.status = $2)
+          AND ($3::int  IS NULL OR cl.staff_user_id = $3)
+        ORDER BY cl.status = 'pending' DESC, cl.start_date`,
+      [parseInt(company_id as string), (status as string) || null,
+       staff_id ? parseInt(staff_id as string) : null]
+    );
 
-    res.json({ success: true, data: leaves });
+    res.json({ success: true, data: result.rows });
   } catch (error) {
     console.error('Get leaves error:', error);
     res.status(500).json({ success: false, error: 'Failed to fetch leaves' });
@@ -109,9 +110,13 @@ router.put('/request/:id/approve', authMiddleware, async (req: AuthRequest, res:
     const { approval_notes } = req.body;
     const approver_id = parseInt(req.userId || '0', 10);
 
-    // Get leave request
+    // Only an owner or manager of the SAME company may decide this. Previously
+    // any signed-in user could approve any leave request by id.
     const leaveRes = await db.query(
-      'SELECT * FROM leave_requests WHERE id = $1',
+      `SELECT cl.*, COALESCE(u.alias, u.display_name) AS staff_name
+         FROM company_leave cl
+         JOIN users u ON u.id = cl.staff_user_id
+        WHERE cl.id = $1`,
       [id]
     );
 
@@ -121,16 +126,26 @@ router.put('/request/:id/approve', authMiddleware, async (req: AuthRequest, res:
 
     const leave = leaveRes.rows[0];
 
-    // Approve and deduct leave days
+    const approver = await db.query(
+      `SELECT 1 FROM company_staff
+        WHERE user_id = $1 AND company_id = $2 AND role IN ('owner','manager')`,
+      [approver_id, leave.company_id]
+    );
+    if (!approver.rows.length) {
+      return res.status(403).json({ success: false, error: 'Only an owner or manager can decide leave' });
+    }
+
+    if (leave.status !== 'pending') {
+      return res.status(400).json({ success: false, error: `Already ${leave.status}` });
+    }
+
     await db.query(
-      `UPDATE leave_requests
-       SET status = 'approved', approved_by = $1, approval_notes = $2, approved_at = NOW()
-       WHERE id = $3`,
+      `UPDATE company_leave
+          SET status = 'approved', approved_by = $1, approved_at = NOW(),
+              reason = COALESCE(NULLIF($2, ''), reason)
+        WHERE id = $3`,
       [approver_id, approval_notes || '', id]
     );
-
-    // Deduct leave days from entitlement
-    await LeaveService.deductLeaveDays(leave.staff_id, leave.leave_type, leave.days_count);
 
     res.json({
       success: true,
@@ -151,7 +166,10 @@ router.put('/request/:id/reject', authMiddleware, async (req: AuthRequest, res: 
     const approver_id = parseInt(req.userId || '0', 10);
 
     const leaveRes = await db.query(
-      'SELECT * FROM leave_requests WHERE id = $1',
+      `SELECT cl.*, COALESCE(u.alias, u.display_name) AS staff_name
+         FROM company_leave cl
+         JOIN users u ON u.id = cl.staff_user_id
+        WHERE cl.id = $1`,
       [id]
     );
 
@@ -161,10 +179,24 @@ router.put('/request/:id/reject', authMiddleware, async (req: AuthRequest, res: 
 
     const leave = leaveRes.rows[0];
 
+    const approver = await db.query(
+      `SELECT 1 FROM company_staff
+        WHERE user_id = $1 AND company_id = $2 AND role IN ('owner','manager')`,
+      [approver_id, leave.company_id]
+    );
+    if (!approver.rows.length) {
+      return res.status(403).json({ success: false, error: 'Only an owner or manager can decide leave' });
+    }
+
+    if (leave.status !== 'pending') {
+      return res.status(400).json({ success: false, error: `Already ${leave.status}` });
+    }
+
     await db.query(
-      `UPDATE leave_requests
-       SET status = 'rejected', approved_by = $1, rejected_reason = $2
-       WHERE id = $3`,
+      `UPDATE company_leave
+          SET status = 'rejected', approved_by = $1, approved_at = NOW(),
+              reason = COALESCE(NULLIF($2, ''), reason)
+        WHERE id = $3`,
       [approver_id, rejected_reason || '', id]
     );
 
@@ -183,7 +215,31 @@ router.put('/request/:id/reject', authMiddleware, async (req: AuthRequest, res: 
 router.get('/balance/:staff_id', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { staff_id } = req.params;
-    const balance = await LeaveService.getLeaveBalance(parseInt(staff_id));
+
+    // Entitlements are the MOM statutory minimums until a company sets its own.
+    // Used days come from approved leave only — a pending request must not eat
+    // someone's balance before anyone has agreed to it.
+    const ENTITLEMENT: Record<string, number> = { annual: 14, sick: 14 };
+
+    const used = await db.query(
+      `SELECT leave_type, COALESCE(SUM(end_date - start_date + 1), 0) AS days
+         FROM company_leave
+        WHERE staff_user_id = $1 AND status = 'approved'
+          AND date_part('year', start_date) = date_part('year', CURRENT_DATE)
+        GROUP BY leave_type`,
+      [parseInt(staff_id)]
+    );
+
+    // SUM returns a string from pg; Number() or the arithmetic below concatenates.
+    const usedBy: Record<string, number> = {};
+    for (const r of used.rows) usedBy[r.leave_type] = Number(r.days);
+
+    const balance = Object.entries(ENTITLEMENT).map(([type, entitled]) => ({
+      leave_type: type,
+      entitled,
+      used: usedBy[type] || 0,
+      remaining: entitled - (usedBy[type] || 0),
+    }));
 
     res.json({ success: true, data: balance });
   } catch (error) {
@@ -201,14 +257,19 @@ router.get('/check', authMiddleware, async (req: AuthRequest, res: Response) => 
       return res.status(400).json({ success: false, error: 'staff_id and date required' });
     }
 
-    const isOnLeave = await LeaveService.isStaffOnLeave(
-      parseInt(staff_id as string),
-      new Date(date as string)
+    // Approved leave only. Allocation must not skip someone because they have
+    // merely asked for a day their manager has not agreed to yet.
+    const r = await db.query(
+      `SELECT 1 FROM company_leave
+        WHERE staff_user_id = $1 AND status = 'approved'
+          AND $2::date BETWEEN start_date AND end_date
+        LIMIT 1`,
+      [parseInt(staff_id as string), date]
     );
 
     res.json({
       success: true,
-      data: { on_leave: isOnLeave }
+      data: { on_leave: r.rows.length > 0 }
     });
   } catch (error) {
     console.error('Leave check error:', error);

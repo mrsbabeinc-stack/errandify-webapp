@@ -40,7 +40,11 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({ companyId, onSucces
     try {
       const token = localStorage.getItem('token');
 
-      const response = await fetch(`${API_URL}/api/leave-requests`, {
+      // /api/leave-requests has never existed. The router is mounted at
+      // /api/leave and the route is /request, so every leave request submitted
+      // from this form 404'd and the staff member was told to wait for a
+      // manager who was never going to see it.
+      const response = await fetch(`${API_URL}/api/leave/request`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
