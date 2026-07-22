@@ -2,7 +2,7 @@ import { Router, Response } from 'express';
 import { AuthRequest, authMiddleware, requireAdmin } from '../middleware/auth.js';
 import db from '../db.js';
 import { resolveOutcome, applyRestrictions, clearRestrictions, isUnrestricted } from '../services/screeningResolver.js';
-import { categoriesClosedBy, needsHumanScoping, OFFENCE_OPTIONS, type OffenceType } from '../services/offenceScope.js';
+import { categoriesClosedBy, needsHumanScoping, allRestrictedCategories, OFFENCE_OPTIONS, type OffenceType } from '../services/offenceScope.js';
 import { sendNotification } from '../utils/notificationHelper.js';
 
 const router = Router();
@@ -124,8 +124,19 @@ router.post('/declare', authMiddleware, async (req: AuthRequest, res: Response) 
 
     // Only the categories this offence actually bears on. Everything else stays
     // open, including categories an earlier blanket declaration had closed.
+    //
+    // But an unscoped declaration restricts everything until a person has
+    // looked at it. Scoping narrows a restriction on the strength of knowing
+    // what happened; not knowing is not the same as knowing it was minor. An
+    // older client that never asks for an offence type, or a "something else"
+    // answer, would otherwise leave someone who has just declared a conviction
+    // with full access to childcare and eldercare while their case sits in a
+    // queue. Uncertainty must not grant access — it is temporary, and the
+    // review is what lifts it.
     const closed = isUnrestricted(outcome)
       ? []
+      : needsHumanScoping(offence, usedLegacy ? null : thirdScheduleOffence)
+      ? allRestrictedCategories()
       : categoriesClosedBy(offence, usedLegacy ? null : thirdScheduleOffence);
 
     if (isUnrestricted(outcome)) {

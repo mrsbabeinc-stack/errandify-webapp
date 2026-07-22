@@ -354,8 +354,21 @@ export default function VerificationStep({ onComplete, onBack }: VerificationSte
                   </div>
 
                   <div>
-                    <p className="text-sm font-semibold text-errandify-brown mb-2">
-                      Was the sentence more than 3 months in prison, or a fine over $2,000?
+                    {/* Plenty of sentences are neither prison nor a fine —
+                        probation, community service, a conditional warning, a
+                        driving disqualification. Asked as a bare yes/no about
+                        prison and fines, those people have no true answer and
+                        get pushed onto "I'm not certain", which sends a case to
+                        review that the statute already answers: neither
+                        threshold in s7C(b) was crossed, so the record can
+                        spend. Naming those outcomes is what makes "No"
+                        answerable rather than a guess. */}
+                    <p className="text-sm font-semibold text-errandify-brown mb-1">
+                      Was the sentence more than 3 months in prison, or a fine of more than $2,000?
+                    </p>
+                    <p className="text-xs text-gray-600 mb-2">
+                      If it was probation, community service, a warning, a disqualification, or a
+                      smaller fine, the answer is no.
                     </p>
                     <div className="flex gap-2 items-center">
                       {(['yes', 'no'] as const).map((v) => (

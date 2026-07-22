@@ -85,6 +85,11 @@ export function categoriesClosedBy(
   return Object.keys(CLOSED_BY).filter((slug) => CLOSED_BY[slug].includes(offence));
 }
 
+/** Every category that screening can close. The conservative default. */
+export function allRestrictedCategories(): string[] {
+  return Object.keys(CLOSED_BY);
+}
+
 /** True when we cannot scope the restriction and a person should look at it. */
 export function needsHumanScoping(
   offence: OffenceType | null | undefined,
