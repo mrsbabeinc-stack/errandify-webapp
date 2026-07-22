@@ -14,3 +14,12 @@ coverage/
 
 # Singpass private keys — must never be committed
 backend/keys/
+
+# Environment files with real credentials. .env.staging was tracked and pushed
+# to origin/main carrying a live QWEN_API_KEY, JWT_SECRET and DATABASE_URL.
+# Only *.example files belong in the repo, and only with placeholder values.
+.env.staging
+.env.production
+.env.*.staging
+!.env.example
+!.env.*.example
