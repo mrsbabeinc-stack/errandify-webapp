@@ -606,6 +606,28 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
     }
   };
 
+  const handleCompleteErrand = async () => {
+    if (!window.confirm('Mark this errand as completed?')) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands/${id}/complete`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      alert('✓ Errand marked as completed! Awaiting asker rating.');
+      fetchErrandDetail();
+    } catch (error: any) {
+      console.error('Failed to complete errand:', error);
+      alert(error.response?.data?.error || 'Failed to complete errand. Please try again.');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-errandify-bg flex items-center justify-center">

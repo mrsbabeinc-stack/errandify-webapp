@@ -1920,7 +1920,7 @@ export default function CreateErrandPage() {
                 className="flex-1 px-3 py-2 text-white rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer pointer-events-auto transition-all shadow-sm hover:opacity-90"
                 style={{backgroundColor: '#FF6B35'}}
               >
-                {loading ? 'Posting...' : 'Post'}
+                {loading ? '⏳ Posting...' : '✓ Post'}
               </button>
             </div>
           </div>
