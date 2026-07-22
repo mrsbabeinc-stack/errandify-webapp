@@ -200,6 +200,43 @@ export default function VerificationStep({ onComplete, onBack }: VerificationSte
                     I will use this platform responsibly and lawfully *
                   </span>
                 </label>
+
+                <label className={`flex items-start gap-4 p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                  errors.authorizedToWork
+                    ? 'border-red-500 bg-red-50'
+                    : formData.authorizedToWork
+                    ? 'border-errandify-orange bg-orange-50'
+                    : 'border-gray-300 hover:border-errandify-orange'
+                }`}>
+                  <input
+                    type="checkbox"
+                    checked={formData.authorizedToWork}
+                    onChange={() => handleCheckboxChange('authorizedToWork')}
+                    disabled={loading}
+                    className="w-5 h-5 mt-1 flex-shrink-0 cursor-pointer"
+                  />
+                  <span className="text-sm font-semibold text-errandify-brown">
+                    I am legally authorised to work in Singapore *
+                  </span>
+                </label>
+                <label className={`flex items-start gap-4 p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                  errors.accurateInformation
+                    ? 'border-red-500 bg-red-50'
+                    : formData.accurateInformation
+                    ? 'border-errandify-orange bg-orange-50'
+                    : 'border-gray-300 hover:border-errandify-orange'
+                }`}>
+                  <input
+                    type="checkbox"
+                    checked={formData.accurateInformation}
+                    onChange={() => handleCheckboxChange('accurateInformation')}
+                    disabled={loading}
+                    className="w-5 h-5 mt-1 flex-shrink-0 cursor-pointer"
+                  />
+                  <span className="text-sm font-semibold text-errandify-brown">
+                    The information I have given is accurate *
+                  </span>
+                </label>
               </div>
             </div>
 
