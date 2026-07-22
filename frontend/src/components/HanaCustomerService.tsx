@@ -779,8 +779,8 @@ export default function HanaCustomerService() {
 
   return (
     <>
-      {/* Floating Button */}
-      {!isOpen && (
+      {/* Floating Button DISABLED - Hana accessed via navigation */}
+      {false && (
         <button
           onClick={() => {
             setIsOpen(true);

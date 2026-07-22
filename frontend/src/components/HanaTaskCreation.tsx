@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import HanaAnimatedAvatar from './HanaAnimatedAvatar';
 import { loadResponsiveVoice } from '../main';
@@ -250,7 +250,7 @@ export default function HanaTaskCreation({
 
       // Use AI to extract structured task info from freeform input
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/extract-task-info`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/ai/extract-task-info`,
         { input: userInput }
       );
 
@@ -262,11 +262,11 @@ export default function HanaTaskCreation({
       console.log('[Hana] Extracted postalCode:', extracted.postalCode);
       console.log('[Hana] Extracted location:', extracted.location);
 
-      // Update task data with extracted info
+      // Update task data with extracted info - USE EXTRACTED CATEGORY, NOT RANDOM
       const updatedTaskData: TaskData = {
         title: extracted.title || userInput.substring(0, 50),
-        description: extracted.description || '',
-        category: extracted.category || '',
+        description: '', // Keep empty - user fills in their own description
+        category: extracted.category || '', // USE extracted category directly, NOT random
         location: extracted.location || '',
         area: extracted.area || '',
         fullAddress: extracted.fullAddress || extracted.location || '',
@@ -411,7 +411,7 @@ export default function HanaTaskCreation({
     try {
       // Content filter check
       const filterResponse = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/content-filter`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/ai/content-filter`,
         {
           title: taskData.title,
           description: taskData.description,
@@ -426,7 +426,7 @@ export default function HanaTaskCreation({
       // Get AI suggestions before closing
       try {
         const suggestionsResponse = await axios.post(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/suggestions`,
+          `${import.meta.env.VITE_API_URL || window.location.origin}/api/ai/suggestions`,
           {
             title: taskData.title,
             description: taskData.description,
@@ -462,64 +462,7 @@ export default function HanaTaskCreation({
     }
   };
 
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
-      audioChunksRef.current = [];
-
-      mediaRecorder.ondataavailable = (event) => {
-        audioChunksRef.current.push(event.data);
-      };
-
-      mediaRecorder.start();
-      setIsRecording(true);
-    } catch (err) {
-      console.error('Microphone access denied:', err);
-      alert('Please allow microphone access to use voice input');
-    }
-  };
-
-  const stopRecording = async () => {
-    if (!mediaRecorderRef.current) return;
-
-    mediaRecorderRef.current.stop();
-    setIsRecording(false);
-
-    mediaRecorderRef.current.onstop = async () => {
-      const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
-
-      // Convert to base64 and send to Qwen API for transcription
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64Audio = (reader.result as string).split(',')[1];
-
-        try {
-          const response = await axios.post(
-            `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/transcribe`,
-            { audio: base64Audio }
-          );
-
-          const transcribedText = response.data.data.text;
-          setInput(transcribedText);
-
-          // Auto-submit the transcribed text
-          setTimeout(() => {
-            handleSendMessage({ preventDefault: () => {} } as any);
-          }, 500);
-        } catch (err) {
-          console.error('Transcription failed:', err);
-          alert('Could not transcribe audio. Please try again.');
-        }
-      };
-
-      reader.readAsDataURL(audioBlob);
-    };
-
-    // Stop all tracks
-    mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
-  };
+  // Audio recording removed - using text input only for reliability
 
   if (!isOpen) return null;
 

@@ -18,7 +18,7 @@ export default function SingPassLogin({ onComplete, onBack }: SingPassLoginProps
       // In production, this would redirect to SingPass OAuth flow
       // For demo, we'll use the demo accounts
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/auth/singpass-login`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/auth/singpass-login`,
         { demo: true }
       );
 
@@ -42,7 +42,7 @@ export default function SingPassLogin({ onComplete, onBack }: SingPassLoginProps
     try {
       // Demo login with predefined accounts
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/auth/demo-login`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/auth/demo-login`,
         { account: demoAccount }
       );
 

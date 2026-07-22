@@ -215,7 +215,7 @@ export default function MyProfilePage() {
 
         // Fetch profile
         const profileRes = await axios.get(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/profile`,
+          `${import.meta.env.VITE_API_URL || window.location.origin}/api/users/profile`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
@@ -258,7 +258,7 @@ export default function MyProfilePage() {
       };
 
       const response = await axios.put(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/profile`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/users/profile`,
         updateData,
         { headers: { Authorization: `Bearer ${token}` } }
       );

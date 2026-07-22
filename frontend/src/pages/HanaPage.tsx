@@ -16,6 +16,9 @@ interface TaskData {
   budget: string;
   postalCode: string;
   notes: string;
+  suggestedSkills?: string[];
+  suggestedDescription?: string;
+  suggestedNotes?: string;
 }
 
 export default function HanaPage() {

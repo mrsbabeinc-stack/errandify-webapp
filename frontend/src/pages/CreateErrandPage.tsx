@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
+import { getAreaFromPostalCode } from '../data/singaporePostalCodes';
 
 export default function CreateErrandPage() {
   console.log('===== CreateErrandPage LOADED =====');
@@ -54,6 +55,41 @@ export default function CreateErrandPage() {
   const [selectedArea, setSelectedArea] = useState('');
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
   const lastRefetchedCorrectedTitle = useRef<string>('');
+
+  // Singapore areas list for dropdown
+  const singaporeAreas = [
+    'Raffles Place', 'Cecil Street', 'Tanjong Pagar', 'Outram', 'People\'s Park',
+    'Chinatown', 'Orchard', 'Pasir Panjang', 'Novena', 'Newton', 'Farrer Park',
+    'Henderson', 'Balestier', 'Macpherson', 'Paya Lebar', 'Geylang', 'Eunos',
+    'Bedok', 'Tampines', 'Pasir Ris', 'Punggol', 'Hougang', 'Serangoon',
+    'Sengkang', 'Choa Chu Kang', 'Jurong West', 'Jurong', 'Jurong East',
+    'Clementi', 'Bukit Merah', 'Tiong Bahru', 'Queenstown', 'Bukit Timah',
+    'Ang Mo Kio', 'Bishan', 'Toa Payoh', 'Yishun', 'Sembawang', 'Kranji', 'Woodlands', 'Simei',
+  ].sort();
+
+  // Load copied errand data on mount
+  useEffect(() => {
+    const copyErrandData = sessionStorage.getItem('copyErrandData');
+    if (copyErrandData) {
+      try {
+        const data = JSON.parse(copyErrandData);
+        setFormData((prev) => ({
+          ...prev,
+          title: data.title || '',
+          description: data.description || '',
+          category: data.category || prev.category,
+          budget: data.budget ? data.budget.toString() : '',
+          deadline: data.deadline || '',
+          location: data.location || '',
+          isRecurring: data.isRecurring || false,
+        }));
+        // Clear the session storage so it doesn't persist
+        sessionStorage.removeItem('copyErrandData');
+      } catch (err) {
+        console.error('Failed to load copied errand data:', err);
+      }
+    }
+  }, []);
 
   // Singapore areas list for dropdown
   const singaporeAreas = [
@@ -440,7 +476,7 @@ export default function CreateErrandPage() {
     try {
       console.log('[EXTRACT] Calling /extract-task-info with:', title);
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/extract-task-info`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/ai/extract-task-info`,
         { input: title }
       );
 
@@ -907,6 +943,12 @@ export default function CreateErrandPage() {
         postal_code: postalCode || null,
         budget: formData.budget ? parseFloat(formData.budget) : null,
         deadline: formData.deadline ? new Date(formData.deadline).toISOString() : null,
+        time: formData.time || null,
+        duration: formData.duration || null,
+        durationUnit: formData.durationUnit || null,
+        notes: formData.specialNote || null,
+        skills: formData.skills.length > 0 ? formData.skills : null,
+        startLocation: formData.startLocation || null,
         certifications:
           formData.certifications.required.length > 0 ||
           formData.certifications.optional.length > 0
@@ -925,7 +967,7 @@ export default function CreateErrandPage() {
       }
 
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/errands`,
         payload,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -1419,6 +1461,8 @@ export default function CreateErrandPage() {
                     style={{borderColor: '#FFF0E5', color: '#333'}}
                   />
                 </div>
+              </div>
+            )}
 
                 {/* Area */}
                 <div>
@@ -1920,7 +1964,7 @@ export default function CreateErrandPage() {
                 className="flex-1 px-3 py-2 text-white rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer pointer-events-auto transition-all shadow-sm hover:opacity-90"
                 style={{backgroundColor: '#FF6B35'}}
               >
-                {loading ? '⏳ Posting...' : '✓ Post'}
+                {loading ? 'Posting...' : 'Post'}
               </button>
             </div>
           </div>

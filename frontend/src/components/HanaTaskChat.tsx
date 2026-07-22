@@ -142,7 +142,7 @@ export default function HanaTaskChat({
     // Detect category
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/detect-category`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/ai/detect-category`,
         { title: input, description: input }
       );
       if (response.data.data.category) {
@@ -165,7 +165,7 @@ export default function HanaTaskChat({
   const processDate = async (input: string) => {
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/parse-datetime`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/ai/parse-datetime`,
         { input }
       );
       setTaskData((prev) => ({
@@ -212,7 +212,7 @@ Ready to post this errand?`;
     try {
       // Content filter check
       const filterResponse = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/content-filter`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/ai/content-filter`,
         {
           title: taskData.title,
           description: taskData.description,
@@ -228,7 +228,7 @@ Ready to post this errand?`;
       // Post the task
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/errands`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/errands`,
         {
           title: taskData.title,
           description: taskData.description,

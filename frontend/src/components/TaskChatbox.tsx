@@ -91,7 +91,7 @@ export default function TaskChatbox({
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/messages/tasks/${taskId}`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/messages/tasks/${taskId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }

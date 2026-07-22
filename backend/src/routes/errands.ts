@@ -441,7 +441,7 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
   }
 });
 
-// Create errand (asker only)
+// Create errand (asker only) - FORCE REBUILD
 router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { title, description, category, location, full_address, postal_code, budget, deadline, certifications, isRecurring, repeatEvery, repeatUnit, occurrences } = req.body;

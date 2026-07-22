@@ -418,6 +418,105 @@ export default function ChatPage({ userRole }: ChatPageProps) {
           ))}
         </div>
 
+      {/* Search Box */}
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder="🔍 Search task name or user..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-errandify-orange"
+        />
+      </div>
+
+      {/* View Filter - All/Asker/Doer */}
+      <div className="flex gap-2 mb-3 pb-2">
+        <button
+          onClick={() => setViewFilter('all')}
+          className={`px-3 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${
+            viewFilter === 'all'
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
+        >
+          📬 All Messages
+        </button>
+        <button
+          onClick={() => setViewFilter('asker')}
+          className={`px-3 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${
+            viewFilter === 'asker'
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
+        >
+          📝 My Tasks (Asker)
+        </button>
+        <button
+          onClick={() => setViewFilter('doer')}
+          className={`px-3 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${
+            viewFilter === 'doer'
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
+        >
+          ✓ My Jobs (Doer)
+        </button>
+      </div>
+
+      {/* Status Filter Buttons */}
+      <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+        <button
+          onClick={() => setSelectedStatus('all')}
+          className={`px-3 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${
+            selectedStatus === 'all'
+              ? 'bg-errandify-orange text-white'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          }`}
+        >
+          All
+        </button>
+        <button
+          onClick={() => setSelectedStatus('confirmed')}
+          className={`px-3 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${
+            selectedStatus === 'confirmed'
+              ? 'bg-errandify-orange text-white'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          }`}
+        >
+          Confirmed
+        </button>
+        <button
+          onClick={() => setSelectedStatus('in_progress')}
+          className={`px-3 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${
+            selectedStatus === 'in_progress'
+              ? 'bg-errandify-orange text-white'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          }`}
+        >
+          In Progress
+        </button>
+        <button
+          onClick={() => setSelectedStatus('completed_unconfirmed')}
+          className={`px-3 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${
+            selectedStatus === 'completed_unconfirmed'
+              ? 'bg-errandify-orange text-white'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          }`}
+        >
+          Awaiting Confirmation
+        </button>
+        <button
+          onClick={() => setSelectedStatus('completed_confirmed')}
+          className={`px-3 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${
+            selectedStatus === 'completed_confirmed'
+              ? 'bg-errandify-orange text-white'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          }`}
+        >
+          Completed
+        </button>
+      </div>
+
       {loading ? (
         <div className="text-center py-8">
           <p className="text-sm text-gray-500">Loading messages...</p>

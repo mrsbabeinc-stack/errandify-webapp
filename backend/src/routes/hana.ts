@@ -12,10 +12,6 @@ import {
 
 const router = Router();
 
-// Audio cache to avoid regenerating same text
-const audioCache = new Map<string, { audio: string; timestamp: number }>();
-const CACHE_TTL = 3600000; // 1 hour in milliseconds
-
 // Hana AI Assistant - Process user messages
 router.post('/chat/hana', authMiddleware, async (req: any, res: any) => {
   try {

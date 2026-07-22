@@ -525,7 +525,7 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
               💡 Tap an errand card to view details and place your offer
             </p>
           </div>
-        )}
+        </div>
       </div>
     </AdminThemeWrapper>
   );

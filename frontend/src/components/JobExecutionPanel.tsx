@@ -60,7 +60,7 @@ export default function JobExecutionPanel({
 
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/jobs/${taskId}/start`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/jobs/${taskId}/start`,
         { latitude, longitude },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -87,7 +87,7 @@ export default function JobExecutionPanel({
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/jobs/${taskId}/complete`,
+        `${import.meta.env.VITE_API_URL || window.location.origin}/api/jobs/${taskId}/complete`,
         { photoUrls: photoUrls.length > 0 ? photoUrls : null },
         {
           headers: { Authorization: `Bearer ${token}` },
