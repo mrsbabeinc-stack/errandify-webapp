@@ -394,16 +394,57 @@ router.delete('/companies/:companyId/employees/:userId', authMiddleware, async (
   try {
     const { companyId, userId } = req.params;
 
-    await db.query(
-      `UPDATE company_staff
-       SET status = $1, updated_at = NOW()
-       WHERE company_id = $2 AND user_id = $3`,
-      ['resigned', companyId, userId]
-    );
+    const client = await db.getClient();
+    let released = 0;
+    try {
+      await client.query('BEGIN');
+
+      await client.query(
+        `UPDATE company_staff
+         SET status = $1, updated_at = NOW()
+         WHERE company_id = $2 AND user_id = $3`,
+        ['resigned', companyId, userId]
+      );
+
+      // Releasing their open allocations is the whole point, and it used to be
+      // missing: marking someone resigned touched one row and nothing else, so
+      // their live allocations stood. Somebody who no longer works here stayed
+      // assigned to attend an errand, and the company could not reallocate it
+      // because the staff picker no longer listed them. The errand was stuck
+      // between the two.
+      //
+      // Only OPEN allocations are released. Work already completed stays
+      // attributed to whoever did it — that is a record of what happened, not a
+      // current assignment.
+      const rel = await client.query(
+        `UPDATE company_orders
+            SET assigned_staff_id = NULL, status = 'open', updated_at = NOW()
+          WHERE company_id = $1
+            AND assigned_staff_id = $2
+            AND status IN ('assigned', 'in_progress')
+          RETURNING errand_id`,
+        [companyId, userId]
+      );
+      released = rel.rows.length;
+
+      await client.query('COMMIT');
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
+
+    if (released > 0) {
+      console.log(`[Company] ${userId} left company ${companyId} — ${released} allocation(s) returned to the pool`);
+    }
 
     res.json({
       success: true,
-      message: 'Employee removed from company'
+      message: released > 0
+        ? `Removed from the company. ${released} errand${released > 1 ? 's are' : ' is'} back in your list to reallocate.`
+        : 'Employee removed from company',
+      data: { releasedAllocations: released },
     });
   } catch (error: any) {
     console.error('Error removing employee:', error);
@@ -1128,6 +1169,18 @@ router.post('/companies/:companyId/errands/:errandId/allocate', authMiddleware, 
       return res.status(409).json({ error: `${staff.rows[0].display_name} is no longer active staff.` });
     }
 
+    // Who was on it before, so a SWAP can be told apart from a first allocation.
+    // Allocation is an idempotent UPDATE, so a company could change the person
+    // any number of times — up to the morning of the errand — and the asker was
+    // never told. They accepted an offer from a company, but a specific person
+    // turns up at their door.
+    const prev = await db.query(
+      'SELECT assigned_staff_id FROM company_orders WHERE company_id = $1 AND errand_id = $2',
+      [companyId, errandId]
+    );
+    const previousStaffId: number | null = prev.rows[0]?.assigned_staff_id ?? null;
+    const isSwap = previousStaffId !== null && previousStaffId !== staffUserId;
+
     const upd = await db.query(
       `UPDATE company_orders
           SET assigned_staff_id = $1, status = 'assigned', updated_at = NOW()
@@ -1136,7 +1189,38 @@ router.post('/companies/:companyId/errands/:errandId/allocate', authMiddleware, 
       [staffUserId, companyId, errandId]
     );
 
-    console.log('[Company] Errand', errandId, 'allocated to staff', staffUserId);
+    if (isSwap) {
+      // Notification only. Whether a late swap should need the asker's
+      // acknowledgement, and how close to the errand that window starts, is a
+      // product decision that has not been made — so this tells them rather than
+      // blocking the company. See the company-path proposal.
+      try {
+        const who = await db.query(
+          `SELECT e.asker_id, e.title, COALESCE(u.alias, u.display_name) AS new_name
+             FROM errands e, users u
+            WHERE e.id = $1 AND u.id = $2`,
+          [errandId, staffUserId]
+        );
+        const row = who.rows[0];
+        if (row?.asker_id) {
+          await db.query(
+            `INSERT INTO notifications (user_id, type, title, message, related_errand_id, is_read, created_at)
+             VALUES ($1, 'errand_update', $2, $3, $4, false, NOW())`,
+            [
+              row.asker_id,
+              'Someone else is coming',
+              `${row.new_name} will now be handling "${row.title}". You can see their profile on the errand.`,
+              errandId,
+            ]
+          );
+        }
+      } catch (notifyErr) {
+        // A failed notification must not undo a valid allocation.
+        console.error('[Company] Could not notify asker of staff swap:', notifyErr);
+      }
+    }
+
+    console.log('[Company] Errand', errandId, isSwap ? 'RE-allocated to staff' : 'allocated to staff', staffUserId);
     res.json({ success: true, message: `Allocated to ${staff.rows[0].display_name}`, data: upd.rows[0] });
   } catch (error) {
     console.error('[Company] Allocate failed:', error);

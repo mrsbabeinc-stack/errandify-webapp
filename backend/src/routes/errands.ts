@@ -372,6 +372,49 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
       [errand.asker_id]
     );
 
+    // Who is ACTUALLY coming, when a company won this errand.
+    //
+    // Nothing exposed assigned_staff_id to the asker, so accepting a company's
+    // offer meant a stranger arriving at your door with no name attached. For an
+    // individual doer the asker sees a name, a photo and a rating; for a company
+    // they saw nothing at all. Same information, whoever is behind the offer.
+    //
+    // Shown to the asker and to the company's own people. Not to anyone else —
+    // a browsing stranger has no business knowing which named person attends
+    // which address.
+    let allocatedTo: any = null;
+    if (userId) {
+      const alloc = await db.query(
+        `SELECT co.company_id, co.assigned_staff_id, co.status,
+                COALESCE(u.alias, u.display_name) AS name,
+                u.profile_image_url, u.average_rating, u.total_ratings
+           FROM company_orders co
+           LEFT JOIN users u ON u.id = co.assigned_staff_id
+          WHERE co.errand_id = $1`,
+        [errandDatabaseId]
+      );
+      if (alloc.rows.length > 0) {
+        const a = alloc.rows[0];
+        const isAskerHere = errand.asker_id === userId;
+        const onTheTeam = await db.query(
+          'SELECT 1 FROM company_staff WHERE company_id = $1 AND user_id = $2',
+          [a.company_id, userId]
+        );
+        if (isAskerHere || onTheTeam.rows.length > 0) {
+          allocatedTo = a.assigned_staff_id
+            ? {
+                userId: a.assigned_staff_id,
+                name: a.name,
+                profileImageUrl: a.profile_image_url,
+                // pg returns NUMERIC as a string; toFixed on it would throw.
+                averageRating: a.average_rating === null ? null : Number(a.average_rating),
+                totalRatings: Number(a.total_ratings || 0),
+              }
+            : null;
+        }
+      }
+    }
+
     // Check if current user is the confirmed doer (can view notes)
     let doerId = null;
     let isConfirmedDoer = false;
@@ -424,6 +467,9 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
         postal_code: errand.postal_code,
         deadline: errand.deadline,
         isRecurring: errand.is_recurring,
+        // Null for an individual doer or when a company has not allocated yet.
+        // Populated only for the asker and the company's own staff.
+        allocatedTo,
         askerId: errand.asker_id,
         asker_alias: askerData?.alias || null,
         doerId: doerId,
