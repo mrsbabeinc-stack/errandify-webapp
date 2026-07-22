@@ -72,7 +72,11 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
     // their feed. Filtering the browse list is what they see; this is what
     // actually stops them — a direct link, a stale page or a crafted request
     // all arrive here, and none of them should get past it.
-    const restrictionReason = await getRestrictionReason(doerId, errand.category);
+    // Also skipped for company offers, for the same reason and with the same
+    // relocation to allocation time.
+    const restrictionReason = req.body.actAsCompany
+      ? null
+      : await getRestrictionReason(doerId, errand.category);
     if (restrictionReason) {
       console.log('[Bids] Blocked restricted-category offer from user', doerId, 'on', errand.category);
       return res.status(403).json({ error: restrictionReason });
@@ -82,7 +86,20 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
     // identical here. This one is answerable rather than final, so it carries a
     // code the client can act on by opening the declaration instead of showing
     // a dead end.
-    if (await needsDeclaration(doerId, errand.category)) {
+    //
+    // Skipped when offering on a company's behalf, because the person clicking
+    // is the owner or manager and is NOT the person who will do the work — a
+    // staff member is allocated later. Screening the wrong person is worse than
+    // not screening: it blocks a manager who will never attend, while the
+    // eventual doer walks through unchecked.
+    //
+    // The check does not disappear, it MOVES to allocation, where the actual
+    // doer is finally known. See POST /companies/:companyId/errands/:errandId/
+    // allocate. If that check is ever removed, this bypass becomes a hole big
+    // enough to drive the whole screening scheme through: someone barred from
+    // childcare as an individual could join a company and be allocated
+    // childcare work.
+    if (!req.body.actAsCompany && await needsDeclaration(doerId, errand.category)) {
       return res.status(403).json({
         code: 'DECLARATION_REQUIRED',
         category: errand.category,

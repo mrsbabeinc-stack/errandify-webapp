@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import { authMiddleware } from '../middleware/auth.js';
 import { getCategoryCode } from '../utils/categoryCodes.js';
 import { requireCompanyRole, resolveMyCompany, resolveCompanyRole } from '../utils/companyRole.js';
+import { getRestrictionReason, needsDeclaration } from '../services/categoryRestrictions.js';
 
 const router = Router();
 
@@ -1059,6 +1060,37 @@ router.post('/companies/:companyId/errands/:errandId/allocate', authMiddleware, 
     );
     if (staff.rows.length === 0) {
       return res.status(400).json({ error: 'That person is not on your staff list' });
+    }
+
+    // The screening check for the company path lives HERE, because this is the
+    // first moment the actual doer is known. The offer was made by an owner or
+    // manager who will not attend, so screening them at bid time checked the
+    // wrong person entirely.
+    //
+    // Without this, the whole screening scheme has a company-shaped hole in it:
+    // someone barred from childcare as an individual could join a company as
+    // staff and be allocated childcare work, with no check anywhere. The
+    // individual protection is only worth as much as this one.
+    const errandCat = await db.query('SELECT category FROM errands WHERE id = $1', [errandId]);
+    const category = errandCat.rows[0]?.category;
+
+    const restricted = await getRestrictionReason(staffUserId, category);
+    if (restricted) {
+      console.log('[Company] Blocked allocation of restricted category', category, 'to staff', staffUserId);
+      return res.status(409).json({
+        // Named, because a manager needs to know to pick someone else — but the
+        // reason is the category, not the person's record. A manager is not
+        // entitled to know why one of their staff is restricted.
+        error: `${staff.rows[0].display_name} can't take ${category?.replace(/-/g, ' ')} errands. Please allocate someone else.`,
+        reason: 'staff_category_restricted',
+      });
+    }
+
+    if (await needsDeclaration(staffUserId, category)) {
+      return res.status(409).json({
+        error: `${staff.rows[0].display_name} hasn't completed the safety declaration these errands need. They can do it from their account, then you can allocate this to them.`,
+        reason: 'staff_declaration_required',
+      });
     }
 
     // ...and not away. Checked at SAVE time, not just when the picker rendered —
