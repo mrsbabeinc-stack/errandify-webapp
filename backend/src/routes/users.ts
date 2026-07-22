@@ -1,6 +1,7 @@
 import { Router, Response } from 'express';
 import { authMiddleware, AuthRequest } from '../middleware/auth.js';
 import db from '../db.js';
+import { getDeletionBlockers, anonymiseAccount } from '../services/accountDeletion.js';
 import { generateFormattedUserId } from '../utils/idFormatter.js';
 import bcrypt from 'bcrypt';
 
@@ -883,149 +884,31 @@ router.post('/change-password', authMiddleware, async (req: AuthRequest, res: Re
 // Check account deletion eligibility
 router.get('/deletion-eligibility', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.userId;
-
-    // Check for active/pending errands (as asker or doer)
-    const errandsResult = await db.query(
-      `SELECT COUNT(*) as count FROM errands
-       WHERE (asker_id = $1 OR id IN (SELECT errand_id FROM errand_assignments WHERE doer_id = $1))
-       AND status IN ('posted', 'bidding', 'accepted', 'in_progress', 'pending_review')`,
-      [userId]
-    );
-
-    const pendingErrands = parseInt(errandsResult.rows[0]?.count || 0);
-
-    // Escrow holds are NOT checked, because nothing holds money yet.
-    //
-    // This used to read a payment_holds table that has never existed. The query
-    // threw, the catch below turned it into a 500, and GET
-    // /deletion-eligibility failed for every user — so nobody could delete
-    // their account at all. A data-deletion right that returns a server error
-    // is worse than one that is merely incomplete, and under PDPA it is not
-    // optional.
-    //
-    // There is no escrow to check: no capture_method anywhere, and the real
-    // payment-intent route is shadowed by a mock. When escrow lands, restore a
-    // blocker here — an account must not be deletable while it is holding
-    // someone else's money.
-    const pendingHolds = 0;
-    const totalHeld = 0;
-
-    // Check for pending disputes
-    // disputes has none of asker_id, doer_id or reporter_id — the party columns
-    // are raised_by_id and filed_by_user_id, and the counterparty is reached
-    // through the errand. The old query named three columns that do not exist,
-    // so it threw and took the whole endpoint down with it.
-    const disputesResult = await db.query(
-      `SELECT COUNT(*) as count
-         FROM disputes d
-         JOIN errands e ON e.id = d.errand_id
-         LEFT JOIN bids ab ON ab.id = e.accepted_bid_id
-        WHERE (d.raised_by_id = $1 OR d.filed_by_user_id = $1
-               OR e.asker_id = $1 OR ab.doer_id = $1)
-          AND d.status IN ('open', 'pending_review', 'under_investigation')`,
-      [userId]
-    );
-
-    const pendingDisputes = parseInt(disputesResult.rows[0]?.count || 0);
-
-    // Same story: there is no `transactions` table. Platform fees, subscription
-    // dues and advertising spend have no shared ledger, so there is nothing to
-    // read. Restore this when one exists.
-    const outstandingPayments = 0;
-    const totalOwed = 0;
-
-    // wallet_transactions is a plain ledger — it records movements, and has no
-    // status column, so a withdrawal cannot be "pending" in it. The filter was
-    // on a column that does not exist.
-    const pendingWithdrawals = 0;
-    const totalWithdrawalPending = 0;
-
-    // Check for active company (if user is company owner)
-    const companyResult = await db.query(
-      // The column is owner_user_id, not owner_id — the old name threw and was
-      // the last of four non-existent columns/tables in this one handler.
-      `SELECT COUNT(*) as count FROM companies
-       WHERE owner_user_id = $1`,
-      [userId]
-    );
-
-    const activeCompanies = parseInt(companyResult.rows[0]?.count || 0);
-
-    // Build eligibility response
-    const canDelete = pendingErrands === 0 && pendingHolds === 0 && pendingDisputes === 0 &&
-                     outstandingPayments === 0 && pendingWithdrawals === 0 && activeCompanies === 0;
-
-    const blockers: Array<{ type: string; count: number; message: string; details?: string }> = [];
-
-    if (pendingErrands > 0) {
-      blockers.push({
-        type: 'PENDING_ERRANDS',
-        count: pendingErrands,
-        message: `${pendingErrands} active errand${pendingErrands > 1 ? 's' : ''} in progress`,
-        details: 'Complete or cancel all active errands before deletion',
-      });
-    }
-
-    if (pendingHolds > 0) {
-      blockers.push({
-        type: 'PAYMENT_HOLDS',
-        count: pendingHolds,
-        message: `SGD $${totalHeld.toFixed(2)} held in escrow`,
-        details: 'Wait for holds to release (typically 48 hours) or resolve disputes',
-      });
-    }
-
-    if (pendingDisputes > 0) {
-      blockers.push({
-        type: 'PENDING_DISPUTES',
-        count: pendingDisputes,
-        message: `${pendingDisputes} pending dispute${pendingDisputes > 1 ? 's' : ''}`,
-        details: 'Resolve all disputes before account deletion',
-      });
-    }
-
-    if (outstandingPayments > 0) {
-      blockers.push({
-        type: 'OUTSTANDING_PAYMENTS',
-        count: outstandingPayments,
-        message: `SGD $${totalOwed.toFixed(2)} outstanding payment${outstandingPayments > 1 ? 's' : ''}`,
-        details: 'Settle all payment obligations before deletion',
-      });
-    }
-
-    if (pendingWithdrawals > 0) {
-      blockers.push({
-        type: 'PENDING_WITHDRAWALS',
-        count: pendingWithdrawals,
-        message: `SGD $${totalWithdrawalPending.toFixed(2)} withdrawal${pendingWithdrawals > 1 ? 's' : ''} in progress`,
-        details: 'Wait for pending withdrawals to complete',
-      });
-    }
-
-    if (activeCompanies > 0) {
-      blockers.push({
-        type: 'ACTIVE_COMPANY',
-        count: activeCompanies,
-        message: `${activeCompanies} company${activeCompanies > 1 ? 'ies' : ''} owned`,
-        details: 'Transfer or delete owned companies first',
-      });
-    }
+    const userId = parseInt(req.userId || '0', 10);
+    const blockers = await getDeletionBlockers(userId);
 
     res.json({
       success: true,
-      canDelete,
+      canDelete: blockers.length === 0,
       blockers,
-      summary: {
-        pendingErrands,
-        pendingHolds,
-        totalHeld,
-        pendingDisputes,
-        outstandingPayments,
-        totalOwed,
-        pendingWithdrawals,
-        totalWithdrawalPending,
-        activeCompanies,
+      // What deletion actually does, said before they press it. PDPA's
+      // Notification Obligation (s20) means the purpose of retention has to be
+      // made known — and someone deciding whether to leave deserves to know
+      // what survives regardless.
+      retention: {
+        removed: [
+          'Your name, alias, photo and bio',
+          'Email, phone number and address',
+          'NRIC and Singpass identifiers',
+          'Bank and payout details',
+          'Any criminal declaration you made',
+        ],
+        kept: [
+          'Errand and offer history, with your name removed',
+          'Payment and payout records, kept for tax and accounting',
+          'Resolved dispute outcomes, which the other party also relies on',
+        ],
+        why: 'Singapore law requires business and accounting records to be kept for a period after the transaction. Those records are stripped of anything that identifies you, and deleted entirely once that period ends.',
       },
     });
   } catch (error: any) {
@@ -1037,40 +920,27 @@ router.get('/deletion-eligibility', authMiddleware, async (req: AuthRequest, res
 // Delete account
 router.post('/delete-account', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.userId;
+    const userId = parseInt(req.userId || '0', 10);
 
-    // Re-check eligibility before deletion
-    const eligibilityResult = await db.query(
-      `SELECT COUNT(*) as pending_errands FROM errands
-       WHERE (asker_id = $1 OR id IN (SELECT errand_id FROM errand_assignments WHERE doer_id = $1))
-       AND status IN ('posted', 'bidding', 'accepted', 'in_progress', 'pending_review')`,
-      [userId]
-    );
-
-    if (parseInt(eligibilityResult.rows[0]?.pending_errands || 0) > 0) {
-      return res.status(400).json({ error: 'Cannot delete account with active errands' });
+    // Re-checked here rather than trusted from the screen. These two used to
+    // disagree — eligibility weighed errands, disputes and company ownership
+    // while this route looked only at errands, so anyone with an open dispute
+    // could delete by calling the API directly.
+    const blockers = await getDeletionBlockers(userId);
+    if (blockers.length > 0) {
+      return res.status(400).json({
+        error: 'There are a few things to settle before your account can close.',
+        blockers,
+      });
     }
 
-    // No escrow exists, so there are no holds to block on — see the note in
-    // GET /deletion-eligibility. This query read a table that has never
-    // existed, which meant delete-account threw before it could delete
-    // anything. Restore the block when escrow lands.
-
-    // Mark user as deleted (soft delete)
-    await db.query(
-      `UPDATE users SET
-        is_deleted = true,
-        email = NULL,
-        mobile = NULL,
-        password_hash = NULL,
-        display_name = 'Deleted User'
-       WHERE id = $1`,
-      [userId]
-    );
+    const result = await anonymiseAccount(userId, 'user_request');
+    console.log(`[Deletion] user ${userId} anonymised — ${result.anonymisedFields} fields cleared`);
 
     res.json({
       success: true,
-      message: 'Account deletion request submitted. Check email for confirmation.',
+      message: 'Your account is closed and your personal details have been removed.',
+      retained: result.retained,
     });
   } catch (error: any) {
     console.error('Account deletion error:', error);
