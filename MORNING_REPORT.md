@@ -130,6 +130,60 @@ worse than none.
 
 ---
 
+---
+
+## Later that night — the company path
+
+You asked me to close the company-side holes. Four existed; all four are now
+fixed. Three had one correct answer, so I made the call; the genuinely
+product-shaped decisions are in the artifact and still yours.
+
+**The asker never learned who was coming.** Accepting an individual's offer shows
+a name, photo and rating. Accepting a company's offer showed nothing — a stranger
+arrived at the door. `GET /errands/:id` now returns `allocatedTo`, visible to the
+asker and the company's own staff only. A browsing stranger has no business
+knowing which named person attends which address.
+
+**Substitution was silent and unlimited.** Allocation is an idempotent UPDATE, so
+a company could change the assigned person any number of times, up to the morning
+of the errand, with nobody told. A swap now notifies the asker by name. I made it
+a notification and not a block on purpose — whether a late swap needs the asker's
+acknowledgement, and how close to the errand that window starts, is decision 1 in
+the company proposal and it is not mine.
+
+**Allocations survived the person leaving.** Marking someone resigned updated one
+row and touched nothing else, so somebody who no longer worked there stayed
+assigned to attend, and the company could not reallocate because the picker no
+longer listed them. Resignation now releases open allocations back to the pool in
+the same transaction. Only open ones — completed work stays attributed to whoever
+did it, because that is a record, not an assignment.
+
+Verified end to end, including that an unrelated user still sees nothing and that
+allocating to the resigned person is refused.
+
+### A smoke test, so this stops happening quietly
+
+`backend/scripts/smoke-test.mjs` — every endpoint the main screens depend on,
+across all three surfaces, hit against a running server.
+
+```
+cd backend && node scripts/smoke-test.mjs
+```
+
+**32/32 passing.** Read-only; it creates and deletes nothing. Worth running
+before and after anything substantial.
+
+### What I did NOT decide for you
+
+Four questions in the company proposal, and the four at the top of this report.
+The two I most want answers to:
+
+- **Late-swap window.** Should a substitution close to the errand need the
+  asker's acknowledgement? I suggest 12 hours, and free cancellation inside it.
+- **Accountability split.** My proposal: the company carries money and dispute
+  liability; the individual carries conduct, their own rating and restrictions.
+  Both, not either.
+
 ## Still not done
 
 - **Company-as-asker has never run.** `errands.company_posted_by` has 0 rows.
