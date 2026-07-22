@@ -981,10 +981,46 @@ router.post('/purchase-ep', authMiddleware, async (req: AuthRequest, res: Respon
   }
 });
 
-// POST /api/wallet/ep-purchase-webhook - Stripe webhook for payment success
+/**
+ * POST /api/wallet/ep-purchase-webhook — Stripe webhook for EP purchases.
+ *
+ * This trusted `req.body` outright. Nothing verified that the request came
+ * from Stripe, so anyone could POST a forged `payment_intent.succeeded` with
+ * their own userId and any ep_amount and mint Errandify Points for free —
+ * points that sell for real money (1000 EP = SGD 10). It also wrote a
+ * "completed" purchase row, so the fabricated payment looked legitimate
+ * afterwards.
+ *
+ * Now verified against the raw request bytes, the same way
+ * routes/webhooks-subscriptions.ts does it. Signature verification only works
+ * on the exact bytes Stripe sent, which is why index.ts keeps req.rawBody.
+ *
+ * Fails closed: no signature, no secret, or a mismatch means no points.
+ */
 router.post('/ep-purchase-webhook', async (req: any, res: Response) => {
   try {
-    const event = req.body;
+    const signature = req.headers['stripe-signature'] as string;
+    const secret = process.env.STRIPE_WEBHOOK_SECRET;
+
+    if (!secret) {
+      console.error('[Wallet] STRIPE_WEBHOOK_SECRET is not set — refusing to credit EP');
+      return res.status(500).json({ error: 'Webhook not configured' });
+    }
+    if (!signature) {
+      return res.status(400).json({ error: 'Missing stripe-signature header' });
+    }
+
+    let event: any;
+    try {
+      const { default: Stripe } = await import('stripe');
+      const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+        apiVersion: '2024-06-20' as any,
+      });
+      event = stripeClient.webhooks.constructEvent(req.rawBody, signature, secret);
+    } catch (err: any) {
+      console.error('[Wallet] EP webhook signature verification failed:', err.message);
+      return res.status(400).json({ error: 'Invalid signature' });
+    }
 
     if (event.type === 'payment_intent.succeeded') {
       const paymentIntent = event.data.object;
@@ -1045,7 +1081,15 @@ router.post('/ep-purchase-webhook', async (req: any, res: Response) => {
 });
 
 // POST /api/wallet/ep-purchase-webhook-demo - Demo endpoint to test webhook locally
+/**
+ * Demo EP crediting. Takes userId and epAmount straight from the body with no
+ * payment involved at all, so it is development-only — in production it is a
+ * "give me any number of points" endpoint.
+ */
 router.post('/ep-purchase-webhook-demo', async (req: any, res: Response) => {
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(404).json({ error: 'Not found' });
+  }
   try {
     const { userId, companyId, epAmount, basePriceSgd, stripeFee } = req.body;
     const epAmount_to_award = parseInt(epAmount || '0', 10);

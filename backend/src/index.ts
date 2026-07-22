@@ -506,7 +506,15 @@ app.use(
 
 // Singpass state/nonce ride in httpOnly cookies through the OIDC redirect
 app.use(cookieParser());
-app.use(express.json({ limit: '10mb' })); // large enough for base64 photo uploads
+// The raw body is kept alongside the parsed one because Stripe signatures are
+// computed over the exact bytes sent — re-serialising the parsed object does
+// not reproduce them. Nothing populated req.rawBody before this, so every
+// signature check in the codebase was verifying against a string that could
+// never match.
+app.use(express.json({
+  limit: '10mb', // large enough for base64 photo uploads
+  verify: (req: any, _res, buf) => { req.rawBody = buf; },
+}));
 
 // Rate limiting (anti brute-force / abuse). Generous global cap on the API,
 // strict cap on auth to stop credential stuffing. Tunable via env.
