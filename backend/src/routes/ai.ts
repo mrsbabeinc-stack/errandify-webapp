@@ -10,6 +10,7 @@ import * as contentMod from '../modules/content-moderation.js';
 import { screenUserMessage } from '../modules/hanaGuardrails.js';
 import * as privacyLogger from '../modules/privacy-logger.js';
 import * as explainability from '../modules/explainability.js';
+import { QWEN_API_BASE } from '../config/aiRegion.js';
 
 const router = Router();
 
@@ -568,7 +569,7 @@ router.post('/extract-task-info', async (req: Request, res: Response) => {
       try {
         console.log('[Extract] ✓ Trying Qwen to clean title (regex fallback failed)...');
         const titleCleanResponse = await axios.post(
-          `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}/chat/completions`,
+          `${process.env.QWEN_API_BASE || QWEN_API_BASE}/chat/completions`,
           {
             model: 'qwen-max',
             messages: [
@@ -694,7 +695,7 @@ Example: "Decorate Apartment For Party At 238857, Tomorrow 9am" → "Decorate Ap
       try {
         console.log('[Extract] ✓ Using Qwen to detect category...');
         const categoryResponse = await axios.post(
-          `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}/chat/completions`,
+          `${process.env.QWEN_API_BASE || QWEN_API_BASE}/chat/completions`,
           {
             model: 'qwen-max',
             messages: [
@@ -1097,7 +1098,7 @@ OUTPUT ONLY the category name, nothing else.`,
       try {
         console.log('[Extract] ✓ Using Qwen to generate task-specific tips...');
         const tipsResponse = await axios.post(
-          `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}/chat/completions`,
+          `${process.env.QWEN_API_BASE || QWEN_API_BASE}/chat/completions`,
           {
             model: 'qwen-max',
             messages: [
@@ -1296,7 +1297,7 @@ router.post('/moderate-image', authMiddleware, async (req: AuthRequest, res: Res
     }
 
     const response = await axios.post(
-      `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}/chat/completions`.replace('/v1//chat', '/v1/chat'),
+      `${process.env.QWEN_API_BASE || QWEN_API_BASE}/chat/completions`.replace('/v1//chat', '/v1/chat'),
       {
         model: 'qwen-vl-plus',
         messages: [
@@ -1437,7 +1438,7 @@ router.post('/suggestions', async (req: Request, res: Response) => {
         try {
           console.log('[Suggestions] Spell-checking title with Qwen:', title);
           const spellCheckResponse = await axios.post(
-            `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}/chat/completions`.replace('/v1//chat', '/v1/chat'),
+            `${process.env.QWEN_API_BASE || QWEN_API_BASE}/chat/completions`.replace('/v1//chat', '/v1/chat'),
             {
               model: 'qwen-max',
               messages: [
@@ -1703,7 +1704,7 @@ router.post('/suggestions', async (req: Request, res: Response) => {
     console.log('[Suggestions] Making Qwen API calls...');
     const [skillsResult, descriptionResult, notesResult, certsResult] = await Promise.allSettled([
       qwenApiKey ? axios.post(
-        `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}/chat/completions`.replace('/v1//chat', '/v1/chat'),
+        `${process.env.QWEN_API_BASE || QWEN_API_BASE}/chat/completions`.replace('/v1//chat', '/v1/chat'),
         {
           model: 'qwen-max',
           messages: [
@@ -1722,7 +1723,7 @@ router.post('/suggestions', async (req: Request, res: Response) => {
         }
       ) : Promise.reject('No API key'),
       qwenApiKey ? axios.post(
-        `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}/chat/completions`.replace('/v1//chat', '/v1/chat'),
+        `${process.env.QWEN_API_BASE || QWEN_API_BASE}/chat/completions`.replace('/v1//chat', '/v1/chat'),
         {
           model: 'qwen-max',
           messages: [
@@ -1741,7 +1742,7 @@ router.post('/suggestions', async (req: Request, res: Response) => {
         }
       ) : Promise.reject('No API key'),
       qwenApiKey ? axios.post(
-        `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}/chat/completions`.replace('/v1//chat', '/v1/chat'),
+        `${process.env.QWEN_API_BASE || QWEN_API_BASE}/chat/completions`.replace('/v1//chat', '/v1/chat'),
         {
           model: 'qwen-max',
           messages: [
@@ -1760,7 +1761,7 @@ router.post('/suggestions', async (req: Request, res: Response) => {
         }
       ) : Promise.reject('No API key'),
       qwenApiKey ? axios.post(
-        `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}/chat/completions`.replace('/v1//chat', '/v1/chat'),
+        `${process.env.QWEN_API_BASE || QWEN_API_BASE}/chat/completions`.replace('/v1//chat', '/v1/chat'),
         {
           model: 'qwen-max',
           messages: [
@@ -2036,7 +2037,7 @@ Return ONLY valid JSON, no markdown or code blocks.`;
 
     try {
       const response = await axios.post(
-        `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}/chat/completions`,
+        `${process.env.QWEN_API_BASE || QWEN_API_BASE}/chat/completions`,
         {
           model: 'qwen-max',
           messages: [
@@ -2161,7 +2162,7 @@ Format: Return as JSON with fields: doer_profile, asker_profile, skill_insights,
 
     try {
       const response = await axios.post(
-        `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}/chat/completions`,
+        `${process.env.QWEN_API_BASE || QWEN_API_BASE}/chat/completions`,
         {
           model: 'qwen-max',
           messages: [
@@ -2311,7 +2312,7 @@ Return ONLY valid JSON.`;
 
     try {
       const response = await axios.post(
-        `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}/chat/completions`,
+        `${process.env.QWEN_API_BASE || QWEN_API_BASE}/chat/completions`,
         {
           model: 'qwen-max',
           messages: [

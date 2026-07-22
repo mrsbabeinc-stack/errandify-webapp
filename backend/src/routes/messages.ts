@@ -5,6 +5,7 @@ import axios from 'axios';
 import { sendEmail } from '../services/email.js';
 import { offlineNotificationService } from '../services/offlineNotificationService.js';
 import { moderateContent } from '../services/contentModerationService.js';
+import { QWEN_GENERATION_URL } from '../config/aiRegion.js';
 
 const router = Router();
 
@@ -542,7 +543,7 @@ async function moderateMessage(content: string): Promise<{ status: 'SAFE' | 'FLA
     const qwenApiKey = process.env.QWEN_API_KEY;
     if (qwenApiKey) {
       try {
-        const moderationResponse = await fetch('https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation', {
+        const moderationResponse = await fetch(QWEN_GENERATION_URL, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${qwenApiKey}`,

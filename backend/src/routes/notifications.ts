@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { AuthRequest, authMiddleware } from '../middleware/auth.js';
 import db from '../db.js';
 import { storePushSubscription, sendPushNotification } from '../services/pushService.js';
+import { QWEN_GENERATION_URL } from '../config/aiRegion.js';
 
 const router = Router();
 
@@ -432,7 +433,7 @@ router.get('/ai-alerts', authMiddleware, async (req: AuthRequest, res: Response)
       try {
         const axios = await import('axios');
         const response = await axios.default.post(
-          'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation',
+          QWEN_GENERATION_URL,
           {
             model: 'qwen-turbo',
             input: {

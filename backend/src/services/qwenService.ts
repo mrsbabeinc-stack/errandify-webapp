@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { config } from '../config.js';
+import { QWEN_GENERATION_URL, QWEN_API_BASE } from '../config/aiRegion.js';
 
 interface QwenRequest {
   model: string;
@@ -34,7 +35,7 @@ export const qwenService = {
     messages: Array<{ role: 'user' | 'assistant'; content: string }>,
     options?: { temperature?: number; maxTokens?: number }
   ) {
-    const base = process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1';
+    const base = process.env.QWEN_API_BASE || QWEN_API_BASE;
     try {
       const response = await axios.post(
         `${base}/chat/completions`,
@@ -73,7 +74,7 @@ export const qwenService = {
   ) {
     try {
       const response = await axios.post(
-        'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation',
+        QWEN_GENERATION_URL,
         {
           model: 'qwen-3.7-plus',
           messages,
@@ -103,7 +104,7 @@ export const qwenService = {
   ) {
     try {
       const response = await axios.post(
-        'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation',
+        QWEN_GENERATION_URL,
         {
           model: 'qwen-2.5-vl',
           messages: [
@@ -137,7 +138,7 @@ export const qwenService = {
   async moderateContent(text: string) {
     try {
       const response = await axios.post(
-        'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation',
+        QWEN_GENERATION_URL,
         {
           model: 'qwen-3.7-plus',
           messages: [

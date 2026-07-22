@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { config } from '../config.js';
+import { QWEN_TTS_URL, QWEN_TRANSCRIPTION_URL } from '../config/aiRegion.js';
 
 export const speechService = {
   // FunASR - Speech to Text
@@ -7,7 +8,7 @@ export const speechService = {
   async transcribeAudio(audioUrl: string): Promise<string> {
     try {
       const response = await axios.post(
-        'https://dashscope.aliyuncs.com/api/v1/services/speech/transcription/transcription',
+        QWEN_TRANSCRIPTION_URL,
         {
           model: 'paraformer-realtime', // Fast transcription
           audio_url: audioUrl,
@@ -35,7 +36,7 @@ export const speechService = {
   ): Promise<string> {
     try {
       const response = await axios.post(
-        'https://dashscope.aliyuncs.com/api/v1/services/tts/text-to-speech/text-to-speech',
+        QWEN_TTS_URL,
         {
           model: 'cosyvoice-v1',
           input: {

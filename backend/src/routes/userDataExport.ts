@@ -41,11 +41,15 @@ router.get('/export', authMiddleware, async (req: AuthRequest, res: Response) =>
 
     // Get all ratings received
     const ratingsResult = await db.query(
+      // The columns are ratee_id and errand_id — rated_user_id and task_id have
+      // never existed, so this query threw and took the whole export down with
+      // it. GET /api/user-data/export returned 500 for every user, which means
+      // the PDPA s21 right of access was as unavailable as s25 deletion was.
       `SELECT r.*, u.display_name as rater_name, e.title as task_title
        FROM ratings r
        JOIN users u ON r.rater_id = u.id
-       JOIN errands e ON r.task_id = e.id
-       WHERE r.rated_user_id = $1
+       JOIN errands e ON r.errand_id = e.id
+       WHERE r.ratee_id = $1
        ORDER BY r.created_at DESC`,
       [userId]
     );
@@ -60,9 +64,18 @@ router.get('/export', authMiddleware, async (req: AuthRequest, res: Response) =>
 
     // Get chat messages
     const messagesResult = await db.query(
-      `SELECT * FROM chat_messages
-       WHERE sender_id = $1 OR recipient_id = $1
-       ORDER BY created_at DESC`,
+      // chat_messages has no recipient_id — messages hang off conversation_id,
+      // and the counterparty is whoever else is in that conversation. The old
+      // column threw, and this was the last of the errors that made the s21
+      // access right return 500 for everybody.
+      //
+      // Both sides of a conversation are returned, because a chat is the
+      // requester's personal data whichever end of it they were on.
+      `SELECT m.* FROM chat_messages m
+        WHERE m.conversation_id IN (
+          SELECT conversation_id FROM chat_messages WHERE sender_id = $1
+        )
+        ORDER BY m.created_at DESC`,
       [userId]
     );
 

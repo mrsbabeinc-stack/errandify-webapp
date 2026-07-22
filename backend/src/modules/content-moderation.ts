@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { QWEN_API_BASE } from '../config/aiRegion.js';
 
 export interface ModerationResult {
   is_safe: boolean;
@@ -258,7 +259,7 @@ export async function checkContentWithQwen(
     if (qwenApiKey) {
       try {
         const response = await axios.post(
-          `${process.env.QWEN_API_BASE || 'https://dashscope.aliyuncs.com/compatible-mode/v1'}/chat/completions`.replace('/v1//chat', '/v1/chat'),
+          `${process.env.QWEN_API_BASE || QWEN_API_BASE}/chat/completions`.replace('/v1//chat', '/v1/chat'),
           {
             model: 'qwen-max',
             messages: [
