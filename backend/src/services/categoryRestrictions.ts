@@ -43,6 +43,33 @@ export async function isCategoryAllowed(userId: number, category?: string | null
 }
 
 /**
+ * Whether this category needs a declaration this person has not made.
+ *
+ * The absence of a restriction row is not evidence of a clean record — it is
+ * equally the state of someone who has never been asked. Until this existed,
+ * the two were indistinguishable and both read as "allowed", so every account
+ * predating the declaration could take eldercare and childcare work
+ * unscreened. The declaration was added to signup, which by definition only
+ * reaches people who have not signed up yet.
+ *
+ * So the gate is asked at the point of the work rather than the point of
+ * joining: a slug in restricted_categories with no declaration on file stops
+ * here and gets asked, once. This is also the data-minimising order — nobody
+ * is asked about a conviction until they choose work where the answer could
+ * matter.
+ */
+export async function needsDeclaration(userId: number, category?: string | null): Promise<boolean> {
+  if (!category || !userId) return false;
+  const result = await db.query(
+    `SELECT EXISTS (SELECT 1 FROM restricted_categories WHERE category_slug = $2) AS restricted,
+            EXISTS (SELECT 1 FROM screening_declarations WHERE user_id = $1) AS declared`,
+    [userId, category]
+  );
+  const row = result.rows[0];
+  return Boolean(row?.restricted) && !row?.declared;
+}
+
+/**
  * The human-readable reason a category is closed, for telling someone why their
  * offer was refused. Returns null when nothing blocks them.
  */

@@ -2,7 +2,19 @@ import { useState, useEffect } from 'react';
 import { useAppContext } from '../hooks/useAppContext';
 import axios from 'axios';
 import WarmMessage from './WarmMessage';
+import SensitiveWorkDeclaration from './SensitiveWorkDeclaration';
 import { formatCurrency } from '../utils/format';
+
+/** Slug → words a person would recognise, for the declaration's opening line. */
+const CATEGORY_LABEL: Record<string, string> = {
+  'childcare-education': 'childcare',
+  'eldercare-healthcare': 'eldercare',
+  'cleaning-household': 'home cleaning',
+  'home-maintenance': 'home repair',
+  'personal-care': 'personal assistant',
+  'pet-care': 'pet sitting',
+  'travel-mobility': 'passenger transport',
+};
 
 interface BidSubmissionModalProps {
   taskId: number;
@@ -38,6 +50,11 @@ export default function BidSubmissionModal({
   // between offering personally and as their company.
   const [payoutBlock, setPayoutBlock] = useState<any>(null);
   const [checkingPayout, setCheckingPayout] = useState(true);
+
+  // Set when the server says this category needs a declaration nobody has made
+  // yet. Their offer is kept in state throughout, so answering one question
+  // returns them to a filled-in form rather than a blank one.
+  const [declarationFor, setDeclarationFor] = useState<string | null>(null);
 
   // Who is this offer from — the person, or their company?
   const { company, mode } = useAppContext();
@@ -95,8 +112,8 @@ export default function BidSubmissionModal({
     }
   }, [isUpdating, taskId]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     setIsSubmitting(true);
     setError('');
 
@@ -157,12 +174,37 @@ export default function BidSubmissionModal({
         setPayoutBlock(err.response.data.payoutBlock);
         return;
       }
+      // Answerable, not final — open the declaration rather than reporting a
+      // refusal they can do nothing about.
+      if (err.response?.data?.code === 'DECLARATION_REQUIRED') {
+        setDeclarationFor(err.response.data.category || '');
+        return;
+      }
       const errorMsg = err.response?.data?.error || err.response?.data?.message || 'We encountered a small hiccup. Please try again.';
       setError(errorMsg);
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  // Takes over the modal rather than stacking on it — one question at a time,
+  // and the offer underneath is still there when they come back.
+  if (declarationFor !== null) {
+    return (
+      <SensitiveWorkDeclaration
+        categoryLabel={CATEGORY_LABEL[declarationFor]}
+        onComplete={() => {
+          setDeclarationFor(null);
+          // Declaring "no" opens the category immediately, so send the offer
+          // they already wrote. Declaring a conviction applies restrictions, and
+          // this retry is what surfaces them — as the real reason, from the same
+          // guard as everyone else, rather than a guess made in the browser.
+          handleSubmit();
+        }}
+        onCancel={() => setDeclarationFor(null)}
+      />
+    );
+  }
 
   if (checkingPayout) {
     return (

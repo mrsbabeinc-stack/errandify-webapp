@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { AuthRequest, authMiddleware } from '../middleware/auth.js';
 import db from '../db.js';
-import { getRestrictionReason } from '../services/categoryRestrictions.js';
+import { getRestrictionReason, needsDeclaration } from '../services/categoryRestrictions.js';
 import axios from 'axios';
 import { getCategoryCode } from '../utils/categoryCodes.js';
 import { activityLogService } from '../services/activityLogService.js';
@@ -76,6 +76,20 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
     if (restrictionReason) {
       console.log('[Bids] Blocked restricted-category offer from user', doerId, 'on', errand.category);
       return res.status(403).json({ error: restrictionReason });
+    }
+
+    // Never asked is not the same as nothing to declare, and both used to look
+    // identical here. This one is answerable rather than final, so it carries a
+    // code the client can act on by opening the declaration instead of showing
+    // a dead end.
+    if (await needsDeclaration(doerId, errand.category)) {
+      return res.status(403).json({
+        code: 'DECLARATION_REQUIRED',
+        category: errand.category,
+        error:
+          'This kind of errand needs a short declaration first — one question for most people. ' +
+          'It only has to be done once.',
+      });
     }
 
     // Moderate offer note content if provided

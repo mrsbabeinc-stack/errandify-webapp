@@ -13,7 +13,7 @@ import AuthPage from './pages/AuthPage';
 import SingPassSimulator from './pages/SingPassSimulator';
 import SingPassCallbackPage from './pages/SingPassCallbackPage';
 import VerificationStep from './components/auth/VerificationStep';
-import CriminalScreening from './components/CriminalScreening';
+import SensitiveWorkDeclaration from './components/SensitiveWorkDeclaration';
 import RoleSelectionStep from './components/auth/RoleSelectionStep';
 import ACRALookupStep from './components/auth/ACRALookupStep';
 import HomePage from './pages/HomePage';
@@ -263,16 +263,20 @@ export default function App() {
     );
   };
 
-  // Kept routed but no longer part of the signup chain: the declaration is now
-  // asked inside VerificationStep, as one declaration rather than two screens.
-  // This remains reachable so a user can re-declare later (e.g. once a record
-  // becomes spent) without going through signup again.
-  const CriminalScreeningRouteWrapper = () => {
+  // Not part of any flow — the declaration is asked at the point someone takes
+  // work it applies to, from BidSubmissionModal. This stays routed as the way
+  // back for someone re-declaring later, typically once a record has become
+  // spent and the restrictions should lift.
+  //
+  // It renders the same component as that gate. There were briefly two of
+  // these asking the same questions, and the one wired to a route was the older
+  // version, so the narrower flow shipped to nobody.
+  const ScreeningRouteWrapper = () => {
     const navigate = useNavigate();
     return (
-      <CriminalScreening
-        onComplete={() => navigate('/auth/complete-profile')}
-        onCancel={() => navigate('/auth/verification')}
+      <SensitiveWorkDeclaration
+        onComplete={() => navigate('/browse')}
+        onCancel={() => navigate(-1)}
       />
     );
   };
@@ -363,7 +367,7 @@ export default function App() {
           path="/auth/screening"
           element={
             isAuthenticated ? (
-              <CriminalScreeningRouteWrapper />
+              <ScreeningRouteWrapper />
             ) : (
               <Navigate to="/auth" replace />
             )
