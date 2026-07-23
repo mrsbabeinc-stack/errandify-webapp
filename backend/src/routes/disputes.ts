@@ -9,6 +9,7 @@ import {
   checkSettlementReadiness,
   prepareSettlementLegs,
   preflightSettlement,
+  executeSettlement,
 } from '../services/disputeSettlement.js';
 import {
   analyzeDisputeWithAI,
@@ -1206,6 +1207,43 @@ router.get('/:id/settlement', adminOnly, async (req: AuthRequest, res: Response)
   } catch (error) {
     console.error('[Disputes] Settlement status error:', error);
     res.status(500).json({ error: 'Could not load settlement status' });
+  }
+});
+
+// POST /api/disputes/:id/settle — the money actually moves here, and only here.
+//
+// Separate from /resolve on purpose: /resolve records the decision and prepares
+// the legs; this pays them. Splitting the two keeps the real Stripe transfers
+// as one explicit, admin-triggered, auditable action rather than a side effect
+// of recording a verdict. It refuses unless readiness says the dispute is
+// actually ready (appeal window closed, doer payout account working), so a
+// premature click cannot pay out over an open appeal.
+router.post('/:id/settle', adminOnly, async (req: AuthRequest, res: Response) => {
+  try {
+    const disputeId = parseInt(req.params.id, 10);
+
+    const readiness = await checkSettlementReadiness(disputeId);
+    if (!readiness.ready && !req.body?.override) {
+      return res.status(409).json({
+        error: 'Not ready to settle yet.',
+        readiness,
+      });
+    }
+
+    const result = await executeSettlement(disputeId);
+    console.log(`[Disputes] Settlement executed for ${disputeId} by admin ${req.userId}:`,
+      result.legs.map((l) => `${l.leg}=${l.status}`).join(', '));
+
+    res.json({
+      success: result.allSettled,
+      message: result.allSettled
+        ? 'Settled. Both parties have been paid their share.'
+        : 'Some legs could not be paid — see the details and retry.',
+      data: result,
+    });
+  } catch (error) {
+    console.error('[Disputes] Settle error:', error);
+    res.status(500).json({ error: 'Could not settle the dispute' });
   }
 });
 

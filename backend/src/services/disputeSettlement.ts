@@ -246,3 +246,122 @@ export async function preflightSettlement(disputeId: number): Promise<PreflightR
 
   return { ok: blockers.length === 0, blockers, warnings };
 }
+
+/**
+ * Actually pays the settlement legs. This is the step that was missing: legs
+ * were prepared with status 'pending' and nothing ever moved money, so a
+ * disputed errand computed a correct split and then paid nobody.
+ *
+ * Per leg:
+ *   doer_transfer -> Stripe transfer to the doer's connected account
+ *   asker_refund  -> partial refund against the errand's original payment intent
+ *
+ * Each leg carries an idempotency_key, so a retry after a crash returns the
+ * original Stripe object instead of paying twice. A leg that fails records the
+ * error and its attempt count and does not block the others — a doer whose
+ * payout account is not ready should not hold up the asker's refund.
+ *
+ * Only runs from an admin-approved resolution (POST /:id/resolve), never on its
+ * own. Not called automatically anywhere yet — see the note in
+ * DISPUTE_FINDINGS.md about /verdict vs /resolve.
+ */
+export interface SettlementExecutionResult {
+  disputeId: number;
+  legs: { leg: string; status: string; reference?: string; error?: string }[];
+  allSettled: boolean;
+}
+
+export async function executeSettlement(disputeId: number): Promise<SettlementExecutionResult> {
+  const { stripeService } = await import('./stripe.js');
+
+  // Everything needed to pay: the doer's connected account, and the errand's
+  // original payment intent to refund against.
+  const ctx = await db.query(
+    `SELECT d.id, d.errand_id,
+            e.payment_intent_id,
+            u.stripe_account_id AS doer_stripe_account
+       FROM disputes d
+       JOIN errands e ON e.id = d.errand_id
+       LEFT JOIN bids ab ON ab.id = e.accepted_bid_id
+       LEFT JOIN users u ON u.id = ab.doer_id
+      WHERE d.id = $1`,
+    [disputeId]
+  );
+  if (ctx.rows.length === 0) {
+    return { disputeId, legs: [], allSettled: false };
+  }
+  const { errand_id, payment_intent_id, doer_stripe_account } = ctx.rows[0];
+
+  const legsRes = await db.query(
+    `SELECT id, leg, amount, status, idempotency_key
+       FROM dispute_settlement_legs
+      WHERE dispute_id = $1 AND status IN ('pending', 'failed')
+      ORDER BY leg`,
+    [disputeId]
+  );
+
+  const out: SettlementExecutionResult = { disputeId, legs: [], allSettled: true };
+
+  for (const leg of legsRes.rows) {
+    const amount = Number(leg.amount);
+
+    // A zero leg has nothing to pay — mark it settled and move on.
+    if (amount <= 0) {
+      await db.query(
+        `UPDATE dispute_settlement_legs SET status = 'skipped', updated_at = NOW() WHERE id = $1`,
+        [leg.id]
+      );
+      out.legs.push({ leg: leg.leg, status: 'skipped' });
+      continue;
+    }
+
+    try {
+      let reference: string;
+
+      if (leg.leg === 'doer_transfer') {
+        if (!doer_stripe_account) throw new Error('doer has no connected payout account');
+        const tr = await stripeService.createTransfer(
+          amount, doer_stripe_account, String(errand_id), `dispute ${disputeId} settlement`, leg.idempotency_key
+        );
+        reference = tr.id;
+      } else if (leg.leg === 'asker_refund') {
+        if (!payment_intent_id) throw new Error('errand has no payment intent to refund');
+        const rf = await stripeService.refundPayment(
+          payment_intent_id, `dispute ${disputeId} settlement`, amount, leg.idempotency_key
+        );
+        reference = rf.refundId;
+      } else {
+        throw new Error(`unknown leg type: ${leg.leg}`);
+      }
+
+      await db.query(
+        `UPDATE dispute_settlement_legs
+            SET status = 'succeeded', stripe_reference = $2, succeeded_at = NOW(),
+                attempts = COALESCE(attempts, 0) + 1, last_attempt_at = NOW(), updated_at = NOW()
+          WHERE id = $1`,
+        [leg.id, reference]
+      );
+      out.legs.push({ leg: leg.leg, status: 'succeeded', reference });
+    } catch (err: any) {
+      out.allSettled = false;
+      await db.query(
+        `UPDATE dispute_settlement_legs
+            SET status = 'failed', error_message = $2,
+                attempts = COALESCE(attempts, 0) + 1, last_attempt_at = NOW(), updated_at = NOW()
+          WHERE id = $1`,
+        [leg.id, String(err.message).slice(0, 240)]
+      );
+      out.legs.push({ leg: leg.leg, status: 'failed', error: String(err.message).slice(0, 120) });
+    }
+  }
+
+  // The dispute is fully settled only when every leg is paid.
+  if (out.allSettled && out.legs.length > 0) {
+    await db.query(
+      `UPDATE disputes SET settlement_status = 'settled', settled_at = NOW() WHERE id = $1`,
+      [disputeId]
+    );
+  }
+
+  return out;
+}

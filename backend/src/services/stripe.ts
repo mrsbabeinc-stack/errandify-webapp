@@ -1,10 +1,16 @@
 import Stripe from 'stripe';
 
-// Development: Disable strict SSL verification (for local testing)
-// Production: Always verify SSL (MUST be enabled in production)
-if (process.env.NODE_ENV !== 'production') {
-  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-}
+// This used to set NODE_TLS_REJECT_UNAUTHORIZED = '0' in non-production, which
+// disables certificate verification for the ENTIRE Node process — every
+// outbound HTTPS call, not just Stripe, including the AI calls that carry
+// private chat messages. It was gated on NODE_ENV !== 'production', so a
+// 'staging' or unset NODE_ENV would run real money and real personal data over
+// unverified TLS. Removed.
+//
+// Local machines that cannot reach Stripe's TLS should set
+// NODE_EXTRA_CA_CERTS=/etc/ssl/cert.pem before starting node — that fixes the
+// specific missing-CA problem without blinding the whole process. Verified this
+// works for live Stripe test-mode calls from this repo.
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_51TPCNWRpPAWSpeM0...', {
   apiVersion: '2023-10-16',
@@ -139,14 +145,31 @@ export const stripeService = {
   /**
    * Refund a payment (if user cancels, dispute, etc.)
    */
-  async refundPayment(intentId: string, reason: string): Promise<any> {
+  /**
+   * Refund a payment, in full or in part.
+   *
+   * amountDollars omitted = full refund. Provided = partial, which is what a
+   * dispute split needs (refund the asker their share, transfer the rest to the
+   * doer). Stripe's `reason` only accepts three enum values, so the real reason
+   * goes in metadata and the enum stays 'requested_by_customer'; passing an
+   * arbitrary string as reason (as this used to) is rejected by Stripe.
+   *
+   * idempotencyKey makes a retried settlement leg return the original refund
+   * rather than issuing a second one.
+   */
+  async refundPayment(intentId: string, reason: string, amountDollars?: number, idempotencyKey?: string): Promise<any> {
     try {
-      console.log(`[Stripe] Refunding payment: ${intentId}, reason: ${reason}`);
+      console.log(`[Stripe] Refunding ${amountDollars != null ? '$' + amountDollars : 'full'} on ${intentId}: ${reason}`);
 
-      const refund = await stripe.refunds.create({
-        payment_intent: intentId,
-        reason: reason as any,
-      });
+      const refund = await stripe.refunds.create(
+        {
+          payment_intent: intentId,
+          reason: 'requested_by_customer',
+          ...(amountDollars != null ? { amount: Math.round(amountDollars * 100) } : {}),
+          metadata: { reason },
+        },
+        idempotencyKey ? { idempotencyKey } : undefined
+      );
 
       console.log(`[Stripe] Refund created: ${refund.id}`);
       return {
@@ -193,20 +216,24 @@ export const stripeService = {
    * Create transfer to doer's connected account
    * Called after task completion and approval
    */
-  async createTransfer(amount: number, destinationAccountId: string, taskId: string, reason: string): Promise<any> {
+  async createTransfer(amount: number, destinationAccountId: string, taskId: string, reason: string, idempotencyKey?: string): Promise<any> {
     try {
       console.log(`[Stripe] Creating transfer to account ${destinationAccountId}, amount: $${amount}`);
 
-      const transfer = await stripe.transfers.create({
-        amount: Math.round(amount * 100), // Convert to cents
-        currency: 'sgd',
-        destination: destinationAccountId,
-        description: `Payment for task ${taskId}`,
-        metadata: {
-          taskId,
-          reason,
+      const transfer = await stripe.transfers.create(
+        {
+          amount: Math.round(amount * 100), // Convert to cents
+          currency: 'sgd',
+          destination: destinationAccountId,
+          description: `Payment for task ${taskId}`,
+          metadata: {
+            taskId,
+            reason,
+          },
         },
-      });
+        // A retried settlement leg returns the original transfer, never a second.
+        idempotencyKey ? { idempotencyKey } : undefined
+      );
 
       console.log(`[Stripe] Transfer created: ${transfer.id}`);
       return {
