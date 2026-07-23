@@ -1713,16 +1713,32 @@ interface GateResult {
   ok: boolean;
   status?: number;
   error?: string;
-  reason?: 'not_found' | 'not_member' | 'not_verified' | 'pending' | 'rejected';
+  reason?: 'not_found' | 'not_member' | 'not_verified' | 'pending' | 'rejected' | 'suspended';
 }
 
 /** Caller must be owner/manager AND the company must be verified. */
 async function requireVerifiedCompany(companyId: number, userId: number): Promise<GateResult> {
-  const c = await db.query('SELECT certified FROM companies WHERE id = $1', [companyId]);
+  const c = await db.query(
+    'SELECT certified, status, suspension_reason FROM companies WHERE id = $1',
+    [companyId]
+  );
   if (c.rows.length === 0) {
     return { ok: false, status: 404, error: 'Company not found', reason: 'not_found' };
   }
-  const { certified } = c.rows[0];
+  const { certified, status, suspension_reason } = c.rows[0];
+
+  // Nothing anywhere read companies.status, so the admin Suspend button changed
+  // a column that gated nothing and a suspended company kept trading normally.
+  // Checked before membership and certification because it outranks both: a
+  // suspended company is blocked whoever is asking and however verified it is.
+  if (status === 'suspended') {
+    return {
+      ok: false, status: 403, reason: 'suspended',
+      error: suspension_reason
+        ? `This company is suspended: ${suspension_reason} Contact Errandify support if you think this is wrong.`
+        : 'This company is suspended. Contact Errandify support if you think this is wrong.',
+    };
+  }
 
   // Use the shared resolver rather than reading owner_user_id/manager_user_id
   // directly. This checked only those two columns and ignored company_staff, so
@@ -2524,6 +2540,190 @@ router.post('/companies/:companyId/dispute-requests/:id/decide', authMiddleware,
   } catch (error) {
     console.error('[Company] Decide dispute request error:', error);
     res.status(500).json({ error: 'Could not record that decision. Please try again.' });
+  }
+});
+
+// ============================================================================
+// HANDING BACK AN ALLOCATED ERRAND
+//
+// A staff member who cannot attend a job they were allocated asks to be taken
+// off it, and the owner or manager decides. Migrations 030 and 031 built all of
+// the storage for this — decline_reason, decline_notes, declined_at, declined_by
+// on company_orders, and 'declined' added to the status check — and no route was
+// ever written against it, so the screen ran on hardcoded rows.
+//
+// A pending request is one with decline_reason set while the row is still
+// assigned. Approving releases the errand back to the pool for reallocation
+// (status 'open', no staff) and keeps the reason as the record of why.
+// Rejecting clears the request and the staff member keeps the job.
+// ============================================================================
+
+// POST /api/companies/:companyId/jobs/:errandId/handback — staff asks to be released
+router.post('/companies/:companyId/jobs/:errandId/handback', authMiddleware, async (req: any, res: Response) => {
+  try {
+    const companyId = parseInt(req.params.companyId, 10);
+    const errandId = parseInt(req.params.errandId, 10);
+    const userId = parseInt(req.userId, 10);
+    const { reason, category, notes } = req.body;
+
+    const gate = await requireCompanyRole(req.userId, companyId, ['owner', 'manager', 'staff']);
+    if (!gate.ok) return res.status(gate.status || 403).json({ error: gate.error });
+
+    if (!reason || !String(reason).trim()) {
+      return res.status(400).json({ error: 'Tell your manager why you cannot take this one' });
+    }
+
+    // Only the person actually allocated the job can hand it back
+    const own = await db.query(
+      `SELECT id, status, decline_reason FROM company_orders
+        WHERE company_id = $1 AND errand_id = $2 AND assigned_staff_id = $3`,
+      [companyId, errandId, userId]
+    );
+    if (own.rows.length === 0) {
+      return res.status(403).json({ error: 'That job is not allocated to you' });
+    }
+    if (own.rows[0].decline_reason) {
+      return res.status(409).json({ error: "You've already asked to be taken off this one" });
+    }
+    if (!['assigned', 'in_progress'].includes(own.rows[0].status)) {
+      return res.status(400).json({ error: `This job is ${own.rows[0].status} — there is nothing to hand back.` });
+    }
+
+    const r = await db.query(
+      `UPDATE company_orders
+          SET decline_reason = $1, decline_notes = $2, declined_at = NOW(), declined_by = $3,
+              updated_at = NOW()
+        WHERE id = $4
+        RETURNING id, errand_id, status, decline_reason, decline_notes, declined_at`,
+      [String(category || 'Other'), String(reason).trim() + (notes ? ` — ${notes}` : ''), userId, own.rows[0].id]
+    );
+
+    console.log('[Company] Staff', userId, 'asked to hand back errand', errandId);
+    res.status(201).json({
+      success: true,
+      message: 'Sent to your manager. Keep the job until they decide.',
+      data: r.rows[0],
+    });
+  } catch (error) {
+    console.error('[Company] Handback request failed:', error);
+    res.status(500).json({ error: 'Could not send that request' });
+  }
+});
+
+// GET /api/companies/:companyId/handbacks — the queue plus what has been decided
+router.get('/companies/:companyId/handbacks', authMiddleware, async (req: any, res: Response) => {
+  try {
+    const companyId = parseInt(req.params.companyId, 10);
+    const gate = await requireCompanyRole(req.userId, companyId, ['owner', 'manager']);
+    if (!gate.ok) return res.status(gate.status || 403).json({ error: gate.error });
+
+    const r = await db.query(
+      `SELECT co.id, co.errand_id, co.status, co.assigned_staff_id,
+              co.decline_reason, co.decline_notes, co.declined_at, co.declined_by,
+              co.created_at AS assigned_date,
+              e.title AS errand_title, e.formatted_id AS errand_formatted_id,
+              COALESCE(u.alias, u.display_name) AS staff_name,
+              -- still assigned with a reason on it = waiting for a decision
+              CASE WHEN co.decline_reason IS NOT NULL AND co.status IN ('assigned','in_progress')
+                   THEN 'pending'
+                   WHEN co.decline_reason IS NOT NULL THEN 'approved'
+                   ELSE 'none' END AS request_status
+         FROM company_orders co
+         JOIN errands e ON e.id = co.errand_id
+         LEFT JOIN users u ON u.id = co.declined_by
+        WHERE co.company_id = $1 AND co.decline_reason IS NOT NULL
+        ORDER BY co.declined_at DESC`,
+      [companyId]
+    );
+
+    const rows = r.rows;
+    res.json({
+      success: true,
+      data: {
+        requests: rows,
+        summary: {
+          pending: rows.filter((x: any) => x.request_status === 'pending').length,
+          approved: rows.filter((x: any) => x.request_status === 'approved').length,
+        },
+      },
+    });
+  } catch (error) {
+    console.error('[Company] Handbacks read failed:', error);
+    res.status(500).json({ error: 'Could not load those requests' });
+  }
+});
+
+// POST /api/companies/:companyId/handbacks/:orderId/decide — approve | reject
+router.post('/companies/:companyId/handbacks/:orderId/decide', authMiddleware, async (req: any, res: Response) => {
+  try {
+    const companyId = parseInt(req.params.companyId, 10);
+    const orderId = parseInt(req.params.orderId, 10);
+    const { decision, note } = req.body;
+
+    const gate = await requireCompanyRole(req.userId, companyId, ['owner', 'manager']);
+    if (!gate.ok) return res.status(gate.status || 403).json({ error: gate.error });
+
+    if (!['approve', 'reject'].includes(decision)) {
+      return res.status(400).json({ error: 'Decision must be approve or reject' });
+    }
+
+    const row = await db.query(
+      `SELECT id, errand_id, status, assigned_staff_id, decline_reason
+         FROM company_orders WHERE id = $1 AND company_id = $2`,
+      [orderId, companyId]
+    );
+    if (row.rows.length === 0) {
+      return res.status(404).json({ error: 'That request no longer exists' });
+    }
+    if (!row.rows[0].decline_reason) {
+      return res.status(400).json({ error: 'There is no open request on that job' });
+    }
+
+    const staffId = row.rows[0].assigned_staff_id;
+
+    if (decision === 'approve') {
+      // Back into the pool. The reason stays on the row as the record of why.
+      await db.query(
+        `UPDATE company_orders
+            SET status = 'open', assigned_staff_id = NULL,
+                decline_notes = COALESCE(NULLIF($1, ''), decline_notes), updated_at = NOW()
+          WHERE id = $2`,
+        [note || '', orderId]
+      );
+    } else {
+      // Request refused — clear it so the job reads as simply allocated again
+      await db.query(
+        `UPDATE company_orders
+            SET decline_reason = NULL, decline_notes = NULL,
+                declined_at = NULL, declined_by = NULL, updated_at = NOW()
+          WHERE id = $1`,
+        [orderId]
+      );
+    }
+
+    if (staffId) {
+      await db.query(
+        `INSERT INTO notifications (user_id, type, title, message, is_read)
+         VALUES ($1, 'handback_decision', $2, $3, FALSE)`,
+        [staffId,
+         decision === 'approve' ? 'Taken off that errand' : 'Still on that errand',
+         decision === 'approve'
+           ? `Your manager has taken you off that job.${note ? ` ${note}` : ''}`
+           : `Your manager needs you to keep that job.${note ? ` ${note}` : ''}`]
+      );
+    }
+
+    console.log('[Company] Handback', orderId, decision + 'd by', req.userId);
+    res.json({
+      success: true,
+      message: decision === 'approve'
+        ? 'Released — the errand is back in your list to reallocate.'
+        : 'Request declined. The staff member keeps the job.',
+      data: { id: orderId, decision },
+    });
+  } catch (error) {
+    console.error('[Company] Handback decision failed:', error);
+    res.status(500).json({ error: 'Could not record that decision' });
   }
 });
 

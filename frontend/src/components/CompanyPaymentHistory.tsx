@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import WalletBreakdown from './WalletBreakdown';
 import PaymentHoldsStatus from './PaymentHoldsStatus';
 
@@ -46,7 +46,7 @@ interface Props {
   pointsBalance?: number;
 }
 
-const CompanyPaymentHistory: React.FC<Props> = ({ companyId = 1, pointsBalance = 3450 }) => {
+const CompanyPaymentHistory: React.FC<Props> = ({ companyId }) => {
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const showNotification = (type: 'success' | 'error', message: string) => {
@@ -89,58 +89,47 @@ const CompanyPaymentHistory: React.FC<Props> = ({ companyId = 1, pointsBalance =
   const [invoiceFilter, setInvoiceFilter] = useState('');
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [addCardLoading, setAddCardLoading] = useState(false);
-  const [transactions] = useState<Transaction[]>([
-    {
-      id: 1,
-      date: '2026-07-10',
-      description: 'House Cleaning Errand Completion - Jordan Smith',
-      type: 'income',
-      amount: 450,
-      status: 'completed',
-      reference: 'ERR-00542',
-      method: 'Bank Transfer',
-    },
-    {
-      id: 2,
-      date: '2026-07-09',
-      description: 'Monthly Subscription - Gold Partner',
-      type: 'expense',
-      amount: 199,
-      status: 'completed',
-      reference: 'SUB-00124',
-      method: 'Credit Card',
-    },
-    {
-      id: 3,
-      date: '2026-07-08',
-      description: 'Advertising Campaign - Summer Promotion',
-      type: 'expense',
-      amount: 320,
-      status: 'completed',
-      reference: 'AD-00089',
-      method: 'Credit Card',
-    },
-    {
-      id: 4,
-      date: '2026-07-07',
-      description: 'Referral Bonus - New Company Signup',
-      type: 'income',
-      amount: 250,
-      status: 'completed',
-      reference: 'REF-00045',
-      method: 'Bank Transfer',
-    },
-    {
-      id: 5,
-      date: '2026-07-06',
-      description: 'Office Maintenance Errand - Ava Johnson',
-      type: 'income',
-      amount: 350,
-      status: 'completed',
-      reference: 'ERR-00541',
-      method: 'Bank Transfer',
-    },
-  ]);
+  // Was five hardcoded transactions — a $450 errand payout, a Gold Partner
+  // subscription charge, an ad campaign — shown against a wallet holding
+  // nothing. Now reads /api/wallet/transactions.
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [txLoading, setTxLoading] = useState(true);
+  const [txError, setTxError] = useState('');
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/wallet/transactions?limit=100`,
+          { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+        );
+        const b = await res.json().catch(() => ({}));
+        if (!res.ok) { setTxError(b.error || 'Could not load transactions'); return; }
+
+        const rows = b.data?.transactions || b.data || [];
+        setTransactions(rows.map((t: any, i: number) => ({
+          id: t.id ?? t.task_id ?? i + 1,
+          date: t.date ? String(t.date).slice(0, 10) : '',
+          description: t.title
+            ? `${t.title}${t.other_party ? ` — ${t.other_party}` : ''}`
+            : (t.description || 'Transaction'),
+          // The API speaks earning/spent; this screen speaks income/expense
+          type: t.type === 'earning' ? 'income' : t.type === 'spent' ? 'expense' : (t.type || 'expense'),
+          amount: Number(t.amount) || 0,
+          status: ['completed_confirmed', 'completed', 'rated'].includes(String(t.status))
+            ? 'completed'
+            : String(t.status) === 'failed' ? 'failed' : 'pending',
+          reference: t.reference || t.formatted_id || (t.task_id ? `ERR-${t.task_id}` : '—'),
+          method: t.method || 'Errandify Wallet',
+        })));
+        setTxError('');
+      } catch {
+        setTxError('Could not load transactions');
+      } finally {
+        setTxLoading(false);
+      }
+    })();
+  }, []);
 
   const [filterType, setFilterType] = useState<'all' | 'income' | 'expense' | 'refund'>('all');
   const [filterStatus, setFilterStatus] = useState<'all' | 'completed' | 'pending' | 'failed'>('all');
@@ -210,13 +199,10 @@ const CompanyPaymentHistory: React.FC<Props> = ({ companyId = 1, pointsBalance =
       {/* Wallet & Payment Status */}
       <div className="wallet-section">
         <div style={{ marginBottom: '24px' }}>
-          <WalletBreakdown data={{
-            total: pointsBalance,
-            available: Math.floor(pointsBalance * 0.5),
-            onHold: Math.floor(pointsBalance * 0.3),
-            pending: Math.floor(pointsBalance * 0.18),
-            subscription: 199,
-          }} />
+          {/* The same fabricated split as the settings tab: a default 3450 EP
+              carved 50/30/18 with a flat 199 subscription. Dropping the prop
+              lets WalletBreakdown read the real wallet. */}
+          <WalletBreakdown />
         </div>
 
         <div style={{ marginBottom: '24px' }}>
@@ -319,7 +305,7 @@ const CompanyPaymentHistory: React.FC<Props> = ({ companyId = 1, pointsBalance =
                   placeholder="1234 5678 9012 3456"
                   value={newCardData.cardNumber}
                   onChange={(e) => setNewCardData(prev => ({ ...prev, cardNumber: e.target.value }))}
-                  maxLength="19"
+                  maxLength={19}
                   required
                 />
                 <small className="help-text">Stripe will tokenize this securely</small>
@@ -333,7 +319,7 @@ const CompanyPaymentHistory: React.FC<Props> = ({ companyId = 1, pointsBalance =
                     placeholder="MM/YY"
                     value={newCardData.expiry}
                     onChange={(e) => setNewCardData(prev => ({ ...prev, expiry: e.target.value }))}
-                    maxLength="5"
+                    maxLength={5}
                     required
                   />
                 </div>
@@ -344,7 +330,7 @@ const CompanyPaymentHistory: React.FC<Props> = ({ companyId = 1, pointsBalance =
                     placeholder="123"
                     value={newCardData.cvc}
                     onChange={(e) => setNewCardData(prev => ({ ...prev, cvc: e.target.value }))}
-                    maxLength="4"
+                    maxLength={4}
                     required
                   />
                   <small className="help-text">3-4 digits on back</small>
@@ -471,6 +457,15 @@ const CompanyPaymentHistory: React.FC<Props> = ({ companyId = 1, pointsBalance =
             </tr>
           </thead>
           <tbody>
+            {txLoading && (
+              <tr><td colSpan={6} style={{ padding: 20, color: '#6B7280' }}>Loading transactions…</td></tr>
+            )}
+            {!txLoading && txError && (
+              <tr><td colSpan={6} style={{ padding: 20, color: '#B91C1C' }}>{txError}</td></tr>
+            )}
+            {!txLoading && !txError && filteredTransactions.length === 0 && (
+              <tr><td colSpan={6} style={{ padding: 20, color: '#6B7280' }}>No transactions yet.</td></tr>
+            )}
             {filteredTransactions.map(transaction => (
               <tr key={transaction.id} className={`row-${transaction.type}`}>
                 <td className="date">{transaction.date}</td>

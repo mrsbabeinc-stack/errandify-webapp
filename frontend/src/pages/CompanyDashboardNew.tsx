@@ -449,6 +449,14 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                     <a href="#" className={`nav-item ${activeSection === 'leave-approvals' ? 'active' : ''}`} onClick={() => setActiveSection('leave-approvals')}>
                       📋 Leave Approvals
                     </a>
+                    {/* Both of these sections existed but nothing ever set
+                        activeSection to them, so they were unreachable UI. */}
+                    <a href="#" className={`nav-item ${activeSection === 'staff-resignation' ? 'active' : ''}`} onClick={() => setActiveSection('staff-resignation')}>
+                      🔄 Errand Hand-backs
+                    </a>
+                    <a href="#" className={`nav-item ${activeSection === 'points-distribution' ? 'active' : ''}`} onClick={() => setActiveSection('points-distribution')}>
+                      🎁 Distribute EP
+                    </a>
                   </>
                 )}
               </div>
@@ -1265,13 +1273,11 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
 
                   {/* Wallet Breakdown */}
                   <div style={{ marginBottom: '24px' }}>
-                    <WalletBreakdown data={{
-                      total: stats.pointsBalance,
-                      available: Math.floor(stats.pointsBalance * 0.5),
-                      onHold: Math.floor(stats.pointsBalance * 0.3),
-                      pending: Math.floor(stats.pointsBalance * 0.18),
-                      subscription: 199,
-                    }} />
+                    {/* Was handed stats.pointsBalance (a hardcoded 3450) split
+                        50/30/18 with a flat 199 subscription — none of which came
+                        from anywhere. With no prop the component reads the real
+                        wallet from /api/wallet/balance. */}
+                    <WalletBreakdown />
                   </div>
 
                   {/* Payment Holds Status */}

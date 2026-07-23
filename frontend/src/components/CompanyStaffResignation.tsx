@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 interface StaffResignation {
   id: number;
   errandId: number;
   errandTitle: string;
-  employeeId: number;
   employeeName: string;
   assignedDate: string;
   resignationReason: string;
@@ -14,60 +15,100 @@ interface StaffResignation {
   managerNotes?: string;
 }
 
-const CompanyStaffResignation: React.FC = () => {
-  const [resignations, setResignations] = useState<StaffResignation[]>([
-    {
-      id: 1,
-      errandId: 101,
-      errandTitle: 'House Cleaning - Bishan',
-      employeeId: 1,
-      employeeName: 'Jordan Smith',
-      assignedDate: '2026-07-10',
-      resignationReason: 'Vehicle breakdown on the way to location',
-      reasonCategory: 'Vehicle Issues',
-      requestDate: '2026-07-11',
-      status: 'pending',
-    },
-    {
-      id: 2,
-      errandId: 102,
-      errandTitle: 'Office Maintenance - Raffles',
-      employeeId: 2,
-      employeeName: 'Ava Johnson',
-      assignedDate: '2026-07-09',
-      resignationReason: 'Delayed completion of previous errand, unable to make it on time',
-      reasonCategory: 'Time Conflict',
-      requestDate: '2026-07-11',
-      status: 'approved',
-      managerNotes: 'Understood, reassigning to another staff member.',
-    },
-  ]);
+interface Props {
+  companyId?: number | null;
+}
 
-  const [showModal, setShowModal] = useState(false);
-  const [selectedReason, setSelectedReason] = useState('');
-  const [customReason, setCustomReason] = useState('');
+/**
+ * Staff asking to be taken off an errand they were allocated.
+ *
+ * Was two hardcoded requests from invented staff, and Approve/Reject only
+ * called setState — the errand was never released and the staff member was
+ * never told. The STORAGE existed all along: migrations 030 and 031 added
+ * decline_reason / decline_notes / declined_at / declined_by to company_orders
+ * and allowed 'declined' on its status, and nothing was ever written against
+ * them. Now backed by /api/companies/:id/handbacks.
+ */
+const CompanyStaffResignation: React.FC<Props> = ({ companyId: companyIdProp }) => {
+  const [companyId, setCompanyId] = useState<number | null>(companyIdProp ?? null);
+  const [resignations, setResignations] = useState<StaffResignation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [deciding, setDeciding] = useState<number | null>(null);
 
-  const reasonCategories = [
-    'Vehicle Issues',
-    'Time Conflict',
-    'Health Issues',
-    'Family Emergency',
-    'Technical Problem',
-    'Customer Issue',
-    'Other',
-  ];
+  const token = () => localStorage.getItem('token');
 
-  const handleApprove = (resignationId: number) => {
-    setResignations(resignations.map(r =>
-      r.id === resignationId ? { ...r, status: 'approved' } : r
-    ));
+  useEffect(() => {
+    if (companyIdProp) { setCompanyId(companyIdProp); return; }
+    (async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/companies/user/my-company`, {
+          headers: { Authorization: `Bearer ${token()}` },
+        });
+        if (res.ok) {
+          const b = await res.json();
+          if (b.data?.id) { setCompanyId(b.data.id); return; }
+        }
+        setLoading(false);
+      } catch { setLoading(false); }
+    })();
+  }, [companyIdProp]);
+
+  const load = useCallback(async () => {
+    if (!companyId) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/api/companies/${companyId}/handbacks`, {
+        headers: { Authorization: `Bearer ${token()}` },
+      });
+      const b = await res.json().catch(() => ({}));
+      if (!res.ok) { setError(b.error || 'Could not load requests'); return; }
+
+      setResignations((b.data?.requests || []).map((r: any) => ({
+        id: r.id,
+        errandId: r.errand_id,
+        errandTitle: r.errand_formatted_id
+          ? `${r.errand_title} (${r.errand_formatted_id})`
+          : r.errand_title,
+        employeeName: r.staff_name || 'Staff member',
+        assignedDate: r.assigned_date ? String(r.assigned_date).slice(0, 10) : '',
+        resignationReason: r.decline_notes || r.decline_reason || '',
+        reasonCategory: r.decline_reason || 'Other',
+        requestDate: r.declined_at ? String(r.declined_at).slice(0, 10) : '',
+        status: r.request_status === 'pending' ? 'pending' : 'approved',
+      })));
+      setError('');
+    } catch {
+      setError('Could not load requests');
+    } finally {
+      setLoading(false);
+    }
+  }, [companyId]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const decide = async (orderId: number, decision: 'approve' | 'reject') => {
+    if (!companyId) return;
+    setDeciding(orderId);
+    setError('');
+    try {
+      const res = await fetch(`${API_URL}/api/companies/${companyId}/handbacks/${orderId}/decide`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token()}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ decision }),
+      });
+      const b = await res.json().catch(() => ({}));
+      if (!res.ok) { setError(b.error || 'Could not record that decision'); return; }
+      await load();
+    } catch {
+      setError('Could not record that decision');
+    } finally {
+      setDeciding(null);
+    }
   };
 
-  const handleReject = (resignationId: number) => {
-    setResignations(resignations.map(r =>
-      r.id === resignationId ? { ...r, status: 'rejected' } : r
-    ));
-  };
+  const handleApprove = (id: number) => decide(id, 'approve');
+  const handleReject = (id: number) => decide(id, 'reject');
 
   const pendingCount = resignations.filter(r => r.status === 'pending').length;
 
@@ -87,9 +128,18 @@ const CompanyStaffResignation: React.FC = () => {
         </div>
       </div>
 
+      {error && (
+        <div style={{
+          background: '#FEF2F2', border: '1px solid #FECACA', color: '#B91C1C',
+          padding: '12px 16px', borderRadius: 8, marginBottom: 16, fontSize: 14,
+        }}>{error}</div>
+      )}
+
       {/* Resignation List */}
       <div className="resignation-list">
-        {resignations.length === 0 ? (
+        {loading ? (
+          <div className="empty-state"><p>Loading requests…</p></div>
+        ) : resignations.length === 0 ? (
           <div className="empty-state">
             <span className="empty-icon">📋</span>
             <p>No resignation requests at this time</p>
@@ -144,12 +194,14 @@ const CompanyStaffResignation: React.FC = () => {
                   <button
                     className="btn-approve"
                     onClick={() => handleApprove(resignation.id)}
+                    disabled={deciding === resignation.id}
                   >
                     ✓ Approve
                   </button>
                   <button
                     className="btn-reject"
                     onClick={() => handleReject(resignation.id)}
+                    disabled={deciding === resignation.id}
                   >
                     ✗ Reject
                   </button>

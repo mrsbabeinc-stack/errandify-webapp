@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 interface WalletData {
   total: number;
@@ -12,19 +14,56 @@ interface WalletBreakdownProps {
   data?: WalletData;
 }
 
+/**
+ * Fell back to a demo wallet — total 5000, available 2500, on hold 1500 — and
+ * the dashboard renders it with no props, so every company saw those numbers
+ * regardless of its actual balance. Now fetches /api/wallet/balance when the
+ * parent doesn't supply data.
+ */
 export default function WalletBreakdown({ data }: WalletBreakdownProps) {
   const [expanded, setExpanded] = useState(false);
+  const [fetched, setFetched] = useState<WalletData | null>(null);
+  const [loading, setLoading] = useState(!data);
 
-  // Default data for demo
-  const walletData: WalletData = data || {
-    total: 5000,
-    available: 2500,
-    onHold: 1500,
-    pending: 900,
-    subscription: 100,
+  useEffect(() => {
+    if (data) { setLoading(false); return; }
+    (async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/wallet/balance`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        });
+        if (res.ok) {
+          const b = await res.json();
+          const doer = b.data?.doer || {};
+          // completed earnings are drawable; work in progress is not yet
+          const available = Number(doer.completedEarnings) || 0;
+          const pending = Number(doer.pendingEarnings) || 0;
+          setFetched({
+            total: available + pending,
+            available,
+            onHold: 0,
+            pending,
+          });
+        }
+      } catch {
+        // leave it at zeros rather than showing invented figures
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [data]);
+
+  const walletData: WalletData = data || fetched || {
+    total: 0, available: 0, onHold: 0, pending: 0,
   };
 
-  const percentage = (amount: number) => ((amount / walletData.total) * 100).toFixed(1);
+  // Guard the divide — an empty wallet rendered "NaN%" on every row
+  const percentage = (amount: number) =>
+    walletData.total > 0 ? ((amount / walletData.total) * 100).toFixed(1) : '0.0';
+
+  if (loading) {
+    return <div style={{ padding: 16, color: '#6B7280', fontSize: 14 }}>Loading wallet…</div>;
+  }
 
   return (
     <div style={{
