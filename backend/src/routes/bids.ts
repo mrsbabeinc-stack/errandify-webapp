@@ -9,7 +9,7 @@ import { activityLogService } from '../services/activityLogService.js';
 import * as contentMod from '../modules/content-moderation.js';
 import { notifyUser } from '../socket.js';
 import postalCodeLookup from '../services/postalCodeToAreaLookup.js';
-import { resolveMyCompany } from '../utils/companyRole.js';
+import { resolveMyCompany, suspensionMessage } from '../utils/companyRole.js';
 import { checkPayoutReadiness } from '../utils/payoutReadiness.js';
 import { recordModerationEvent, decideAction, blockedMessage } from '../utils/moderationLog.js';
 
@@ -239,6 +239,16 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       let companyId: number | null = null;
       if (req.body.actAsCompany) {
         const m = await resolveMyCompany(doerId);
+        // Suspension is checked first and separately from certification. This
+        // path only ever tested `certified`, so a suspended company was blocked
+        // from posting errands but could still make offers on its own behalf —
+        // half a suspension is not a suspension.
+        if (m && m.suspended) {
+          return res.status(403).json({
+            error: suspensionMessage(m.suspensionReason),
+            reason: 'suspended',
+          });
+        }
         if (m && m.canActForCompany && m.certified) {
           companyId = m.companyId;
         } else if (m && !m.certified) {

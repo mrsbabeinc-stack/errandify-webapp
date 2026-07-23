@@ -20,10 +20,26 @@ export interface CompanyMembership {
   companyName: string;
   role: CompanyRole;
   certified: boolean;
+  /**
+   * An admin has suspended the company. Resolved here rather than at each call
+   * site: `certified` was the only trading condition this returned, so callers
+   * that correctly refused an unverified company still let a suspended one
+   * through — which is how a suspended company could not post an errand but
+   * could still make offers.
+   */
+  suspended: boolean;
+  suspensionReason: string | null;
   /** true for owner/manager — the roles that can act on the company's behalf */
   canActForCompany: boolean;
   /** staff who are on approved leave shouldn't be handed new work */
   onLeave: boolean;
+}
+
+/** One wording for a suspended company, wherever they run into it. */
+export function suspensionMessage(reason: string | null): string {
+  return reason
+    ? `This company is suspended: ${reason} Contact Errandify support if you think this is wrong.`
+    : 'This company is suspended. Contact Errandify support if you think this is wrong.';
 }
 
 /**
@@ -39,7 +55,7 @@ export async function resolveCompanyRole(
   if (!uid || !cid) return null;
 
   const result = await db.query(
-    `SELECT c.id, c.company_name, c.certified,
+    `SELECT c.id, c.company_name, c.certified, c.status, c.suspension_reason,
             c.owner_user_id, c.manager_user_id,
             cs.role AS staff_role, cs.status AS staff_status
        FROM companies c
@@ -67,6 +83,8 @@ export async function resolveCompanyRole(
     companyName: r.company_name,
     role,
     certified: !!r.certified,
+    suspended: r.status === 'suspended',
+    suspensionReason: r.suspension_reason ?? null,
     canActForCompany: role === 'owner' || role === 'manager',
     onLeave: r.staff_status === 'on_leave',
   };
@@ -120,6 +138,18 @@ export async function requireCompanyRole(
       ok: false,
       status: 403,
       error: `Only the company ${need} can do this. You're signed in as ${m.role}.`,
+      membership: m,
+    };
+  }
+
+  // Checked before certification: a suspended company is blocked regardless of
+  // how verified it is. requireCertified marks the endpoints that act in the
+  // marketplace, which is exactly the set a suspension is meant to stop.
+  if (opts.requireCertified && m.suspended) {
+    return {
+      ok: false,
+      status: 403,
+      error: suspensionMessage(m.suspensionReason),
       membership: m,
     };
   }
