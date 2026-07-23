@@ -66,16 +66,20 @@ export async function allocateMonthlyCredits(companyId?: number): Promise<number
   let allocated = 0;
 
   for (const sub of subscriptions) {
-    // Insert or update ad credits for this company
+    // subscription_tiers.ad_credit_monthly is in DOLLARS (50 / 200 / 500), but
+    // this ledger is in CENTS — every spend/refund divides amount by 100. The
+    // old code stored the dollar figure straight in, so a platinum company got
+    // 500 cents = $5 instead of $500. Convert to cents on the way in.
+    const amountCents = Math.round(Number(sub.ad_credit_monthly) * 100);
     await db.query(
       `INSERT INTO subscription_ad_credits (company_id, amount, spent, expires_at, created_at)
-       VALUES ($1, $2, COALESCE(0, 0), $3, NOW())
+       VALUES ($1, $2, 0, $3, NOW())
        ON CONFLICT (company_id) DO UPDATE SET amount = EXCLUDED.amount, expires_at = EXCLUDED.expires_at`,
-      [sub.company_id, sub.ad_credit_monthly, expiresAt]
+      [sub.company_id, amountCents, expiresAt]
     );
 
     allocated++;
-    console.log(`✅ Allocated SGD $${sub.ad_credit_monthly / 100} credits to company ${sub.company_id}`);
+    console.log(`✅ Allocated SGD $${amountCents / 100} credits to company ${sub.company_id}`);
   }
 
   return allocated;
