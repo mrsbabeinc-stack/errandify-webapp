@@ -273,6 +273,102 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
 // stored correctly and then never readable: profiles showed no reviews and
 // both read endpoints returned 500.
 // GET /api/ratings/user/:userId - Get all ratings for a user
+/**
+ * POST /api/ratings/:id/respond — reply to a review written about me.
+ *
+ * The UI for this shipped long ago (the "Your Response" modal in DoerReviews);
+ * it just called alert(). Migration 076 added ratings.response/responded_at.
+ * Only the person rated may reply, and only once — an editable public reply to
+ * someone else's review invites rewriting history after the fact.
+ */
+router.post('/:id/respond', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const ratingId = parseInt(req.params.id, 10);
+    const userId = parseInt(req.userId || '0', 10);
+    const { response } = req.body;
+
+    const text = String(response || '').trim();
+    if (!text) return res.status(400).json({ error: 'Write something before posting your response' });
+    if (text.length > 1000) {
+      return res.status(400).json({ error: 'Keep your response under 1000 characters' });
+    }
+
+    const existing = await db.query(
+      'SELECT id, ratee_id, response FROM ratings WHERE id = $1',
+      [ratingId]
+    );
+    if (existing.rows.length === 0) {
+      return res.status(404).json({ error: 'That review no longer exists' });
+    }
+    if (Number(existing.rows[0].ratee_id) !== userId) {
+      return res.status(403).json({ error: 'You can only respond to reviews about you' });
+    }
+    if (existing.rows[0].response) {
+      return res.status(409).json({ error: "You've already responded to this review" });
+    }
+
+    const updated = await db.query(
+      `UPDATE ratings SET response = $1, responded_at = NOW(), updated_at = NOW()
+        WHERE id = $2 AND response IS NULL
+        RETURNING id, response, responded_at`,
+      [text, ratingId]
+    );
+    if (updated.rows.length === 0) {
+      return res.status(409).json({ error: "You've already responded to this review" });
+    }
+
+    res.json({ success: true, message: 'Response posted.', data: updated.rows[0] });
+  } catch (error) {
+    console.error('[Ratings] Respond failed:', error);
+    res.status(500).json({ error: 'Could not post your response' });
+  }
+});
+
+/**
+ * GET /api/ratings/given — the ratings I have written about other people.
+ *
+ * /user/:userId returns ratings RECEIVED. The "Reviews (As Asker)" screen wants
+ * the opposite direction and had no endpoint to call, so it displayed a
+ * hardcoded list instead.
+ */
+router.get('/given', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const raterId = parseInt(req.userId || '0', 10);
+
+    const result = await db.query(
+      `SELECT r.id, r.rating, r.review_text AS comment, r.created_at,
+              r.ratee_id,
+              COALESCE(u.alias, u.display_name) AS ratee_name,
+              e.id AS errand_id, e.title AS errand_title,
+              e.formatted_id AS errand_formatted_id, e.category,
+              c.company_name AS ratee_company_name
+         FROM ratings r
+         JOIN users u ON u.id = r.ratee_id
+         JOIN errands e ON e.id = r.errand_id
+         LEFT JOIN bids b ON b.id = e.accepted_bid_id AND b.doer_id = r.ratee_id
+         LEFT JOIN companies c ON c.id = b.company_id
+        WHERE r.rater_id = $1
+        ORDER BY r.created_at DESC
+        LIMIT 50`,
+      [raterId]
+    );
+
+    const ratings = result.rows.map((r: any) => ({ ...r, rating: parseFloat(r.rating) }));
+    const total = ratings.length;
+    const average = total > 0
+      ? (ratings.reduce((s: number, r: any) => s + r.rating, 0) / total).toFixed(1)
+      : '0.0';
+
+    res.json({
+      success: true,
+      data: { ratings, summary: { total, average } },
+    });
+  } catch (error) {
+    console.error('[Ratings] Given ratings failed:', error);
+    res.status(500).json({ error: 'Could not load your reviews' });
+  }
+});
+
 router.get('/user/:userId', async (req: AuthRequest, res: Response) => {
   try {
     const userId = parseInt(req.params.userId, 10);
@@ -283,8 +379,13 @@ router.get('/user/:userId', async (req: AuthRequest, res: Response) => {
          r.rating,
          r.review_text AS comment,
          r.created_at,
-         u.display_name as rater_name,
-         e.title as task_title
+         r.response,
+         r.responded_at,
+         r.rater_id,
+         COALESCE(u.alias, u.display_name) as rater_name,
+         e.id as errand_id,
+         e.title as task_title,
+         e.formatted_id as errand_formatted_id
        FROM ratings r
        JOIN users u ON r.rater_id = u.id
        JOIN errands e ON r.errand_id = e.id
@@ -321,6 +422,15 @@ router.get('/user/:userId', async (req: AuthRequest, res: Response) => {
           raterName: r.rater_name,
           taskTitle: r.task_title,
           createdAt: r.created_at,
+          // The screens that consume this need to link back to the errand and
+          // to show / post a reply; both snake_case and camelCase are emitted
+          // because existing callers read created_at as well as createdAt.
+          created_at: r.created_at,
+          rater_id: r.rater_id,
+          errand_id: r.errand_id,
+          errand_formatted_id: r.errand_formatted_id,
+          response: r.response,
+          responded_at: r.responded_at,
         })),
         stats: {
           totalRatings,

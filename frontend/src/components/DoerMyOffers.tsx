@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 interface Offer {
   id: number;
@@ -11,54 +13,72 @@ interface Offer {
   proposedPrice?: number;
 }
 
+/**
+ * The offers I have made, from GET /api/bids/my-bids. Was three hardcoded rows,
+ * and "Withdraw" only called alert() — there was no withdraw route at all until
+ * POST /api/bids/:id/withdraw was added alongside this.
+ */
 const DoerMyOffers: React.FC = () => {
-  const [offers] = useState<Offer[]>([
-    {
-      id: 1,
-      errandId: 'ERR-2026-001',
-      errandTitle: 'Office Cleaning Service',
-      askerName: 'ABC Corp',
-      budget: 150,
-      submittedAt: '2026-07-10',
-      status: 'pending',
-      proposedPrice: 145,
-    },
-    {
-      id: 2,
-      errandId: 'ERR-2026-002',
-      errandTitle: 'Delivery Service',
-      askerName: 'Sarah Tan',
-      budget: 85,
-      submittedAt: '2026-07-09',
-      status: 'accepted',
-      proposedPrice: 80,
-    },
-    {
-      id: 3,
-      errandId: 'ERR-2026-003',
-      errandTitle: 'Handyman Repairs',
-      askerName: 'John Lee',
-      budget: 200,
-      submittedAt: '2026-07-08',
-      status: 'rejected',
-      proposedPrice: 190,
-    },
-  ]);
-
-  const [filteredOffers, setFilteredOffers] = useState<Offer[]>(offers);
+  const [offers, setOffers] = useState<Offer[]>([]);
   const [selectedFilter, setSelectedFilter] = useState('all');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [withdrawing, setWithdrawing] = useState<number | null>(null);
 
-  const handleFilter = (filter: string) => {
-    setSelectedFilter(filter);
-    if (filter === 'all') {
-      setFilteredOffers(offers);
-    } else {
-      setFilteredOffers(offers.filter(o => o.status === filter));
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/api/bids/my-bids`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) { setError(body.error || 'Could not load your offers'); return; }
+
+      setOffers((body.data || []).map((b: any) => ({
+        id: b.id,
+        errandId: b.formatted_id || b.errand?.formatted_id || `#${b.errand_id}`,
+        errandTitle: b.title || b.errand?.title || 'Untitled errand',
+        askerName: b.alias || b.asker_display_name || b.errand?.asker_alias || b.errand?.asker_name || 'Neighbour',
+        budget: Number(b.budget ?? b.errand?.budget) || 0,
+        submittedAt: b.created_at,
+        status: b.status,
+        proposedPrice: Number(b.amount) || 0,
+      })));
+      setError('');
+    } catch {
+      setError('Could not load your offers');
+    } finally {
+      setLoading(false);
     }
-  };
+  }, []);
 
-  const handleWithdrawOffer = (offerId: number) => {
-    alert(`Offer #${offerId} withdrawn`);
+  useEffect(() => { load(); }, [load]);
+
+  const filteredOffers = selectedFilter === 'all'
+    ? offers
+    : offers.filter(o => o.status === selectedFilter);
+
+  const handleFilter = (filter: string) => setSelectedFilter(filter);
+
+  const handleWithdrawOffer = async (offerId: number) => {
+    setWithdrawing(offerId);
+    setError('');
+    try {
+      const res = await fetch(`${API_URL}/api/bids/${offerId}/withdraw`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) { setError(body.error || 'Could not withdraw that offer'); return; }
+      await load();
+    } catch {
+      setError('Could not withdraw that offer');
+    } finally {
+      setWithdrawing(null);
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -97,11 +117,15 @@ const DoerMyOffers: React.FC = () => {
         ))}
       </div>
 
+      {error && <div className="offers-error">{error}</div>}
+
       {/* Offers List */}
       <div className="offers-list">
-        {filteredOffers.length === 0 ? (
+        {loading ? (
+          <div className="empty-state"><p>Loading your offers…</p></div>
+        ) : filteredOffers.length === 0 ? (
           <div className="empty-state">
-            <p>No offers in this category</p>
+            <p>{offers.length === 0 ? "You haven't made any offers yet" : 'No offers in this category'}</p>
           </div>
         ) : (
           filteredOffers.map(offer => {
@@ -135,7 +159,7 @@ const DoerMyOffers: React.FC = () => {
                   </div>
                   <div className="detail-row">
                     <span className="label">Submitted</span>
-                    <span className="value">{offer.submittedAt}</span>
+                    <span className="value">{new Date(offer.submittedAt).toLocaleDateString()}</span>
                   </div>
                 </div>
 
@@ -143,9 +167,10 @@ const DoerMyOffers: React.FC = () => {
                   {offer.status === 'pending' && (
                     <button
                       className="btn-withdraw"
+                      disabled={withdrawing === offer.id}
                       onClick={() => handleWithdrawOffer(offer.id)}
                     >
-                      ↩️ Withdraw
+                      {withdrawing === offer.id ? 'Withdrawing…' : '↩️ Withdraw'}
                     </button>
                   )}
                   {offer.status === 'accepted' && (
@@ -238,6 +263,16 @@ const DoerMyOffers: React.FC = () => {
         .filter-tab.active .count {
           background: #FFE8D6;
           color: #FF6B35;
+        }
+
+        .offers-error {
+          background: #FEF2F2;
+          border: 1px solid #FECACA;
+          color: #B91C1C;
+          padding: 12px 16px;
+          border-radius: 8px;
+          margin-bottom: 16px;
+          font-size: 14px;
         }
 
         .offers-list {

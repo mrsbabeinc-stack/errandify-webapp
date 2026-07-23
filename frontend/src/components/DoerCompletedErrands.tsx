@@ -1,4 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
+/** Errand statuses that mean the work is finished. */
+const DONE_STATUSES = ['completed', 'rated', 'acknowledged'];
 
 interface CompletedErrand {
   id: number;
@@ -12,42 +17,78 @@ interface CompletedErrand {
   earningsReceived: number;
 }
 
+/**
+ * Work I have finished, built from my accepted offers (GET /api/bids/my-bids)
+ * filtered to the errand statuses that mean "done", with the rating the asker
+ * left me attached from GET /api/ratings/user/:id by errand.
+ *
+ * Was three hardcoded rows. Note the amount shown is the AGREED offer amount —
+ * the gross, before platform commission — because that is what the API exposes;
+ * it is labelled accordingly rather than presented as take-home.
+ */
 const DoerCompletedErrands: React.FC = () => {
-  const [errands] = useState<CompletedErrand[]>([
-    {
-      id: 1,
-      errandId: 'ERR-2026-001',
-      title: 'Office Cleaning Service',
-      askerName: 'ABC Corp',
-      completedAt: '2026-07-09',
-      budget: 150,
-      rating: 5,
-      review: 'Excellent work! Very thorough and professional. Will hire again.',
-      earningsReceived: 150,
-    },
-    {
-      id: 2,
-      errandId: 'ERR-2026-002',
-      title: 'Delivery Service',
-      askerName: 'Sarah Tan',
-      completedAt: '2026-07-08',
-      budget: 85,
-      rating: 4,
-      review: 'Good job, arrived on time. Minor mix-up with one item.',
-      earningsReceived: 85,
-    },
-    {
-      id: 3,
-      errandId: 'ERR-2026-003',
-      title: 'Handyman Repairs',
-      askerName: 'John Lee',
-      completedAt: '2026-07-07',
-      budget: 200,
-      rating: 5,
-      review: 'Perfect! Fixed everything as promised. Very reliable.',
-      earningsReceived: 200,
-    },
-  ]);
+  const [errands, setErrands] = useState<CompletedErrand[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const raw = localStorage.getItem('user');
+        const me = raw ? JSON.parse(raw) : null;
+        const myId = me?.id ?? me?.userId;
+
+        const [bidsRes, ratingsRes] = await Promise.all([
+          fetch(`${API_URL}/api/bids/my-bids`, { headers: { Authorization: `Bearer ${token}` } }),
+          myId
+            ? fetch(`${API_URL}/api/ratings/user/${myId}`, { headers: { Authorization: `Bearer ${token}` } })
+            : Promise.resolve(null as any),
+        ]);
+
+        const bidsBody = await bidsRes.json().catch(() => ({}));
+        if (!bidsRes.ok) { setError(bidsBody.error || 'Could not load your completed errands'); return; }
+
+        // Rating the asker left me, keyed by errand
+        const ratingByErrand: Record<number, { rating: number; comment: string }> = {};
+        if (ratingsRes && ratingsRes.ok) {
+          const rb = await ratingsRes.json().catch(() => ({}));
+          for (const r of rb.data?.ratings || []) {
+            if (r.errand_id) {
+              ratingByErrand[r.errand_id] = { rating: Number(r.rating) || 0, comment: r.comment || '' };
+            }
+          }
+        }
+
+        const done = (bidsBody.data || [])
+          .filter((b: any) => {
+            const st = b.errand_status || b.errand?.status;
+            const mine = b.status === 'accepted' || b.status === 'confirmed' || b.is_accepted;
+            return mine && DONE_STATUSES.includes(st);
+          })
+          .map((b: any) => {
+            const got = ratingByErrand[b.errand_id] || { rating: 0, comment: '' };
+            return {
+              id: b.id,
+              errandId: b.formatted_id || b.errand?.formatted_id || `#${b.errand_id}`,
+              title: b.title || b.errand?.title || 'Untitled errand',
+              askerName: b.alias || b.asker_display_name || b.errand?.asker_alias || b.errand?.asker_name || 'Neighbour',
+              completedAt: b.updated_at || b.created_at,
+              budget: Number(b.budget ?? b.errand?.budget) || 0,
+              rating: got.rating,
+              review: got.comment,
+              earningsReceived: Number(b.amount) || 0,
+            };
+          });
+
+        setErrands(done);
+      } catch {
+        setError('Could not load your completed errands');
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
 
   const [selectedErrand, setSelectedErrand] = useState<CompletedErrand | null>(null);
   const [sortBy, setSortBy] = useState<'recent' | 'rating' | 'earnings'>('recent');
@@ -66,7 +107,12 @@ const DoerCompletedErrands: React.FC = () => {
   });
 
   const totalEarnings = errands.reduce((sum, e) => sum + e.earningsReceived, 0);
-  const averageRating = (errands.reduce((sum, e) => sum + e.rating, 0) / errands.length).toFixed(1);
+  // Average over RATED errands only — counting an unrated errand as 0 would
+  // drag the average down, and dividing by errands.length gives NaN at zero.
+  const rated = errands.filter(e => e.rating > 0);
+  const averageRating = rated.length
+    ? (rated.reduce((sum, e) => sum + e.rating, 0) / rated.length).toFixed(1)
+    : '—';
 
   const renderStars = (rating: number) => {
     return (
@@ -92,12 +138,12 @@ const DoerCompletedErrands: React.FC = () => {
           <p className="stat-value">{errands.length}</p>
         </div>
         <div className="stat-card">
-          <p className="stat-label">Total Earnings</p>
+          <p className="stat-label">Agreed Total (before commission)</p>
           <p className="stat-value">${totalEarnings}</p>
         </div>
         <div className="stat-card">
           <p className="stat-label">Average Rating</p>
-          <p className="stat-value">{averageRating} ⭐</p>
+          <p className="stat-value">{averageRating}{averageRating !== '—' ? ' ⭐' : ''}</p>
         </div>
       </div>
 
@@ -111,9 +157,18 @@ const DoerCompletedErrands: React.FC = () => {
         </select>
       </div>
 
+      {error && (
+        <div style={{
+          background: '#FEF2F2', border: '1px solid #FECACA', color: '#B91C1C',
+          padding: '12px 16px', borderRadius: 8, marginBottom: 16, fontSize: 14,
+        }}>{error}</div>
+      )}
+
       {/* Errands List */}
       <div className="errands-list">
-        {sortedErrands.length === 0 ? (
+        {loading ? (
+          <div className="empty-state"><p>Loading your completed errands…</p></div>
+        ) : sortedErrands.length === 0 ? (
           <div className="empty-state">
             <p>No completed errands yet</p>
           </div>
@@ -130,8 +185,14 @@ const DoerCompletedErrands: React.FC = () => {
                   <p className="errand-id">{errand.errandId}</p>
                 </div>
                 <div className="rating-section">
-                  {renderStars(errand.rating)}
-                  <span className="rating-value">{errand.rating}.0</span>
+                  {errand.rating > 0 ? (
+                    <>
+                      {renderStars(errand.rating)}
+                      <span className="rating-value">{errand.rating.toFixed(1)}</span>
+                    </>
+                  ) : (
+                    <span className="rating-value">Not rated yet</span>
+                  )}
                 </div>
               </div>
 
@@ -142,7 +203,7 @@ const DoerCompletedErrands: React.FC = () => {
                 </div>
                 <div className="detail">
                   <span className="label">Completed</span>
-                  <span className="value">{errand.completedAt}</span>
+                  <span className="value">{new Date(errand.completedAt).toLocaleDateString()}</span>
                 </div>
                 <div className="detail">
                   <span className="label">Earnings</span>

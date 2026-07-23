@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 interface Offer {
   id: number;
@@ -9,80 +11,106 @@ interface Offer {
   proposedPrice: number;
   rating: number;
   submittedAt: string;
-  status: 'pending' | 'accepted' | 'rejected';
+  status: string;
   message: string;
 }
 
+/**
+ * Was a hardcoded list ("John Cleaners", ERR-2026-001) with accept/reject
+ * buttons that only called alert() — the offer was never accepted and no money
+ * ever moved. Now reads GET /api/bids/received and acts through the real
+ * accept/reject routes.
+ */
 const AskerBidsReceived: React.FC = () => {
-  const [offers] = useState<Offer[]>([
-    {
-      id: 1,
-      errandId: 'ERR-2026-001',
-      errandTitle: 'Office Cleaning Service',
-      doerName: 'John Cleaners',
-      doerType: 'company',
-      proposedPrice: 145,
-      rating: 4.9,
-      submittedAt: '2026-07-10T14:30',
-      status: 'accepted',
-      message: 'We can complete this by tomorrow morning. Our team has 10+ years of experience.',
-    },
-    {
-      id: 2,
-      errandId: 'ERR-2026-001',
-      errandTitle: 'Office Cleaning Service',
-      doerName: 'Sarah Pro',
-      doerType: 'individual',
-      proposedPrice: 135,
-      rating: 4.7,
-      submittedAt: '2026-07-10T15:15',
-      status: 'pending',
-      message: 'I can do this at a lower price. Available immediately.',
-    },
-    {
-      id: 3,
-      errandId: 'ERR-2026-002',
-      errandTitle: 'Delivery Service',
-      doerName: 'FastDeliver Ltd',
-      doerType: 'company',
-      proposedPrice: 85,
-      rating: 4.8,
-      submittedAt: '2026-07-09T10:00',
-      status: 'pending',
-      message: 'We guarantee same-day delivery with GPS tracking.',
-    },
-  ]);
-
+  const [offers, setOffers] = useState<Offer[]>([]);
   const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
-  const [filteredOffers, setFilteredOffers] = useState<Offer[]>(offers);
   const [statusFilter, setStatusFilter] = useState('all');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [acting, setActing] = useState(false);
 
-  const handleFilter = (status: string) => {
-    setStatusFilter(status);
-    if (status === 'all') {
-      setFilteredOffers(offers);
-    } else {
-      setFilteredOffers(offers.filter(o => o.status === status));
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/api/bids/received`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) { setError(body.error || 'Could not load offers'); return; }
+
+      setOffers((body.data || []).map((o: any) => ({
+        id: o.id,
+        errandId: o.errand_formatted_id || `#${o.errand_id}`,
+        errandTitle: o.errand_title,
+        doerName: o.doer_company_name || o.doer_name,
+        doerType: o.doer_company_name ? 'company' : 'individual',
+        proposedPrice: Number(o.amount) || 0,
+        rating: Number(o.doer_rating) || 0,
+        submittedAt: o.created_at,
+        status: o.status,
+        message: o.note || '',
+      })));
+      setError('');
+    } catch {
+      setError('Could not load offers');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  // `accepted` covers confirmed too — otherwise an offer the doer has already
+  // started appears under no tab at all, and the tab counts don't add up to All.
+  const matchesTab = (o: Offer, tab: string) =>
+    tab === 'accepted' ? (o.status === 'accepted' || o.status === 'confirmed') : o.status === tab;
+
+  const filteredOffers = statusFilter === 'all'
+    ? offers
+    : offers.filter(o => matchesTab(o, statusFilter));
+
+  const handleFilter = (status: string) => setStatusFilter(status);
+
+  const act = async (offerId: number, action: 'accept' | 'reject') => {
+    setActing(true);
+    setError('');
+    try {
+      const res = await fetch(`${API_URL}/api/bids/${offerId}/${action}`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({}),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) { setError(body.error || `Could not ${action} that offer`); return; }
+      setSelectedOffer(null);
+      await load();
+    } catch {
+      setError(`Could not ${action} that offer`);
+    } finally {
+      setActing(false);
     }
   };
 
-  const handleAcceptOffer = (offerId: number) => {
-    alert(`Offer #${offerId} accepted! Proceeding to payment.`);
-    setSelectedOffer(null);
-  };
-
-  const handleRejectOffer = (offerId: number) => {
-    alert(`Offer #${offerId} rejected.`);
-    setSelectedOffer(null);
-  };
+  const handleAcceptOffer = (offerId: number) => act(offerId, 'accept');
+  const handleRejectOffer = (offerId: number) => act(offerId, 'reject');
 
   const getStatusBadge = (status: string) => {
     const badges: { [key: string]: { bg: string; color: string; icon: string; text: string } } = {
       pending: { bg: '#FFF4E6', color: '#FF6B35', icon: '⏳', text: 'Pending' },
       accepted: { bg: '#E6F9E6', color: '#2D7A34', icon: '✅', text: 'Accepted' },
+      // A confirmed offer is one the doer has started. It has no badge of its
+      // own before, so it fell through to the `pending` default and an errand
+      // already under way was shown as still awaiting a decision.
+      confirmed: { bg: '#E6F4FF', color: '#1D4ED8', icon: '🚀', text: 'In progress' },
       rejected: { bg: '#FFE8E8', color: '#D32F2F', icon: '❌', text: 'Rejected' },
+      withdrawn: { bg: '#F0F0F0', color: '#666', icon: '↩️', text: 'Withdrawn' },
+      closed: { bg: '#F0F0F0', color: '#666', icon: '🔒', text: 'Closed' },
+      cancelled: { bg: '#F0F0F0', color: '#666', icon: '🚫', text: 'Cancelled' },
     };
-    return badges[status] || badges.pending;
+    return badges[status] || { bg: '#F0F0F0', color: '#666', icon: '•', text: status };
   };
 
   const renderStars = (rating: number) => {
@@ -117,17 +145,21 @@ const AskerBidsReceived: React.FC = () => {
           >
             {tab.charAt(0).toUpperCase() + tab.slice(1)}
             <span className="count">
-              {tab === 'all' ? offers.length : offers.filter(o => o.status === tab).length}
+              {tab === 'all' ? offers.length : offers.filter(o => matchesTab(o, tab)).length}
             </span>
           </button>
         ))}
       </div>
 
+      {error && <div className="offers-error">{error}</div>}
+
       {/* Offers List */}
       <div className="offers-list">
-        {filteredOffers.length === 0 ? (
+        {loading ? (
+          <div className="empty-state"><p>Loading offers…</p></div>
+        ) : filteredOffers.length === 0 ? (
           <div className="empty-state">
-            <p>No offers in this category</p>
+            <p>{offers.length === 0 ? 'No offers yet on your errands' : 'No offers in this category'}</p>
           </div>
         ) : (
           filteredOffers.map(offer => {
@@ -155,7 +187,7 @@ const AskerBidsReceived: React.FC = () => {
                   </div>
                 </div>
 
-                <p className="offer-message">"{offer.message}"</p>
+                {offer.message && <p className="offer-message">"{offer.message}"</p>}
 
                 <div className="offer-footer">
                   <div className="price-section">
@@ -199,7 +231,9 @@ const AskerBidsReceived: React.FC = () => {
 
             <div className="modal-body">
               <h4>Doer's Message</h4>
-              <p className="message-text">"{selectedOffer.message}"</p>
+              <p className="message-text">
+                {selectedOffer.message ? `"${selectedOffer.message}"` : 'No message left with this offer.'}
+              </p>
             </div>
 
             <div className="details-grid">
@@ -218,15 +252,17 @@ const AskerBidsReceived: React.FC = () => {
                 <>
                   <button
                     className="btn-accept"
+                    disabled={acting}
                     onClick={() => handleAcceptOffer(selectedOffer.id)}
                   >
-                    ✅ Accept Offer
+                    {acting ? 'Working…' : '✅ Accept Offer'}
                   </button>
                   <button
                     className="btn-reject"
+                    disabled={acting}
                     onClick={() => handleRejectOffer(selectedOffer.id)}
                   >
-                    ❌ Reject
+                    {acting ? 'Working…' : '❌ Reject'}
                   </button>
                 </>
               )}
@@ -403,6 +439,16 @@ const AskerBidsReceived: React.FC = () => {
           font-weight: 600;
           font-size: 12px;
           white-space: nowrap;
+        }
+
+        .offers-error {
+          background: #FEF2F2;
+          border: 1px solid #FECACA;
+          color: #B91C1C;
+          padding: 12px 16px;
+          border-radius: 8px;
+          margin-bottom: 16px;
+          font-size: 14px;
         }
 
         .offer-message {

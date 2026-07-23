@@ -87,6 +87,18 @@ const CompanyDashboardNew: React.FC = () => {
     activeAds: 2,
     revenue: 15240,
   });
+  // Real subscription row for this company. The plan header used to be hardcoded
+  // to "Gold Partner / Jul 1 2026 / SGD $1,990" regardless of what the company
+  // actually pays for — a Platinum company was shown the Gold name above its own
+  // Platinum benefits.
+  const [subscription, setSubscription] = useState<{
+    tier?: string;
+    billing_cycle?: string | null;
+    price?: number | string | null;
+    started_at?: string | null;
+    renewal_date?: string | null;
+    status?: string | null;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeSection, setActiveSection] = useState<string>('dashboard');
@@ -214,6 +226,29 @@ const CompanyDashboardNew: React.FC = () => {
 
   const currentBanner = banners[bannerIndex];
 
+  // ---- Real subscription plan header ------------------------------------
+  // Every value below used to be a literal. Anything the API hasn't given us
+  // shows an em dash rather than a plausible-looking guess.
+  const TIER_STRAPLINE: Record<string, string> = {
+    silver: 'Silver Partner - Getting started',
+    gold: 'Gold Partner - Best for growing teams',
+    platinum: 'Platinum Partner - For established operators',
+  };
+
+  const planTier = (subscription?.tier || company?.subscription_tier || '').toLowerCase();
+  const planName = planTier
+    ? `${planTier.charAt(0).toUpperCase()}${planTier.slice(1)} Partner`
+    : '—';
+  const planStrapline = TIER_STRAPLINE[planTier] || 'No subscription on file';
+  const activePlan = !!planTier && (subscription?.status ?? 'active') === 'active';
+
+  const fmtPlanDate = (d?: string | null) =>
+    d ? new Date(d).toLocaleDateString('en-SG', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+
+  const planCost = subscription?.price != null && Number(subscription.price) > 0
+    ? `SGD $${Number(subscription.price).toLocaleString('en-SG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+    : '—';
+
   const fetchCompanyData = async () => {
     const token = localStorage.getItem('token');
     // Retry on a transient failure — the dashboard fires many calls on load and
@@ -231,6 +266,22 @@ const CompanyDashboardNew: React.FC = () => {
           const data = await res.json();
           setCompany(data.data);
           setLoading(false);
+
+          // Pull the real subscription row for the plan header
+          if (data.data?.id) {
+            try {
+              const subRes = await fetch(`${API_URL}/api/companies/${data.data.id}/subscription`, {
+                headers: { 'Authorization': `Bearer ${token}` },
+              });
+              if (subRes.ok) {
+                const subBody = await subRes.json();
+                setSubscription(subBody.data || null);
+              }
+            } catch (subErr) {
+              // Non-fatal: the header falls back to the tier on the company row
+              console.warn('Could not load subscription details:', subErr);
+            }
+          }
           return;
         }
         // 429/503 are transient — wait and retry. Other codes are not.
@@ -1564,10 +1615,10 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                 <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '32px'}}>
                   <div>
                     <h2 style={{margin: '0 0 8px 0', fontSize: '32px', fontWeight: '800', color: '#333'}}>🏆 Your Current Plan</h2>
-                    <p style={{margin: 0, fontSize: '16px', color: '#666', fontWeight: '500'}}>Gold Partner - Best for growing teams</p>
+                    <p style={{margin: 0, fontSize: '16px', color: '#666', fontWeight: '500'}}>{planStrapline}</p>
                   </div>
-                  <div style={{background: '#FF6B35', color: 'white', padding: '8px 20px', borderRadius: '20px', fontSize: '13px', fontWeight: '700', textAlign: 'center'}}>
-                    ✓ ACTIVE
+                  <div style={{background: activePlan ? '#FF6B35' : '#9CA3AF', color: 'white', padding: '8px 20px', borderRadius: '20px', fontSize: '13px', fontWeight: '700', textAlign: 'center'}}>
+                    {activePlan ? '✓ ACTIVE' : 'NO ACTIVE PLAN'}
                   </div>
                 </div>
 
@@ -1575,19 +1626,21 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                 <div style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '32px', paddingBottom: '32px', borderBottom: '2px solid #FFD9B3'}}>
                   <div>
                     <p style={{margin: '0 0 8px 0', fontSize: '12px', color: '#8B4513', fontWeight: '700', textTransform: 'uppercase'}}>Plan Name</p>
-                    <p style={{margin: 0, fontSize: '18px', fontWeight: '700', color: '#333'}}>Gold Partner</p>
+                    <p style={{margin: 0, fontSize: '18px', fontWeight: '700', color: '#333'}}>{planName}</p>
                   </div>
                   <div>
                     <p style={{margin: '0 0 8px 0', fontSize: '12px', color: '#8B4513', fontWeight: '700', textTransform: 'uppercase'}}>Started</p>
-                    <p style={{margin: 0, fontSize: '18px', fontWeight: '700', color: '#333'}}>Jul 1, 2026</p>
+                    <p style={{margin: 0, fontSize: '18px', fontWeight: '700', color: '#333'}}>{fmtPlanDate(subscription?.started_at)}</p>
                   </div>
                   <div>
                     <p style={{margin: '0 0 8px 0', fontSize: '12px', color: '#8B4513', fontWeight: '700', textTransform: 'uppercase'}}>Renews</p>
-                    <p style={{margin: 0, fontSize: '18px', fontWeight: '700', color: '#333'}}>Aug 1, 2027</p>
+                    <p style={{margin: 0, fontSize: '18px', fontWeight: '700', color: '#333'}}>{fmtPlanDate(subscription?.renewal_date)}</p>
                   </div>
                   <div>
-                    <p style={{margin: '0 0 8px 0', fontSize: '12px', color: '#8B4513', fontWeight: '700', textTransform: 'uppercase'}}>Annual Cost</p>
-                    <p style={{margin: 0, fontSize: '18px', fontWeight: '700', color: '#FF6B35'}}>SGD $1,990</p>
+                    <p style={{margin: '0 0 8px 0', fontSize: '12px', color: '#8B4513', fontWeight: '700', textTransform: 'uppercase'}}>
+                      {subscription?.billing_cycle === 'annual' ? 'Annual Cost' : 'Cost'}
+                    </p>
+                    <p style={{margin: 0, fontSize: '18px', fontWeight: '700', color: '#FF6B35'}}>{planCost}</p>
                   </div>
                 </div>
 

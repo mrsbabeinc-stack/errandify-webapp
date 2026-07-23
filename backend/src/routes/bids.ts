@@ -283,7 +283,10 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
             errand.asker_id,
             'bid_placed',
             `New Offer Placed • ${offerId}`,
-            `${formattedErrandId}: ${doerAlias} has placed an offer for $\${parseFloat(amount)}`,
+            // The `\$` escaped the interpolation, so the literal source text
+            // "${parseFloat(amount)}" was written into the notification and shown
+            // to the asker instead of the amount.
+            `${formattedErrandId}: ${doerAlias} has placed an offer for $${bidAmount.toFixed(2)}`,
             task_id,
           ]
         );
@@ -789,6 +792,127 @@ router.get('/user/:userId/confidence', authMiddleware, async (req: AuthRequest, 
 });
 
 // GET /api/bids/my-bids - Get all bids placed by current doer
+/**
+ * POST /api/bids/:id/withdraw — take back an offer I haven't had accepted yet.
+ *
+ * The "Withdraw" button in My Offers only called alert(), and there was no
+ * route behind it. Only the doer who made the offer can withdraw it, and only
+ * while it is still pending — once accepted it is an agreement, and backing out
+ * is a cancellation, not a withdrawal.
+ *
+ * Re-offering afterwards is deliberately allowed: the duplicate-bid check above
+ * blocks rejected/closed/cancelled/confirmed but lets a withdrawn bid be
+ * updated, so changing your mind works.
+ */
+router.post('/:id/withdraw', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const bidId = parseInt(req.params.id, 10);
+    const userId = parseInt(req.userId || '0', 10);
+
+    const existing = await db.query(
+      `SELECT b.id, b.doer_id, b.status, e.accepted_bid_id
+         FROM bids b JOIN errands e ON e.id = b.errand_id
+        WHERE b.id = $1`,
+      [bidId]
+    );
+    if (existing.rows.length === 0) {
+      return res.status(404).json({ error: 'That offer no longer exists' });
+    }
+
+    const bid = existing.rows[0];
+    if (Number(bid.doer_id) !== userId) {
+      return res.status(403).json({ error: 'You can only withdraw your own offers' });
+    }
+    if (Number(bid.accepted_bid_id) === bidId || ['accepted', 'confirmed'].includes(bid.status)) {
+      return res.status(400).json({
+        error: 'This offer was already accepted. Contact the asker if you need to cancel.',
+        reason: 'already_accepted',
+      });
+    }
+    if (bid.status !== 'pending') {
+      return res.status(400).json({ error: `You can't withdraw an offer that is ${bid.status}.` });
+    }
+
+    const updated = await db.query(
+      `UPDATE bids SET status = 'withdrawn', updated_at = NOW()
+        WHERE id = $1 AND status = 'pending'
+        RETURNING id, status`,
+      [bidId]
+    );
+    if (updated.rows.length === 0) {
+      return res.status(409).json({ error: 'That offer changed while you were withdrawing it' });
+    }
+
+    console.log('[Bids] Offer', bidId, 'withdrawn by doer', userId);
+    res.json({ success: true, message: 'Offer withdrawn.', data: updated.rows[0] });
+  } catch (error) {
+    console.error('[Bids] Withdraw failed:', error);
+    res.status(500).json({ error: 'Could not withdraw that offer' });
+  }
+});
+
+/**
+ * GET /api/bids/received — every offer made on the errands I posted.
+ *
+ * The mirror of /my-bids. `/task/:taskId` returns offers one errand at a time,
+ * which is fine on an errand page but useless for the "Offers Received" screen,
+ * so that screen was showing a hardcoded list instead.
+ */
+router.get('/received', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const askerId = parseInt(req.userId || '0', 10);
+    const { status } = req.query;
+
+    const params: any[] = [askerId];
+    let statusFilter = '';
+    if (status && status !== 'all') {
+      params.push(status);
+      statusFilter = ` AND b.status = $${params.length}`;
+    }
+
+    const result = await db.query(
+      `SELECT b.id, b.errand_id, b.doer_id, b.amount, b.note, b.status,
+              b.offer_id, b.created_at, b.viewed_at,
+              e.title AS errand_title, e.formatted_id AS errand_formatted_id,
+              e.budget AS errand_budget, e.category, e.status AS errand_status,
+              e.deadline, e.accepted_bid_id,
+              COALESCE(u.alias, u.display_name) AS doer_name,
+              u.profile_image_url AS doer_avatar,
+              u.average_rating AS doer_rating,
+              u.total_ratings AS doer_total_ratings,
+              c.company_name AS doer_company_name,
+              c.certified AS doer_company_certified
+         FROM bids b
+         JOIN errands e ON e.id = b.errand_id
+         JOIN users u ON u.id = b.doer_id
+         LEFT JOIN companies c ON c.id = b.company_id
+        WHERE e.asker_id = $1${statusFilter}
+        ORDER BY b.created_at DESC`,
+      params
+    );
+
+    const offers = result.rows.map((r: any) => ({
+      ...r,
+      amount: parseFloat(r.amount),
+      is_accepted: r.accepted_bid_id != null && Number(r.accepted_bid_id) === Number(r.id),
+    }));
+
+    res.json({
+      success: true,
+      data: offers,
+      summary: {
+        total: offers.length,
+        pending: offers.filter((o: any) => o.status === 'pending').length,
+        accepted: offers.filter((o: any) => o.status === 'accepted').length,
+        rejected: offers.filter((o: any) => o.status === 'rejected').length,
+      },
+    });
+  } catch (error) {
+    console.error('[Bids] Received offers failed:', error);
+    res.status(500).json({ error: 'Could not load your offers' });
+  }
+});
+
 router.get('/my-bids', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const doerId = parseInt(req.userId || '0', 10);

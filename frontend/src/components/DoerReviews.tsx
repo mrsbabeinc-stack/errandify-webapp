@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 interface Review {
   id: number;
@@ -13,66 +15,93 @@ interface Review {
   response?: string;
 }
 
+/**
+ * Reviews written about me, from GET /api/ratings/user/:id.
+ *
+ * Was three hardcoded reviews with hardcoded replies. The "Your Response"
+ * feature was fully built in this file but had nothing behind it — the handler
+ * called alert() and `ratings` had no column to store a reply. Migration 076
+ * added ratings.response/responded_at and POST /api/ratings/:id/respond, so the
+ * modal now posts for real.
+ */
 const DoerReviews: React.FC = () => {
-  const [reviews] = useState<Review[]>([
-    {
-      id: 1,
-      errandId: 'ERR-2026-001',
-      errandTitle: 'Office Cleaning Service',
-      askerName: 'ABC Corp',
-      rating: 5,
-      review: 'Excellent work! Very thorough and professional. Will hire again.',
-      submittedAt: '2026-07-09',
-      askerType: 'company',
-      hasResponse: true,
-      response: 'Thank you so much! I appreciate your kind words. Looking forward to working with you again!',
-    },
-    {
-      id: 2,
-      errandId: 'ERR-2026-002',
-      errandTitle: 'Delivery Service',
-      askerName: 'Sarah Tan',
-      rating: 4,
-      review: 'Good job, arrived on time. Minor mix-up with one item.',
-      submittedAt: '2026-07-08',
-      askerType: 'individual',
-      hasResponse: false,
-    },
-    {
-      id: 3,
-      errandId: 'ERR-2026-003',
-      errandTitle: 'Handyman Repairs',
-      askerName: 'John Lee',
-      rating: 5,
-      review: 'Perfect! Fixed everything as promised. Very reliable.',
-      submittedAt: '2026-07-07',
-      askerType: 'individual',
-      hasResponse: true,
-      response: 'Thank you for the opportunity! It was a pleasure working with you.',
-    },
-  ]);
-
-  const [filteredReviews, setFilteredReviews] = useState<Review[]>(reviews);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [selectedReview, setSelectedReview] = useState<Review | null>(null);
   const [showResponseModal, setShowResponseModal] = useState(false);
   const [responseText, setResponseText] = useState('');
   const [ratingFilter, setRatingFilter] = useState('all');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [posting, setPosting] = useState(false);
 
-  const handleRatingFilter = (rating: string) => {
-    setRatingFilter(rating);
-    if (rating === 'all') {
-      setFilteredReviews(reviews);
-    } else {
-      setFilteredReviews(reviews.filter(r => r.rating === parseInt(rating)));
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const raw = localStorage.getItem('user');
+      const me = raw ? JSON.parse(raw) : null;
+      const myId = me?.id ?? me?.userId;
+      if (!myId) { setError('Please sign in again'); return; }
+
+      const res = await fetch(`${API_URL}/api/ratings/user/${myId}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) { setError(body.error || 'Could not load your reviews'); return; }
+
+      setReviews((body.data?.ratings || []).map((r: any) => ({
+        id: r.id,
+        errandId: r.errand_formatted_id || `#${r.errand_id}`,
+        // This endpoint serialises camelCase (raterName / taskTitle); the
+        // snake_case fallbacks cover the other shapes the API can return.
+        errandTitle: r.taskTitle || r.task_title || 'Untitled errand',
+        askerName: r.raterName || r.rater_name || 'Neighbour',
+        rating: Number(r.rating) || 0,
+        review: r.comment || '',
+        submittedAt: r.created_at,
+        askerType: 'individual' as const,
+        hasResponse: !!r.response,
+        response: r.response || undefined,
+      })));
+      setError('');
+    } catch {
+      setError('Could not load your reviews');
+    } finally {
+      setLoading(false);
     }
-  };
+  }, []);
 
-  const handleAddResponse = () => {
-    if (responseText.trim() && selectedReview) {
-      alert('Response added successfully!');
+  useEffect(() => { load(); }, [load]);
+
+  const filteredReviews = ratingFilter === 'all'
+    ? reviews
+    : reviews.filter(r => r.rating === parseInt(ratingFilter));
+
+  const handleRatingFilter = (rating: string) => setRatingFilter(rating);
+
+  const handleAddResponse = async () => {
+    if (!responseText.trim() || !selectedReview) return;
+    setPosting(true);
+    setError('');
+    try {
+      const res = await fetch(`${API_URL}/api/ratings/${selectedReview.id}/respond`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ response: responseText.trim() }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) { setError(body.error || 'Could not post your response'); return; }
+
       setResponseText('');
       setShowResponseModal(false);
       setSelectedReview(null);
+      await load();
+    } catch {
+      setError('Could not post your response');
+    } finally {
+      setPosting(false);
     }
   };
 
@@ -88,8 +117,11 @@ const DoerReviews: React.FC = () => {
     );
   };
 
-  const averageRating = (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1);
   const totalReviews = reviews.length;
+  // Guard the divide — with no reviews this rendered "NaN"
+  const averageRating = totalReviews
+    ? (reviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews).toFixed(1)
+    : '0.0';
   const fiveStarCount = reviews.filter(r => r.rating === 5).length;
   const fourStarCount = reviews.filter(r => r.rating === 4).length;
   const threeStarCount = reviews.filter(r => r.rating === 3).length;
@@ -111,7 +143,7 @@ const DoerReviews: React.FC = () => {
           <div className="rating-breakdown">
             {[5, 4, 3].map(stars => {
               const count = stars === 5 ? fiveStarCount : stars === 4 ? fourStarCount : threeStarCount;
-              const percentage = (count / totalReviews) * 100;
+              const percentage = totalReviews ? (count / totalReviews) * 100 : 0;
               return (
                 <div key={stars} className="breakdown-row">
                   <span className="breakdown-label">
@@ -144,9 +176,18 @@ const DoerReviews: React.FC = () => {
         </div>
       </div>
 
+      {error && (
+        <div style={{
+          background: '#FEF2F2', border: '1px solid #FECACA', color: '#B91C1C',
+          padding: '12px 16px', borderRadius: 8, marginBottom: 16, fontSize: 14,
+        }}>{error}</div>
+      )}
+
       {/* Reviews List */}
       <div className="reviews-list">
-        {filteredReviews.length === 0 ? (
+        {loading ? (
+          <div className="empty-state"><p>Loading your reviews…</p></div>
+        ) : filteredReviews.length === 0 ? (
           <div className="empty-state">
             <p>No reviews in this category</p>
           </div>
@@ -171,10 +212,10 @@ const DoerReviews: React.FC = () => {
                 </div>
               </div>
 
-              <p className="review-text">"{review.review}"</p>
+              {review.review && <p className="review-text">"{review.review}"</p>}
 
               <div className="review-footer">
-                <span className="review-date">{review.submittedAt}</span>
+                <span className="review-date">{new Date(review.submittedAt).toLocaleDateString()}</span>
                 {review.hasResponse && (
                   <span className="has-response">✅ You responded</span>
                 )}
@@ -207,7 +248,7 @@ const DoerReviews: React.FC = () => {
             <div className="modal-body">
               <h4>Review</h4>
               <p className="review-text">"{selectedReview.review}"</p>
-              <p className="review-date">Submitted on {selectedReview.submittedAt}</p>
+              <p className="review-date">Submitted on {new Date(selectedReview.submittedAt).toLocaleDateString()}</p>
             </div>
 
             {selectedReview.hasResponse && selectedReview.response && (
@@ -256,7 +297,7 @@ const DoerReviews: React.FC = () => {
             />
 
             <div className="modal-actions">
-              <button className="btn-submit" onClick={handleAddResponse}>
+              <button className="btn-submit" disabled={posting || !responseText.trim()} onClick={handleAddResponse}>
                 ✅ Submit Response
               </button>
               <button className="btn-cancel" onClick={() => setShowResponseModal(false)}>

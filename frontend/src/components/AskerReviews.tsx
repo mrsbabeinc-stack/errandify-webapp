@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 interface Review {
   id: number;
@@ -9,61 +11,61 @@ interface Review {
   rating: number;
   review: string;
   submittedAt: string;
-  workQuality: number;
-  communication: number;
-  timeliness: number;
 }
 
+/**
+ * The reviews I have written about doers, from GET /api/ratings/given. Was a
+ * hardcoded pair of reviews ("John Cleaners", ERR-2026-001) shown even when the
+ * user had rated nobody.
+ *
+ * The per-category scores this screen used to show (work quality /
+ * communication / timeliness) are gone: `ratings` stores one overall score and
+ * a comment, so those three numbers had nothing behind them and splitting the
+ * single rating three ways would just have been the same invention with extra
+ * steps. Add columns to `ratings` if the breakdown is wanted for real.
+ */
 const AskerReviews: React.FC = () => {
-  const [reviews] = useState<Review[]>([
-    {
-      id: 1,
-      errandId: 'ERR-2026-001',
-      errandTitle: 'Office Cleaning Service',
-      doerName: 'John Cleaners',
-      doerType: 'company',
-      rating: 5,
-      review: 'Excellent service! Team was professional, thorough, and finished ahead of schedule.',
-      submittedAt: '2026-07-09',
-      workQuality: 5,
-      communication: 5,
-      timeliness: 5,
-    },
-    {
-      id: 2,
-      errandId: 'ERR-2026-002',
-      errandTitle: 'Delivery Service',
-      doerName: 'FastDeliver Ltd',
-      doerType: 'company',
-      rating: 4,
-      review: 'Good service overall. Delivery was on time, but packaging could have been better.',
-      submittedAt: '2026-07-08',
-      workQuality: 4,
-      communication: 4,
-      timeliness: 5,
-    },
-  ]);
-
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [selectedReview, setSelectedReview] = useState<Review | null>(null);
-  const [sortBy, setSortBy] = useState<'recent' | 'rating' | 'quality'>('recent');
+  const [sortBy, setSortBy] = useState<'recent' | 'rating'>('recent');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/ratings/given`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        });
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) { setError(body.error || 'Could not load your reviews'); return; }
+
+        setReviews((body.data?.ratings || []).map((r: any) => ({
+          id: r.id,
+          errandId: r.errand_formatted_id || `#${r.errand_id}`,
+          errandTitle: r.errand_title,
+          doerName: r.ratee_company_name || r.ratee_name,
+          doerType: r.ratee_company_name ? 'company' : 'individual',
+          rating: Number(r.rating) || 0,
+          review: r.comment || '',
+          submittedAt: r.created_at,
+        })));
+      } catch {
+        setError('Could not load your reviews');
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
 
   const sortedReviews = [...reviews].sort((a, b) => {
-    if (sortBy === 'recent') {
-      return new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime();
-    }
-    if (sortBy === 'rating') {
-      return b.rating - a.rating;
-    }
-    if (sortBy === 'quality') {
-      return b.workQuality - a.workQuality;
-    }
-    return 0;
+    if (sortBy === 'rating') return b.rating - a.rating;
+    return new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime();
   });
 
-  const averageRating = (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1);
-  const averageQuality = (reviews.reduce((sum, r) => sum + r.workQuality, 0) / reviews.length).toFixed(1);
-  const averageCommunication = (reviews.reduce((sum, r) => sum + r.communication, 0) / reviews.length).toFixed(1);
-  const averageTimeliness = (reviews.reduce((sum, r) => sum + r.timeliness, 0) / reviews.length).toFixed(1);
+  const averageRating = reviews.length
+    ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
+    : '0.0';
 
   const renderStars = (rating: number) => {
     return (
@@ -90,21 +92,9 @@ const AskerReviews: React.FC = () => {
           <p className="total-reviews">({reviews.length} doers rated)</p>
         </div>
 
-        <div className="metrics-grid">
-          <div className="metric">
-            <p className="metric-label">Work Quality</p>
-            <p className="metric-value">{averageQuality} ⭐</p>
-          </div>
-          <div className="metric">
-            <p className="metric-label">Communication</p>
-            <p className="metric-value">{averageCommunication} ⭐</p>
-          </div>
-          <div className="metric">
-            <p className="metric-label">Timeliness</p>
-            <p className="metric-value">{averageTimeliness} ⭐</p>
-          </div>
-        </div>
       </div>
+
+      {error && <div className="reviews-error">{error}</div>}
 
       {/* Sort Controls */}
       <div className="sort-controls">
@@ -112,13 +102,14 @@ const AskerReviews: React.FC = () => {
         <select value={sortBy} onChange={(e) => setSortBy(e.target.value as any)} className="sort-select">
           <option value="recent">Most Recent</option>
           <option value="rating">Highest Rated</option>
-          <option value="quality">Best Quality</option>
         </select>
       </div>
 
       {/* Reviews List */}
       <div className="reviews-list">
-        {sortedReviews.length === 0 ? (
+        {loading ? (
+          <div className="empty-state"><p>Loading your reviews…</p></div>
+        ) : sortedReviews.length === 0 ? (
           <div className="empty-state">
             <p>No reviews yet. Complete errands and rate doers to see their feedback here.</p>
           </div>
@@ -143,15 +134,9 @@ const AskerReviews: React.FC = () => {
                 </div>
               </div>
 
-              <p className="review-text">"{review.review}"</p>
+              {review.review && <p className="review-text">"{review.review}"</p>}
 
-              <div className="review-metrics">
-                <span className="metric-tag">Quality: {review.workQuality}★</span>
-                <span className="metric-tag">Comm: {review.communication}★</span>
-                <span className="metric-tag">Time: {review.timeliness}★</span>
-              </div>
-
-              <p className="review-date">{review.submittedAt}</p>
+              <p className="review-date">{new Date(review.submittedAt).toLocaleDateString()}</p>
             </div>
           ))
         )}
@@ -179,33 +164,12 @@ const AskerReviews: React.FC = () => {
 
             <div className="modal-body">
               <h4>Your Review</h4>
-              <p className="review-text">"{selectedReview.review}"</p>
-              <p className="review-date">Submitted on {selectedReview.submittedAt}</p>
-            </div>
-
-            <div className="metrics-detail">
-              <h4>Rating Breakdown</h4>
-              <div className="metric-row">
-                <span className="metric-label">Work Quality</span>
-                <div className="metric-stars">
-                  {renderStars(selectedReview.workQuality)}
-                  <span>{selectedReview.workQuality}.0/5.0</span>
-                </div>
-              </div>
-              <div className="metric-row">
-                <span className="metric-label">Communication</span>
-                <div className="metric-stars">
-                  {renderStars(selectedReview.communication)}
-                  <span>{selectedReview.communication}.0/5.0</span>
-                </div>
-              </div>
-              <div className="metric-row">
-                <span className="metric-label">Timeliness</span>
-                <div className="metric-stars">
-                  {renderStars(selectedReview.timeliness)}
-                  <span>{selectedReview.timeliness}.0/5.0</span>
-                </div>
-              </div>
+              <p className="review-text">
+                {selectedReview.review ? `"${selectedReview.review}"` : 'You left a rating without a written review.'}
+              </p>
+              <p className="review-date">
+                Submitted on {new Date(selectedReview.submittedAt).toLocaleDateString()}
+              </p>
             </div>
 
             <div className="modal-actions">
@@ -394,6 +358,16 @@ const AskerReviews: React.FC = () => {
           font-size: 12px;
           font-weight: 600;
           color: #FFB800;
+        }
+
+        .reviews-error {
+          background: #FEF2F2;
+          border: 1px solid #FECACA;
+          color: #B91C1C;
+          padding: 12px 16px;
+          border-radius: 8px;
+          margin-bottom: 16px;
+          font-size: 14px;
         }
 
         .review-text {

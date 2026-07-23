@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import db from '../db.js';
 import crypto from 'crypto';
 import { authMiddleware } from '../middleware/auth.js';
-import { getCategoryCode } from '../utils/categoryCodes.js';
+import { getCategoryCode, resolveCategorySlug, getCategorySlugs } from '../utils/categoryCodes.js';
 import { requireCompanyRole, resolveMyCompany, resolveCompanyRole } from '../utils/companyRole.js';
 import { getRestrictionReason, needsDeclaration } from '../services/categoryRestrictions.js';
 
@@ -1761,7 +1761,19 @@ router.post('/companies/errands', authMiddleware, async (req: any, res: Response
       return res.status(400).json({ error: 'Title and category are required' });
     }
 
-    const formattedId = generateCompanyErrandId(category);
+    // Hana returns a display name ("Home Services") or nothing at all, and this
+    // stored it verbatim. The marketplace matches `e.category = $slug` exactly,
+    // so those errands turned up under no category filter and got an ER26XX id.
+    const categorySlug = resolveCategorySlug(category);
+    if (!categorySlug) {
+      return res.status(400).json({
+        error: `Could not work out a category from "${category}". Pick one of: ${getCategorySlugs().join(', ')}`,
+        reason: 'unknown_category',
+        validCategories: getCategorySlugs(),
+      });
+    }
+
+    const formattedId = generateCompanyErrandId(categorySlug);
 
     // Both rows must land together — otherwise a failed link leaves an errand
     // that exists but doesn't belong to the company.
@@ -1775,7 +1787,7 @@ router.post('/companies/errands', authMiddleware, async (req: any, res: Response
             postal_code, budget, deadline, status, formatted_id)
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'open',$10)
          RETURNING id, formatted_id, title, category, budget, deadline, status, created_at`,
-        [userId, title, description || '', category, location || null, full_address || null,
+        [userId, title, description || '', categorySlug, location || null, full_address || null,
          postal_code || null, budget || 0, deadline || null, formattedId]
       );
       const errand = result.rows[0];
@@ -2489,6 +2501,171 @@ router.post('/companies/:companyId/dispute-requests/:id/decide', authMiddleware,
   } catch (error) {
     console.error('[Company] Decide dispute request error:', error);
     res.status(500).json({ error: 'Could not record that decision. Please try again.' });
+  }
+});
+
+// ============================================================================
+// EP DISTRIBUTION TO STAFF
+//
+// `company_points_allocation` was created for exactly this and nothing ever
+// wrote to it — the UI's "Distribute" button only called setState, so the
+// company's balance never moved, the staff member never received anything, and
+// the screen showed a completed distribution that had not happened.
+//
+// EP moves out of companies.errandify_points and into users.errandify_points.
+// Both sides plus the audit row go in one transaction, and the debit is
+// conditional so a company can never spend past its balance.
+// ============================================================================
+
+// POST /api/companies/:companyId/points/allocate — hand EP down to staff
+router.post('/companies/:companyId/points/allocate', authMiddleware, async (req: any, res: Response) => {
+  try {
+    const companyId = parseInt(req.params.companyId, 10);
+    const { staffUserIds, pointsEach, reason } = req.body;
+
+    const gate = await requireCompanyRole(req.userId, companyId, ['owner', 'manager']);
+    if (!gate.ok) return res.status(gate.status || 403).json({ error: gate.error });
+
+    const recipients = Array.isArray(staffUserIds) ? staffUserIds.map(Number).filter(Boolean) : [];
+    const each = parseInt(pointsEach, 10);
+
+    if (recipients.length === 0) {
+      return res.status(400).json({ error: 'Pick at least one team member' });
+    }
+    if (!each || each <= 0) {
+      return res.status(400).json({ error: 'Points must be a positive number' });
+    }
+
+    // Only actual members can receive — otherwise this is a transfer to anyone
+    const members = await db.query(
+      `SELECT user_id FROM company_staff
+        WHERE company_id = $1 AND user_id = ANY($2::int[]) AND status IN ('active', 'on_leave')`,
+      [companyId, recipients]
+    );
+    const validIds = members.rows.map((r: any) => Number(r.user_id));
+    const rejected = recipients.filter((id) => !validIds.includes(id));
+    if (validIds.length === 0) {
+      return res.status(400).json({ error: 'None of those people are on your team' });
+    }
+
+    const total = each * validIds.length;
+    const client = await db.getClient();
+    try {
+      await client.query('BEGIN');
+
+      // Conditional debit — returns no row if the balance is short, which is
+      // how the overspend is prevented rather than by reading then writing.
+      const debit = await client.query(
+        `UPDATE companies
+            SET errandify_points = errandify_points - $1, updated_at = NOW()
+          WHERE id = $2 AND errandify_points >= $1
+          RETURNING errandify_points`,
+        [total, companyId]
+      );
+      if (debit.rows.length === 0) {
+        await client.query('ROLLBACK');
+        const cur = await db.query('SELECT errandify_points FROM companies WHERE id = $1', [companyId]);
+        return res.status(400).json({
+          error: `Not enough EP. This would need ${total} and the company has ${cur.rows[0]?.errandify_points ?? 0}.`,
+          reason: 'insufficient_balance',
+        });
+      }
+
+      for (const staffId of validIds) {
+        await client.query(
+          'UPDATE users SET errandify_points = errandify_points + $1, updated_at = NOW() WHERE id = $2',
+          [each, staffId]
+        );
+        await client.query(
+          `INSERT INTO company_points_allocation (company_id, staff_user_id, points, reason, allocated_by)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [companyId, staffId, each, reason || null, req.userId]
+        );
+        await client.query(
+          `INSERT INTO wallet_transactions (user_id, type, amount, description, created_at)
+           VALUES ($1, 'ep_earned', $2, $3, NOW())`,
+          [staffId, each, `EP from ${gate.membership?.companyName}${reason ? ` — ${reason}` : ''}`]
+        );
+        await client.query(
+          `INSERT INTO notifications (user_id, type, title, message, is_read)
+           VALUES ($1, 'ep_received', 'You received EP', $2, FALSE)`,
+          [staffId, `${gate.membership?.companyName} gave you ${each} EP${reason ? ` — ${reason}` : ''}.`]
+        );
+      }
+
+      await client.query('COMMIT');
+
+      console.log('[Company] Allocated', total, 'EP from company', companyId, 'to', validIds.length, 'staff');
+      res.status(201).json({
+        success: true,
+        message: `${each} EP sent to ${validIds.length} team member${validIds.length > 1 ? 's' : ''}.`,
+        data: {
+          pointsEach: each,
+          recipients: validIds.length,
+          totalSpent: total,
+          companyBalance: debit.rows[0].errandify_points,
+          skipped: rejected,
+        },
+      });
+    } catch (txErr) {
+      await client.query('ROLLBACK');
+      throw txErr;
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('[Company] EP allocation failed:', error);
+    res.status(500).json({ error: 'Could not distribute those points' });
+  }
+});
+
+// GET /api/companies/:companyId/points — balance + who has been given what
+router.get('/companies/:companyId/points', authMiddleware, async (req: any, res: Response) => {
+  try {
+    const companyId = parseInt(req.params.companyId, 10);
+
+    const gate = await requireCompanyRole(req.userId, companyId, ['owner', 'manager']);
+    if (!gate.ok) return res.status(gate.status || 403).json({ error: gate.error });
+
+    const balance = await db.query('SELECT errandify_points FROM companies WHERE id = $1', [companyId]);
+
+    const staff = await db.query(
+      `SELECT cs.user_id, cs.role, cs.position, cs.status,
+              COALESCE(u.alias, u.display_name) AS name,
+              u.errandify_points AS staff_points,
+              COALESCE((SELECT SUM(points) FROM company_points_allocation
+                         WHERE company_id = cs.company_id AND staff_user_id = cs.user_id), 0)::int AS total_received
+         FROM company_staff cs
+         JOIN users u ON u.id = cs.user_id
+        WHERE cs.company_id = $1 AND cs.status IN ('active', 'on_leave')
+        ORDER BY cs.role, name`,
+      [companyId]
+    );
+
+    const history = await db.query(
+      `SELECT cpa.id, cpa.points, cpa.reason, cpa.created_at,
+              COALESCE(u.alias, u.display_name) AS staff_name,
+              COALESCE(a.alias, a.display_name) AS allocated_by_name
+         FROM company_points_allocation cpa
+         JOIN users u ON u.id = cpa.staff_user_id
+         LEFT JOIN users a ON a.id = cpa.allocated_by
+        WHERE cpa.company_id = $1
+        ORDER BY cpa.created_at DESC
+        LIMIT 50`,
+      [companyId]
+    );
+
+    res.json({
+      success: true,
+      data: {
+        companyBalance: balance.rows[0]?.errandify_points ?? 0,
+        staff: staff.rows,
+        history: history.rows,
+      },
+    });
+  } catch (error) {
+    console.error('[Company] Points read failed:', error);
+    res.status(500).json({ error: 'Could not load points' });
   }
 });
 
