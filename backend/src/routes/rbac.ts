@@ -22,10 +22,19 @@ router.use(authMiddleware, requireAdmin(['admin', 'super-admin']));
 // Get all roles
 router.get('/roles', async (req: Request, res: Response) => {
   try {
+    // The dashboard prints "Users: n • Permissions: n" per role and had nothing
+    // to print, so it showed 0 for a role holding 117 permissions. Counted here
+    // rather than by a request per role from the client.
     const result = await db.query(`
-      SELECT id, name, description, created_at
-      FROM rbac_roles
-      ORDER BY created_at ASC
+      SELECT r.id, r.name, r.description, r.created_at,
+             (SELECT COUNT(*) FROM rbac_role_permissions rp WHERE rp.role_id = r.id)::int
+               AS permission_count,
+             -- rbac_user_roles.user_id is varchar; compare as text, same as
+             -- the /rbac-users join.
+             (SELECT COUNT(*) FROM rbac_user_roles ur WHERE ur.role_id::text = r.id::text)::int
+               AS user_count
+      FROM rbac_roles r
+      ORDER BY r.created_at ASC
     `);
     res.json({ success: true, data: result.rows });
   } catch (error) {

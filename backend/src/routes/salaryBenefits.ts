@@ -15,6 +15,54 @@ const router = express.Router();
  */
 router.use(authMiddleware, requireAdmin(['admin', 'super-admin']));
 
+/**
+ * Recomputes total_allowances and gross_salary for one salary record.
+ *
+ * The add/remove allowance handlers each did this inline as
+ * `base_salary + totalAllowances`. node-postgres returns NUMERIC as a *string*,
+ * so that was string concatenation, not addition: a base of 4500.00 with 800 of
+ * allowances wrote a gross of "4500.00800". Number() on both sides is the fix,
+ * and doing it in one place keeps the two call sites from drifting apart.
+ */
+async function recalculateGross(salaryId: number) {
+  const totals = await db.query(
+    'SELECT COALESCE(SUM(amount), 0) AS total FROM staff_allowances WHERE staff_salary_id = $1',
+    [salaryId]
+  );
+  const salary = await db.query('SELECT base_salary FROM staff_salary WHERE id = $1', [salaryId]);
+
+  const totalAllowances = Number(totals.rows[0].total) || 0;
+  const baseSalary = Number(salary.rows[0]?.base_salary) || 0;
+
+  await db.query(
+    'UPDATE staff_salary SET total_allowances = $1, gross_salary = $2 WHERE id = $3',
+    [totalAllowances, baseSalary + totalAllowances, salaryId]
+  );
+}
+
+// List every salary record, for the staff-list view
+router.get('/salary', async (_req: Request, res: Response) => {
+  try {
+    const result = await db.query(
+      `SELECT s.id, s.staff_id, s.staff_name, s.position, s.department,
+              s.base_salary, s.total_allowances, s.gross_salary, s.notes,
+              s.last_modified,
+              COALESCE(a.count, 0) AS allowance_count,
+              COALESCE(b.count, 0) AS benefit_count
+       FROM staff_salary s
+       LEFT JOIN (SELECT staff_salary_id, COUNT(*) AS count FROM staff_allowances GROUP BY staff_salary_id) a
+              ON a.staff_salary_id = s.id
+       LEFT JOIN (SELECT staff_salary_id, COUNT(*) AS count FROM staff_benefits GROUP BY staff_salary_id) b
+              ON b.staff_salary_id = s.id
+       ORDER BY s.staff_id`
+    );
+    res.json({ success: true, data: result.rows });
+  } catch (error) {
+    console.error('[Salary] List salaries error:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch salaries' });
+  }
+});
+
 // Get staff salary info
 router.get('/salary/:staffId', async (req: Request, res: Response) => {
   try {
@@ -44,12 +92,20 @@ router.get('/salary/:staffId', async (req: Request, res: Response) => {
       [result.rows[0].id]
     );
 
+    // Get deductions
+    const deductions = await db.query(
+      `SELECT id, name, amount, frequency, description FROM staff_deductions
+       WHERE staff_salary_id = $1 ORDER BY created_at DESC`,
+      [result.rows[0].id]
+    );
+
     res.json({
       success: true,
       data: {
         ...result.rows[0],
         allowances: allowances.rows,
-        benefits: benefits.rows
+        benefits: benefits.rows,
+        deductions: deductions.rows
       }
     });
   } catch (error) {
@@ -80,6 +136,9 @@ router.post('/salary/:staffId', async (req: Request, res: Response) => {
          WHERE id = $4`,
         [base_salary, notes, new Date().toISOString(), salaryId]
       );
+      // Changing the base moves the gross; without this the row kept the gross
+      // computed from the previous base.
+      await recalculateGross(salaryId);
     } else {
       // Create new
       const result = await db.query(
@@ -125,23 +184,7 @@ router.post('/salary/:staffId/allowances', async (req: Request, res: Response) =
       [salaryId, name, amount, frequency, description, new Date().toISOString()]
     );
 
-    // Update total allowances
-    const totalsResult = await db.query(
-      'SELECT SUM(amount) as total FROM staff_allowances WHERE staff_salary_id = $1',
-      [salaryId]
-    );
-    const totalAllowances = totalsResult.rows[0].total || 0;
-
-    const salaryData = await db.query(
-      'SELECT base_salary FROM staff_salary WHERE id = $1',
-      [salaryId]
-    );
-
-    await db.query(
-      `UPDATE staff_salary SET total_allowances = $1, gross_salary = $2
-       WHERE id = $3`,
-      [totalAllowances, salaryData.rows[0].base_salary + totalAllowances, salaryId]
-    );
+    await recalculateGross(salaryId);
 
     res.status(201).json({ success: true, data: result.rows[0] });
   } catch (error) {
@@ -168,23 +211,7 @@ router.delete('/allowances/:allowanceId', async (req: Request, res: Response) =>
 
     await db.query('DELETE FROM staff_allowances WHERE id = $1', [allowanceId]);
 
-    // Update total
-    const totalsResult = await db.query(
-      'SELECT SUM(amount) as total FROM staff_allowances WHERE staff_salary_id = $1',
-      [salaryId]
-    );
-    const totalAllowances = totalsResult.rows[0].total || 0;
-
-    const salaryData = await db.query(
-      'SELECT base_salary FROM staff_salary WHERE id = $1',
-      [salaryId]
-    );
-
-    await db.query(
-      `UPDATE staff_salary SET total_allowances = $1, gross_salary = $2
-       WHERE id = $3`,
-      [totalAllowances, salaryData.rows[0].base_salary + totalAllowances, salaryId]
-    );
+    await recalculateGross(salaryId);
 
     res.json({ success: true });
   } catch (error) {
@@ -241,6 +268,55 @@ router.delete('/benefits/:benefitId', async (req: Request, res: Response) => {
   } catch (error) {
     console.error('[Salary] Delete benefit error:', error);
     res.status(500).json({ success: false, error: 'Failed to delete benefit' });
+  }
+});
+
+// Add deduction
+router.post('/salary/:staffId/deductions', async (req: Request, res: Response) => {
+  try {
+    const { staffId } = req.params;
+    const { name, amount, frequency, description } = req.body;
+
+    const salaryResult = await db.query(
+      'SELECT id FROM staff_salary WHERE staff_id = $1',
+      [staffId]
+    );
+
+    if (salaryResult.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Salary record not found' });
+    }
+
+    const result = await db.query(
+      `INSERT INTO staff_deductions (staff_salary_id, name, amount, frequency, description, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING *`,
+      [salaryResult.rows[0].id, name, amount, frequency, description, new Date().toISOString()]
+    );
+
+    res.status(201).json({ success: true, data: result.rows[0] });
+  } catch (error) {
+    console.error('[Salary] Add deduction error:', error);
+    res.status(500).json({ success: false, error: 'Failed to add deduction' });
+  }
+});
+
+// Remove deduction
+router.delete('/deductions/:deductionId', async (req: Request, res: Response) => {
+  try {
+    const { deductionId } = req.params;
+    const result = await db.query(
+      'DELETE FROM staff_deductions WHERE id = $1 RETURNING staff_salary_id',
+      [deductionId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'Deduction not found' });
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('[Salary] Delete deduction error:', error);
+    res.status(500).json({ success: false, error: 'Failed to delete deduction' });
   }
 });
 

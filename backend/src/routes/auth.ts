@@ -7,6 +7,7 @@ import { authMiddleware, AuthRequest } from '../middleware/auth.js';
 import { generateFormattedUserId } from '../utils/idFormatter.js';
 import * as singpass from '../services/singpass.js';
 import { sendCriticalEmail } from '../services/emailNotifications.js';
+import { awardReferralPoints, JOIN_BONUS_EP } from '../services/referralService.js';
 
 const router = Router();
 
@@ -220,28 +221,13 @@ router.post('/signup', async (req: Request, res: Response) => {
             [referrerId, newUserId, ref, 'joined']
           );
 
-          // Award join bonus (50 points) - configurable
-          const joinBonus = 50;
-          await client.query(
-            `INSERT INTO referral_rewards (referrer_id, reward_type, points_amount)
-             VALUES ($1, $2, $3)`,
-            [referrerId, 'join', joinBonus]
-          );
-
-          // Update referrer's errandify_points
-          await client.query(
-            `UPDATE users
-             SET errandify_points = errandify_points + $1,
-                 updated_at = NOW()
-             WHERE id = $2`,
-            [joinBonus, referrerId]
-          );
-
-          // Log EP transaction for referrer
-          await client.query(
-            `INSERT INTO ep_transactions (user_id, amount, reason, created_at)
-             VALUES ($1, $2, LEFT('Referral join bonus - ' || $3 || ' signed up', 100), NOW())`,
-            [referrerId, joinBonus, displayName]
+          // One payer for both bonuses. This block used to repeat all three
+          // writes — referral_rewards, errandify_points, ep_transactions —
+          // that referralService.awardReferralPoints already does, and the two
+          // copies had already drifted apart in the transaction reason.
+          const joinBonus = JOIN_BONUS_EP;
+          await awardReferralPoints(
+            client, referrerId, joinBonus, 'join', `${displayName} signed up`
           );
 
           console.log(`[Referral] User ${newUserId} signed up via code ${ref}. Referrer ${referrerId} awarded ${joinBonus} EP`);
@@ -254,6 +240,17 @@ router.post('/signup', async (req: Request, res: Response) => {
             console.error('[Email] Failed to send referral_join email:', err);
             // Don't fail the signup if email fails
           });
+
+          // ...and in-app, matching the first-errand bonus. Email alone meant
+          // the join bonus was invisible to anyone who does not read email.
+          import('../utils/notificationHelper.js')
+            .then(({ sendNotification }) => sendNotification({
+              userId: referrerId,
+              type: 'referral_bonus',
+              title: `+${joinBonus} EP — someone joined on your invite`,
+              message: `${displayName} signed up using your referral code. That's ${joinBonus} Errandify Points for you.`,
+            }))
+            .catch(err => console.error('[Referral] Join notification failed:', err));
         }
       } catch (refError) {
         // Don't fail signup if referral tracking fails - log and continue

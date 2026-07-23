@@ -39,6 +39,7 @@ import newsRoutes from './routes/news.js';
 import blogRoutes from './routes/blog.js';
 import recruitmentRoutes from './routes/recruitment.js';
 import { community as communityRoutes, announcements as announcementRoutes, events as eventRoutes } from './routes/community.js';
+import { marcom as marcomRoutes, recognitions as recognitionRoutes, banners as bannerRoutes } from './routes/marcom.js';
 // import verificationRoutes from './routes/verification.js'; // TODO: Fix module imports
 import referralRoutes from './routes/referrals.js';
 import speechRoutes from './routes/speech.js';
@@ -56,6 +57,15 @@ import acraRoutes from './routes/acraRoutes.js';
 import demoRoutes from './routes/demo.js';
 import staffManagementRoutes from './routes/staffManagement.js';
 import salaryBenefitsRoutes from './routes/salaryBenefits.js';
+import probationRoutes from './routes/probation.js';
+import attendanceRoutes from './routes/attendance.js';
+import staffAttendanceRoutes from './routes/staffAttendance.js';
+import jobOpeningRoutes from './routes/jobOpenings.js';
+import { adminScreeningRouter, publicScreeningRouter } from './routes/candidateScreening.js';
+import financeRoutes from './routes/finance.js';
+import { adminRouter as staffOnboardingAdmin, publicRouter as staffOnboardingPublic } from './routes/staffOnboarding.js';
+import leadRoutes from './routes/leads.js';
+import interestRoutes from './routes/interest.js';
 import holidaysRoutes from './routes/holidays.js';
 import advertisingRoutes from './routes/advertising.js';
 import advertisingAdminRoutes from './routes/advertisingAdmin.js';
@@ -535,8 +545,24 @@ app.use('/api/auth', authLimiter);
 app.use('/api', apiLimiter);
 
 // Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok' });
+/**
+ * Health check. Reports the database separately from the process, because the
+ * admin footer showed a green "Database" light purely because the page had
+ * rendered — it could not have gone amber if the database were unreachable.
+ */
+app.get('/health', async (req, res) => {
+  let database: 'healthy' | 'down' = 'healthy';
+  try {
+    await db.query('SELECT 1');
+  } catch {
+    database = 'down';
+  }
+  res.status(database === 'healthy' ? 200 : 503).json({
+    status: database === 'healthy' ? 'ok' : 'degraded',
+    api: 'healthy', // reaching this handler is the API check
+    database,
+    checkedAt: new Date().toISOString(),
+  });
 });
 
 // Serve static frontend files
@@ -589,15 +615,40 @@ app.use('/api/errands', activityLogRoutes);
 app.use('/api/errands', errandRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/address', addressRoutes);
+// Candidate-facing screening: public by design (a candidate has no account),
+// so it is mounted on bare /api — anything under /api/admin is caught by the
+// router-level guard in staffManagement.ts before it resolves.
+app.use('/api', publicScreeningRouter);
 app.use('/api/screening', screeningRoutes);
 app.use('/api/ratings', ratingsRoutes);
 app.use('/api/gamification', gamificationRoutes);
 app.use('/api/wallet', walletRoutes);
+// Staff-facing attendance: authenticated but not admin-guarded, and scoped
+// to the caller's own record. Mounted ahead of staffRoutes so its /me/* paths
+// cannot be captured by a param route there.
+app.use('/api/staff-attendance', staffAttendanceRoutes);
 app.use('/api/staff', staffRoutes);
 app.use('/api/user-profile', userProfileRoutes);
 app.use('/api/user-data', userDataExportRoutes);
+// Mounted ahead of the bare /api/admin routers so a wildcard param route in one
+// of them cannot shadow the finance endpoints — the same shadowing that hid the
+// working subscription routes behind duplicates.
+app.use('/api/admin/finance', financeRoutes);
+// Public by necessity: a newly hired employee has no login yet. Access is a
+// hashed token plus an identity check — see routes/staffOnboarding.ts.
+app.use('/api/onboarding', staffOnboardingPublic);
+app.use('/api/admin', staffOnboardingAdmin);
+app.use('/api/admin/leads', leadRoutes);
+// Public, unauthenticated — the pre-launch interest form. Guarded by its own
+// rate limiter and validation rather than by auth, since its whole purpose is
+// to take submissions from people who have no account yet.
+app.use('/api/interest', interestRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/admin', staffManagementRoutes);
+app.use('/api/admin', probationRoutes);
+app.use('/api/admin', attendanceRoutes);
+app.use('/api/admin', jobOpeningRoutes);
+app.use('/api/admin', adminScreeningRouter);
 app.use('/api/admin', salaryBenefitsRoutes);
 app.use('/api/admin', holidaysRoutes);
 app.use('/api/admin', rbacRoutes);
@@ -625,6 +676,12 @@ app.use('/api/recruitment', recruitmentRoutes);
 app.use('/api/community', communityRoutes);
 app.use('/api/announcements', announcementRoutes);
 app.use('/api/events', eventRoutes);
+// Communications (Marcom): campaigns, broadcasts, recognition, banners.
+// Authoring is admin-only and guarded per route inside marcom.ts; the two
+// public routers below are the read side those screens feed.
+app.use('/api/marcom', marcomRoutes);
+app.use('/api/recognitions', recognitionRoutes);
+app.use('/api/banners', bannerRoutes);
 app.use('/api/referrals', referralRoutes);
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/safety', safetyRoutes);

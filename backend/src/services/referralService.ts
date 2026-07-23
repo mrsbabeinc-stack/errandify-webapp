@@ -1,5 +1,33 @@
 import { db } from '../db.js';
 
+/**
+ * The two bonuses, in one place.
+ *
+ * 50 was written as a bare literal in four spots — twice here, once inline in
+ * the signup route, and once again in the users route's earnings maths — so
+ * changing the programme meant finding all four. Only the *referrer* is paid;
+ * the person being referred receives nothing for being referred.
+ */
+export const JOIN_BONUS_EP = 50;
+export const FIRST_JOB_BONUS_EP = 50;
+
+/**
+ * The one place an invite URL is built.
+ *
+ * There were four, disagreeing: this file hardcoded errandify.ai/join,
+ * routes/users.ts built FRONTEND_URL/signup, and two frontend share buttons
+ * each rolled their own. None of the three paths was a routed page, so every
+ * invite link led nowhere. /join and /signup both resolve now, and /join is
+ * the canonical one.
+ *
+ * The domain comes from FRONTEND_URL so a staging invite does not send people
+ * to production.
+ */
+export function buildReferralLink(referralCode: string): string {
+  const base = (process.env.FRONTEND_URL || 'https://errandify.ai').replace(/\/+$/, '');
+  return `${base}/join?ref=${encodeURIComponent(referralCode)}`;
+}
+
 interface ReferralStats {
   referral_code: string;
   referral_link: string;
@@ -52,113 +80,20 @@ export async function getUserReferralCode(userId: number): Promise<string> {
   }
 }
 
-/**
- * Track when a referred user joins
+/*
+ * trackReferralJoin and trackReferralFirstJob were removed on 2026-07-23.
+ *
+ * Joins are recorded by POST /api/auth/signup, inside the transaction that
+ * creates the account, so there is no window in which a user exists without
+ * their referral. First errands are credited by creditFirstCompletedErrand
+ * below, called from the errand-completion routes.
+ *
+ * trackReferralFirstJob is worth remembering as a cautionary tale: it looked
+ * finished and was fully wired to an HTTP route, but its duplicate check asked
+ * whether the referrer had ever received *any* first-job bonus rather than one
+ * for *this* referred user. A referrer's second successful referral would
+ * silently never have paid. Nothing called it, so nobody found out.
  */
-export async function trackReferralJoin(
-  referrerId: number,
-  referredUserId: number,
-  referralCode: string
-): Promise<{ success: boolean; points_awarded: number }> {
-  const client = await db.getClient();
-  try {
-    await client.query('BEGIN');
-
-    // Check if already tracked
-    const existing = await client.query(
-      'SELECT id FROM referral_tracking WHERE referrer_id = $1 AND referred_user_id = $2',
-      [referrerId, referredUserId]
-    );
-
-    if (existing.rows.length > 0) {
-      await client.query('COMMIT');
-      return { success: false, points_awarded: 0 };
-    }
-
-    // Insert referral tracking
-    await client.query(
-      `INSERT INTO referral_tracking
-       (referrer_id, referred_user_id, referral_code, status)
-       VALUES ($1, $2, $3, $4)`,
-      [referrerId, referredUserId, referralCode, 'joined']
-    );
-
-    // Award join bonus (50 points)
-    const joinBonus = 50;
-    await awardReferralPoints(client, referrerId, joinBonus, 'join');
-
-    await client.query('COMMIT');
-    return { success: true, points_awarded: joinBonus };
-  } catch (error) {
-    await client.query('ROLLBACK');
-    console.error('Track referral join error:', error);
-    throw error;
-  } finally {
-    client.release();
-  }
-}
-
-/**
- * Track when a referred user completes their first job
- */
-export async function trackReferralFirstJob(
-  referrerId: number,
-  referredUserId: number
-): Promise<{ success: boolean; points_awarded: number }> {
-  const client = await db.getClient();
-  try {
-    await client.query('BEGIN');
-
-    // Check if tracking exists
-    const tracking = await client.query(
-      `SELECT id FROM referral_tracking
-       WHERE referrer_id = $1 AND referred_user_id = $2`,
-      [referrerId, referredUserId]
-    );
-
-    if (tracking.rows.length === 0) {
-      await client.query('COMMIT');
-      return { success: false, points_awarded: 0 };
-    }
-
-    // Check if first job bonus already awarded
-    const bonus = await client.query(
-      `SELECT id FROM referral_rewards
-       WHERE referrer_id = $1 AND reward_type = 'first_job'
-       AND referrer_id IN (
-         SELECT referrer_id FROM referral_tracking
-         WHERE referred_user_id = $2
-       )`,
-      [referrerId, referredUserId]
-    );
-
-    if (bonus.rows.length > 0) {
-      await client.query('COMMIT');
-      return { success: false, points_awarded: 0 };
-    }
-
-    // Update tracking status
-    await client.query(
-      `UPDATE referral_tracking
-       SET status = 'first_job_completed', first_job_completed_at = NOW()
-       WHERE referrer_id = $1 AND referred_user_id = $2`,
-      [referrerId, referredUserId]
-    );
-
-    // Award first job bonus (50 points)
-    const firstJobBonus = 50;
-    await awardReferralPoints(client, referrerId, firstJobBonus, 'first_job');
-
-    await client.query('COMMIT');
-    return { success: true, points_awarded: firstJobBonus };
-  } catch (error) {
-    await client.query('ROLLBACK');
-    console.error('Track referral first job error:', error);
-    throw error;
-  } finally {
-    client.release();
-  }
-}
 
 /**
  * Get referral statistics for a user
@@ -222,7 +157,7 @@ export async function getReferralStats(userId: number): Promise<ReferralStats> {
       totalEarnedPoints += points;
     }
 
-    const referralLink = `https://errandify.ai/join?ref=${referralCode}`;
+    const referralLink = buildReferralLink(referralCode);
 
     return {
       referral_code: referralCode,
@@ -270,13 +205,21 @@ export async function getReferralRewards(
 }
 
 /**
- * Helper: Award referral points
+ * Award referral points.
+ *
+ * Exported because the signup route used to inline its own copy of all three
+ * of these writes — a second implementation of one reward, already drifting
+ * (it wrote a different ep_transactions reason). One payer, one ledger shape.
+ *
+ * `detail` is appended to the transaction reason so the join bonus can still
+ * say who triggered it, which the inline version did and was worth keeping.
  */
-async function awardReferralPoints(
+export async function awardReferralPoints(
   client: any,
   referrerId: number,
   points: number,
-  rewardType: 'join' | 'first_job' | 'loyalty' | 'multiplier'
+  rewardType: 'join' | 'first_job' | 'loyalty' | 'multiplier',
+  detail?: string
 ): Promise<void> {
   // Insert referral reward
   await client.query(
@@ -301,8 +244,8 @@ async function awardReferralPoints(
   // lives on users.errandify_points, updated just above.
   await client.query(
     `INSERT INTO ep_transactions (user_id, amount, reason, created_at)
-     VALUES ($1, $3, LEFT('Referral ' || $2 || ' bonus', 100), NOW())`,
-    [referrerId, rewardType, points]
+     VALUES ($1, $3, LEFT('Referral ' || $2 || ' bonus' || COALESCE($4, ''), 100), NOW())`,
+    [referrerId, rewardType, points, detail ? ` — ${detail}` : null]
   );
 }
 
@@ -313,10 +256,132 @@ function generateReferralCode(): string {
   return 'REF-' + Math.random().toString(36).substring(2, 8).toUpperCase();
 }
 
+/**
+ * Pay the referrer when someone they invited finishes their first errand.
+ *
+ * The half of the reward programme that never ran. `trackReferralFirstJob`
+ * below has existed since the referral system was built and has exactly one
+ * caller — its own HTTP route — which nothing in the frontend ever hits. So
+ * `referral_tracking.status` stayed 'joined' forever, `first_job_completed_at`
+ * stayed NULL, and the second 50 EP was never paid to anyone.
+ *
+ * Two things are different here:
+ *
+ *  - **Keyed on the doer alone.** The old signature needed `referrerId`, which
+ *    meant the *client* told the server who to pay. The referrer is a fact the
+ *    database already knows; asking the caller for it is both awkward to wire
+ *    and trivially abusable.
+ *
+ *  - **Idempotency comes from the status transition, not a lookup.** The old
+ *    duplicate check asked "has this referrer ever been paid a first_job
+ *    bonus?" — not "for this person?" — so a referrer who earned the bonus
+ *    from one friend could never earn it from a second. Here the UPDATE
+ *    itself carries `status = 'joined'` in its WHERE clause, so exactly one
+ *    concurrent caller can win it, per referred user.
+ *
+ * Safe to call from every completion path, and cheap when there is no referral
+ * to credit (one indexed lookup that usually returns nothing).
+ */
+export async function creditFirstCompletedErrand(
+  doerId: number
+): Promise<{ credited: boolean; referrerId?: number; points?: number }> {
+  const client = await db.getClient();
+  try {
+    await client.query('BEGIN');
+
+    // Claim the transition. Returns a row only for the caller that moved it
+    // out of 'joined', so a double-submit or two completion paths firing for
+    // the same errand cannot pay twice.
+    const claimed = await client.query(
+      `UPDATE referral_tracking
+          SET status = 'first_job_completed',
+              first_job_completed_at = NOW(),
+              updated_at = NOW()
+        WHERE referred_user_id = $1
+          AND status = 'joined'
+        RETURNING referrer_id`,
+      [doerId]
+    );
+
+    if (claimed.rows.length === 0) {
+      await client.query('COMMIT');
+      return { credited: false };
+    }
+
+    const referrerId = claimed.rows[0].referrer_id;
+    const points = FIRST_JOB_BONUS_EP;
+    await awardReferralPoints(client, referrerId, points, 'first_job');
+
+    await client.query('COMMIT');
+
+    // EP that lands with no explanation reads like a glitch. Fire-and-forget:
+    // the bonus is already committed and a notification failure must not
+    // suggest otherwise.
+    try {
+      const who = await db.query(
+        `SELECT COALESCE(alias, display_name, 'Someone you invited') AS name
+           FROM users WHERE id = $1`,
+        [doerId]
+      );
+      const name = who.rows[0]?.name || 'Someone you invited';
+      const { sendNotification } = await import('../utils/notificationHelper.js');
+      await sendNotification({
+        userId: referrerId,
+        type: 'referral_bonus',
+        title: `+${points} EP — your invite is working`,
+        message: `${name} just completed their first errand. That's ${points} Errandify Points for you.`,
+      });
+    } catch (notifyError) {
+      console.error('[Referral] First-errand notification failed:', notifyError);
+    }
+    console.log(
+      `[Referral] ${doerId} completed their first errand — referrer ${referrerId} awarded ${points} EP`
+    );
+    return { credited: true, referrerId, points };
+  } catch (error) {
+    await client.query('ROLLBACK');
+    // A reward failure must never roll back the errand completion that
+    // triggered it — the job is done either way. Callers log and move on.
+    console.error('[Referral] First-errand credit failed for doer', doerId, error);
+    return { credited: false };
+  } finally {
+    client.release();
+  }
+}
+
+/**
+ * Same as above, when the caller has an errand rather than a doer.
+ *
+ * The doer is read from the accepted bid, which is how the rest of this
+ * codebase resolves it; errand_assignments is the fallback for rows that
+ * predate accepted_bid_id.
+ */
+export async function creditFirstErrandForErrand(
+  errandId: number | string
+): Promise<{ credited: boolean; referrerId?: number; points?: number }> {
+  try {
+    const result = await db.query(
+      `SELECT COALESCE(b.doer_id, ea.doer_id) AS doer_id
+         FROM errands e
+         LEFT JOIN bids b ON b.id = e.accepted_bid_id
+         LEFT JOIN errand_assignments ea ON ea.errand_id = e.id AND ea.status = 'completed'
+        WHERE e.id = $1
+        LIMIT 1`,
+      [errandId]
+    );
+    const doerId = result.rows[0]?.doer_id;
+    if (!doerId) return { credited: false };
+    return await creditFirstCompletedErrand(Number(doerId));
+  } catch (error) {
+    console.error('[Referral] Could not resolve doer for errand', errandId, error);
+    return { credited: false };
+  }
+}
+
 export default {
   getUserReferralCode,
-  trackReferralJoin,
-  trackReferralFirstJob,
+  creditFirstCompletedErrand,
+  creditFirstErrandForErrand,
   getReferralStats,
   getReferralRewards,
 };

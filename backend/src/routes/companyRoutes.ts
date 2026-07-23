@@ -241,7 +241,24 @@ router.post('/companies', authMiddleware, async (req: Request, res: Response) =>
 });
 
 // GET /api/companies/:companyId - Get company details
-router.get('/companies/:companyId', authMiddleware, async (req: Request, res: Response) => {
+// Everything a non-member is allowed to see. An asker weighing up an offer needs
+// to know who the company is; they do not need its Stripe account, billing
+// email, GST number, owner's user id or named contact person. `SELECT c.*` sent
+// all of that to any logged-in account, for any company.
+const PUBLIC_COMPANY_FIELDS = [
+  'id', 'company_name', 'uen', 'logo_url', 'description', 'industry',
+  'business_type', 'website', 'certified', 'certification_date',
+  'average_rating', 'total_projects_completed', 'service_categories',
+  'service_areas', 'status', 'created_at',
+] as const;
+
+function toPublicCompany(row: Record<string, any>) {
+  const out: Record<string, any> = {};
+  for (const f of PUBLIC_COMPANY_FIELDS) out[f] = row[f];
+  return out;
+}
+
+router.get('/companies/:companyId', authMiddleware, async (req: any, res: Response) => {
   try {
     const { companyId } = req.params;
 
@@ -261,9 +278,13 @@ router.get('/companies/:companyId', authMiddleware, async (req: Request, res: Re
       });
     }
 
+    // Members get the full record (the dashboard needs wallet + tier); everyone
+    // else gets the public profile only.
+    const membership = await resolveCompanyRole(req.userId, companyId);
+
     res.json({
       success: true,
-      data: result.rows[0]
+      data: membership ? result.rows[0] : toPublicCompany(result.rows[0])
     });
   } catch (error: any) {
     console.error('Error fetching company:', error);
@@ -276,14 +297,22 @@ router.get('/companies/:companyId', authMiddleware, async (req: Request, res: Re
 });
 
 // PUT /api/companies/:companyId - Update company
-router.put('/companies/:companyId', authMiddleware, async (req: Request, res: Response) => {
+router.put('/companies/:companyId', authMiddleware, async (req: any, res: Response) => {
   try {
     const { companyId } = req.params;
-    const { name, email, phone, address, description } = req.body;
+    const { name, company_name, email, phone, address, description } = req.body;
+
+    const gate = await requireCompanyRole(req.userId, companyId, ['owner', 'manager']);
+    if (!gate.ok) return res.status(gate.status || 403).json({ success: false, message: gate.error });
+
+    // The column is company_name — `SET name = ...` threw on every request, so
+    // saving the company profile has never worked. `name` is still accepted
+    // from the body because that's what the dashboard sends.
+    const newName = company_name ?? name ?? null;
 
     const result = await db.query(
       `UPDATE companies
-       SET name = COALESCE($1, name),
+       SET company_name = COALESCE($1, company_name),
            email = COALESCE($2, email),
            phone = COALESCE($3, phone),
            address = COALESCE($4, address),
@@ -291,7 +320,7 @@ router.put('/companies/:companyId', authMiddleware, async (req: Request, res: Re
            updated_at = NOW()
        WHERE id = $6
        RETURNING *`,
-      [name, email, phone, address, description, companyId]
+      [newName, email, phone, address, description, companyId]
     );
 
     if (result.rows.length === 0) {
@@ -317,10 +346,13 @@ router.put('/companies/:companyId', authMiddleware, async (req: Request, res: Re
 });
 
 // POST /api/companies/:companyId/employees - Tag employee
-router.post('/companies/:companyId/employees', authMiddleware, async (req: Request, res: Response) => {
+router.post('/companies/:companyId/employees', authMiddleware, async (req: any, res: Response) => {
   try {
     const { companyId } = req.params;
-    const { userId, role = 'employee', skills } = req.body;
+    const { userId, role = 'staff', position } = req.body;
+
+    const gate = await requireCompanyRole(req.userId, companyId, ['owner', 'manager']);
+    if (!gate.ok) return res.status(gate.status || 403).json({ success: false, message: gate.error });
 
     if (!userId) {
       return res.status(400).json({
@@ -329,15 +361,37 @@ router.post('/companies/:companyId/employees', authMiddleware, async (req: Reque
       });
     }
 
+    if (!['manager', 'staff'].includes(String(role))) {
+      return res.status(400).json({ success: false, message: 'Role must be manager or staff' });
+    }
+    // Only an owner may appoint a manager — same rule as the invite route
+    if (role === 'manager' && gate.membership?.role !== 'owner') {
+      return res.status(403).json({ success: false, message: 'Only the company owner can appoint a manager' });
+    }
+
     const result = await db.query(
       // Was INSERT INTO employees — a table that never existed. company_staff
       // already holds exactly this, and /staff reads from it.
+      //
+      // company_staff has no `skills` column and the RETURNING clause aliased a
+      // table that isn't in the statement, so every call 500'd. Writes position
+      // instead, and re-reads the row to attach the user's name.
       `INSERT INTO company_staff (company_id, user_id, role, position, status, join_date)
        VALUES ($1, $2, $3, $4, $5, NOW())
-       ON CONFLICT (company_id, user_id) DO UPDATE SET role = $3, skills = $4
-       RETURNING e.*, COALESCE(u.alias, u.display_name) as user_name, u.email as user_email`,
-      [companyId, userId, role, skills || '', 'active']
+       ON CONFLICT (company_id, user_id)
+         DO UPDATE SET role = EXCLUDED.role, position = EXCLUDED.position,
+                       status = EXCLUDED.status, updated_at = NOW()
+       RETURNING id`,
+      [companyId, userId, role, position || null, 'active']
     );
+
+    const row = await db.query(
+      `SELECT cs.*, COALESCE(u.alias, u.display_name) AS user_name, u.email AS user_email
+         FROM company_staff cs JOIN users u ON u.id = cs.user_id
+        WHERE cs.id = $1`,
+      [result.rows[0].id]
+    );
+    result.rows = row.rows;
 
     res.status(201).json({
       success: true,
@@ -355,10 +409,15 @@ router.post('/companies/:companyId/employees', authMiddleware, async (req: Reque
 });
 
 // GET /api/companies/:companyId/employees - List employees
-router.get('/companies/:companyId/employees', authMiddleware, async (req: Request, res: Response) => {
+router.get('/companies/:companyId/employees', authMiddleware, async (req: any, res: Response) => {
   try {
     const { companyId } = req.params;
     const { status } = req.query;
+
+    // The roster carries every colleague's name and email. Without this gate any
+    // logged-in account could enumerate any company's staff.
+    const gate = await requireCompanyRole(req.userId, companyId, ['owner', 'manager', 'staff']);
+    if (!gate.ok) return res.status(gate.status || 403).json({ success: false, message: gate.error });
 
     let query = `SELECT e.*, COALESCE(u.alias, u.display_name) as user_name, u.email as user_email
                  FROM company_staff e
@@ -390,9 +449,24 @@ router.get('/companies/:companyId/employees', authMiddleware, async (req: Reques
 });
 
 // DELETE /api/companies/:companyId/employees/:userId - Remove employee
-router.delete('/companies/:companyId/employees/:userId', authMiddleware, async (req: Request, res: Response) => {
+router.delete('/companies/:companyId/employees/:userId', authMiddleware, async (req: any, res: Response) => {
   try {
     const { companyId, userId } = req.params;
+
+    // Unguarded, this let any logged-in account resign anyone from any company
+    // and release their live allocations.
+    const gate = await requireCompanyRole(req.userId, companyId, ['owner', 'manager']);
+    if (!gate.ok) return res.status(gate.status || 403).json({ success: false, message: gate.error });
+
+    // The owner is the company — removing them would leave it with nobody who
+    // can act for it.
+    const target = await db.query('SELECT owner_user_id FROM companies WHERE id = $1', [companyId]);
+    if (Number(target.rows[0]?.owner_user_id) === Number(userId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'The company owner cannot be removed. Transfer ownership first.',
+      });
+    }
 
     const client = await db.getClient();
     let released = 0;
@@ -549,11 +623,29 @@ router.post('/companies/:companyId/employees/bulk-import', authMiddleware, async
   }
 });
 // POST /api/companies/:companyId/leaves - Request leave
-router.post('/companies/:companyId/leaves', authMiddleware, async (req: Request, res: Response) => {
+// Company staff leave lives in `company_leave`.
+//
+// These three routes were split across two other tables and neither worked.
+// POST and approve wrote to `employee_leaves`, which does not exist in the
+// schema at all, so both threw on every call. GET read `leave_requests`, which
+// is the INTERNAL HR table — its staff_id is a FK to staff(staff_id) ('S001'),
+// a different identity space from users.id, so the join it did against
+// company_staff.user_id could never match a row and the list was always empty.
+//
+// company_leave is the company-scoped table: company_id + staff_user_id both
+// FK'd properly, and it is what the leave UI needs.
+const COMPANY_LEAVE_TYPES = ['sick', 'annual', 'emergency', 'unpaid', 'other'];
+
+router.post('/companies/:companyId/leaves', authMiddleware, async (req: any, res: Response) => {
   try {
     const { companyId } = req.params;
-    const userId = (req as any).userId;
+    const userId = req.userId;
     const { start_date, end_date, leave_type, reason } = req.body;
+
+    // Anyone in the company may file their own leave; nobody may file into a
+    // company they don't belong to.
+    const gate = await requireCompanyRole(userId, companyId, ['owner', 'manager', 'staff']);
+    if (!gate.ok) return res.status(gate.status || 403).json({ success: false, message: gate.error });
 
     if (!start_date || !end_date) {
       return res.status(400).json({
@@ -562,11 +654,27 @@ router.post('/companies/:companyId/leaves', authMiddleware, async (req: Request,
       });
     }
 
+    if (new Date(end_date) < new Date(start_date)) {
+      return res.status(400).json({
+        success: false,
+        message: 'The end date cannot be before the start date'
+      });
+    }
+
+    // The table constrains leave_type; anything else fails the check constraint
+    const type = String(leave_type || 'annual').toLowerCase();
+    if (!COMPANY_LEAVE_TYPES.includes(type)) {
+      return res.status(400).json({
+        success: false,
+        message: `Leave type must be one of: ${COMPANY_LEAVE_TYPES.join(', ')}`
+      });
+    }
+
     const result = await db.query(
-      `INSERT INTO employee_leaves (company_id, user_id, start_date, end_date, leave_type, reason, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `INSERT INTO company_leave (company_id, staff_user_id, start_date, end_date, leave_type, reason, status)
+       VALUES ($1, $2, $3, $4, $5, $6, 'pending')
        RETURNING *`,
-      [companyId, userId, start_date, end_date, leave_type || 'paid', reason || '', 'pending']
+      [companyId, userId, start_date, end_date, type, reason || '']
     );
 
     res.status(201).json({
@@ -585,28 +693,28 @@ router.post('/companies/:companyId/leaves', authMiddleware, async (req: Request,
 });
 
 // GET /api/companies/:companyId/leaves - Get leave requests
-router.get('/companies/:companyId/leaves', authMiddleware, async (req: Request, res: Response) => {
+router.get('/companies/:companyId/leaves', authMiddleware, async (req: any, res: Response) => {
   try {
     const { companyId } = req.params;
     const { status } = req.query;
 
-    // leave_requests keys on staff_id and has no company_id of its own, so the
-    // company is reached through company_staff.
-    let query = `SELECT el.*, COALESCE(u.alias, u.display_name) as user_name, u.email as user_email
-                 FROM leave_requests el
-                 -- leave_requests.staff_id is VARCHAR while company_staff.user_id
-                 -- is INTEGER, so the join has to be cast explicitly.
-                 JOIN company_staff cs ON cs.user_id::text = el.staff_id
-                 JOIN users u ON u.id::text = el.staff_id
-                 WHERE cs.company_id = $1`;
+    // Leave reasons are frequently medical. Only the people who approve leave
+    // see the whole company's; staff see their own via the leave module.
+    const gate = await requireCompanyRole(req.userId, companyId, ['owner', 'manager']);
+    if (!gate.ok) return res.status(gate.status || 403).json({ success: false, message: gate.error });
+
+    let query = `SELECT cl.*, COALESCE(u.alias, u.display_name) as user_name, u.email as user_email
+                 FROM company_leave cl
+                 JOIN users u ON u.id = cl.staff_user_id
+                 WHERE cl.company_id = $1`;
     const params: any[] = [companyId];
 
     if (status) {
-      query += ` AND el.status = $2`;
+      query += ` AND cl.status = $2`;
       params.push(status);
     }
 
-    query += ` ORDER BY el.start_date DESC`;
+    query += ` ORDER BY cl.start_date DESC`;
 
     const result = await db.query(query, params);
 
@@ -625,24 +733,62 @@ router.get('/companies/:companyId/leaves', authMiddleware, async (req: Request, 
 });
 
 // PUT /api/companies/leaves/:leaveId/approve - Approve/deny leave
-router.put('/companies/leaves/:leaveId/approve', authMiddleware, async (req: Request, res: Response) => {
+router.put('/companies/leaves/:leaveId/approve', authMiddleware, async (req: any, res: Response) => {
   try {
     const { leaveId } = req.params;
     const { status, notes } = req.body;
 
-    if (!['approved', 'denied'].includes(status)) {
+    // The table's check constraint allows pending/approved/rejected — 'denied'
+    // would have been rejected by Postgres. Still accepted from the body since
+    // that's the word the UI uses.
+    const decision = status === 'denied' ? 'rejected' : status;
+    if (!['approved', 'rejected'].includes(decision)) {
       return res.status(400).json({
         success: false,
-        message: 'Status must be approved or denied'
+        message: 'Status must be approved or rejected'
+      });
+    }
+
+    // This route took a bare leave id and no company at all — any logged-in
+    // account could approve or deny anybody's leave anywhere. Resolve the
+    // owning company from the row first, then gate on it.
+    const owner = await db.query(
+      'SELECT company_id, staff_user_id FROM company_leave WHERE id = $1',
+      [leaveId]
+    );
+    if (owner.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Leave request not found'
+      });
+    }
+
+    const gate = await requireCompanyRole(req.userId, owner.rows[0].company_id, ['owner', 'manager']);
+    if (!gate.ok) return res.status(gate.status || 403).json({ success: false, message: gate.error });
+
+    // Nobody signs off their own leave
+    if (Number(owner.rows[0].staff_user_id) === Number(req.userId)) {
+      return res.status(403).json({
+        success: false,
+        message: 'You cannot approve your own leave request'
       });
     }
 
     const result = await db.query(
-      `UPDATE employee_leaves
-       SET status = $1, approval_notes = $2, updated_at = NOW()
-       WHERE id = $3
+      `UPDATE company_leave
+       SET status = $1, reason = COALESCE(NULLIF($2, ''), reason),
+           approved_by = $3, approved_at = NOW(), updated_at = NOW()
+       WHERE id = $4
        RETURNING *`,
-      [status, notes || '', leaveId]
+      [decision, notes || '', req.userId, leaveId]
+    );
+
+    // Keep the staff record in step so the allocator stops handing them work
+    await db.query(
+      `UPDATE company_staff SET status = $1, updated_at = NOW()
+        WHERE company_id = $2 AND user_id = $3 AND status IN ('active', 'on_leave')`,
+      [decision === 'approved' ? 'on_leave' : 'active',
+       owner.rows[0].company_id, owner.rows[0].staff_user_id]
     );
 
     if (result.rows.length === 0) {
@@ -668,9 +814,12 @@ router.put('/companies/leaves/:leaveId/approve', authMiddleware, async (req: Req
 });
 
 // POST /api/companies/:companyId/suggest-categories - AI suggest errand categories
-router.post('/companies/:companyId/suggest-categories', authMiddleware, async (req: Request, res: Response) => {
+router.post('/companies/:companyId/suggest-categories', authMiddleware, async (req: any, res: Response) => {
   try {
     const { industry, bio } = req.body;
+
+    const gate = await requireCompanyRole(req.userId, req.params.companyId, ['owner', 'manager']);
+    if (!gate.ok) return res.status(gate.status || 403).json({ success: false, message: gate.error });
 
     // Default category suggestions based on industry
     const categoryMap: { [key: string]: string[] } = {
@@ -759,11 +908,14 @@ router.get('/companies/:companyId/reviews', authMiddleware, async (req: Request,
 });
 
 // POST /api/companies/:companyId/reviews - Add company review
-router.post('/companies/:companyId/reviews', authMiddleware, async (req: Request, res: Response) => {
+router.post('/companies/:companyId/reviews', authMiddleware, async (req: any, res: Response) => {
   try {
     const { companyId } = req.params;
-    const { rating, comment, taskId } = req.body;
-    const userId = (req as any).userId;
+    const { rating, comment, errandId, taskId } = req.body;
+    const userId = req.userId;
+    // The column is errand_id; `task_id` threw on every submission. Both names
+    // are accepted from the body since callers send either.
+    const ref = errandId ?? taskId ?? null;
 
     if (!rating || rating < 1 || rating > 5) {
       return res.status(400).json({
@@ -772,11 +924,66 @@ router.post('/companies/:companyId/reviews', authMiddleware, async (req: Request
       });
     }
 
+    // Nobody rates their own company
+    const membership = await resolveCompanyRole(userId, companyId);
+    if (membership) {
+      return res.status(403).json({
+        success: false,
+        message: 'You cannot review your own company'
+      });
+    }
+
+    // A review has to come out of real work, otherwise the rating is open to
+    // anyone with an account. The reviewer must have posted the errand and this
+    // company must have won it.
+    if (!ref) {
+      return res.status(400).json({
+        success: false,
+        message: 'errandId is required — you can only review a company on an errand it completed for you'
+      });
+    }
+
+    const worked = await db.query(
+      `SELECT 1
+         FROM errands e
+         JOIN bids b ON b.errand_id = e.id AND b.id = e.accepted_bid_id
+        WHERE e.id = $1 AND e.asker_id = $2 AND b.company_id = $3
+        LIMIT 1`,
+      [ref, userId, companyId]
+    );
+    if (worked.rows.length === 0) {
+      return res.status(403).json({
+        success: false,
+        message: 'You can only review a company on an errand it completed for you'
+      });
+    }
+
+    const existing = await db.query(
+      'SELECT 1 FROM company_reviews WHERE company_id = $1 AND rater_id = $2 AND errand_id = $3',
+      [companyId, userId, ref]
+    );
+    if (existing.rows.length > 0) {
+      return res.status(409).json({
+        success: false,
+        message: "You've already reviewed this errand"
+      });
+    }
+
     const result = await db.query(
-      `INSERT INTO company_reviews (company_id, rater_id, rating, comment, task_id)
+      `INSERT INTO company_reviews (company_id, rater_id, rating, comment, errand_id)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING *`,
-      [companyId, userId, rating, comment || '', taskId || null]
+      [companyId, userId, rating, comment || '', ref]
+    );
+
+    // Keep the denormalised average on companies in step with the reviews
+    await db.query(
+      `UPDATE companies
+          SET average_rating = COALESCE((SELECT ROUND(AVG(rating)::numeric, 2)
+                                           FROM company_reviews WHERE company_id = $1), 0),
+              updated_at = NOW()
+        WHERE id = $1`,
+      [companyId]
     );
 
     res.status(201).json({

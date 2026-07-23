@@ -1,15 +1,24 @@
 import express, { Response } from 'express';
 import { campaignModel } from '../models/Campaign.js';
 import { advertisingService } from '../services/advertisingService.js';
+import { authMiddleware, requireAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
-const isAdmin = (req: any, res: Response, next: Function) => {
-  if (req.user?.role !== 'admin' && req.user?.role !== 'super-admin') {
-    return res.status(403).json({ error: 'Admin access required' });
-  }
-  next();
-};
+/**
+ * This router used to define its own guard that read `req.user?.role`. Nothing
+ * ever populated it: authMiddleware was not mounted here at all, and even where
+ * it is, it sets only { id, email } because the JWT carries no role. So the
+ * check could never pass and *every* advertising admin route returned 403 to
+ * everyone — the approval queue, approve, reject, pause, end and stats were all
+ * unreachable while the screen behind them looked complete.
+ *
+ * routes/admin.ts hit exactly this bug and fixed it the same way: authenticate,
+ * then look the role up in the database. Applied at router level so a handler
+ * added later cannot be forgotten. requireAdmin also populates nothing itself —
+ * authMiddleware ahead of it is what gives the handlers req.user.id.
+ */
+const isAdmin: any = [authMiddleware, requireAdmin(['admin', 'super-admin'])];
 
 router.get('/campaigns', isAdmin, async (req: any, res: Response) => {
   try {

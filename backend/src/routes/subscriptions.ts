@@ -389,16 +389,32 @@ router.get('/ad-credits/balance', authMiddleware, attachCompanyId, async (req: A
   try {
     const companyId = parseInt(req.companyId || '0', 10);
 
-    // Demo ad credit balance - replace with real calculation
+    // Real balance, not the hardcoded gold demo that made this disagree with
+    // /status for every company. The tier and monthly allowance come from the
+    // live subscription; the allocated/used/available come from the ledger.
+    const { getCredits } = await import('../services/adCreditService.js');
+    const { getCompanySubscription, getTierConfig } = await import('../services/subscriptionService.js');
+
+    const sub: any = await getCompanySubscription(companyId);
+    const tier = sub?.subscription_tier &&
+      (!sub.expires_at || new Date(sub.expires_at) > new Date()) ? sub.subscription_tier : null;
+    const cfg: any = tier ? await getTierConfig(tier).catch(() => null) : null;
+    const monthlyAllowanceCents = cfg ? Math.round(Number(cfg.ad_credit_monthly) * 100) : 0;
+
+    const credits: any = await getCredits(companyId);
+    const allocated = Number(credits?.allocated_amount || 0);
+    const used = Number(credits?.used_amount || 0);
+    const available = Number(credits?.available_amount ?? (allocated - used));
+
     res.json({
       success: true,
-      allocated: 20000, // SGD 200/month for Gold tier
-      used: 12500,
-      available: 7500,
-      expires_at: '2026-09-01',
-      tier: 'gold',
-      monthly_allowance: 20000,
-      usage_percent: 62.5,
+      allocated,
+      used,
+      available,
+      expires_at: credits?.expires_at || null,
+      tier,
+      monthly_allowance: monthlyAllowanceCents,
+      usage_percent: allocated > 0 ? Math.round((used / allocated) * 1000) / 10 : 0,
     });
   } catch (error) {
     console.error('Get ad credits error:', error);

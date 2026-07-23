@@ -84,35 +84,101 @@ router.post('/applications', async (req: Request, res: Response) => {
     const num = (v: any) => (v === '' || v === null || v === undefined ? null : Number(v) || 0);
     const date = (v: any) => (v ? v : null);
 
+    // Constrained at the DB too; validated here so a bad value returns a clear
+    // 400 rather than a 500 from the check constraint.
+    const workAuthorisation = b.work_authorisation || null;
+    if (workAuthorisation && !['authorised', 'requires_sponsorship'].includes(workAuthorisation)) {
+      return res.status(400).json({
+        error: "work_authorisation must be 'authorised' or 'requires_sponsorship'",
+      });
+    }
+    const canPerformDuties =
+      typeof b.can_perform_duties === 'boolean' ? b.can_perform_duties : null;
+
+    /**
+     * Only what can actually bear on the hiring decision is stored.
+     *
+     * This endpoint previously accepted and wrote NRIC, date of birth,
+     * nationality, residential status, home address, emergency contacts and a
+     * disability/medical declaration — from anyone who applied, before anyone
+     * had decided anything. Each of those is a separate problem:
+     *
+     *  - NRIC. PDPC's Advisory Guidelines on the PDPA for NRIC and other
+     *    National Identification Numbers (in force 1 Sep 2019) bar collecting
+     *    an NRIC number unless required by law or needed to verify identity to
+     *    a high degree of fidelity. A job application is neither. It becomes
+     *    lawful once someone is hired, because CPF and IRAS then require it —
+     *    which is why `staff.nric` exists and this column should not.
+     *
+     *  - Disability and medical condition. Sensitive data collected before an
+     *    offer, when it cannot lawfully affect the outcome; asking it at all at
+     *    this stage is the evidence a discrimination complaint would rest on.
+     *    TAFEP's fair-employment guidelines expect medical questions to be
+     *    job-relevant and post-offer.
+     *
+     *  - Nationality. A protected characteristic under the Fair Consideration
+     *    Framework, and not the question actually being asked.
+     *
+     *  - Emergency contacts. Onboarding details, and a third party who has
+     *    not consented to anything.
+     *
+     * Date of birth and address ARE collected — no rule bars them, address
+     * supports commute matching, and some roles carry statutory age limits.
+     * Nationality is replaced by `work_authorisation`, which answers the
+     * question actually needed (can they work here, do they need sponsoring)
+     * without recording a protected characteristic. The health declaration is
+     * replaced by `can_perform_duties` — whether someone can do the job, with
+     * or without adjustment, is job-relevant; their medical history is not.
+     *
+     * NRIC and emergency contacts are collected at hire, by
+     * POST /api/admin/job-applications/:id/hire below.
+     *
+     * Fields sent by an older client are ignored rather than rejected, so a
+     * stale form degrades to a lawful application instead of a hard failure.
+     */
     const result = await db.query(
       `INSERT INTO job_applications (
-         job_id, first_name, last_name, email, phone, nric, date_of_birth,
-         nationality, home_address, city, postal_code, country, residential_status,
-         emergency_contact_name, emergency_contact_relationship, emergency_contact_phone,
+         job_id, first_name, last_name, email, phone,
+         date_of_birth, home_address, city, postal_code, country,
+         work_authorisation, can_perform_duties, adjustments_needed,
          position_applied, expected_salary, notice_period_days, available_start_date,
          years_of_experience, key_skills, highest_qualification, field_of_study,
-         health_declaration, agreements,
-         employment_history, education_records, referee_contacts,
+         agreements, employment_history, education_records, referee_contacts,
          status, submitted_at
        ) VALUES (
          $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,
-         $21,$22,$23,$24,$25,$26,$27,$28,$29,'submitted',NOW()
+         $21,$22,$23,$24,$25,'submitted',NOW()
        )
        RETURNING id, application_id, status, submitted_at`,
       [
-        b.job_id, b.first_name, b.last_name, b.email, b.phone || null, b.nric || null,
-        date(b.date_of_birth), b.nationality || null, b.home_address || null, b.city || null,
-        b.postal_code || null, b.country || null, b.residential_status || null,
-        b.emergency_contact_name || null, b.emergency_contact_relationship || null,
-        b.emergency_contact_phone || null, b.position_applied || null,
+        b.job_id, b.first_name, b.last_name, b.email, b.phone || null,
+        date(b.date_of_birth), b.home_address || null, b.city || null,
+        b.postal_code || null, b.country || null,
+        workAuthorisation, canPerformDuties, b.adjustments_needed || null,
+        b.position_applied || null,
         num(b.expected_salary), num(b.notice_period_days), date(b.available_start_date),
         num(b.years_of_experience), b.key_skills || null, b.highest_qualification || null,
         b.field_of_study || null,
-        JSON.stringify(b.health_declaration || {}), JSON.stringify(agreements),
+        JSON.stringify(agreements),
         JSON.stringify(b.employment_history || []), JSON.stringify(b.education_records || []),
         JSON.stringify(b.referee_contacts || []),
       ]
     );
+
+    // Loud, because a client still sending these means a form somewhere is
+    // still asking for them — and the data reached our logs even if not our
+    // table. Field names only; never the values.
+    const refused = ['nric', 'nationality', 'residential_status',
+                     'emergency_contact_name', 'emergency_contact_phone',
+                     'health_declaration']
+      .filter((f) => b[f] !== undefined && b[f] !== null && b[f] !== '' &&
+                     !(typeof b[f] === 'object' && Object.keys(b[f]).length === 0));
+    if (refused.length) {
+      console.warn(
+        `[Recruitment] Ignored fields not collected at application stage: ${refused.join(', ')} ` +
+        `— a client is still sending them. See docs/DATA_RETENTION.md.`
+      );
+    }
 
     console.log('[Recruitment] Application', result.rows[0].application_id, 'received for', b.job_id);
     res.status(201).json({ success: true, data: result.rows[0] });
@@ -193,6 +259,147 @@ const ACTIONS: Record<string, string> = {
   offer: 'offered',
   review: 'under_review',
 };
+
+/**
+ * NOTE ON ORDER: the hire route must stay ABOVE the '/:action' route below.
+ * Express matches in definition order, and '/applications/:id/:action' happily
+ * matches '/applications/13/hire' — which answered "Unknown action" until this
+ * was moved up.
+ */
+/**
+ * Hires an applicant: turns the application into a staff record.
+ *
+ * This is the missing step that made the application form over-collect. There
+ * was no way to get from "accepted applicant" to "employee", so the form asked
+ * for everything the staff record would eventually need — NRIC, residential
+ * status, emergency contact — from everyone who applied, months before anyone
+ * was hired. Collecting them here instead is the whole point: at this moment
+ * the person IS an employee, so CPF and IRAS make the NRIC lawful and
+ * necessary, and the emergency contact has an employment relationship to sit
+ * in.
+ *
+ * The application keeps only what it already held; the onboarding details are
+ * supplied by the admin now and written straight to `staff`.
+ */
+router.post('/applications/:id/hire', isAdmin, async (req: any, res: Response) => {
+  const client = await db.getClient();
+  try {
+    const { id } = req.params;
+    const {
+      nric, residential_status, department, position, hire_date,
+      employment_type, base_salary, cpf_membership_no,
+      emergency_contact_name, emergency_contact_relationship, emergency_contact_phone,
+      fitness_status, fitness_assessed_on, fitness_restrictions, workplace_adjustments,
+    } = req.body;
+
+    if (!nric || !String(nric).trim()) {
+      return res.status(400).json({
+        error: 'NRIC/FIN is required to create the employee record (CPF and IRAS need it)',
+      });
+    }
+    if (!hire_date) {
+      return res.status(400).json({ error: 'Hire date is required' });
+    }
+    if (fitness_status &&
+        !['pending', 'fit', 'fit_with_adjustments', 'not_yet_cleared'].includes(fitness_status)) {
+      return res.status(400).json({ error: 'Invalid fitness status' });
+    }
+
+    await client.query('BEGIN');
+
+    const app = await client.query(
+      `SELECT id, application_id, first_name, last_name, email, phone,
+              home_address, city, postal_code, country, status,
+              adjustments_needed
+         FROM job_applications WHERE id = $1 FOR UPDATE`,
+      [id]
+    );
+    if (app.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Application not found' });
+    }
+
+    const a = app.rows[0];
+
+    if (a.status === 'hired') {
+      await client.query('ROLLBACK');
+      return res.status(409).json({ error: 'This applicant has already been hired' });
+    }
+
+    const existing = await client.query(
+      'SELECT staff_id FROM staff WHERE LOWER(email) = LOWER($1)',
+      [a.email]
+    );
+    if (existing.rows.length > 0) {
+      await client.query('ROLLBACK');
+      return res.status(409).json({
+        error: `A staff record already exists for that email (${existing.rows[0].staff_id})`,
+      });
+    }
+
+    // Same id scheme the staff route uses.
+    const countResult = await client.query('SELECT COUNT(*) AS count FROM staff');
+    const staffId = `S${String(Number(countResult.rows[0].count) + 1).padStart(3, '0')}`;
+
+    const staff = await client.query(
+      `INSERT INTO staff (
+         staff_id, first_name, last_name, email, phone, nric,
+         home_address, city, postal_code, country, residential_status,
+         emergency_contact_name, emergency_contact_relationship, emergency_contact_phone,
+         department, position, hire_date, employment_type, base_salary,
+         cpf_membership_no, annual_leave_entitlement, sick_leave_entitlement,
+         fitness_status, fitness_assessed_on, fitness_restrictions, workplace_adjustments,
+         status, created_at, last_modified
+       ) VALUES (
+         $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,
+         12, 4, $21, $22, $23, $24, 'active', NOW(), NOW()
+       )
+       RETURNING id, staff_id, first_name, last_name`,
+      [
+        staffId, a.first_name, a.last_name, a.email, a.phone, String(nric).trim(),
+        a.home_address, a.city, a.postal_code, a.country, residential_status || null,
+        emergency_contact_name || null, emergency_contact_relationship || null,
+        emergency_contact_phone || null,
+        department || null, position || null, hire_date, employment_type || 'Permanent',
+        base_salary ?? null, cpf_membership_no || null,
+        fitness_status || 'pending', fitness_assessed_on || null,
+        fitness_restrictions || null,
+        // Any adjustment the applicant asked for carries over, so a request
+        // made at application is not lost the moment they are hired.
+        workplace_adjustments || a.adjustments_needed || null,
+      ]
+    );
+
+    await client.query(
+      `UPDATE job_applications
+          SET status = 'hired', reviewed_at = NOW(), reviewed_by = $1, updated_at = NOW()
+        WHERE id = $2`,
+      [req.user?.email || 'admin', id]
+    );
+
+    await client.query('COMMIT');
+
+    console.log(`[Recruitment] ${a.application_id} hired as ${staff.rows[0].staff_id}`);
+    res.status(201).json({ success: true, data: staff.rows[0] });
+  } catch (error: any) {
+    await client.query('ROLLBACK');
+    console.error('[Recruitment] Hire failed:', error);
+    if (error?.constraint === 'staff_fitness_status_valid') {
+      return res.status(400).json({ error: 'Invalid fitness status' });
+    }
+    // staff.nric is UNIQUE, which is right — one NRIC, one employee. Say so
+    // plainly instead of returning a 500 that looks like our fault: the likely
+    // causes are a typo or the person already being on the payroll.
+    if (error?.constraint === 'staff_nric_key') {
+      return res.status(409).json({
+        error: 'That NRIC/FIN already belongs to an existing employee. Check for a typo, or whether this person is already on the staff list.',
+      });
+    }
+    res.status(500).json({ error: 'Failed to create the employee record' });
+  } finally {
+    client.release();
+  }
+});
 
 router.post('/applications/:id/:action', isAdmin, async (req: any, res: Response) => {
   try {

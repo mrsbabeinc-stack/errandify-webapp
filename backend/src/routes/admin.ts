@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import db from '../db.js';
 import { authMiddleware, requireAdmin } from '../middleware/auth.js';
 import { sendCompanyApprovedNotice, sendCompanyRejectedNotice } from '../services/companyOnboarding.js';
+import { creditFirstErrandForErrand } from '../services/referralService.js';
 
 const router = express.Router();
 
@@ -496,6 +497,12 @@ router.post('/errands/:errandId/complete', isAdmin, async (req: Request, res: Re
     );
     if (r.rows.length === 0) return res.status(404).json({ error: 'Errand not found' });
     console.log('[Admin] Errand force-completed:', errandId, 'by', (req as any).userId);
+
+    // A force-complete is still a completed errand, so it can still be the one
+    // that earns a referrer their first-errand bonus. Idempotent — if the doer
+    // has already had an errand completed, this does nothing.
+    creditFirstErrandForErrand(errandId).catch(() => undefined);
+
     res.json({ success: true, message: 'Errand marked as completed', data: r.rows[0] });
   } catch (error) {
     console.error('[Admin] Force complete failed:', error instanceof Error ? error.message : error);
@@ -617,28 +624,16 @@ router.patch('/feature-flags/:flagId/rollout', isAdmin, async (req: Request, res
   }
 });
 
-// ADD HOLIDAY
-router.post('/holidays', isAdmin, async (req: Request, res: Response) => {
-  try {
-    const { date, name, country } = req.body;
-    if (!date || !name) return res.status(400).json({ error: 'Date and name required' });
-    const result = await db.query('INSERT INTO holidays (date, name, country, created_at) VALUES (?, ?, ?, NOW())', [date, name, country || 'SG']);
-    res.status(201).json({ id: result.insertId, date, name, country });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to add holiday' });
-  }
-});
-
-// DELETE HOLIDAY
-router.delete('/holidays/:holidayId', isAdmin, async (req: Request, res: Response) => {
-  try {
-    const { holidayId } = req.params;
-    await db.query('DELETE FROM holidays WHERE id = ?', [holidayId]);
-    res.json({ message: 'Holiday deleted' });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to delete holiday' });
-  }
-});
+/*
+ * The POST /holidays and DELETE /holidays/:holidayId handlers that used to sit
+ * here have been removed in favour of the full CRUD set in routes/holidays.ts.
+ *
+ * This router is mounted first on /api/admin, so these two shadowed the working
+ * handlers — and they could never succeed: MySQL `?` placeholders against a
+ * Postgres pool, a MySQL-only `result.insertId`, and an INSERT into a `country`
+ * column the holidays table does not have. Creating or deleting a holiday from
+ * the admin returned 500 every time.
+ */
 
 // GET AUDIT LOGS
 router.get('/audit-logs', isAdmin, async (req: Request, res: Response) => {
@@ -691,77 +686,25 @@ router.patch('/alert-rules/:ruleId', isAdmin, async (req: Request, res: Response
   }
 });
 
-// CREATE EMAIL CAMPAIGN
-router.post('/campaigns/email', isAdmin, async (req: Request, res: Response) => {
-  try {
-    const { name, subject, recipientCount } = req.body;
-    if (!name || !subject) return res.status(400).json({ error: 'Name and subject required' });
-    const result = await db.query('INSERT INTO email_campaigns (name, subject, recipient_count, status, created_at) VALUES (?, ?, ?, ?, NOW())', [name, subject, recipientCount, 'draft']);
-    res.status(201).json({ id: result.insertId, name, subject, status: 'draft' });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to create email campaign' });
-  }
-});
-
-// SEND NOTIFICATION
-router.post('/notifications/send', isAdmin, async (req: Request, res: Response) => {
-  try {
-    const { title, message, type, targetAudience } = req.body;
-    if (!title || !message) return res.status(400).json({ error: 'Title and message required' });
-    const result = await db.query('INSERT INTO notifications (title, message, type, target_audience, status, created_at) VALUES (?, ?, ?, ?, ?, NOW())', [title, message, type, targetAudience, 'scheduled']);
-    res.status(201).json({ id: result.insertId, title, message });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to send notification' });
-  }
-});
-
-// CREATE EVENT REMINDER
-router.post('/event-reminders', isAdmin, async (req: Request, res: Response) => {
-  try {
-    const { eventName, description, scheduledDate, reminderTiming } = req.body;
-    if (!eventName || !scheduledDate) return res.status(400).json({ error: 'Event name and date required' });
-    const result = await db.query('INSERT INTO event_reminders (event_name, description, scheduled_date, reminder_timing, status, created_at) VALUES (?, ?, ?, ?, ?, NOW())', [eventName, description, scheduledDate, reminderTiming, 'active']);
-    res.status(201).json({ id: result.insertId, eventName, scheduledDate });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to create event reminder' });
-  }
-});
-
-// CREATE BLOG ARTICLE
-router.post('/blog/articles', isAdmin, async (req: Request, res: Response) => {
-  try {
-    const { title, author, category, content } = req.body;
-    if (!title || !author) return res.status(400).json({ error: 'Title and author required' });
-    const result = await db.query('INSERT INTO blog_articles (title, author, category, content, status, created_at) VALUES (?, ?, ?, ?, ?, NOW())', [title, author, category, content, 'draft']);
-    res.status(201).json({ id: result.insertId, title, author, status: 'draft' });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to create article' });
-  }
-});
-
-// AWARD RECOGNITION
-router.post('/recognition/award', isAdmin, async (req: Request, res: Response) => {
-  try {
-    const { userId, award, reason } = req.body;
-    if (!userId || !award) return res.status(400).json({ error: 'User ID and award required' });
-    const result = await db.query('INSERT INTO recognitions (user_id, award, reason, visibility, awarded_at) VALUES (?, ?, ?, ?, NOW())', [userId, award, reason, 'public']);
-    res.status(201).json({ id: result.insertId, award });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to award recognition' });
-  }
-});
-
-// CREATE HERO BANNER
-router.post('/banners/hero', isAdmin, async (req: Request, res: Response) => {
-  try {
-    const { title, subtitle, ctaText, ctaLink, displayLocation } = req.body;
-    if (!title || !ctaText) return res.status(400).json({ error: 'Title and CTA text required' });
-    const result = await db.query('INSERT INTO hero_banners (title, subtitle, cta_text, cta_link, display_location, status, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())', [title, subtitle, ctaText, ctaLink, displayLocation, 'scheduled']);
-    res.status(201).json({ id: result.insertId, title });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to create banner' });
-  }
-});
+/*
+ * The Marcom write handlers that used to live here — POST /campaigns/email,
+ * /notifications/send, /event-reminders, /blog/articles, /recognition/award
+ * and /banners/hero — have been removed rather than repaired.
+ *
+ * None of them could ever have worked. They used MySQL `?` placeholders and
+ * `result.insertId` against a Postgres pool, and four of the five tables they
+ * inserted into (email_campaigns, event_reminders, blog_articles,
+ * recognitions, hero_banners) did not exist. Every call returned a 500 that
+ * the frontend never made, because the screens saved to localStorage instead.
+ *
+ * The real implementations are:
+ *   campaigns, broadcasts, recognition, banners, reminders → routes/marcom.ts
+ *   blog articles                                          → routes/blog.ts
+ *
+ * POST /alert-rules and PATCH /alert-rules/:ruleId above have the same two
+ * faults and no `alert_rules` table, but they belong to monitoring rather than
+ * Marcom and are left for whoever owns that screen.
+ */
 
 /**
  * GET /api/admin/subscriptions — every company's plan, for the admin table.

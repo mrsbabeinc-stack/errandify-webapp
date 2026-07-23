@@ -1,13 +1,27 @@
 import express, { Request, Response } from 'express';
 import db from '../db.js';
 
+import { authMiddleware, requireAdmin } from '../middleware/auth.js';
+
 const router = express.Router();
+
+/**
+ * This router had no guard of its own. It was reachable only because
+ * routes/staffManagement.ts is mounted earlier on the same /api/admin path and
+ * its router-level guard rejects the request first — so the protection came
+ * from an unrelated file and would disappear if the mount order in index.ts
+ * changed. Stated explicitly here so it holds on its own.
+ */
+router.use(authMiddleware, requireAdmin(['admin', 'super-admin']));
 
 // Get all holidays
 router.get('/holidays', async (req: Request, res: Response) => {
   try {
     const { year, type } = req.query;
-    let query = 'SELECT * FROM holidays WHERE 1=1';
+    // `date` is a DATE column — cast to text so it survives JSON as a calendar
+    // date rather than being shifted a day by the UTC conversion. Same issue as
+    // routes/leaves.ts.
+    let query = 'SELECT *, date::text AS date FROM holidays WHERE 1=1';
     const params: any[] = [];
 
     if (year) {
@@ -20,7 +34,9 @@ router.get('/holidays', async (req: Request, res: Response) => {
       params.push(type);
     }
 
-    query += ' ORDER BY date ASC';
+    // Table-qualified: the `date::text AS date` alias above makes a bare
+    // `date` here ambiguous between the column and the output column.
+    query += ' ORDER BY holidays.date ASC';
 
     const result = await db.query(query, params);
     res.json({ success: true, data: result.rows });
@@ -35,7 +51,7 @@ router.get('/holidays/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const result = await db.query(
-      'SELECT * FROM holidays WHERE id = $1',
+      'SELECT *, date::text AS date FROM holidays WHERE id = $1',
       [id]
     );
 

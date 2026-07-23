@@ -1,13 +1,30 @@
 import express, { Request, Response } from 'express';
 import db from '../db.js';
 
+import { authMiddleware, requireAdmin } from '../middleware/auth.js';
+
 const router = express.Router();
+
+/**
+ * Same gap as routes/holidays.ts: no guard of its own, protected only by the
+ * router-level guard in routes/staffManagement.ts happening to sit earlier on
+ * the /api/admin mount. These rows carry staff names alongside leave type and
+ * reason — sick leave reasons are health data — so the guard belongs here
+ * rather than being inherited by accident.
+ */
+router.use(authMiddleware, requireAdmin(['admin', 'super-admin']));
 
 // Get all leave requests
 router.get('/leaves', async (req: Request, res: Response) => {
   try {
     const { status, staffId, startDate, endDate } = req.query;
-    let query = 'SELECT * FROM leave_requests WHERE 1=1';
+    // start_date/end_date are DATE columns. node-postgres parses them into JS
+    // Dates at *local* midnight, so serialising to JSON converts them to UTC
+    // and, from SGT (UTC+8), moves them back a day: a leave stored as
+    // 2026-08-03 reached the UI as 2026-08-02T16:00:00Z, and every caller that
+    // does .split('T')[0] then showed the leave starting a day early.
+    // Casting to text keeps a calendar date a calendar date.
+    let query = 'SELECT *, start_date::text AS start_date, end_date::text AS end_date FROM leave_requests WHERE 1=1';
     const params: any[] = [];
 
     if (status) {
@@ -45,7 +62,7 @@ router.get('/leaves/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const result = await db.query(
-      'SELECT * FROM leave_requests WHERE id = $1',
+      'SELECT *, start_date::text AS start_date, end_date::text AS end_date FROM leave_requests WHERE id = $1',
       [id]
     );
 
@@ -171,9 +188,15 @@ router.get('/leave-balance/:staffId', async (req: Request, res: Response) => {
   try {
     const { staffId } = req.params;
 
-    // Get staff entitlements
+    // Keyed on staff.staff_id ("S001"), not the numeric primary key: the
+    // usage query below joins on leave_requests.staff_id, which holds that
+    // same varchar. Looking the staff row up by `id` meant the two halves of
+    // this handler were keyed on different things — passing "S001" threw on
+    // the integer comparison, and passing a numeric id found the staff member
+    // but then matched no leave rows, so the balance always came back as the
+    // full entitlement.
     const staffResult = await db.query(
-      `SELECT annual_leave_entitlement, sick_leave_entitlement FROM staff WHERE id = $1`,
+      `SELECT annual_leave_entitlement, sick_leave_entitlement FROM staff WHERE staff_id = $1`,
       [staffId]
     );
 
@@ -195,20 +218,28 @@ router.get('/leave-balance/:staffId', async (req: Request, res: Response) => {
     );
 
     const balances: any = {
-      annual_leave: staff.annual_leave_entitlement,
-      sick_leave: staff.sick_leave_entitlement,
+      annual_leave: Number(staff.annual_leave_entitlement) || 0,
+      sick_leave: Number(staff.sick_leave_entitlement) || 0,
       unpaid_leave: 365,
       other_leaves: {},
     };
 
     // Deduct used days
     leaveUsage.rows.forEach((row: any) => {
+      // SUM() comes back as a string; without Number() the "other" branch below
+      // would concatenate rather than subtract.
+      const daysUsed = Number(row.days_used) || 0;
+
       if (row.leave_type === 'Annual Leave') {
-        balances.annual_leave -= row.days_used;
+        balances.annual_leave -= daysUsed;
       } else if (row.leave_type === 'Sick Leave') {
-        balances.sick_leave -= row.days_used;
+        balances.sick_leave -= daysUsed;
       } else {
-        balances.other_leaves[row.leave_type] = balances.other_leaves[row.leave_type] || 0 - row.days_used;
+        // Parenthesised: `x || 0 - days` binds as `x || (0 - days)`, so the
+        // first entry for a leave type recorded a negative running total and
+        // any later entry for it was dropped.
+        balances.other_leaves[row.leave_type] =
+          (balances.other_leaves[row.leave_type] || 0) - daysUsed;
       }
     });
 

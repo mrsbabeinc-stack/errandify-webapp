@@ -769,4 +769,19 @@ export async function runRetentionPurgeJob() {
   } catch (error) {
     console.error('[CRON] Retention job failed:', error);
   }
+
+  try {
+    /**
+     * Recruitment data is on its own clock and its own service: applicants are
+     * not users, so the account-based purge above cannot see them at all.
+     *
+     * No approval batch here — that machinery is keyed to user accounts, and
+     * this anonymises rather than deletes, so a mistake loses the identity but
+     * not the hiring record. It is still dry-run by default.
+     */
+    const { runRecruitmentRetention } = await import('./services/recruitmentRetention.js');
+    await runRecruitmentRetention();
+  } catch (error) {
+    console.error('[CRON] Recruitment retention job failed:', error);
+  }
 }

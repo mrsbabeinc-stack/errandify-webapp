@@ -18,7 +18,14 @@ export type NotificationType =
   | 'payment_released'
   | 'dispute_opened'
   | 'dispute_resolved'
-  | 'screening_update';
+  | 'screening_update'
+  // Marcom: an admin broadcast, an award, and an event reminder all land in
+  // the same bell as everything else rather than in a channel of their own.
+  | 'admin_broadcast'
+  | 'recognition_awarded'
+  | 'event_reminder'
+  // Paid when someone you invited completes their first errand.
+  | 'referral_bonus';
 
 export interface NotificationPayload {
   userId: number;

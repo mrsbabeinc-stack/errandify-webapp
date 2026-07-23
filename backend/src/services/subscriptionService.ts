@@ -180,6 +180,14 @@ export async function createSubscription(
   // Keep the denormalised mirror on companies in step.
   await db.query(`UPDATE companies SET subscription_status = $1 WHERE id = $2`, [tier, companyId]);
 
+  // Allocate this tier's ad credits immediately on subscribe.
+  try {
+    const { allocateMonthlyCredits } = await import('./adCreditService.js');
+    await allocateMonthlyCredits(companyId);
+  } catch (err) {
+    console.error(`[Subscription] ad-credit allocation failed for company ${companyId}:`, err);
+  }
+
   return getCompanySubscription(companyId) as Promise<CompanySubscription>;
 }
 
@@ -206,6 +214,17 @@ export async function upgradeSubscription(
     [newTier, companyId]
   );
   await db.query(`UPDATE companies SET subscription_status = $1 WHERE id = $2`, [newTier, companyId]);
+
+  // Re-allocate ad credits to the new tier's amount so the balance matches the
+  // plan immediately, not only after the monthly cron. Without this the ledger
+  // keeps the old tier's allowance and /ad-credits/balance disagrees with the
+  // subscription — the exact inconsistency this connects.
+  try {
+    const { allocateMonthlyCredits } = await import('./adCreditService.js');
+    await allocateMonthlyCredits(companyId);
+  } catch (err) {
+    console.error(`[Subscription] ad-credit re-allocation failed for company ${companyId}:`, err);
+  }
 
   // Log upgrade
   console.log(`✅ Upgraded company ${companyId} to ${newTier} tier`);

@@ -9,6 +9,10 @@ import { checkContentWithQwen } from '../modules/content-moderation.js';
 import { getRestrictedSlugs, getRestrictionReason } from '../services/categoryRestrictions.js';
 import { recordModerationEvent, decideAction, blockedMessage } from '../utils/moderationLog.js';
 import { getCategoryCode } from '../utils/categoryCodes.js';
+import {
+  creditFirstCompletedErrand,
+  creditFirstErrandForErrand,
+} from '../services/referralService.js';
 
 const router = Router();
 
@@ -1941,6 +1945,12 @@ router.post('/:id/confirm-completion', authMiddleware, async (req: AuthRequest, 
 
     console.log('[ConfirmCompletion] Update result:', updateResult.rows[0]);
 
+    // If the doer was invited by someone, this may be the errand that earns
+    // that person their second bonus. Idempotent, and deliberately not
+    // awaited into the response path — a reward problem must not fail a
+    // completion that has already happened.
+    creditFirstErrandForErrand(id).catch(() => undefined);
+
     res.json({
       success: true,
       message: 'Errand marked as completed',
@@ -1992,6 +2002,12 @@ router.post('/:id/approve-completion', authMiddleware, async (req: AuthRequest, 
       'UPDATE errands SET status = $1, updated_at = NOW() WHERE id = $2',
       ['completed', id]
     );
+
+    // Same as the confirm-completion path above — both routes end an errand,
+    // so both have to be able to trigger the referrer's first-errand bonus.
+    if (doerId) {
+      creditFirstCompletedErrand(doerId).catch(() => undefined);
+    }
 
     // Notify doer that completion was approved
     try {

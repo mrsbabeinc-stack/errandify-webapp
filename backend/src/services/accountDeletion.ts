@@ -207,6 +207,18 @@ export async function anonymiseAccount(
     await client.query(`DELETE FROM screening_declarations WHERE user_id = $1`, [userId]);
     await client.query(`DELETE FROM user_category_restrictions WHERE user_id = $1`, [userId]);
 
+    // A public recognition renders the users row, so the name disappears with
+    // the profile — but `reason` is admin-written free text and routinely
+    // names the person ("Sarah helped twenty neighbours..."). Anonymising the
+    // profile while leaving that on a public page would defeat the exercise.
+    // The award itself stays: it is the community's record, not the person's
+    // identity.
+    await client.query(
+      `UPDATE recognitions SET reason = 'Details removed at the recipient''s request'
+        WHERE user_id = $1`,
+      [userId]
+    ).catch(() => undefined);
+
     await client.query('COMMIT');
 
     return {

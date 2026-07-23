@@ -3,6 +3,12 @@ import { authMiddleware, AuthRequest } from '../middleware/auth.js';
 import db from '../db.js';
 import { getDeletionBlockers, anonymiseAccount } from '../services/accountDeletion.js';
 import { generateFormattedUserId } from '../utils/idFormatter.js';
+import {
+  buildReferralLink,
+  JOIN_BONUS_EP,
+  FIRST_JOB_BONUS_EP,
+} from '../services/referralService.js';
+import { randomBytes } from 'crypto';
 import bcrypt from 'bcrypt';
 
 const router = Router();
@@ -461,23 +467,114 @@ router.get('/referral', authMiddleware, async (req: any, res: Response) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    const referralCode = userResult.rows[0].referral_code;
+    /**
+     * Backfill a missing code rather than serving a broken link.
+     *
+     * generateReferralCode only runs inside POST /api/auth/signup, so anyone
+     * created before it existed — 6 of 15 accounts on this database, including
+     * the admin — has referral_code NULL. That produced an invite link ending
+     * `?ref=null`, and the literal string "null" matches no referrer, so every
+     * one of those members had a share button that could never be credited.
+     *
+     * Same lazy-backfill shape as formatted_user_id above. The loop is for the
+     * unique constraint: a collision is unlikely at 16.7M combinations but not
+     * impossible, and silently handing two people the same code would
+     * misattribute signups.
+     */
+    let referralCode = userResult.rows[0].referral_code;
+    if (!referralCode) {
+      for (let attempt = 0; attempt < 5 && !referralCode; attempt++) {
+        const candidate = 'REF-' + randomBytes(3).toString('hex').toUpperCase();
+        const taken = await db.query('SELECT 1 FROM users WHERE referral_code = $1', [candidate]);
+        if (taken.rows.length === 0) {
+          await db.query('UPDATE users SET referral_code = $1 WHERE id = $2', [candidate, userId]);
+          referralCode = candidate;
+        }
+      }
+      if (!referralCode) {
+        return res.status(503).json({ error: 'Could not issue a referral code, please try again' });
+      }
+      console.log('[Referral] Backfilled code for user', userId);
+    }
 
-    // Get referral stats: how many people joined with this code
+    /**
+     * How many they brought in, and what that actually earned them.
+     *
+     * The earnings line used to be `count(kyc_status = 'completed') * 50`.
+     * kyc_status is only ever set to 'verified' or 'pending' — nothing in the
+     * codebase writes 'completed', and all fifteen accounts on this database
+     * read 'verified' — so completedCount was always 0 and the Referral page
+     * told every member they had earned 0 EP no matter how many friends had
+     * joined and finished errands.
+     *
+     * referral_rewards is the ledger of what was really paid, so that is what
+     * gets reported. "Completed" now means the referred person finished their
+     * first errand, which is the event that triggers the second bonus.
+     */
     const referralStatsResult = await db.query(
-      `SELECT COUNT(*) as referred_count, SUM(CASE WHEN kyc_status = 'completed' THEN 1 ELSE 0 END) as completed_count
-       FROM users WHERE referred_by = $1`,
+      `SELECT COUNT(*)::int AS referred_count,
+              COUNT(*) FILTER (WHERE t.status = 'first_job_completed')::int AS completed_count
+         FROM users u
+         LEFT JOIN referral_tracking t ON t.referred_user_id = u.id
+        WHERE u.referred_by = $1 AND u.anonymised_at IS NULL`,
       [referralCode]
     );
 
-    const referredCount = parseInt(referralStatsResult.rows[0].referred_count || '0', 10);
-    const completedCount = parseInt(referralStatsResult.rows[0].completed_count || '0', 10);
+    const referredCount = referralStatsResult.rows[0].referred_count || 0;
+    const completedCount = referralStatsResult.rows[0].completed_count || 0;
 
-    // Calculate earned points: 50 EP per completed referral
-    const earnedPoints = completedCount * 50;
+    const earnedResult = await db.query(
+      `SELECT COALESCE(SUM(points_amount), 0)::int AS earned
+         FROM referral_rewards WHERE referrer_id = $1`,
+      [userId]
+    );
+    const earnedPoints = earnedResult.rows[0].earned || 0;
 
-    // Generate referral link
-    const referralLink = `${process.env.FRONTEND_URL || 'https://errandify.ai'}/signup?ref=${referralCode}`;
+    /**
+     * Who they actually brought in. The page renders this list and had no
+     * source for it, so it fell back to five invented names — the referral
+     * screen showed strangers' "referrals" to every user who opened it.
+     *
+     * Alias before display_name, matching how this platform shows people
+     * elsewhere, and an anonymised account resolves to neither.
+     */
+    const referredUsersResult = await db.query(
+      `SELECT u.id,
+              COALESCE(u.alias, u.display_name, 'Errandify member') AS alias,
+              u.created_at AS signup_date,
+              t.status,
+              t.first_job_completed_at,
+              (SELECT COUNT(*) FROM errand_assignments ea
+                WHERE ea.doer_id = u.id AND ea.status = 'completed')::int AS errands_completed
+         FROM users u
+         LEFT JOIN referral_tracking t
+                ON t.referred_user_id = u.id AND t.referrer_id = $2
+        WHERE u.referred_by = $1 AND u.anonymised_at IS NULL
+        ORDER BY u.created_at DESC
+        LIMIT 100`,
+      [referralCode, userId]
+    );
+
+    const referredUsers = referredUsersResult.rows.map((r: any) => ({
+      id: String(r.id),
+      alias: r.alias,
+      signupDate: r.signup_date,
+      // Read from referral_tracking, not from a separate errand count. The
+      // two can disagree — the tracking row is what the second bonus was paid
+      // against — and a row reading "inactive · 100 EP earned" is nonsense to
+      // whoever is looking at it.
+      status: r.first_job_completed_at ? 'active' : 'inactive',
+      errandsCompleted: r.errands_completed,
+      // Only the referrer earns; see the share copy note in ReferralPage.
+      epEarned: r.first_job_completed_at
+        ? JOIN_BONUS_EP + FIRST_JOB_BONUS_EP
+        : JOIN_BONUS_EP,
+    }));
+
+    // Shared builder — this used to produce /signup?ref= while
+    // /api/referrals/me produced errandify.ai/join?ref=, so the same user got
+    // two different invite links depending on which screen they copied from.
+    const referralLink = buildReferralLink(referralCode);
 
     console.log('[Referral] User:', userId, 'Code:', referralCode, 'Referred:', referredCount, 'Completed:', completedCount, 'Earned:', earnedPoints);
 
@@ -489,6 +586,7 @@ router.get('/referral', authMiddleware, async (req: any, res: Response) => {
         referredCount,
         completedCount,
         earnedPoints,
+        referredUsers,
       },
     });
   } catch (error: any) {

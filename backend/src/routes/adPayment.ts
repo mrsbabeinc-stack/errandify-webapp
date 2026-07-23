@@ -4,6 +4,7 @@ import db from '../db.js';
 import * as adPaymentService from '../services/adCreditPaymentService.js';
 import { campaignModel } from '../models/Campaign.js';
 import { advertisingNotifications } from '../services/advertisingNotifications.js';
+import { requireCompanyRole } from '../utils/companyRole.js';
 
 const router = Router();
 
@@ -127,6 +128,10 @@ router.post('/process', authMiddleware, async (req: AuthRequest, res: Response) 
 router.get('/status/:company_id', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { company_id } = req.params;
+
+    // The company id came from the URL and was never checked against the caller
+    const gate = await requireCompanyRole(req.userId!, company_id, ['owner', 'manager']);
+    if (!gate.ok) return res.status(gate.status || 403).json({ success: false, error: gate.error });
 
     const status = await adPaymentService.getCompanyAdCreditStatus(parseInt(company_id));
 

@@ -3,19 +3,43 @@ import { AuthRequest, authMiddleware } from '../middleware/auth.js';
 import db from '../db.js';
 import * as adCreditService from '../services/adCreditService.js';
 import { getCompanySubscription, getTierConfig } from '../services/subscriptionService.js';
+import { requireCompanyRole } from '../utils/companyRole.js';
 
 const router = Router();
+
+/**
+ * Every route here takes company_id straight off the query string and never
+ * checked it against the caller — any logged-in account could read any
+ * company's advertising budget, spend and campaign list. Resolves and gates the
+ * id once, so the handlers can trust it.
+ *
+ * Returns the numeric id, or null after having already sent the response.
+ */
+async function gateCompanyId(req: AuthRequest, res: Response): Promise<number | null> {
+  const raw = req.query.company_id;
+  const companyId = parseInt(String(raw ?? ''), 10);
+
+  if (!raw || Number.isNaN(companyId)) {
+    res.status(400).json({ success: false, error: 'company_id required' });
+    return null;
+  }
+
+  const gate = await requireCompanyRole(req.userId!, companyId, ['owner', 'manager']);
+  if (!gate.ok) {
+    res.status(gate.status || 403).json({ success: false, error: gate.error });
+    return null;
+  }
+
+  return companyId;
+}
 
 // GET /api/ad-credits/balance - Get current month's ad credit balance
 router.get('/balance', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const { company_id } = req.query;
+    const company_id = await gateCompanyId(req, res);
+    if (company_id === null) return;
 
-    if (!company_id) {
-      return res.status(400).json({ success: false, error: 'company_id required' });
-    }
-
-    const credits = await adCreditService.getCredits(parseInt(company_id as string));
+    const credits = await adCreditService.getCredits(company_id);
 
     if (!credits) {
       return res.status(404).json({
@@ -24,8 +48,12 @@ router.get('/balance', authMiddleware, async (req: AuthRequest, res: Response) =
       });
     }
 
-    const subscription = await getCompanySubscription(parseInt(company_id as string));
-    const tier = subscription ? await getTierConfig(subscription.current_tier) : null;
+    const subscription = await getCompanySubscription(company_id);
+    // company_subscriptions has no `current_tier` column — it's subscription_tier.
+    // getTierConfig(undefined) threw "Tier not found", so this endpoint was a 500
+    // for every company.
+    const tierName = (subscription as any)?.subscription_tier;
+    const tier = tierName ? await getTierConfig(tierName) : null;
 
     const availableCents = credits.allocated_amount - credits.used_amount;
 
@@ -38,8 +66,11 @@ router.get('/balance', authMiddleware, async (req: AuthRequest, res: Response) =
         available_sgd: (availableCents / 100).toFixed(2),
         usage_percentage: ((credits.used_amount / credits.allocated_amount) * 100).toFixed(1),
         expires_at: credits.expires_at,
-        tier: subscription?.current_tier || 'free',
-        tier_monthly_credit: tier ? `SGD $${(tier.ad_credit_monthly / 100).toFixed(2)}` : 'N/A'
+        tier: tierName || 'free',
+        // subscription_tiers.ad_credit_monthly is already in DOLLARS (50/200/500)
+        // — the ledger is what's in cents. Dividing here reported platinum's
+        // SGD 500 allowance as SGD 5.
+        tier_monthly_credit: tier ? `SGD $${Number(tier.ad_credit_monthly).toFixed(2)}` : 'N/A'
       }
     });
   } catch (error) {
@@ -51,11 +82,9 @@ router.get('/balance', authMiddleware, async (req: AuthRequest, res: Response) =
 // GET /api/ad-credits/usage-history - Get usage history
 router.get('/usage-history', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const { company_id, limit = '20' } = req.query;
-
-    if (!company_id) {
-      return res.status(400).json({ success: false, error: 'company_id required' });
-    }
+    const { limit = '20' } = req.query;
+    const company_id = await gateCompanyId(req, res);
+    if (company_id === null) return;
 
     const result = await db.query(
       `SELECT
@@ -93,11 +122,9 @@ router.get('/usage-history', authMiddleware, async (req: AuthRequest, res: Respo
 // GET /api/ad-credits/monthly-breakdown - Get monthly credit stats
 router.get('/monthly-breakdown', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const { company_id, months = '6' } = req.query;
-
-    if (!company_id) {
-      return res.status(400).json({ success: false, error: 'company_id required' });
-    }
+    const { months = '6' } = req.query;
+    const company_id = await gateCompanyId(req, res);
+    if (company_id === null) return;
 
     const result = await db.query(
       `SELECT
@@ -135,11 +162,8 @@ router.get('/monthly-breakdown', authMiddleware, async (req: AuthRequest, res: R
 // GET /api/ad-credits/campaigns-spending - Get spending by campaign
 router.get('/campaigns-spending', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const { company_id } = req.query;
-
-    if (!company_id) {
-      return res.status(400).json({ success: false, error: 'company_id required' });
-    }
+    const company_id = await gateCompanyId(req, res);
+    if (company_id === null) return;
 
     // Get campaigns and their budgets
     const result = await db.query(
@@ -184,13 +208,10 @@ router.get('/campaigns-spending', authMiddleware, async (req: AuthRequest, res: 
 // GET /api/ad-credits/alerts - Get credit usage alerts
 router.get('/alerts', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const { company_id } = req.query;
+    const company_id = await gateCompanyId(req, res);
+    if (company_id === null) return;
 
-    if (!company_id) {
-      return res.status(400).json({ success: false, error: 'company_id required' });
-    }
-
-    const credits = await adCreditService.getCredits(parseInt(company_id as string));
+    const credits = await adCreditService.getCredits(company_id);
 
     if (!credits) {
       return res.json({
