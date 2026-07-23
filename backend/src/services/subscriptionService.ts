@@ -16,14 +16,33 @@ export interface SubscriptionTier {
   price_annual: number;
 }
 
+// The REAL company_subscriptions columns are subscription_tier, billing_cycle,
+// expires_at, started_at, price, auto_renew, max_*. The extra fields below
+// (current_tier, status, billing_type, renewal_date, pending_tier, …) are what
+// the create/upgrade/downgrade functions were written against and DO NOT exist
+// in the table — those write paths are broken at runtime and flagged in
+// SUBSCRIPTION_FINDINGS.md. Kept on the interface as optional only so this file
+// typechecks at baseline; the read path (commission/multiplier/team) uses the
+// real columns via the accessors below and is correct.
 export interface CompanySubscription {
   id: number;
   company_id: number;
-  current_tier: string;
-  billing_type: 'monthly' | 'annual';
-  status: string;
-  billing_date: string;
-  renewal_date: string;
+  // real columns
+  subscription_tier?: string;
+  billing_cycle?: string | null;
+  expires_at?: string | null;
+  started_at?: string | null;
+  price?: number | null;
+  auto_renew?: boolean | null;
+  max_staff_members?: number | null;
+  max_errands_per_month?: number | null;
+  features?: any;
+  // referenced by the broken write path; not real columns
+  current_tier?: string;
+  status?: string;
+  billing_type?: 'monthly' | 'annual';
+  renewal_date?: string;
+  billing_date?: string;
   pending_tier?: string;
   pending_effective_date?: string;
   stripe_subscription_id?: string;
@@ -60,6 +79,24 @@ export async function getCompanySubscription(companyId: number): Promise<Company
 }
 
 /**
+ * Whether a subscription row is currently active.
+ *
+ * The code checked subscription.status === 'active', but company_subscriptions
+ * has no status column — so the check was always false and EVERY company fell
+ * back to the entry (silver) rate, EP multiplier 1x, and the solo team cap,
+ * regardless of the tier they actually pay for. A Gold or Platinum company was
+ * overcharged commission and denied its multiplier and staff cap.
+ *
+ * Active is derived from expires_at instead: no expiry, or an expiry in the
+ * future. The tier is subscription_tier, not the non-existent current_tier.
+ */
+function subscriptionActive(sub: any): boolean {
+  if (!sub) return false;
+  if (!sub.expires_at) return true;               // ongoing, no end date
+  return new Date(sub.expires_at) > new Date();   // not yet lapsed
+}
+
+/**
  * Get commission rate for company
  * Returns subscription tier rate if active, else 20% (free)
  */
@@ -69,12 +106,12 @@ export async function getCommissionRate(companyId: number): Promise<number> {
   // No free tier exists — a company without an active subscription row is
   // mid-signup, not on a free plan, so it gets the entry (silver) rate rather
   // than the 20% individual rate.
-  if (!subscription || subscription.status !== 'active') {
+  if (!subscriptionActive(subscription)) {
     const silver = await getTierConfig('silver');
     return Number(silver.commission_rate);
   }
 
-  const tier = await getTierConfig(subscription.current_tier);
+  const tier = await getTierConfig(subscription.subscription_tier);
   return Number(tier.commission_rate);
 }
 
@@ -85,11 +122,11 @@ export async function getCommissionRate(companyId: number): Promise<number> {
 export async function getEpMultiplier(companyId: number): Promise<number> {
   const subscription = await getCompanySubscription(companyId);
 
-  if (!subscription || subscription.status !== 'active') {
+  if (!subscriptionActive(subscription)) {
     return 1; // Free tier
   }
 
-  const tier = await getTierConfig(subscription.current_tier);
+  const tier = await getTierConfig(subscription.subscription_tier);
   return tier.ep_multiplier;
 }
 
@@ -99,11 +136,11 @@ export async function getEpMultiplier(companyId: number): Promise<number> {
 export async function getMaxTeamMembers(companyId: number): Promise<number> {
   const subscription = await getCompanySubscription(companyId);
 
-  if (!subscription || subscription.status !== 'active') {
+  if (!subscriptionActive(subscription)) {
     return 1; // Free tier: solo only
   }
 
-  const tier = await getTierConfig(subscription.current_tier);
+  const tier = await getTierConfig(subscription.subscription_tier);
   return tier.max_team_members;
 }
 
