@@ -4,6 +4,7 @@ import db from '../db.js';
 import { getRestrictionReason, needsDeclaration } from '../services/categoryRestrictions.js';
 import axios from 'axios';
 import { getCategoryCode } from '../utils/categoryCodes.js';
+import { askerTotal } from '../utils/stripeFee.js';
 import { activityLogService } from '../services/activityLogService.js';
 import * as contentMod from '../modules/content-moderation.js';
 import { notifyUser } from '../socket.js';
@@ -591,8 +592,14 @@ router.post('/:id/accept', authMiddleware, async (req: AuthRequest, res: Respons
       // Bounded wait. Accepting an offer must not hang on a slow or unreachable
       // payment provider — the asker is sitting in front of a spinner. If Stripe
       // does not answer quickly we accept the offer and flag payment separately.
+      // The asker pays the errand price plus the Stripe processing fee, so the
+      // platform keeps a clean commission and the doer receives their full
+      // share. stripeSurcharge grosses the fee up onto the total.
+      const errandAmount = Number(bid.amount);
+      const chargeAmount = askerTotal(errandAmount);
+
       const intent: any = await Promise.race([
-        stripeService.createPaymentIntent(Number(bid.amount), bid.errand_id, bid.doer_id),
+        stripeService.createPaymentIntent(chargeAmount, bid.errand_id, bid.doer_id),
         new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Stripe did not respond in time')), 8000)
         ),
@@ -606,6 +613,7 @@ router.post('/:id/accept', authMiddleware, async (req: AuthRequest, res: Respons
           WHERE id = $2`,
         [intent.intentId, bid.errand_id]
       );
+      console.log(`[Bids] Charged asker $${chargeAmount} (errand $${errandAmount} + $${(chargeAmount - errandAmount).toFixed(2)} processing) for errand ${bid.errand_id}`);
 
       stripeIntent = {
         id: intent.intentId,

@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express';
+import { stripeSurcharge } from '../utils/stripeFee.js';
 import { AuthRequest, authMiddleware } from '../middleware/auth.js';
 import db from '../db.js';
 import { stripeService } from '../services/stripe.js';
@@ -427,8 +428,11 @@ router.get('/:taskId/photos', authMiddleware, async (req: AuthRequest, res: Resp
 async function releasePayment(taskId: string, task: any, reason: 'early_confirm' | 'auto_release') {
   try {
     const bidAmount = parseFloat(task.amount);
-    const platformFee = bidAmount * 0.20; // 20% platform fee
+    const platformFee = bidAmount * 0.20; // 20% platform fee — now genuinely kept,
+                                          // because the asker paid the Stripe fee on top.
     const doerPayout = bidAmount - platformFee;
+    // The surcharge the asker paid over the errand price, for the record.
+    const stripeFeeCharged = stripeSurcharge(bidAmount);
 
     // Check for penalties on doer and get user info
     const doerResult = await db.query(
@@ -468,10 +472,10 @@ async function releasePayment(taskId: string, task: any, reason: 'early_confirm'
 
     // Record payment release
     const releaseResult = await db.query(
-      `INSERT INTO payment_releases (task_id, bid_amount, platform_fee, doer_payout, stripe_transfer_id, released_at, release_reason)
-       VALUES ($1, $2, $3, $4, $5, NOW(), $6)
+      `INSERT INTO payment_releases (task_id, bid_amount, platform_fee, doer_payout, stripe_fee, stripe_transfer_id, released_at, release_reason)
+       VALUES ($1, $2, $3, $4, $5, $6, NOW(), $7)
        RETURNING id, released_at`,
-      [taskId, bidAmount, platformFee, finalPayout, stripeTransferId, reason]
+      [taskId, bidAmount, platformFee, finalPayout, stripeFeeCharged, stripeTransferId, reason]
     );
 
     // Deduct penalty if applied
