@@ -1,4 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'] as const;
 
 interface OperatingHours {
   day: string;
@@ -15,23 +18,120 @@ interface SpecialDate {
   blocked: boolean;
 }
 
-const CompanyOperatingHours: React.FC = () => {
-  const [hours, setHours] = useState<OperatingHours[]>([
-    { day: 'Monday', open: '09:00', close: '18:00', active: true },
-    { day: 'Tuesday', open: '09:00', close: '18:00', active: true },
-    { day: 'Wednesday', open: '09:00', close: '18:00', active: true },
-    { day: 'Thursday', open: '09:00', close: '18:00', active: true },
-    { day: 'Friday', open: '09:00', close: '18:00', active: true },
-    { day: 'Saturday', open: '09:00', close: '14:00', active: true },
-    { day: 'Sunday', open: '00:00', close: '00:00', active: false },
-  ]);
+interface Props {
+  companyId?: number | null;
+}
 
-  const [specialDates, setSpecialDates] = useState<SpecialDate[]>([
-    { id: 1, date: '2026-02-10', name: 'Chinese New Year', type: 'holiday', blocked: false },
-    { id: 2, date: '2026-02-11', name: 'Chinese New Year Day 2', type: 'holiday', blocked: false },
-    { id: 3, date: '2026-12-24', name: 'Christmas Eve', type: 'holiday', blocked: false },
-    { id: 4, date: '2026-12-25', name: 'Christmas Day', type: 'holiday', blocked: true },
-  ]);
+/**
+ * Company operating hours.
+ *
+ * The weekly schedule was local state and "Save" only printed a success
+ * message — nothing was ever stored. The backend for it existed the whole time
+ * (OperationHoursService + GET/PUT /api/operations/hours/:company_id); what was
+ * missing were the TABLES, which migration 078 adds. The service swallowed the
+ * "relation does not exist" error and returned null, so the route answered a
+ * flat 404 that read like "not configured yet".
+ *
+ * Special dates are still local-only — see the note by the section heading.
+ */
+const CompanyOperatingHours: React.FC<Props> = ({ companyId: companyIdProp }) => {
+  const [companyId, setCompanyId] = useState<number | null>(companyIdProp ?? null);
+  const [hours, setHours] = useState<OperatingHours[]>(
+    DAYS.map(d => ({ day: d, open: '09:00', close: '18:00', active: d !== 'Sunday' }))
+  );
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  const [specialDates, setSpecialDates] = useState<SpecialDate[]>([]);
+
+  const token = () => localStorage.getItem('token');
+
+  useEffect(() => {
+    if (companyIdProp) { setCompanyId(companyIdProp); return; }
+    (async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/companies/user/my-company`, {
+          headers: { Authorization: `Bearer ${token()}` },
+        });
+        if (res.ok) {
+          const b = await res.json();
+          if (b.data?.id) { setCompanyId(b.data.id); return; }
+        }
+        setLoading(false);
+      } catch { setLoading(false); }
+    })();
+  }, [companyIdProp]);
+
+  // Public holidays come from the shared calendar; the server only knows which
+  // dates this company has decided not to work.
+  const loadBlockedDates = async (cid: number) => {
+    try {
+      const res = await fetch(`${API_URL}/api/companies/${cid}/blocked-dates`, {
+        headers: { Authorization: `Bearer ${token()}` },
+      });
+      if (!res.ok) return;
+      const b = await res.json();
+      const blocked: Array<{ id: number; date: string; name: string; kind: string }> = b.data || [];
+      const blockedByDate = new Map(blocked.map(r => [r.date, r]));
+
+      const merged: SpecialDate[] = singaporeHolidays.map((h, i) => ({
+        id: blockedByDate.get(h.date)?.id ?? -(i + 1),
+        date: h.date,
+        name: h.name,
+        type: 'holiday',
+        blocked: blockedByDate.has(h.date),
+      }));
+
+      // Custom closures the company added that aren't public holidays
+      blocked
+        .filter(r => !singaporeHolidays.some(h => h.date === r.date))
+        .forEach(r => merged.push({
+          id: r.id, date: r.date, name: r.name || 'Closed', type: 'custom', blocked: true,
+        }));
+
+      merged.sort((a, b2) => a.date.localeCompare(b2.date));
+      setSpecialDates(merged);
+    } catch { /* the hours error banner already covers connectivity */ }
+  };
+
+  useEffect(() => {
+    if (!companyId) return;
+    loadBlockedDates(companyId);
+    (async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(`${API_URL}/api/operations/hours/${companyId}`, {
+          headers: { Authorization: `Bearer ${token()}` },
+        });
+        if (res.ok) {
+          const b = await res.json();
+          const d = b.data || {};
+          setHours(DAYS.map(day => {
+            const k = day.toLowerCase() as keyof typeof d;
+            const v: any = d[k] || {};
+            return {
+              day,
+              open: v.open || '09:00',
+              close: v.close || '18:00',
+              active: v.active ?? (day !== 'Sunday'),
+            };
+          }));
+          setError('');
+        } else if (res.status === 404) {
+          // No row yet — the defaults above stand until the first save
+          setError('');
+        } else {
+          const b = await res.json().catch(() => ({}));
+          setError(b.error || 'Could not load operating hours');
+        }
+      } catch {
+        setError('Could not load operating hours');
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [companyId]);
 
   const [showCustomDateForm, setShowCustomDateForm] = useState(false);
   const [newDateName, setNewDateName] = useState('');
@@ -64,45 +164,104 @@ const CompanyOperatingHours: React.FC = () => {
     setHours(updated);
   };
 
-  const handleToggleBlockDate = (dateId: number) => {
-    setSpecialDates(
-      specialDates.map((d) =>
-        d.id === dateId ? { ...d, blocked: !d.blocked } : d
-      )
-    );
+  // A blocked date is a row; unblocking deletes it. That keeps "which days do
+  // we not work" answerable with one query and means an unblocked public
+  // holiday costs nothing to store.
+  const handleToggleBlockDate = async (dateId: number) => {
+    const target = specialDates.find(d => d.id === dateId);
+    if (!target || !companyId) return;
+
+    const nowBlocked = !target.blocked;
+    setSpecialDates(specialDates.map(d => d.id === dateId ? { ...d, blocked: nowBlocked } : d));
+
+    try {
+      const res = nowBlocked
+        ? await fetch(`${API_URL}/api/companies/${companyId}/blocked-dates`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token()}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ date: target.date, name: target.name, kind: target.type }),
+          })
+        : await fetch(`${API_URL}/api/companies/${companyId}/blocked-dates/${target.date}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token()}` },
+          });
+      if (!res.ok) throw new Error();
+    } catch {
+      // Put the toggle back rather than leaving the screen claiming something
+      // the server never accepted
+      setSpecialDates(prev => prev.map(d => d.id === dateId ? { ...d, blocked: !nowBlocked } : d));
+      setError('Could not save that change');
+    }
   };
 
-  const handleAddCustomDate = () => {
+  const handleAddCustomDate = async () => {
     if (!newDateName.trim() || !newDateValue) {
-      alert('Please fill in date name and date');
+      setError('Please fill in date name and date');
       return;
     }
+    if (!companyId) return;
 
-    const newId = Math.max(...specialDates.map((d) => d.id), 0) + 1;
-    setSpecialDates([
-      ...specialDates,
-      {
-        id: newId,
-        date: newDateValue,
-        name: newDateName,
-        type: newDateType,
-        blocked: true, // Default custom dates to blocked
-      },
-    ]);
+    try {
+      const res = await fetch(`${API_URL}/api/companies/${companyId}/blocked-dates`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token()}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date: newDateValue, name: newDateName, kind: newDateType }),
+      });
+      const b = await res.json().catch(() => ({}));
+      if (!res.ok) { setError(b.error || 'Could not add that date'); return; }
 
-    setNewDateName('');
-    setNewDateValue('');
-    setNewDateType('custom');
-    setShowCustomDateForm(false);
+      setError('');
+      setNewDateName('');
+      setNewDateValue('');
+      setNewDateType('custom');
+      setShowCustomDateForm(false);
+      await loadBlockedDates(companyId);
+    } catch {
+      setError('Could not add that date');
+    }
   };
 
-  const handleDeleteDate = (dateId: number) => {
-    setSpecialDates(specialDates.filter((d) => d.id !== dateId));
+  const handleDeleteDate = async (dateId: number) => {
+    const target = specialDates.find(d => d.id === dateId);
+    if (!target || !companyId) return;
+    try {
+      const res = await fetch(`${API_URL}/api/companies/${companyId}/blocked-dates/${target.date}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token()}` },
+      });
+      if (!res.ok) { setError('Could not remove that date'); return; }
+      await loadBlockedDates(companyId);
+    } catch {
+      setError('Could not remove that date');
+    }
   };
 
-  const handleSave = () => {
-    setSavedMessage('✅ Operating hours saved successfully!');
-    setTimeout(() => setSavedMessage(''), 3000);
+  const handleSave = async () => {
+    if (!companyId) return;
+    setSaving(true);
+    setError('');
+    try {
+      // The service expects { monday: {open, close, active}, … }
+      const payload: Record<string, any> = { timezone: 'Asia/Singapore' };
+      hours.forEach(h => {
+        payload[h.day.toLowerCase()] = { open: h.open, close: h.close, active: h.active };
+      });
+
+      const res = await fetch(`${API_URL}/api/operations/hours/${companyId}`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token()}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const b = await res.json().catch(() => ({}));
+      if (!res.ok) { setError(b.error || 'Could not save operating hours'); return; }
+
+      setSavedMessage('✅ Operating hours saved successfully!');
+      setTimeout(() => setSavedMessage(''), 3000);
+    } catch {
+      setError('Could not save operating hours');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -110,6 +269,14 @@ const CompanyOperatingHours: React.FC = () => {
       <h2 style={{ fontSize: '28px', fontWeight: '700', marginBottom: '20px', color: '#333' }}>
         ⏰ Company Operating Hours
       </h2>
+
+      {error && (
+        <div style={{
+          background: '#FEF2F2', border: '1px solid #FECACA', color: '#B91C1C',
+          padding: '12px 16px', borderRadius: 8, marginBottom: 16, fontSize: 14,
+        }}>{error}</div>
+      )}
+      {loading && <p style={{ color: '#6B7280', fontSize: 14 }}>Loading your hours…</p>}
 
       {/* Operating Hours Section */}
       <div style={{ background: '#FFF9F5', borderRadius: '12px', padding: '24px', marginBottom: '20px', border: '1px solid #e0e0e0' }}>
@@ -374,6 +541,7 @@ const CompanyOperatingHours: React.FC = () => {
       <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
         <button
           onClick={handleSave}
+          disabled={saving || loading || !companyId}
           style={{
             padding: '12px 24px',
             background: 'linear-gradient(135deg, #FF6B35 0%, #FF8C5A 100%)',

@@ -670,11 +670,24 @@ router.post('/companies/:companyId/leaves', authMiddleware, async (req: any, res
       });
     }
 
+    // Half-day and recurring are stored too (migration 077), so this route and
+    // /api/leave/request agree on the shape of a leave row.
+    const { period, is_recurring, recurring_pattern } = req.body;
+    const wantedPeriod = ['full-day', 'morning', 'afternoon'].includes(String(period))
+      ? String(period)
+      : 'full-day';
+
     const result = await db.query(
-      `INSERT INTO company_leave (company_id, staff_user_id, start_date, end_date, leave_type, reason, status)
-       VALUES ($1, $2, $3, $4, $5, $6, 'pending')
-       RETURNING *`,
-      [companyId, userId, start_date, end_date, type, reason || '']
+      `INSERT INTO company_leave (company_id, staff_user_id, start_date, end_date, leave_type, reason, status,
+                                  period, is_recurring, recurring_pattern)
+       VALUES ($1, $2, $3, $4, $5, $6, 'pending', $7, $8, $9)
+       RETURNING id, company_id, staff_user_id, leave_type, reason, status,
+                 period, is_recurring, recurring_pattern, created_at,
+                 to_char(start_date, 'YYYY-MM-DD') AS start_date,
+                 to_char(end_date,   'YYYY-MM-DD') AS end_date`,
+      [companyId, userId, start_date, end_date, type, reason || '',
+       wantedPeriod, !!is_recurring,
+       is_recurring && recurring_pattern ? JSON.stringify(recurring_pattern) : null]
     );
 
     res.status(201).json({
@@ -703,7 +716,17 @@ router.get('/companies/:companyId/leaves', authMiddleware, async (req: any, res:
     const gate = await requireCompanyRole(req.userId, companyId, ['owner', 'manager']);
     if (!gate.ok) return res.status(gate.status || 403).json({ success: false, message: gate.error });
 
-    let query = `SELECT cl.*, COALESCE(u.alias, u.display_name) as user_name, u.email as user_email
+    // start_date/end_date are DATE columns. Selecting them via cl.* serialises
+    // them as UTC timestamps, so SGT midnight came back as the previous day at
+    // 16:00Z and the calendar drew every leave one day early. to_char keeps them
+    // calendar dates, which is what they are — same as /api/leave/requests.
+    let query = `SELECT cl.id, cl.company_id, cl.staff_user_id, cl.leave_type,
+                        cl.reason, cl.status, cl.approved_by, cl.approved_at,
+                        cl.created_at, cl.updated_at,
+                        cl.period, cl.is_recurring, cl.recurring_pattern,
+                        to_char(cl.start_date, 'YYYY-MM-DD') AS start_date,
+                        to_char(cl.end_date,   'YYYY-MM-DD') AS end_date,
+                        COALESCE(u.alias, u.display_name) as user_name, u.email as user_email
                  FROM company_leave cl
                  JOIN users u ON u.id = cl.staff_user_id
                  WHERE cl.company_id = $1`;
@@ -2501,6 +2524,82 @@ router.post('/companies/:companyId/dispute-requests/:id/decide', authMiddleware,
   } catch (error) {
     console.error('[Company] Decide dispute request error:', error);
     res.status(500).json({ error: 'Could not record that decision. Please try again.' });
+  }
+});
+
+// ============================================================================
+// BLOCKED DATES — days the company does not operate
+//
+// The Operating Hours screen let an owner block a date and forgot it on reload;
+// there was nowhere to put it until migration 079. Public holidays are NOT
+// stored — they come from the shared holiday calendar — only the company's
+// decision about a date is.
+// ============================================================================
+
+// GET /api/companies/:companyId/blocked-dates
+router.get('/companies/:companyId/blocked-dates', authMiddleware, async (req: any, res: Response) => {
+  try {
+    const companyId = parseInt(req.params.companyId, 10);
+    const gate = await requireCompanyRole(req.userId, companyId, ['owner', 'manager', 'staff']);
+    if (!gate.ok) return res.status(gate.status || 403).json({ error: gate.error });
+
+    const r = await db.query(
+      `SELECT id, to_char(blocked_date, 'YYYY-MM-DD') AS date, name, kind
+         FROM company_blocked_dates
+        WHERE company_id = $1
+        ORDER BY blocked_date`,
+      [companyId]
+    );
+    res.json({ success: true, data: r.rows });
+  } catch (error) {
+    console.error('[Company] Blocked dates read failed:', error);
+    res.status(500).json({ error: 'Could not load blocked dates' });
+  }
+});
+
+// POST /api/companies/:companyId/blocked-dates — block a day
+router.post('/companies/:companyId/blocked-dates', authMiddleware, async (req: any, res: Response) => {
+  try {
+    const companyId = parseInt(req.params.companyId, 10);
+    const gate = await requireCompanyRole(req.userId, companyId, ['owner', 'manager']);
+    if (!gate.ok) return res.status(gate.status || 403).json({ error: gate.error });
+
+    const { date, name, kind } = req.body;
+    if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(String(date))) {
+      return res.status(400).json({ error: 'A date (YYYY-MM-DD) is required' });
+    }
+    const wantedKind = kind === 'holiday' ? 'holiday' : 'custom';
+
+    const r = await db.query(
+      `INSERT INTO company_blocked_dates (company_id, blocked_date, name, kind, created_by)
+       VALUES ($1, $2, $3, $4, $5)
+       ON CONFLICT (company_id, blocked_date)
+         DO UPDATE SET name = EXCLUDED.name, kind = EXCLUDED.kind
+       RETURNING id, to_char(blocked_date, 'YYYY-MM-DD') AS date, name, kind`,
+      [companyId, date, name || null, wantedKind, req.userId]
+    );
+    res.status(201).json({ success: true, data: r.rows[0] });
+  } catch (error) {
+    console.error('[Company] Block date failed:', error);
+    res.status(500).json({ error: 'Could not block that date' });
+  }
+});
+
+// DELETE /api/companies/:companyId/blocked-dates/:date — unblock (works again)
+router.delete('/companies/:companyId/blocked-dates/:date', authMiddleware, async (req: any, res: Response) => {
+  try {
+    const companyId = parseInt(req.params.companyId, 10);
+    const gate = await requireCompanyRole(req.userId, companyId, ['owner', 'manager']);
+    if (!gate.ok) return res.status(gate.status || 403).json({ error: gate.error });
+
+    await db.query(
+      'DELETE FROM company_blocked_dates WHERE company_id = $1 AND blocked_date = $2',
+      [companyId, req.params.date]
+    );
+    res.json({ success: true, message: 'That date is open again.' });
+  } catch (error) {
+    console.error('[Company] Unblock date failed:', error);
+    res.status(500).json({ error: 'Could not unblock that date' });
   }
 });
 

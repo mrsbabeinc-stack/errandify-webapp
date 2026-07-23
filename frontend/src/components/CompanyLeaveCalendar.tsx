@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { getHolidaysInRange, isPublicHoliday, SINGAPORE_HOLIDAYS_2026 } from '../utils/publicHolidayService';
 import { getBlockedDatesFromPattern, RecurringPattern, isDateBlocked } from '../utils/recurringLeaveHelper';
 
@@ -25,24 +25,97 @@ interface UnavailableStaff {
   type?: 'leave' | 'holiday' | 'recurring';
 }
 
-const CompanyLeaveCalendar: React.FC = () => {
+interface Props {
+  companyId?: number | null;
+}
+
+/**
+ * The company's availability calendar.
+ *
+ * Read its leave from localStorage['leaveApplications'] — a key nothing in the
+ * app has ever written — and listed six invented colleagues (Jordan Smith, Ava
+ * Johnson, …) as the team. So it showed a fictional roster with no leave, on
+ * every account, forever.
+ *
+ * Now reads the real team from /api/companies/:id/staff and real leave from
+ * /api/companies/:id/leaves, which is the same company_leave table the Apply
+ * for Unavailability and Leave Approvals screens write to.
+ */
+const CompanyLeaveCalendar: React.FC<Props> = ({ companyId: companyIdProp }) => {
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
   const [view, setView] = useState<'today' | 'week' | 'month'>('month');
-  const [currentDate, setCurrentDate] = useState(new Date(2026, 6, 14)); // Jul 14, 2026
+  const [currentDate, setCurrentDate] = useState(new Date());
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'blocked' | 'pending' | 'available'>('all');
   const [reasonFilter, setReasonFilter] = useState<'all' | 'training' | 'medical' | 'other'>('all');
 
-  // Load leave applications from localStorage
-  const getLeaveApplications = (): LeaveApplication[] => {
-    try {
-      const saved = localStorage.getItem('leaveApplications');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  };
+  const [companyId, setCompanyId] = useState<number | null>(companyIdProp ?? null);
+  const [teamNames, setTeamNames] = useState<string[]>([]);
+  const [leaveApps, setLeaveApps] = useState<LeaveApplication[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const leaveApps = getLeaveApplications();
+  const token = () => localStorage.getItem('token');
+
+  useEffect(() => {
+    if (companyIdProp) { setCompanyId(companyIdProp); return; }
+    (async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/companies/user/my-company`, {
+          headers: { Authorization: `Bearer ${token()}` },
+        });
+        if (res.ok) {
+          const b = await res.json();
+          if (b.data?.id) { setCompanyId(b.data.id); return; }
+        }
+        setLoading(false);
+      } catch { setLoading(false); }
+    })();
+  }, [companyIdProp, API_URL]);
+
+  useEffect(() => {
+    if (!companyId) return;
+    (async () => {
+      setLoading(true);
+      try {
+        const [staffRes, leaveRes] = await Promise.all([
+          fetch(`${API_URL}/api/companies/${companyId}/staff`, { headers: { Authorization: `Bearer ${token()}` } }),
+          fetch(`${API_URL}/api/companies/${companyId}/leaves`, { headers: { Authorization: `Bearer ${token()}` } }),
+        ]);
+
+        if (staffRes.ok) {
+          const sb = await staffRes.json();
+          setTeamNames((sb.data?.staff || []).map((m: any) => m.alias || m.display_name).filter(Boolean));
+        }
+
+        if (leaveRes.ok) {
+          const lb = await leaveRes.json();
+          setLeaveApps((lb.data || []).map((l: any) => ({
+            id: l.id,
+            staffName: l.user_name,
+            startDate: String(l.start_date).slice(0, 10),
+            endDate: String(l.end_date).slice(0, 10),
+            period: l.period || 'full-day',
+            reason: l.reason || l.leave_type || 'Leave',
+            // company_leave uses approved/pending/rejected; the calendar only
+            // distinguishes blocked from tentative, so rejected leave is simply
+            // not shown rather than being painted as pending.
+            status: l.status,
+            isRecurring: !!l.is_recurring,
+            recurringPattern: l.recurring_pattern || undefined,
+          })).filter((l: any) => l.status === 'approved' || l.status === 'pending'));
+          setError('');
+        } else {
+          const eb = await leaveRes.json().catch(() => ({}));
+          setError(eb.message || eb.error || 'Could not load leave');
+        }
+      } catch {
+        setError('Could not load the calendar');
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [companyId, API_URL]);
 
   // Expand leave data with holidays and recurring patterns
   const unavailableStaff: UnavailableStaff[] = useMemo(() => {
@@ -85,9 +158,8 @@ const CompanyLeaveCalendar: React.FC = () => {
     const monthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).toISOString().split('T')[0];
     const holidays = getHolidaysInRange(monthStart, monthEnd);
 
-    const allStaff = ['Jordan Smith', 'Ava Johnson', 'Liam Brown', 'Mason Wilson', 'Sarah Davis', 'Emily Lee'];
     holidays.forEach(holiday => {
-      allStaff.forEach(staffName => {
+      teamNames.forEach(staffName => {
         result.push({
           id: id++,
           staffName,
@@ -102,9 +174,9 @@ const CompanyLeaveCalendar: React.FC = () => {
     });
 
     return result;
-  }, [currentDate, leaveApps]);
+  }, [currentDate, leaveApps, teamNames]);
 
-  let staff = ['Jordan Smith', 'Ava Johnson', 'Liam Brown', 'Mason Wilson', 'Sarah Davis', 'Emily Lee'];
+  let staff = teamNames;
 
   // Apply search filter
   if (searchTerm) {
@@ -294,8 +366,10 @@ const CompanyLeaveCalendar: React.FC = () => {
                       fontSize: '11px',
                       fontWeight: '700',
                       cursor: 'help',
-                      title: status.unavailable ? `${status.reason} (${status.period})` : 'Available',
                     }}
+                    // `title` was inside the style object, so it was never a
+                    // real attribute and the hover tooltip never appeared.
+                    title={status.unavailable ? `${status.reason} (${status.period})` : 'Available'}
                   >
                     {status.unavailable ? status.status === 'approved' ? '✗' : '?' : '✓'}
                   </div>
@@ -472,6 +546,26 @@ const CompanyLeaveCalendar: React.FC = () => {
           Monitor who is unavailable on each day
         </p>
       </div>
+
+      {error && (
+        <div style={{
+          background: '#FEF2F2', border: '1px solid #FECACA', color: '#B91C1C',
+          padding: '12px 16px', borderRadius: 8, marginBottom: 16, fontSize: 14,
+        }}>{error}</div>
+      )}
+
+      {loading && (
+        <p style={{ color: '#6B7280', fontSize: 14, marginBottom: 16 }}>Loading your team's availability…</p>
+      )}
+
+      {!loading && !error && staff.length === 0 && (
+        <div style={{
+          background: '#FFF8F5', border: '1px solid #FFD9B3', color: '#8B4513',
+          padding: '12px 16px', borderRadius: 8, marginBottom: 16, fontSize: 14,
+        }}>
+          Nobody on the team yet — invite staff from My Staff and their availability will show here.
+        </div>
+      )}
 
       {/* Search & Filter Section */}
       <div style={{ marginBottom: '24px', padding: '16px', background: 'linear-gradient(135deg, #FFF8F5 0%, #FFE4C4 100%)', borderRadius: '12px', border: '2px solid #FFD9B3' }}>

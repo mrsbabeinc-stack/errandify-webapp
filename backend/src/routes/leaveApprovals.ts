@@ -3,6 +3,7 @@ import { AuthRequest, authMiddleware } from '../middleware/auth.js';
 import db from '../db.js';
 import { LeaveService } from '../services/leaveService.js';
 import { OperationHoursService } from '../services/operationHoursService.js';
+import { requireCompanyRole, resolveCompanyRole, resolveMyCompany } from '../utils/companyRole.js';
 
 const router = Router();
 
@@ -48,21 +49,34 @@ router.post('/request', authMiddleware, async (req: AuthRequest, res: Response) 
       return res.status(403).json({ success: false, error: 'You are not staff of this company' });
     }
 
+    // period and recurring were accepted from the body, echoed back in the
+    // response, and then dropped on the floor — the INSERT wrote neither, so a
+    // recurring morning-only request was stored as a one-off full day and the
+    // applicant was told it had been submitted. Migration 077 added the columns.
+    const wantedPeriod = ['full-day', 'morning', 'afternoon'].includes(String(period))
+      ? String(period)
+      : 'full-day';
+
     const leaveRes = await db.query(
       `INSERT INTO company_leave
-         (company_id, staff_user_id, leave_type, start_date, end_date, reason, status)
-       VALUES ($1, $2, $3, $4, $5, $6, 'pending')
+         (company_id, staff_user_id, leave_type, start_date, end_date, reason, status,
+          period, is_recurring, recurring_pattern)
+       VALUES ($1, $2, $3, $4, $5, $6, 'pending', $7, $8, $9)
        RETURNING id, company_id, staff_user_id, leave_type, status,
+                 period, is_recurring, recurring_pattern,
                  to_char(start_date, 'YYYY-MM-DD') AS start_date,
                  to_char(end_date,   'YYYY-MM-DD') AS end_date`,
       [company_id, staff_id, leave_type, start_date, end_date || start_date,
-       [reason, notes].filter(Boolean).join(' — ') || null]
+       [reason, notes].filter(Boolean).join(' — ') || null,
+       wantedPeriod,
+       !!is_recurring,
+       is_recurring && recurring_pattern ? JSON.stringify(recurring_pattern) : null]
     );
 
     res.json({
       success: true,
       message: '✅ Leave request submitted',
-      data: { ...leaveRes.rows[0], staff_name: member.rows[0].staff_name, period }
+      data: { ...leaveRes.rows[0], staff_name: member.rows[0].staff_name }
     });
   } catch (error) {
     console.error('Leave request error:', error);
@@ -79,12 +93,21 @@ router.get('/requests', authMiddleware, async (req: AuthRequest, res: Response) 
       return res.status(400).json({ success: false, error: 'company_id required' });
     }
 
+    // company_id came straight off the query string and was never checked, so
+    // any signed-in account could read another company's leave register —
+    // including `reason`, which routinely carries medical detail.
+    const gate = await requireCompanyRole(req.userId!, String(company_id), ['owner', 'manager']);
+    if (!gate.ok) return res.status(gate.status || 403).json({ success: false, error: gate.error });
+
     const result = await db.query(
       `SELECT cl.id, cl.company_id, cl.staff_user_id, cl.leave_type, cl.status,
               cl.reason, cl.approved_by, cl.approved_at, cl.created_at,
               to_char(cl.start_date, 'YYYY-MM-DD') AS start_date,
               to_char(cl.end_date,   'YYYY-MM-DD') AS end_date,
               (cl.end_date - cl.start_date + 1) AS days_count,
+              -- Surfaced so the approver can see they're approving a half-day
+              -- or a repeating block, not just a plain range (migration 077)
+              cl.period, cl.is_recurring, cl.recurring_pattern,
               COALESCE(u.alias, u.display_name) AS staff_name
          FROM company_leave cl
          JOIN users u ON u.id = cl.staff_user_id
@@ -214,6 +237,16 @@ router.put('/request/:id/reject', authMiddleware, async (req: AuthRequest, res: 
 // GET /api/leave/balance/:staff_id - Get leave balance
 router.get('/balance/:staff_id', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
+    // Your own balance, or one of your team's if you approve leave. Without
+    // this, any account could read any staff member's leave entitlement.
+    const target = parseInt(req.params.staff_id, 10);
+    if (target !== parseInt(req.userId || '0', 10)) {
+      const mine = await resolveMyCompany(req.userId!);
+      const theirs = mine ? await resolveCompanyRole(target, mine.companyId) : null;
+      if (!mine?.canActForCompany || !theirs) {
+        return res.status(403).json({ success: false, error: 'You cannot view that leave balance' });
+      }
+    }
     const { staff_id } = req.params;
 
     // Entitlements are the MOM statutory minimums until a company sets its own.
@@ -303,6 +336,10 @@ router.put('/hours/:company_id', authMiddleware, async (req: AuthRequest, res: R
   try {
     const { company_id } = req.params;
     const hoursData = req.body;
+
+    // Anyone could rewrite any company's opening hours
+    const gate = await requireCompanyRole(req.userId!, company_id, ['owner', 'manager']);
+    if (!gate.ok) return res.status(gate.status || 403).json({ success: false, error: gate.error });
 
     const updated = await OperationHoursService.updateCompanyHours(
       parseInt(company_id),
