@@ -13,13 +13,23 @@ export const advertisingService = {
     if (!campaign) throw new Error('Campaign not found');
     if (campaign.status !== 'submitted') throw new Error('Only submitted campaigns can be approved');
 
+    // pg returns NUMERIC as a string, so campaign.budget is '500.00', not 500.
+    // Arithmetic coerced it silently but `.toFixed()` did not: approving threw
+    // "campaign.budget.toFixed is not a function" *after* the credits had been
+    // deducted, the hold written and the schedules created — so the campaign was
+    // approved and the admin was shown a 500. Coerce once, here.
+    const budget = Number(campaign.budget);
+
     try {
-      const companyResult = await db.query('SELECT c.*, u.email as owner_email FROM companies c JOIN users u ON c.owner_id = u.id WHERE c.id = $1', [campaign.company_id]);
+      // companies.owner_id does not exist — the column is owner_user_id — so
+      // approving any campaign raised "column c.owner_id does not exist". The
+      // router's broken guard meant this was never reached to find out.
+      const companyResult = await db.query('SELECT c.*, u.email as owner_email FROM companies c JOIN users u ON c.owner_user_id = u.id WHERE c.id = $1', [campaign.company_id]);
       if (companyResult.rows.length === 0) throw new Error('Company not found');
       const company = companyResult.rows[0];
 
       // Convert budget to cents for ad credit tracking
-      const budgetInCents = Math.round(campaign.budget * 100);
+      const budgetInCents = Math.round(budget * 100);
 
       // Check if company has enough ad credits allocated for this month
       const credits = await adCreditService.getCredits(campaign.company_id);
@@ -31,7 +41,7 @@ export const advertisingService = {
       const availableCents = credits.allocated_amount - credits.used_amount;
       if (availableCents < budgetInCents) {
         throw new Error(
-          `Insufficient ad credits. Available: SGD $${(availableCents / 100).toFixed(2)}, Required: SGD $${campaign.budget.toFixed(2)}. Please wait for next month's allocation or upgrade your plan.`
+          `Insufficient ad credits. Available: SGD $${(availableCents / 100).toFixed(2)}, Required: SGD $${budget.toFixed(2)}. Please wait for next month's allocation or upgrade your plan.`
         );
       }
 
@@ -63,10 +73,10 @@ export const advertisingService = {
 
       await advertisingNotifications.notifyCampaignApproved({
         companyId: campaign.company_id,
-        companyName: company.name,
+        companyName: company.company_name,
         campaignId,
         campaignTitle: campaign.title,
-        chargeAmount: campaign.budget,
+        chargeAmount: budget,
       });
 
       return {
@@ -74,9 +84,9 @@ export const advertisingService = {
         campaignId,
         status: 'approved',
         stripeChargeId,
-        creditsUsed: campaign.budget,
+        creditsUsed: budget,
         creditsRemaining: remainingCredits,
-        message: `Campaign approved! Ad credits deducted: SGD $${campaign.budget.toFixed(2)}. Remaining this month: SGD $${remainingCredits.toFixed(2)}`
+        message: `Campaign approved! Ad credits deducted: SGD $${budget.toFixed(2)}. Remaining this month: SGD $${remainingCredits.toFixed(2)}`
       };
     } catch (error) {
       console.error('[ADVERTISING] Campaign approval failed:', error);
@@ -103,8 +113,10 @@ export const advertisingService = {
 
     await campaignModel.update(campaignId, { status: 'rejected', rejection_reason: rejectionReason, admin_notes: rejectionReason });
 
-    const companyResult = await db.query('SELECT name FROM companies WHERE id = $1', [campaign.company_id]);
-    const companyName = companyResult.rows[0]?.name || 'Unknown';
+    // companies has no `name` column — this raised and took the whole rejection
+    // down with it, after the status had already been written.
+    const companyResult = await db.query('SELECT company_name FROM companies WHERE id = $1', [campaign.company_id]);
+    const companyName = companyResult.rows[0]?.company_name || 'Unknown';
 
     await advertisingNotifications.notifyCampaignRejected({
       companyId: campaign.company_id,
@@ -123,10 +135,22 @@ export const advertisingService = {
 
     await campaignModel.update(campaignId, { status: 'live' });
 
-    const placements = ['homepage_banner', 'browse_sidebar', 'email_newsletter', 'company_profile'];
-    for (const placement of placements) {
-      await db.query(`INSERT INTO ad_placements (campaign_id, placement_type, impressions, clicks, created_at, updated_at) VALUES ($1, $2, 0, 0, NOW(), NOW())`, [campaignId, placement]);
-    }
+    /*
+     * One metrics row, for the placement the customer actually bought.
+     *
+     * This used to insert four hardcoded rows — homepage_banner,
+     * browse_sidebar, email_newsletter, company_profile — none of which is a
+     * placement this platform sells. The wizard offers 'hero-banner' and
+     * 'in-feed-ads', and serving filters on those, so the four rows counted
+     * nothing, described nothing, and split one campaign's figures across
+     * slots that do not exist.
+     */
+    await db.query(
+      `INSERT INTO ad_placements (campaign_id, placement_type, impressions, clicks, created_at, updated_at)
+       VALUES ($1, $2, 0, 0, NOW(), NOW())
+       ON CONFLICT (campaign_id, placement_type) DO NOTHING`,
+      [campaignId, campaign.placement_type || 'hero-banner']
+    );
 
     await advertisingNotifications.notifyCampaignStarted(campaignId, campaign.title, campaign.company_id);
     console.log(`[ADVERTISING] Campaign ${campaignId} started and is now live`);

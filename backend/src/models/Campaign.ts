@@ -20,6 +20,12 @@ export interface Campaign {
   created_by?: number;
   stripe_charge_id?: string;
   updated_at: string;
+  /** Where the action button sends people — see migration 080. */
+  target_url?: string;
+  target_url_type?: 'website' | 'instagram' | 'facebook' | 'tiktok';
+  /** Which slot was bought. Matches the wizard's vocabulary. */
+  placement_type?: 'hero-banner' | 'in-feed-ads';
+  cta_text?: string;
 }
 
 export interface AdPlacement {
@@ -61,15 +67,30 @@ export const campaignModel = {
     starts_at: string;
     ends_at: string;
     created_by: number;
+    // What the buyer picked in the wizard. Both were previously discarded, so
+    // a paid banner had no destination and no slot; see migration 080.
+    target_url?: string;
+    target_url_type?: string;
+    placement_type?: string;
+    cta_text?: string;
   }): Promise<Campaign> {
     const startDate = new Date(data.starts_at);
     const endDate = new Date(data.ends_at);
-    const durationDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    // At least one day: a campaign that starts and ends the same day would
+    // otherwise divide by zero in the share-of-voice rotation.
+    const durationDays = Math.max(1,
+      Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)));
+
+    const PLACEMENTS = ['hero-banner', 'in-feed-ads'];
+    const placement = PLACEMENTS.includes(data.placement_type || '')
+      ? data.placement_type
+      : 'hero-banner';
 
     const result = await db.query(
-      `INSERT INTO campaigns (company_id, title, description, image_url, budget, spent, status, starts_at, ends_at, duration_days, created_by, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW()) RETURNING *`,
-      [companyId, data.title, data.description, data.image_url, data.budget, 0, 'draft', data.starts_at, data.ends_at, durationDays, data.created_by]
+      `INSERT INTO campaigns (company_id, title, description, image_url, budget, spent, status, starts_at, ends_at, duration_days, created_by, target_url, target_url_type, placement_type, cta_text, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, NOW(), NOW()) RETURNING *`,
+      [companyId, data.title, data.description, data.image_url, data.budget, 0, 'draft', data.starts_at, data.ends_at, durationDays, data.created_by,
+       data.target_url || null, data.target_url_type || null, placement, data.cta_text || 'Learn More']
     );
     return result.rows[0];
   },
@@ -113,7 +134,11 @@ export const campaignModel = {
   },
 
   async getPendingForApproval(): Promise<Campaign[]> {
-    const result = await db.query(`SELECT c.*, comp.name as company_name FROM campaigns c LEFT JOIN companies comp ON c.company_id = comp.id WHERE c.status = 'submitted' ORDER BY c.submitted_at ASC`, []);
+    // companies has no 'name' column — the company's name lives in
+    // company_name — so this join raised "column comp.name does not exist" and
+    // the approval queue 500'd. It went unnoticed because the router's broken
+    // guard returned 403 before the query ever ran.
+    const result = await db.query(`SELECT c.*, comp.company_name FROM campaigns c LEFT JOIN companies comp ON c.company_id = comp.id WHERE c.status = 'submitted' ORDER BY c.submitted_at ASC`, []);
     return result.rows;
   },
 
