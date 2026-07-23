@@ -21,10 +21,19 @@ router.post('/tasks/:taskId/send', authMiddleware, async (req: AuthRequest, res:
     }
 
     // Verify user is involved in task
+    // co.assigned_staff_id is the company's allocated doer. COALESCE puts it
+    // ahead of the bid's doer_id, so a company errand's chat reaches the staff
+    // member actually attending — and follows a swap, because it reads the
+    // current allocation rather than the fixed bidder.
     const taskResult = await db.query(
-      `SELECT e.*, b.doer_id, u.display_name as asker_name, sender.alias as sender_alias, sender.display_name as sender_name
+      `SELECT e.*,
+              COALESCE(co.assigned_staff_id, b.doer_id) AS doer_id,
+              b.doer_id AS bidder_id,
+              co.company_id,
+              u.display_name as asker_name, sender.alias as sender_alias, sender.display_name as sender_name
        FROM errands e
        LEFT JOIN bids b ON e.id = b.errand_id AND b.status IN ('accepted', 'confirmed', 'confirmed_awaiting_start', 'in_progress')
+       LEFT JOIN company_orders co ON co.errand_id = e.id
        LEFT JOIN users u ON e.asker_id = u.id
        LEFT JOIN users sender ON sender.id = $2
        WHERE e.id = $1`,
@@ -37,7 +46,9 @@ router.post('/tasks/:taskId/send', authMiddleware, async (req: AuthRequest, res:
 
     const task = taskResult.rows[0];
     const isAsker = task.asker_id === senderId;
-    const isDoer = task.doer_id === senderId;
+    // The allocated staff, and the owner/manager who placed the bid, are both
+    // the doer side of a company errand.
+    const isDoer = task.doer_id === senderId || task.bidder_id === senderId;
 
     if (!isAsker && !isDoer) {
       return res.status(403).json({ error: 'Only asker and doer can message' });
@@ -243,8 +254,29 @@ router.get('/tasks/:taskId', authMiddleware, async (req: AuthRequest, res: Respo
         confirmedBidAmount = bidResult.rows[0].amount;
       }
     }
+    // For a company errand the person actually attending is the allocated staff,
+    // not the owner who bid — so they must be able to read the thread, and the
+    // asker must be talking to them. This overrides doerId with the current
+    // allocation and follows a swap automatically.
+    const alloc = await db.query(
+      `SELECT co.assigned_staff_id, co.company_id,
+              COALESCE(u.alias, u.display_name) AS staff_name
+         FROM company_orders co
+         LEFT JOIN users u ON u.id = co.assigned_staff_id
+        WHERE co.errand_id = $1 AND co.assigned_staff_id IS NOT NULL`,
+      [taskId]
+    );
+    const allocatedStaffId: number | null = alloc.rows[0]?.assigned_staff_id ?? null;
+    const bidderId = doerId;
+    if (allocatedStaffId) {
+      doerId = allocatedStaffId;
+      doerName = alloc.rows[0].staff_name || doerName;
+      doerAlias = alloc.rows[0].staff_name || doerAlias;
+    }
+
     const isAsker = task.asker_id === userId;
-    const isDoer = doerId === userId;
+    // Allocated staff, or the owner/manager who placed the bid, are the doer side.
+    const isDoer = doerId === userId || bidderId === userId;
 
     if (!isAsker && !isDoer) {
       return res.status(403).json({ error: 'Only asker and doer can view messages' });
