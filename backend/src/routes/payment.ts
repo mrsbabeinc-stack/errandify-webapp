@@ -3,6 +3,7 @@ import { AuthRequest, authMiddleware } from '../middleware/auth.js';
 import db from '../db.js';
 import { stripeService } from '../services/stripe.js';
 import { resolvePayoutRecipient, canReleasePayment } from '../utils/payoutRecipient.js';
+import { feeBreakdown } from '../utils/stripeFee.js';
 
 const router = Router();
 
@@ -89,6 +90,25 @@ router.post('/add-method', authMiddleware, async (req: AuthRequest, res: Respons
 // The real implementations below are now reachable. They have NOT been
 // exercised against Stripe from this machine (no outbound access), so treat
 // the first live run as untested.
+
+// GET /api/payment/fee-preview?amount=100 — what the asker will actually pay.
+//
+// The processing fee is disclosed BEFORE they confirm, not buried. Without a
+// card yet, this shows the overseas-rate estimate (the safe upper bound); once
+// Stripe knows the card country it comes down for a local card. Surcharging is
+// only fair if the person can see it first.
+router.get('/fee-preview', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const amount = parseFloat(String(req.query.amount || ''));
+    if (!amount || amount <= 0) return res.status(400).json({ error: 'amount required' });
+    // cardCountry can be passed once known (e.g. from Stripe.js) for an exact quote.
+    const country = req.query.cardCountry ? String(req.query.cardCountry) : null;
+    res.json({ success: true, data: feeBreakdown(amount, country) });
+  } catch (error) {
+    console.error('[Payment] Fee preview error:', error);
+    res.status(500).json({ error: 'Could not compute the fee' });
+  }
+});
 
 // POST /api/payment/create-intent - Create Stripe payment intent
 router.post('/create-intent', authMiddleware, async (req: AuthRequest, res: Response) => {
