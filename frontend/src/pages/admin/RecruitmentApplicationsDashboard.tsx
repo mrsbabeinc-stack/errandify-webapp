@@ -12,7 +12,8 @@ interface Application {
   email: string;
   position_applied: string;
   years_of_experience: number;
-  status: 'submitted' | 'under_review' | 'shortlisted' | 'interview_scheduled' | 'offered' | 'rejected' | 'accepted';
+  // 'hired' is terminal: the hire endpoint has created the staff record.
+  status: 'submitted' | 'under_review' | 'shortlisted' | 'interview_scheduled' | 'offered' | 'rejected' | 'accepted' | 'hired';
   ai_match_score: number;
   submitted_at: string;
   interview_stage?: string;
@@ -27,9 +28,13 @@ const STATUS_COLORS: { [key: string]: { bg: string; color: string } } = {
   offered: { bg: '#FCE4EC', color: '#880E4F' },
   rejected: { bg: '#FFEBEE', color: '#B71C1C' },
   accepted: { bg: '#C8E6C9', color: '#1B5E20' },
+  hired: { bg: '#2E7D32', color: '#FFFFFF' },
 };
 
 const INTERVIEW_STAGES = ['Round 1 - Phone Screening', 'Round 2 - Technical', 'Round 3 - Manager', 'Round 4 - Final', 'Offer Stage'];
+
+const LBL = { display: 'block', fontSize: '11px', fontWeight: 600, color: '#666', marginBottom: '4px' } as const;
+const FLD = { width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px', fontSize: '12px', fontFamily: 'inherit', boxSizing: 'border-box' as const };
 
 const RecruitmentApplicationsDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -67,6 +72,66 @@ const RecruitmentApplicationsDashboard: React.FC = () => {
       showToast('Failed to load applications', 'error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Onboarding details are collected here, at hire — the point at which this
+  // person becomes an employee and CPF/IRAS make an NRIC lawful and necessary.
+  // The application deliberately never asked for any of it.
+  const [showHireModal, setShowHireModal] = useState(false);
+  const [hiring, setHiring] = useState(false);
+  const [hireForm, setHireForm] = useState({
+    nric: '',
+    residential_status: 'Citizen',
+    department: '',
+    position: '',
+    hire_date: new Date().toISOString().split('T')[0],
+    employment_type: 'Permanent',
+    base_salary: '',
+    cpf_membership_no: '',
+    emergency_contact_name: '',
+    emergency_contact_relationship: '',
+    emergency_contact_phone: '',
+    fitness_status: 'pending',
+    fitness_assessed_on: '',
+    fitness_restrictions: '',
+  });
+
+  const handleHire = async () => {
+    if (!selectedApp) return;
+    if (!hireForm.nric.trim()) {
+      showToast('❌ NRIC/FIN is required to create the employee record', 'error');
+      return;
+    }
+    try {
+      setHiring(true);
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      const token = localStorage.getItem('token');
+      const response = await fetch(
+        `${API_URL}/api/recruitment/applications/${selectedApp.id}/hire`,
+        {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...hireForm,
+            base_salary: hireForm.base_salary ? Number(hireForm.base_salary) : null,
+            fitness_assessed_on: hireForm.fitness_assessed_on || null,
+          }),
+        }
+      );
+      const body = await response.json();
+      if (!response.ok) throw new Error(body?.error || 'Could not create the employee record');
+
+      showToast(`✅ ${body.data.first_name} ${body.data.last_name} hired as ${body.data.staff_id}`, 'success');
+      setShowHireModal(false);
+      setApplications(prev =>
+        prev.map(a => (a.id === selectedApp.id ? { ...a, status: 'hired' } : a))
+      );
+      setSelectedApp(null);
+    } catch (error: any) {
+      showToast(`❌ ${error.message}`, 'error');
+    } finally {
+      setHiring(false);
     }
   };
 
@@ -286,12 +351,132 @@ const RecruitmentApplicationsDashboard: React.FC = () => {
                     >
                       Review
                     </button>
+                    {/* Creates the staff record directly. Replaces re-typing
+                        the whole person, NRIC included, into Staff Manager. */}
+                    {app.status !== 'hired' && app.status !== 'rejected' && (
+                      <button
+                        onClick={() => {
+                          setSelectedApp(app);
+                          setHireForm(f => ({
+                            ...f,
+                            position: app.position_applied || '',
+                          }));
+                          setShowHireModal(true);
+                        }}
+                        style={{
+                          marginLeft: '6px',
+                          padding: '6px 12px',
+                          background: '#2E7D32',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '11px',
+                          fontWeight: '600',
+                        }}
+                      >
+                        Hire
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+
+        {/* Hire modal — onboarding details, collected at the point of hire */}
+        {showHireModal && selectedApp && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '16px' }}>
+            <div style={{ background: 'white', borderRadius: '8px', padding: '24px', maxWidth: '620px', width: '100%', maxHeight: '90vh', overflowY: 'auto' }}>
+              <h2 style={{ margin: '0 0 4px 0', fontSize: '18px', fontWeight: 700, color: '#333' }}>
+                Hire {selectedApp.first_name} {selectedApp.last_name}
+              </h2>
+              <p style={{ fontSize: '12px', color: '#666', margin: '0 0 16px 0' }}>
+                These details are collected now rather than on the application form —
+                they only become necessary once someone is actually employed.
+              </p>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={LBL}>NRIC / FIN * <span style={{ fontWeight: 400, color: '#999' }}>(needed for CPF and IRAS)</span></label>
+                  <input value={hireForm.nric} onChange={e => setHireForm({ ...hireForm, nric: e.target.value.toUpperCase() })} style={FLD} />
+                </div>
+                <div>
+                  <label style={LBL}>Residential status</label>
+                  <select value={hireForm.residential_status} onChange={e => setHireForm({ ...hireForm, residential_status: e.target.value })} style={FLD}>
+                    {['Citizen', 'PR', 'Work Permit', 'S Pass', 'Employment Pass'].map(o => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={LBL}>Hire date *</label>
+                  <input type="date" value={hireForm.hire_date} onChange={e => setHireForm({ ...hireForm, hire_date: e.target.value })} style={FLD} />
+                </div>
+                <div>
+                  <label style={LBL}>Department</label>
+                  <input value={hireForm.department} onChange={e => setHireForm({ ...hireForm, department: e.target.value })} style={FLD} />
+                </div>
+                <div>
+                  <label style={LBL}>Position</label>
+                  <input value={hireForm.position} onChange={e => setHireForm({ ...hireForm, position: e.target.value })} style={FLD} />
+                </div>
+                <div>
+                  <label style={LBL}>Employment type</label>
+                  <select value={hireForm.employment_type} onChange={e => setHireForm({ ...hireForm, employment_type: e.target.value })} style={FLD}>
+                    {['Permanent', 'Contract', 'Temporary', 'Intern'].map(o => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={LBL}>Base salary (SGD)</label>
+                  <input type="number" value={hireForm.base_salary} onChange={e => setHireForm({ ...hireForm, base_salary: e.target.value })} style={FLD} />
+                </div>
+
+                <div style={{ gridColumn: '1 / -1', marginTop: '8px', paddingTop: '12px', borderTop: '1px solid #eee' }}>
+                  <strong style={{ fontSize: '13px', color: '#333' }}>Emergency contact</strong>
+                </div>
+                <div>
+                  <label style={LBL}>Name</label>
+                  <input value={hireForm.emergency_contact_name} onChange={e => setHireForm({ ...hireForm, emergency_contact_name: e.target.value })} style={FLD} />
+                </div>
+                <div>
+                  <label style={LBL}>Phone</label>
+                  <input value={hireForm.emergency_contact_phone} onChange={e => setHireForm({ ...hireForm, emergency_contact_phone: e.target.value })} style={FLD} />
+                </div>
+
+                <div style={{ gridColumn: '1 / -1', marginTop: '8px', paddingTop: '12px', borderTop: '1px solid #eee' }}>
+                  <strong style={{ fontSize: '13px', color: '#333' }}>Fitness to work</strong>
+                  <p style={{ fontSize: '11px', color: '#999', margin: '4px 0 0 0' }}>
+                    Record whether they are cleared for the role and what to adjust — not a diagnosis.
+                  </p>
+                </div>
+                <div>
+                  <label style={LBL}>Status</label>
+                  <select value={hireForm.fitness_status} onChange={e => setHireForm({ ...hireForm, fitness_status: e.target.value })} style={FLD}>
+                    <option value="pending">Check pending</option>
+                    <option value="fit">Fit for the role</option>
+                    <option value="fit_with_adjustments">Fit, with adjustments</option>
+                    <option value="not_yet_cleared">Not yet cleared</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={LBL}>Assessed on</label>
+                  <input type="date" value={hireForm.fitness_assessed_on} onChange={e => setHireForm({ ...hireForm, fitness_assessed_on: e.target.value })} style={FLD} />
+                </div>
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={LBL}>Restrictions or adjustments</label>
+                  <input value={hireForm.fitness_restrictions} onChange={e => setHireForm({ ...hireForm, fitness_restrictions: e.target.value })} placeholder="e.g. no lifting over 15kg" style={FLD} />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '20px' }}>
+                <button onClick={() => setShowHireModal(false)} style={{ padding: '10px', background: '#f0f0f0', color: '#333', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}>Cancel</button>
+                <button onClick={handleHire} disabled={hiring} style={{ padding: '10px', background: hiring ? '#A5D6A7' : '#2E7D32', color: 'white', border: 'none', borderRadius: '4px', cursor: hiring ? 'default' : 'pointer', fontWeight: 600 }}>
+                  {hiring ? 'Creating…' : 'Create employee record'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Approval Modal */}
         {showApprovalModal && selectedApp && (
@@ -336,7 +521,10 @@ const RecruitmentApplicationsDashboard: React.FC = () => {
                     { value: 'shortlist', label: '✅ Shortlist for Interview', color: '#4CAF50' },
                     { value: 'schedule_interview', label: '📅 Schedule Interview', color: '#2196F3' },
                     { value: 'offer', label: '🎁 Send Offer', color: '#9C27B0' },
-                    { value: 'approve', label: '⭐ APPROVE & MOVE TO STAFF', color: '#FF6B35' },
+                    // 'approve' used to say "can now be added in Staff Manager",
+                    // i.e. re-type everything including the NRIC by hand. The
+                    // Hire button below does it properly.
+                    { value: 'approve', label: '⭐ Approve', color: '#FF6B35' },
                     { value: 'reject', label: '❌ Reject', color: '#f44336' },
                   ].map(action => (
                     <button

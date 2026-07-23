@@ -1,476 +1,335 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { useToast, ToastContainer } from '../../components/Toast';
 import AdminLayout from '../../components/admin/AdminLayout';
 
-interface AdminUser {
-  id: string;
-  email: string;
-  name: string;
-  role: 'super-admin' | 'moderator' | 'support' | 'finance' | 'ops';
-  status: 'active' | 'inactive';
-  lastLogin?: string;
-  createdAt: string;
-  twoFactorEnabled: boolean;
-}
+/**
+ * Admin access, backed by `users.role`.
+ *
+ * This screen used to keep its own list in localStorage under 'adminUsers',
+ * seeded with a demo row. Create, Deactivate, Delete and the 2FA toggle only
+ * edited that blob: they granted nobody access and revoked nobody's, while
+ * looking exactly as though they had. The backend they would have called wrote
+ * to an `admin_users` table that does not exist in this database.
+ *
+ * Only one thing actually decides who is an admin — `users.role`, which
+ * requireAdmin() reads on every guarded route — so this screen reads and writes
+ * that, and nothing else. A second store would have been a second answer to
+ * "who is an admin" that granted nobody anything.
+ *
+ * Two things the old screen offered are gone rather than reimplemented:
+ *  - Creating an admin from an email and a temporary password. Accounts are
+ *    created by signing up through Singpass; there is no password to set. You
+ *    grant access to someone who already has an account.
+ *  - The 2FA toggle and the "Security Settings" checkboxes. Nothing backed any
+ *    of them — they were `defaultChecked` with no handler — and a security
+ *    control that reports "enabled" while enforcing nothing is worse than one
+ *    that is absent.
+ */
 
-interface Role {
-  name: string;
-  permissions: string[];
-  description: string;
-}
-
-const ROLES: Record<string, Role> = {
-  'super-admin': {
-    name: 'Super Admin',
-    description: 'Full access to all admin functions',
-    permissions: ['all'],
+const ROLE_LABELS: Record<string, { name: string; description: string }> = {
+  admin: {
+    name: 'Admin',
+    description: 'Full back-office access, including granting and revoking admin access',
   },
-  'moderator': {
-    name: 'Moderator',
-    description: 'Manage disputes, user safety, content moderation',
-    permissions: ['disputes', 'safety', 'moderation', 'user-actions'],
+  support_l2: {
+    name: 'Support L2',
+    description: 'Front-line support: cases and user help',
   },
-  'support': {
-    name: 'Support',
-    description: 'Handle support cases and customer issues',
-    permissions: ['cases', 'user-help', 'refunds'],
-  },
-  'finance': {
-    name: 'Finance',
-    description: 'Manage payments, refunds, revenue',
-    permissions: ['payments', 'refunds', 'payouts', 'financial-reports'],
-  },
-  'ops': {
-    name: 'Operations',
-    description: 'Manage companies, errands, operations',
-    permissions: ['companies', 'errands', 'operations', 'scheduling'],
+  support_l3: {
+    name: 'Support L3',
+    description: 'Senior support: escalations, disputes, moderation',
   },
 };
+
+interface AdminUser {
+  id: string;
+  name: string;
+  email: string | null;
+  role: string;
+  status: string;
+  last_active_at: string | null;
+  created_at: string;
+}
+
+interface Candidate {
+  id: string;
+  name: string;
+  email: string | null;
+  role: string;
+  status: string;
+}
+
+const api = async (path: string, init: RequestInit = {}) => {
+  const token = localStorage.getItem('token');
+  const res = await fetch(path, {
+    ...init,
+    headers: {
+      ...(init.body ? { 'Content-Type': 'application/json' } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...((init.headers as Record<string, string>) || {}),
+    },
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(body?.error || `Request failed (${res.status})`);
+  return body;
+};
+
+const fmt = (d: string | null) => (d ? new Date(d).toLocaleString('en-SG') : '—');
 
 export default function AdminAuthManagement() {
   const navigate = useNavigate();
   const { toasts, showToast, removeToast } = useToast();
-  const [admins, setAdmins] = useState<AdminUser[]>([]);
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [showRoleManager, setShowRoleManager] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [formData, setFormData] = useState({
-    email: '',
-    name: '',
-    role: 'moderator' as const,
-    password: '',
-  });
 
-  // Load admins from localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem('adminUsers');
-    if (saved) {
-      setAdmins(JSON.parse(saved));
-    } else {
-      // Initialize with demo admin
-      const demoAdmins: AdminUser[] = [
-        {
-          id: '1',
-          email: 'admin@errandify.ai',
-          name: 'Admin User',
-          role: 'super-admin',
-          status: 'active',
-          lastLogin: new Date().toISOString(),
-          createdAt: new Date().toISOString(),
-          twoFactorEnabled: true,
-        },
-      ];
-      setAdmins(demoAdmins);
-      localStorage.setItem('adminUsers', JSON.stringify(demoAdmins));
+  const [admins, setAdmins] = useState<AdminUser[]>([]);
+  const [roles, setRoles] = useState<string[]>(Object.keys(ROLE_LABELS));
+  const [loading, setLoading] = useState(true);
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  const [showGrant, setShowGrant] = useState(false);
+  const [candidateSearch, setCandidateSearch] = useState('');
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [searched, setSearched] = useState(false);
+  const [searching, setSearching] = useState(false);
+  const [grantRole, setGrantRole] = useState('support_l2');
+
+  // useToast() builds a new showToast on every render, so depending on it here
+  // would give useCallback a new identity each time, the mount effect would
+  // re-fire on every render, and the screen would load forever. Reach it
+  // through a ref so `load` can be created once.
+  const toast = useRef(showToast);
+  toast.current = showToast;
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const body = await api('/api/admin/admin-users');
+      setAdmins(body.data || []);
+      if (body.roles?.length) setRoles(body.roles);
+    } catch (err) {
+      toast.current(`⚠️ ${(err as Error).message}`, 'error');
+      setAdmins([]);
+    } finally {
+      setLoading(false);
     }
   }, []);
 
-  const handleCreateAdmin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.email || !formData.name) return;
+  useEffect(() => { load(); }, [load]);
 
-    const newAdmin: AdminUser = {
-      id: Date.now().toString(),
-      email: formData.email,
-      name: formData.name,
-      role: formData.role,
-      status: 'active',
-      createdAt: new Date().toISOString(),
-      twoFactorEnabled: false,
-    };
-
-    const updated = [...admins, newAdmin];
-    setAdmins(updated);
-    localStorage.setItem('adminUsers', JSON.stringify(updated));
-
-    setFormData({ email: '', name: '', role: 'moderator', password: '' });
-    setShowCreateForm(false);
-  };
-
-  const handleDeactivate = (id: string) => {
-    const updated = admins.map(a =>
-      a.id === id ? { ...a, status: a.status === 'active' ? 'inactive' : 'active' } : a
-    );
-    setAdmins(updated);
-    localStorage.setItem('adminUsers', JSON.stringify(updated));
-  };
-
-  const handleDelete = (id: string) => {
-    if (window.confirm('Are you sure you want to delete this admin?')) {
-      const updated = admins.filter(a => a.id !== id);
-      setAdmins(updated);
-      localStorage.setItem('adminUsers', JSON.stringify(updated));
+  const searchCandidates = async () => {
+    if (candidateSearch.trim().length < 2) {
+      showToast('Type at least 2 characters to search', 'warning');
+      return;
+    }
+    setSearching(true);
+    try {
+      const body = await api(`/api/admin/users?search=${encodeURIComponent(candidateSearch.trim())}`);
+      // Anyone who already holds an admin role is managed in the table below.
+      setCandidates((body.data || []).filter((u: Candidate) => !roles.includes(u.role)));
+      setSearched(true);
+    } catch (err) {
+      showToast(`⚠️ ${(err as Error).message}`, 'error');
+    } finally {
+      setSearching(false);
     }
   };
 
-  const handleToggle2FA = (id: string) => {
-    const updated = admins.map(a =>
-      a.id === id ? { ...a, twoFactorEnabled: !a.twoFactorEnabled } : a
-    );
-    setAdmins(updated);
-    localStorage.setItem('adminUsers', JSON.stringify(updated));
+  const setRole = async (userId: string, role: string, name: string) => {
+    setBusyId(userId);
+    try {
+      await api(`/api/admin/admin-users/${userId}/role`, {
+        method: 'POST',
+        body: JSON.stringify({ role }),
+      });
+      showToast(`✅ ${name} is now ${ROLE_LABELS[role]?.name || role}`, 'success');
+      setShowGrant(false);
+      setCandidates([]);
+      setCandidateSearch('');
+      setSearched(false);
+      await load();
+    } catch (err) {
+      showToast(`❌ ${(err as Error).message}`, 'error');
+      await load(); // the select is now out of step with the server
+    } finally {
+      setBusyId(null);
+    }
   };
 
-  const filteredAdmins = admins.filter(a =>
-    a.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    a.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const revoke = async (admin: AdminUser) => {
+    // Describes what actually happens: the account is kept, only access goes.
+    if (!window.confirm(
+      `Remove admin access from ${admin.name}?\n\n` +
+      `Their account stays, along with their errands and history. ` +
+      `They lose all back-office access.`
+    )) return;
+    setBusyId(admin.id);
+    try {
+      await api(`/api/admin/admin-users/${admin.id}/role`, { method: 'DELETE' });
+      showToast(`✅ Admin access removed from ${admin.name}`, 'success');
+      await load();
+    } catch (err) {
+      showToast(`❌ ${(err as Error).message}`, 'error');
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const card: React.CSSProperties = {
+    padding: '16px', background: '#fff', border: '2px solid #FFD9B3',
+    borderRadius: '8px', marginBottom: '16px',
+  };
+  const btn = (bg: string): React.CSSProperties => ({
+    padding: '9px 15px', background: bg, color: '#fff', border: 'none',
+    borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: 600,
+  });
 
   return (
     <AdminLayout>
-      <div style={{ padding: '16px', background: '#fff' }}>
+      <div style={{ padding: '16px', background: '#fff', minHeight: '100vh' }}>
         <ToastContainer toasts={toasts} onClose={removeToast} />
-      <div style={{ marginBottom: '20px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-          <h2 style={{ fontSize: '20px', fontWeight: '700', color: '#333' }}>
-            🔐 Admin Users & Access Control
-          </h2>
-          <button
-            onClick={() => navigate(-1)}
-            style={{
-              fontSize: '20px',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              color: '#FF6B35',
-              fontWeight: '700',
-              padding: '0 8px',
-            }}
-            title="Go back"
-          >
-            ←
-          </button>
-        </div>
-        <p style={{ fontSize: '14px', color: '#666' }}>
-          Manage admin accounts, roles, permissions, and security settings
-        </p>
-      </div>
 
-      {/* Search & Actions */}
-      <div style={{
-        padding: '16px',
-        background: 'linear-gradient(135deg, #FFF8F5 0%, #FFE4C4 100%)',
-        borderRadius: '8px',
-        marginBottom: '24px',
-        border: '2px solid #FFD9B3',
-      }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
-          <input
-            type="text"
-            placeholder="Search by email or name..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={{
-              padding: '10px 12px',
-              border: '2px solid #FFD9B3',
-              borderRadius: '6px',
-              fontSize: '14px',
-            }}
-          />
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button
-              onClick={() => setShowCreateForm(!showCreateForm)}
-              style={{
-                padding: '10px 16px',
-                background: 'linear-gradient(135deg, #FF6B35 0%, #FF8C5A 100%)',
-                color: 'white',
-                border: 'none',
-                borderRadius: '6px',
-                fontWeight: '600',
-                cursor: 'pointer',
-              }}
-            >
-              ➕ Create Admin
-            </button>
-            <button
-              onClick={() => setShowRoleManager(!showRoleManager)}
-              style={{
-                padding: '10px 16px',
-                background: '#f5f5f5',
-                border: '1px solid #ddd',
-                borderRadius: '6px',
-                fontWeight: '600',
-                cursor: 'pointer',
-              }}
-            >
-              👥 Roles & Permissions
+        <div style={{ marginBottom: '20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#333', margin: 0 }}>🔐 Admin Access</h2>
+            <button onClick={() => navigate(-1)} title="Go back"
+              style={{ fontSize: '20px', background: 'none', border: 'none', cursor: 'pointer', color: '#FF6B35', fontWeight: 700, padding: '0 8px' }}>
+              ←
             </button>
           </div>
+          <p style={{ fontSize: '14px', color: '#666', margin: 0 }}>
+            Who can reach the back office. Changes here take effect on that person's next request.
+          </p>
         </div>
-      </div>
 
-      {/* Create Form */}
-      {showCreateForm && (
-        <div style={{
-          padding: '20px',
-          background: '#FFF8F5',
-          border: '2px solid #FFD9B3',
-          borderRadius: '8px',
-          marginBottom: '24px',
-        }}>
-          <h3 style={{ color: '#333', marginBottom: '20px', fontWeight: '600' }}>Create New Admin</h3>
-          <form onSubmit={handleCreateAdmin}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
-              <input
-                type="email"
-                placeholder="Email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                style={{
-                  padding: '10px 12px',
-                  border: '2px solid #FFD9B3',
-                  borderRadius: '6px',
-                  fontSize: '14px',
-                }}
-                required
-              />
-              <input
-                type="text"
-                placeholder="Full Name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                style={{
-                  padding: '10px 12px',
-                  border: '2px solid #FFD9B3',
-                  borderRadius: '6px',
-                  fontSize: '14px',
-                }}
-                required
-              />
+        <div style={{ ...card, background: 'linear-gradient(135deg, #FFF8F5 0%, #FFE4C4 100%)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+            <div style={{ fontSize: '13px', color: '#666' }}>
+              <strong style={{ color: '#333', fontSize: '15px' }}>{admins.length}</strong>
+              {' '}account{admins.length === 1 ? '' : 's'} with back-office access
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
-              <select
-                value={formData.role}
-                onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
-                style={{
-                  padding: '10px 12px',
-                  border: '2px solid #FFD9B3',
-                  borderRadius: '6px',
-                  fontSize: '14px',
-                  cursor: 'pointer',
-                }}
-              >
-                {Object.entries(ROLES).map(([key, role]) => (
-                  <option key={key} value={key}>{role.name}</option>
-                ))}
-              </select>
-              <input
-                type="password"
-                placeholder="Temporary Password"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                style={{
-                  padding: '10px 12px',
-                  border: '2px solid #FFD9B3',
-                  borderRadius: '6px',
-                  fontSize: '14px',
-                }}
-                required
-              />
-            </div>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button
-                type="submit"
-                style={{
-                  padding: '10px 20px',
-                  background: 'linear-gradient(135deg, #FF6B35 0%, #FF8C5A 100%)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '6px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                }}
-              >
-                Create Admin
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowCreateForm(false)}
-                style={{
-                  padding: '10px 20px',
-                  background: '#f5f5f5',
-                  border: '1px solid #ddd',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                }}
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
+            <button style={btn('#FF6B35')} onClick={() => setShowGrant(v => !v)}>
+              {showGrant ? 'Cancel' : '+ Grant admin access'}
+            </button>
+          </div>
 
-      {/* Roles & Permissions */}
-      {showRoleManager && (
-        <div style={{
-          padding: '20px',
-          background: '#f5f5f5',
-          borderRadius: '8px',
-          marginBottom: '24px',
-        }}>
-          <h3 style={{ color: '#333', marginBottom: '20px', fontWeight: '600' }}>Roles & Permissions</h3>
-          <div style={{ display: 'grid', gap: '12px' }}>
-            {Object.entries(ROLES).map(([key, role]) => (
-              <div key={key} style={{
-                padding: '12px',
-                background: 'white',
-                border: '1px solid #ddd',
-                borderRadius: '6px',
-              }}>
-                <div style={{ fontWeight: '600', color: '#333', marginBottom: '4px' }}>
-                  {role.name}
-                </div>
-                <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>
-                  {role.description}
-                </div>
-                <div style={{ fontSize: '12px', color: '#999' }}>
-                  Permissions: {Array.isArray(role.permissions) && role.permissions.join(', ')}
-                </div>
+          {showGrant && (
+            <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '2px solid #FFD9B3' }}>
+              <p style={{ fontSize: '13px', color: '#666', margin: '0 0 12px 0' }}>
+                Find an existing account. Accounts are created through Singpass sign-up — here you grant access to
+                someone who already has one.
+              </p>
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '10px', flexWrap: 'wrap' }}>
+                <input
+                  value={candidateSearch}
+                  onChange={e => setCandidateSearch(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') searchCandidates(); }}
+                  placeholder="Search by name or email"
+                  style={{ flex: '1 1 240px', padding: '9px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '13px' }}
+                />
+                <select value={grantRole} onChange={e => setGrantRole(e.target.value)}
+                  style={{ padding: '9px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '13px', cursor: 'pointer' }}>
+                  {roles.map(r => <option key={r} value={r}>{ROLE_LABELS[r]?.name || r}</option>)}
+                </select>
+                <button style={btn('#2196F3')} onClick={searchCandidates} disabled={searching}>
+                  {searching ? 'Searching…' : 'Search'}
+                </button>
               </div>
-            ))}
-          </div>
-        </div>
-      )}
+              <p style={{ fontSize: '12px', color: '#888', margin: '0 0 12px 0' }}>
+                {ROLE_LABELS[grantRole]?.description}
+              </p>
 
-      {/* Admin List */}
-      <div>
-        <h3 style={{ color: '#333', marginBottom: '12px', fontWeight: '600' }}>
-          Active Admins ({filteredAdmins.length})
-        </h3>
-        <div style={{ display: 'grid', gap: '12px' }}>
-          {filteredAdmins.map(admin => (
-            <div key={admin.id} style={{
-              padding: '16px',
-              background: 'white',
-              border: '2px solid #FFD9B3',
-              borderRadius: '8px',
-              display: 'grid',
-              gridTemplateColumns: '1fr auto',
-              gap: '12px',
-              alignItems: 'center',
-            }}>
-              <div>
-                <div style={{ fontWeight: '600', color: '#333', marginBottom: '4px' }}>
-                  {admin.name}
-                </div>
-                <div style={{ fontSize: '13px', color: '#666', marginBottom: '4px' }}>
-                  {admin.email}
-                </div>
-                <div style={{ fontSize: '12px', color: '#999' }}>
-                  Role: <span style={{ fontWeight: '600' }}>{ROLES[admin.role]?.name}</span> •
-                  Status: <span style={{ color: admin.status === 'active' ? '#4caf50' : '#f57c00', fontWeight: '600' }}>
-                    {admin.status.toUpperCase()}
-                  </span> •
-                  2FA: {admin.twoFactorEnabled ? '✅ Enabled' : '❌ Disabled'}
-                </div>
-                {admin.lastLogin && (
-                  <div style={{ fontSize: '12px', color: '#999', marginTop: '4px' }}>
-                    Last login: {new Date(admin.lastLogin).toLocaleString()}
+              {candidates.map(c => (
+                <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', borderBottom: '1px solid #FFE4C4', gap: '8px', flexWrap: 'wrap' }}>
+                  <div style={{ fontSize: '13px' }}>
+                    <strong>{c.name}</strong>
+                    <span style={{ color: '#888' }}> · {c.email || 'no email'} · currently {c.role}</span>
+                    {c.status !== 'active' && (
+                      <span style={{ color: '#f44336', fontWeight: 600 }}> · {c.status}</span>
+                    )}
                   </div>
-                )}
-              </div>
-              <div style={{ display: 'flex', gap: '8px', flexDirection: 'column' }}>
-                <button
-                  onClick={() => handleToggle2FA(admin.id)}
-                  style={{
-                    padding: '6px 12px',
-                    background: admin.twoFactorEnabled ? '#e8f5e9' : '#fff3e0',
-                    color: admin.twoFactorEnabled ? '#2e7d32' : '#e65100',
-                    border: 'none',
-                    borderRadius: '4px',
-                    fontSize: '12px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                  }}
-                >
-                  {admin.twoFactorEnabled ? '🔒 2FA On' : '🔓 2FA Off'}
-                </button>
-                <button
-                  onClick={() => handleDeactivate(admin.id)}
-                  style={{
-                    padding: '6px 12px',
-                    background: admin.status === 'active' ? '#ffebee' : '#e8f5e9',
-                    color: admin.status === 'active' ? '#c62828' : '#2e7d32',
-                    border: 'none',
-                    borderRadius: '4px',
-                    fontSize: '12px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                  }}
-                >
-                  {admin.status === 'active' ? '⏹ Deactivate' : '▶ Activate'}
-                </button>
-                <button
-                  onClick={() => handleDelete(admin.id)}
-                  style={{
-                    padding: '6px 12px',
-                    background: '#ffebee',
-                    color: '#c62828',
-                    border: 'none',
-                    borderRadius: '4px',
-                    fontSize: '12px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                  }}
-                >
-                  🗑️ Delete
-                </button>
-              </div>
+                  <button
+                    style={{ ...btn('#4CAF50'), opacity: c.status === 'active' ? 1 : 0.5 }}
+                    disabled={busyId === c.id || c.status !== 'active'}
+                    title={c.status !== 'active' ? `Cannot grant access to a ${c.status} account` : undefined}
+                    onClick={() => setRole(c.id, grantRole, c.name)}
+                  >
+                    {busyId === c.id ? 'Working…' : `Grant ${ROLE_LABELS[grantRole]?.name || grantRole}`}
+                  </button>
+                </div>
+              ))}
+              {searched && !searching && candidates.length === 0 && (
+                <p style={{ fontSize: '13px', color: '#888', margin: 0 }}>
+                  No matching accounts without back-office access.
+                </p>
+              )}
             </div>
-          ))}
+          )}
         </div>
-      </div>
 
-      {/* Security Settings */}
-      <div style={{
-        marginTop: '32px',
-        padding: '20px',
-        background: 'linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%)',
-        borderRadius: '8px',
-      }}>
-        <h3 style={{ color: '#1976d2', marginBottom: '12px', fontWeight: '600' }}>🔐 Security Settings</h3>
-        <div style={{ display: 'grid', gap: '8px', fontSize: '14px' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-            <input type="checkbox" defaultChecked style={{ cursor: 'pointer' }} />
-            <span>Require 2FA for all admins</span>
-          </label>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-            <input type="checkbox" defaultChecked style={{ cursor: 'pointer' }} />
-            <span>Enable IP whitelist for admin access</span>
-          </label>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-            <input type="checkbox" defaultChecked style={{ cursor: 'pointer' }} />
-            <span>Log all admin actions to audit trail</span>
-          </label>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-            <input type="checkbox" style={{ cursor: 'pointer' }} />
-            <span>Require password change every 90 days</span>
-          </label>
+        {loading ? (
+          <div style={card}>Loading…</div>
+        ) : admins.length === 0 ? (
+          <div style={card}>No accounts have back-office access.</div>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+              <thead>
+                <tr style={{ background: '#FFD9B3', borderBottom: '2px solid #FF6B35' }}>
+                  {['Name', 'Email', 'Role', 'Status', 'Last active', ''].map(h => (
+                    <th key={h} style={{ padding: '10px', textAlign: 'left', fontWeight: 600, color: '#333' }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {admins.map((a, i) => (
+                  <tr key={a.id} style={{ borderBottom: '1px solid #FFD9B3', background: i % 2 === 0 ? '#fff' : '#FFF8F5' }}>
+                    <td style={{ padding: '10px' }}>{a.name}</td>
+                    <td style={{ padding: '10px', color: '#666' }}>{a.email || '—'}</td>
+                    <td style={{ padding: '10px' }}>
+                      <select
+                        value={a.role}
+                        disabled={busyId === a.id}
+                        onChange={e => setRole(a.id, e.target.value, a.name)}
+                        style={{ padding: '5px 8px', border: '1px solid #FFD9B3', borderRadius: '4px', fontSize: '12px', fontWeight: 600, color: '#FF6B35', cursor: 'pointer' }}
+                      >
+                        {roles.map(r => <option key={r} value={r}>{ROLE_LABELS[r]?.name || r}</option>)}
+                      </select>
+                    </td>
+                    <td style={{ padding: '10px' }}>
+                      <span style={{
+                        padding: '3px 8px', borderRadius: '3px', fontSize: '11px', fontWeight: 600,
+                        background: a.status === 'active' ? '#E8F5E9' : '#F5F5F5',
+                        color: a.status === 'active' ? '#2E7D32' : '#999',
+                      }}>
+                        {a.status}
+                      </span>
+                    </td>
+                    <td style={{ padding: '10px', color: '#666' }}>{fmt(a.last_active_at)}</td>
+                    <td style={{ padding: '10px', textAlign: 'right' }}>
+                      <button style={{ ...btn('#f44336'), padding: '6px 11px' }} disabled={busyId === a.id} onClick={() => revoke(a)}>
+                        {busyId === a.id ? 'Working…' : 'Remove access'}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        <div style={{ ...card, marginTop: '20px', background: '#FFF8F5' }}>
+          <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#333', margin: '0 0 10px 0' }}>What each role reaches</h3>
+          {roles.map(r => (
+            <p key={r} style={{ fontSize: '13px', color: '#666', margin: '0 0 6px 0' }}>
+              <strong style={{ color: '#FF6B35' }}>{ROLE_LABELS[r]?.name || r}</strong>
+              {' — '}{ROLE_LABELS[r]?.description || 'Back-office access'}
+            </p>
+          ))}
+          <p style={{ fontSize: '12px', color: '#888', margin: '12px 0 0 0' }}>
+            You cannot change your own role, and the last active Admin cannot have access removed. Both are
+            enforced by the server, not just hidden in this page.
+          </p>
         </div>
-      </div>
       </div>
     </AdminLayout>
   );

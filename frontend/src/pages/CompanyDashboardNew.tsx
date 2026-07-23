@@ -174,7 +174,7 @@ const CompanyDashboardNew: React.FC = () => {
       id: 1,
       title: `Welcome back, ${company?.name}`,
       description: 'Your performance this month is looking great. Keep up the momentum!',
-      badge: `${stats.partnerTier} Partner`,
+      badge: `${company?.subscription_tier ? company.subscription_tier.charAt(0).toUpperCase() + company.subscription_tier.slice(1) : stats.partnerTier} Partner`,
       badgeIcon: '⭐',
       gradient: 'linear-gradient(135deg, #FF6B35, #FF8C5A)',
     },
@@ -215,46 +215,42 @@ const CompanyDashboardNew: React.FC = () => {
   const currentBanner = banners[bannerIndex];
 
   const fetchCompanyData = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/api/companies/user/my-company`, {
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        setCompany(data.data);
-      } else {
-        setCompany({
-          id: 3,
-          name: 'Rumah Emas Demo Company',
-          uen: 'UEN202401001',
-          subscription_tier: 'gold',
-          wallet_balance: 15240,
-          ep_balance: 3450,
-          logo_url: '',
-          rating: 4.8,
-          billing_type: 'annual',
-          renewal_date: '2027-08-01',
+    const token = localStorage.getItem('token');
+    // Retry on a transient failure — the dashboard fires many calls on load and
+    // can rate-limit (429) its own company fetch. The old code fell straight to
+    // fabricated GOLD data on any non-ok response, so a Platinum company saw
+    // "Gold Partner" whenever the load was busy. Never substitute a fake tier;
+    // retry, and on genuine failure leave the tier unknown so the header shows a
+    // neutral state rather than a wrong plan.
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const res = await fetch(`${API_URL}/api/companies/user/my-company`, {
+          headers: { 'Authorization': `Bearer ${token}` },
         });
+        if (res.ok) {
+          const data = await res.json();
+          setCompany(data.data);
+          setLoading(false);
+          return;
+        }
+        // 429/503 are transient — wait and retry. Other codes are not.
+        if (res.status !== 429 && res.status !== 503) break;
+        await new Promise((r) => setTimeout(r, 600 * (attempt + 1)));
+      } catch (err) {
+        console.error('Error fetching company data (attempt ' + (attempt + 1) + '):', err);
+        await new Promise((r) => setTimeout(r, 600 * (attempt + 1)));
       }
-    } catch (err) {
-      console.error('Error fetching company data:', err);
-      setCompany({
-        id: 3,
-        name: 'Rumah Emas Demo Company',
-        uen: 'UEN202401001',
-        subscription_tier: 'gold',
-        wallet_balance: 15240,
-        ep_balance: 3450,
-        logo_url: '',
-        billing_type: 'annual',
-        renewal_date: '2027-08-01',
-        rating: 4.8,
-      });
-    } finally {
-      setLoading(false);
     }
+    // Could not load. Keep the identity but leave the tier UNKNOWN, so the plan
+    // header shows a neutral placeholder instead of a wrong hardcoded tier.
+    setCompany((prev) => prev ?? {
+      id: 3,
+      name: 'Rumah Emas Demo Company',
+      uen: 'UEN202401001',
+      subscription_tier: undefined as any,
+      logo_url: '',
+    } as any);
+    setLoading(false);
   };
 
   const handleLogout = () => {
@@ -624,7 +620,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                     <h3>🏅 Partner Tier</h3>
                   </div>
                   <div className="kpi-bottom">
-                    <div className="kpi-value">{stats.partnerTier}</div>
+                    <div className="kpi-value">{company?.subscription_tier ? company.subscription_tier.charAt(0).toUpperCase() + company.subscription_tier.slice(1) : stats.partnerTier}</div>
                     <div className="kpi-description">Premium status</div>
                   </div>
                 </div>
@@ -635,7 +631,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                 <div className="brief-content">
                   <div className="brief-left">
                     <h3>Active Subscription</h3>
-                    <p className="plan-name">{company?.subscription_tier?.toUpperCase() || 'GOLD'} Partner</p>
+                    <p className="plan-name">{company?.subscription_tier ? `${company.subscription_tier.toUpperCase()} Partner` : 'Loading plan…'}</p>
                     <p className="plan-status">● Active</p>
                     {/* Live ad-credit balance and milestone progress from the
                         real subscription, replacing the hardcoded per-tier text. */}

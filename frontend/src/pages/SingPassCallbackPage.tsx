@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { getStoredReferral, clearStoredReferral } from '../utils/referralCapture';
@@ -16,7 +16,25 @@ export default function SingPassCallbackPage({ onLogin }: SingPassCallbackPagePr
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
+  /**
+   * Guards against running the exchange twice.
+   *
+   * React StrictMode double-invokes effects in development, and both passes
+   * raced the same authorization code: the first created the account and
+   * stored a real token, the second got "user already exists" back and
+   * overwrote that token with a fabricated one. A referred friend signing up
+   * ended up logged in with a token the backend rejects — the account existed,
+   * the referral was credited, and nothing they did afterwards worked.
+   *
+   * A real authorization code is single-use anyway, so exchanging it once is
+   * correct regardless of StrictMode.
+   */
+  const exchangeStarted = useRef(false);
+
   useEffect(() => {
+    if (exchangeStarted.current) return;
+    exchangeStarted.current = true;
+
     const handleCallback = async () => {
       try {
         // Get authorization code from SingPass redirect
@@ -57,6 +75,8 @@ export default function SingPassCallbackPage({ onLogin }: SingPassCallbackPagePr
           setMessage('Verifying identity...');
 
           const singpassData = response.data.data;
+          // Present only when this identity already has an account.
+          const session = response.data.session;
           const mode = localStorage.getItem('singpass_mode') || 'signin';
 
           // Check if user exists or create new account
@@ -104,20 +124,14 @@ export default function SingPassCallbackPage({ onLogin }: SingPassCallbackPagePr
                 setTimeout(() => navigate('/auth/verification'), 500);
               }
             } catch (signupErr: any) {
-              // If user already exists (409), just log them in
-              if (signupErr.response?.status === 409) {
+              // Already registered — sign them in with the session the
+              // callback issued, rather than the fabricated token and the
+              // made-up `id: 1` user object this used to store.
+              if (signupErr.response?.status === 409 && session) {
                 setMessage('Account already exists, signing in...');
-                localStorage.setItem('token', 'mock_token_' + Date.now());
-                localStorage.setItem('user', JSON.stringify({
-                  id: 1,
-                  nric_hash: singpassData.sub,
-                  display_name: singpassData.name,
-                  email: singpassData.email,
-                  mobile: singpassData.phone_number,
-                  role: 'asker',
-                  singpass_verified: true,
-                }));
-                onLogin('asker');
+                localStorage.setItem('token', session.token);
+                localStorage.setItem('user', JSON.stringify(session.user));
+                onLogin(session.user.role || 'asker');
                 setMessage('Login successful!');
                 setLoading(false);
                 setTimeout(() => navigate('/home'), 500);
@@ -126,19 +140,25 @@ export default function SingPassCallbackPage({ onLogin }: SingPassCallbackPagePr
               }
             }
           } else {
-            // Sign in existing user
+            /*
+             * Sign in an existing user.
+             *
+             * This read `response.data.data.token`, which never existed — the
+             * callback returned the Singpass identity and nothing more — so it
+             * always fell through to `'mock_token_' + Date.now()`. Every
+             * Singpass sign-in has stored a token the backend rejects, along
+             * with a hardcoded `id: 1` that belongs to whoever happens to be
+             * the first row in the users table.
+             */
+            if (!session) {
+              setError('No Errandify account is linked to this SingPass identity yet. Please sign up first.');
+              setLoading(false);
+              return;
+            }
             setMessage('Signing in...');
-            localStorage.setItem('token', response.data.data.token || 'mock_token_' + Date.now());
-            localStorage.setItem('user', JSON.stringify({
-              id: 1,
-              nric_hash: singpassData.sub,
-              display_name: singpassData.name,
-              email: singpassData.email,
-              mobile: singpassData.phone_number,
-              role: 'asker',
-              singpass_verified: true,
-            }));
-            onLogin('asker');
+            localStorage.setItem('token', session.token);
+            localStorage.setItem('user', JSON.stringify(session.user));
+            onLogin(session.user.role || 'asker');
             setMessage('Login successful!');
             setLoading(false);
             setTimeout(() => navigate('/home'), 500);

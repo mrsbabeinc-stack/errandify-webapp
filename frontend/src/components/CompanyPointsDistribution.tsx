@@ -1,60 +1,105 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 interface Employee {
   id: number;
   name: string;
-  alias: string;
-  role: 'owner' | 'manager' | 'employee';
+  role: string;
   pointsBalance: number;
+  totalReceived: number;
 }
 
 interface PointsDistribution {
   id: number;
-  employeeId: number;
   employeeName: string;
   pointsAwarded: number;
   reason: string;
   distributedBy: string;
   distributedDate: string;
-  status: 'pending' | 'completed';
 }
 
-const CompanyPointsDistribution: React.FC = () => {
-  const [employees, setEmployees] = useState<Employee[]>([
-    { id: 1, name: 'Jordan Smith', alias: 'jordan_s', role: 'manager', pointsBalance: 2500 },
-    { id: 2, name: 'Ava Johnson', alias: 'ava_j', role: 'employee', pointsBalance: 1800 },
-    { id: 3, name: 'Liam Brown', alias: 'liam_b', role: 'employee', pointsBalance: 2100 },
-    { id: 4, name: 'Mason Wilson', alias: 'mason_w', role: 'employee', pointsBalance: 1600 },
-  ]);
+interface Props {
+  companyId?: number | null;
+}
 
-  const [distributions, setDistributions] = useState<PointsDistribution[]>([
-    {
-      id: 1,
-      employeeId: 1,
-      employeeName: 'Jordan Smith',
-      pointsAwarded: 500,
-      reason: 'Excellent errand completion',
-      distributedBy: 'Loh Kean Yew',
-      distributedDate: '2026-07-10',
-      status: 'completed',
-    },
-    {
-      id: 2,
-      employeeId: 2,
-      employeeName: 'Ava Johnson',
-      pointsAwarded: 250,
-      reason: 'Monthly bonus',
-      distributedBy: 'Loh Kean Yew',
-      distributedDate: '2026-07-11',
-      status: 'completed',
-    },
-  ]);
+/**
+ * Distributing EP used to be a pure setState: the "Distribute" button pushed a
+ * row into local state and showed it as completed, while the company balance
+ * never moved and the staff member never received anything. The balance,
+ * the team and the history shown here were all hardcoded too.
+ *
+ * Now backed by /api/companies/:id/points (read) and .../points/allocate
+ * (write), which moves the EP inside one transaction.
+ */
+const CompanyPointsDistribution: React.FC<Props> = ({ companyId: companyIdProp }) => {
+  const [companyId, setCompanyId] = useState<number | null>(companyIdProp ?? null);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [distributions, setDistributions] = useState<PointsDistribution[]>([]);
+  const [companyBalance, setCompanyBalance] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
   const [showModal, setShowModal] = useState(false);
   const [selectedEmployees, setSelectedEmployees] = useState<number[]>([]);
   const [pointsPerEmployee, setPointsPerEmployee] = useState('');
   const [reason, setReason] = useState('');
-  const [companyBalance] = useState(50000);
+
+  const token = () => localStorage.getItem('token');
+
+  // Resolve the company when the parent doesn't pass one
+  useEffect(() => {
+    if (companyIdProp) { setCompanyId(companyIdProp); return; }
+    (async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/companies/user/my-company`, {
+          headers: { Authorization: `Bearer ${token()}` },
+        });
+        if (res.ok) {
+          const body = await res.json();
+          if (body.data?.id) setCompanyId(body.data.id);
+          else setLoading(false);
+        } else setLoading(false);
+      } catch { setLoading(false); }
+    })();
+  }, [companyIdProp]);
+
+  const load = useCallback(async () => {
+    if (!companyId) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/api/companies/${companyId}/points`, {
+        headers: { Authorization: `Bearer ${token()}` },
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) { setError(body.error || 'Could not load points'); return; }
+
+      setCompanyBalance(body.data?.companyBalance ?? 0);
+      setEmployees((body.data?.staff || []).map((s: any) => ({
+        id: s.user_id,
+        name: s.name,
+        role: s.role,
+        pointsBalance: s.staff_points ?? 0,
+        totalReceived: s.total_received ?? 0,
+      })));
+      setDistributions((body.data?.history || []).map((h: any) => ({
+        id: h.id,
+        employeeName: h.staff_name,
+        pointsAwarded: h.points,
+        reason: h.reason || '—',
+        distributedBy: h.allocated_by_name || '—',
+        distributedDate: new Date(h.created_at).toLocaleDateString(),
+      })));
+      setError('');
+    } catch {
+      setError('Could not load points');
+    } finally {
+      setLoading(false);
+    }
+  }, [companyId]);
+
+  useEffect(() => { load(); }, [load]);
 
   const toggleEmployeeSelection = (employeeId: number) => {
     setSelectedEmployees(prev =>
@@ -64,37 +109,41 @@ const CompanyPointsDistribution: React.FC = () => {
     );
   };
 
-  const handleDistribute = () => {
+  const handleDistribute = async () => {
     const points = parseInt(pointsPerEmployee) || 0;
-    const totalPoints = points * selectedEmployees.length;
+    if (!companyId || selectedEmployees.length === 0 || points <= 0) return;
 
-    if (totalPoints > companyBalance) {
-      alert('Insufficient company balance');
-      return;
+    setSubmitting(true);
+    setError('');
+    try {
+      const res = await fetch(`${API_URL}/api/companies/${companyId}/points/allocate`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token()}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          staffUserIds: selectedEmployees,
+          pointsEach: points,
+          reason,
+        }),
+      });
+      const body = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        // Surface the server's reason — the balance check lives there, where it
+        // can be enforced, not in this component
+        setError(body.error || 'Could not distribute those points');
+        return;
+      }
+
+      setSelectedEmployees([]);
+      setPointsPerEmployee('');
+      setReason('');
+      setShowModal(false);
+      await load();
+    } catch {
+      setError('Could not distribute those points');
+    } finally {
+      setSubmitting(false);
     }
-
-    const newDistributions = selectedEmployees.map((empId, idx) => ({
-      id: distributions.length + idx + 1,
-      employeeId: empId,
-      employeeName: employees.find(e => e.id === empId)?.name || '',
-      pointsAwarded: points,
-      reason,
-      distributedBy: 'Loh Kean Yew',
-      distributedDate: new Date().toISOString().split('T')[0],
-      status: 'pending' as const,
-    }));
-
-    setDistributions([...distributions, ...newDistributions]);
-    setSelectedEmployees([]);
-    setPointsPerEmployee('');
-    setReason('');
-    setShowModal(false);
-  };
-
-  const handleApprove = (distributionId: number) => {
-    setDistributions(distributions.map(d =>
-      d.id === distributionId ? { ...d, status: 'completed' } : d
-    ));
   };
 
   const totalPoints = selectedEmployees.length * (parseInt(pointsPerEmployee) || 0);
@@ -116,36 +165,34 @@ const CompanyPointsDistribution: React.FC = () => {
         </div>
       </div>
 
+      {error && <div className="points-error">{error}</div>}
+
       {/* Distribution History */}
       <div className="distribution-history">
         <h3>Distribution History</h3>
         <div className="history-list">
+          {loading && <p className="points-empty">Loading…</p>}
+          {!loading && distributions.length === 0 && (
+            <p className="points-empty">No points distributed yet.</p>
+          )}
+          {/* Allocation is immediate and atomic on the server, so there is no
+              pending state to approve — every row here is money that moved. */}
           {distributions.map(dist => (
-            <div key={dist.id} className={`history-item ${dist.status}`}>
+            <div key={dist.id} className="history-item completed">
               <div className="item-content">
                 <div className="item-header">
                   <h4>{dist.employeeName}</h4>
-                  <span className={`status-badge ${dist.status}`}>
-                    {dist.status === 'completed' ? '✓ Completed' : '⏳ Pending'}
-                  </span>
+                  <span className="status-badge completed">✓ Completed</span>
                 </div>
                 <div className="item-details">
                   <span className="reason">{dist.reason}</span>
-                  <span className="date">{dist.distributedDate}</span>
+                  <span className="date">{dist.distributedDate} · by {dist.distributedBy}</span>
                 </div>
               </div>
               <div className="points-amount">
                 <span className="amount">+{dist.pointsAwarded}</span>
                 <span className="ep">EP</span>
               </div>
-              {dist.status === 'pending' && (
-                <button
-                  className="btn-approve-small"
-                  onClick={() => handleApprove(dist.id)}
-                >
-                  Approve
-                </button>
-              )}
             </div>
           ))}
         </div>
@@ -164,6 +211,11 @@ const CompanyPointsDistribution: React.FC = () => {
               <div className="form-section">
                 <h4>Select Employees</h4>
                 <div className="employee-list">
+                  {employees.length === 0 && (
+                    <p className="points-empty">
+                      Nobody on the team yet — invite staff from My Staff first.
+                    </p>
+                  )}
                   {employees.map(emp => (
                     <label key={emp.id} className="employee-checkbox">
                       <input
@@ -248,9 +300,15 @@ const CompanyPointsDistribution: React.FC = () => {
                 <button
                   className="btn-primary"
                   onClick={handleDistribute}
-                  disabled={selectedEmployees.length === 0 || !pointsPerEmployee || !reason}
+                  disabled={
+                    submitting ||
+                    selectedEmployees.length === 0 ||
+                    !pointsPerEmployee ||
+                    !reason ||
+                    totalPoints > companyBalance
+                  }
                 >
-                  Distribute
+                  {submitting ? 'Sending…' : 'Distribute'}
                 </button>
                 <button className="btn-secondary" onClick={() => setShowModal(false)}>
                   Cancel
@@ -262,6 +320,22 @@ const CompanyPointsDistribution: React.FC = () => {
       )}
 
       <style>{`
+        .points-error {
+          background: #FEF2F2;
+          border: 1px solid #FECACA;
+          color: #B91C1C;
+          padding: 12px 16px;
+          border-radius: 8px;
+          margin-bottom: 16px;
+          font-size: 14px;
+        }
+
+        .points-empty {
+          color: #6B7280;
+          font-size: 14px;
+          margin: 12px 0;
+        }
+
         .company-points-distribution {
           background: #fff;
           border-radius: 12px;

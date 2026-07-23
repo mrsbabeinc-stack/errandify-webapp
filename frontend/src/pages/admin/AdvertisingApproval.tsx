@@ -1,8 +1,43 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useToast, ToastContainer } from '../../components/Toast';
 import AdminLayout from '../../components/admin/AdminLayout';
+
+/**
+ * routes/advertisingAdmin.ts has served this screen's whole workflow — queue,
+ * approve, reject, pause, end — the entire time. Nothing here called it: the
+ * list was `mockAds` and Approve/Reject only edited local state, so an admin
+ * could work through the queue and no campaign ever changed. (The endpoints
+ * were unreachable anyway until the router's guard was fixed.)
+ */
+const ADMIN_ADS = '/api/admin/advertising';
+
+const authHeaders = () => {
+  const token = localStorage.getItem('token');
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
+/** campaigns row -> the shape this screen renders. */
+const toAdvertisement = (c: any): Advertisement => ({
+  id: String(c.id),
+  companyId: String(c.company_id ?? ''),
+  companyName: c.company_name || `Company ${c.company_id}`,
+  headline: c.title || '',
+  description: c.description || '',
+  heroImageUrl: c.image_url || '',
+  startDate: c.starts_at || '',
+  endDate: c.ends_at || '',
+  duration: c.duration_days ?? 0,
+  placements: [],
+  // 'submitted' is what the backend calls a campaign awaiting a decision.
+  status: c.status === 'submitted' ? 'pending' : c.status,
+  submittedAt: c.submitted_at || c.created_at || '',
+  approvedAt: c.approved_at || undefined,
+  rejectionReason: c.rejection_reason || undefined,
+  budget: Number(c.budget ?? 0),
+  spent: Number(c.spent ?? 0),
+});
 
 interface Advertisement {
   id: string;
@@ -24,80 +59,68 @@ interface Advertisement {
   impressions?: number;
 }
 
-const mockAds: Advertisement[] = [
-  {
-    id: 'ad-001',
-    companyId: 'comp-001',
-    companyName: 'ProClean Services',
-    headline: 'Summer Cleaning Special',
-    description: 'Professional home cleaning services with 20% discount',
-    heroImageUrl: 'https://via.placeholder.com/1200x400?text=ProClean+Summer+Special',
-    startDate: '2026-07-15',
-    endDate: '2026-08-31',
-    duration: 47,
-    placements: ['Homepage Banner', 'Browse Sidebar', 'Email Newsletter'],
-    status: 'pending',
-    submittedAt: '2026-07-10 14:30',
-    budget: 500,
-  },
-  {
-    id: 'ad-002',
-    companyId: 'comp-002',
-    companyName: 'FastGo Delivery',
-    headline: 'Fast & Reliable Delivery',
-    description: 'Same-day delivery across Singapore',
-    heroImageUrl: 'https://via.placeholder.com/1200x400?text=FastGo+Delivery',
-    startDate: '2026-06-15',
-    endDate: '2026-07-31',
-    duration: 46,
-    placements: ['Homepage Banner'],
-    status: 'approved',
-    submittedAt: '2026-06-10 09:15',
-    approvedAt: '2026-06-11 10:00',
-    budget: 200,
-    spent: 185,
-    impressions: 5420,
-  },
-  {
-    id: 'ad-003',
-    companyId: 'comp-003',
-    companyName: 'Elite Care Services',
-    headline: 'Healthcare at Your Doorstep',
-    description: 'Professional healthcare and wellness services',
-    heroImageUrl: 'https://via.placeholder.com/1200x400?text=Elite+Care',
-    startDate: '2026-07-20',
-    endDate: '2026-09-15',
-    duration: 57,
-    placements: ['Homepage Banner', 'Browse Sidebar', 'Company Profile'],
-    status: 'rejected',
-    submittedAt: '2026-07-09 16:45',
-    rejectionReason: 'Contact information found in description',
-    budget: 750,
-  },
-];
 
 export const AdvertisingApproval: React.FC = () => {
-  const [ads, setAds] = useState<Advertisement[]>(mockAds);
+  // Declared up here because loadAds closes over showToast.
+  const navigate = useNavigate();
+  const { toasts, showToast, removeToast } = useToast();
+
+  const [ads, setAds] = useState<Advertisement[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>('pending');
   const [selectedAd, setSelectedAd] = useState<Advertisement | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
 
-  const filteredAds = useMemo(() => {
-    if (!filterStatus) return ads;
-    return ads.filter((ad) => ad.status === filterStatus);
-  }, [ads, filterStatus]);
+  // useToast() builds a new showToast on every render, so depending on it below
+  // would give useCallback a new identity each time and re-fire the effect on
+  // every render. Reach it through a ref so `loadAds` only changes when it must.
+  const toast = useRef(showToast);
+  toast.current = showToast;
 
-  const handleApprove = (ad: Advertisement) => {
-    setAds(
-      ads.map((a) =>
-        a.id === ad.id
-          ? { ...a, status: 'approved', approvedAt: new Date().toLocaleString() }
-          : a
-      )
-    );
-    setShowDetailModal(false);
+  // The queue endpoint returns only 'submitted'. Any other filter has to ask
+  // for that status explicitly, otherwise switching tabs would show nothing.
+  const loadAds = useCallback(async (status: string) => {
+    setLoading(true);
+    try {
+      const backendStatus = status === 'pending' ? 'submitted' : status;
+      const { data } = await axios.get(`${ADMIN_ADS}/campaigns`, {
+        headers: authHeaders(),
+        params: status ? { status: backendStatus } : undefined,
+      });
+      setAds((data.campaigns || []).map(toAdvertisement));
+    } catch (err: any) {
+      console.error('[AdvertisingApproval] Failed to load campaigns:', err);
+      toast.current(`⚠️ Could not load campaigns: ${err.response?.data?.error || err.message}`, 'error');
+      setAds([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { loadAds(filterStatus); }, [filterStatus, loadAds]);
+
+  // The list already reflects the filter the server applied.
+  const filteredAds = ads;
+
+  const handleApprove = async (ad: Advertisement) => {
+    setBusy(true);
+    try {
+      await axios.post(`${ADMIN_ADS}/approve`, { campaign_id: Number(ad.id) }, { headers: authHeaders() });
+      showToast(`✅ Approved "${ad.headline}"`, 'success');
+      setShowDetailModal(false);
+      await loadAds(filterStatus);
+    } catch (err: any) {
+      // 402 is the service refusing because the Stripe charge failed — the
+      // campaign is deliberately left unapproved, so say so rather than
+      // showing it as approved.
+      console.error('[AdvertisingApproval] Approve failed:', err);
+      showToast(`❌ ${err.response?.data?.error || err.message}`, 'error');
+    } finally {
+      setBusy(false);
+    }
   };
 
   const handleRejectClick = (ad: Advertisement) => {
@@ -106,17 +129,30 @@ export const AdvertisingApproval: React.FC = () => {
     setShowRejectModal(true);
   };
 
-  const confirmReject = () => {
+  const confirmReject = async () => {
     if (!selectedAd) return;
-    setAds(
-      ads.map((a) =>
-        a.id === selectedAd.id
-          ? { ...a, status: 'rejected', rejectionReason }
-          : a
-      )
-    );
-    setShowRejectModal(false);
-    setShowDetailModal(false);
+    // Matches the server's own rule, so the advertiser always gets a reason.
+    if (rejectionReason.trim().length < 10) {
+      showToast('❌ Give a rejection reason of at least 10 characters', 'error');
+      return;
+    }
+    setBusy(true);
+    try {
+      await axios.post(
+        `${ADMIN_ADS}/reject`,
+        { campaign_id: Number(selectedAd.id), rejection_reason: rejectionReason.trim() },
+        { headers: authHeaders() }
+      );
+      showToast(`✅ Rejected "${selectedAd.headline}"`, 'success');
+      setShowRejectModal(false);
+      setShowDetailModal(false);
+      await loadAds(filterStatus);
+    } catch (err: any) {
+      console.error('[AdvertisingApproval] Reject failed:', err);
+      showToast(`❌ ${err.response?.data?.error || err.message}`, 'error');
+    } finally {
+      setBusy(false);
+    }
   };
 
   const getStatusBadgeColor = (status: string) => {
@@ -136,9 +172,6 @@ export const AdvertisingApproval: React.FC = () => {
     rejected: ads.filter((a) => a.status === 'rejected').length,
     live: ads.filter((a) => a.status === 'live').length,
   };
-
-  const navigate = useNavigate();
-  const { toasts, showToast, removeToast } = useToast();
 
   return (
     <AdminLayout>
@@ -202,7 +235,11 @@ export const AdvertisingApproval: React.FC = () => {
       </div>
 
       <div className="ads-list">
-        {filteredAds.length > 0 ? (
+        {loading ? (
+          <div className="empty-state">
+            <p>Loading campaigns…</p>
+          </div>
+        ) : filteredAds.length > 0 ? (
           filteredAds.map((ad) => (
             <div key={ad.id} className="ad-card">
               <div className="ad-card-image">
@@ -279,15 +316,17 @@ export const AdvertisingApproval: React.FC = () => {
                   <>
                     <button
                       className="btn-success"
+                      disabled={busy}
                       onClick={() => {
                         setSelectedAd(ad);
                         handleApprove(ad);
                       }}
                     >
-                      Approve
+                      {busy ? 'Working…' : 'Approve'}
                     </button>
                     <button
                       className="btn-danger"
+                      disabled={busy}
                       onClick={() => handleRejectClick(ad)}
                     >
                       Reject
@@ -394,8 +433,8 @@ export const AdvertisingApproval: React.FC = () => {
               </button>
               {selectedAd.status === 'pending' && (
                 <>
-                  <button className="btn-success" onClick={() => handleApprove(selectedAd)}>
-                    Approve
+                  <button className="btn-success" disabled={busy} onClick={() => handleApprove(selectedAd)}>
+                    {busy ? 'Working…' : 'Approve'}
                   </button>
                   <button className="btn-danger" onClick={() => handleRejectClick(selectedAd)}>
                     Reject
@@ -431,8 +470,8 @@ export const AdvertisingApproval: React.FC = () => {
               <button className="btn-secondary" onClick={() => setShowRejectModal(false)}>
                 Cancel
               </button>
-              <button className="btn-danger" onClick={confirmReject} disabled={!rejectionReason.trim()}>
-                Reject
+              <button className="btn-danger" onClick={confirmReject} disabled={busy || rejectionReason.trim().length < 10}>
+                {busy ? 'Working…' : 'Reject'}
               </button>
             </div>
           </div>
