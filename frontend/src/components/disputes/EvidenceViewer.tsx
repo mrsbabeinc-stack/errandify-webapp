@@ -15,6 +15,8 @@ interface Evidence {
   aiConfidence?: number;
   aiVerdictHint?: string;
   url?: string;
+  isMine?: boolean;
+  mime?: string | null;
 }
 
 interface EvidenceViewerProps {
@@ -38,6 +40,7 @@ export function EvidenceViewer({
   const [error, setError] = useState('');
   const [filter, setFilter] = useState<'all' | 'doer' | 'company'>('all');
   const [dragOver, setDragOver] = useState(false);
+  const [preview, setPreview] = useState<{ name: string; mime: string; dataUrl: string } | null>(null);
 
   useEffect(() => {
     fetchEvidence();
@@ -62,15 +65,23 @@ export function EvidenceViewer({
     }
   };
 
+  // Must match the server: it takes photos and PDFs at up to 6MB each. The old
+  // 50MB check here passed files the server would always reject.
+  const ACCEPTED = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'application/pdf'];
+  const MAX_BYTES = 6_000_000;
+
   const handleFileSelect = async (files: FileList | null) => {
     if (!files || !files.length) return;
 
-    // Validate files
     const validFiles: File[] = [];
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      if (file.size > 50 * 1024 * 1024) {
-        setError(`${file.name} exceeds 50MB limit`);
+      if (!ACCEPTED.includes(file.type)) {
+        setError(`${file.name} is not a photo or a PDF.`);
+        continue;
+      }
+      if (file.size > MAX_BYTES) {
+        setError(`${file.name} is ${(file.size / 1e6).toFixed(1)}MB — the limit is 6MB.`);
         continue;
       }
       validFiles.push(file);
@@ -81,20 +92,37 @@ export function EvidenceViewer({
     await uploadEvidence(validFiles);
   };
 
+  const readAsDataUrl = (file: File) =>
+    new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(new Error(`Could not read ${file.name}`));
+      reader.readAsDataURL(file);
+    });
+
+  // Sent as base64 JSON, not multipart. There is no object storage in this app
+  // and no multipart parser mounted — the server stores the bytes alongside the
+  // dispute, the same way the ACRA company document works.
   const uploadEvidence = async (files: File[]) => {
     setUploading(true);
     setError('');
 
     try {
-      const formData = new FormData();
-      files.forEach((file) => {
-        formData.append('files', file);
-      });
+      const payload = await Promise.all(
+        files.map(async (file) => ({
+          name: file.name,
+          mime: file.type,
+          data: await readAsDataUrl(file),
+        }))
+      );
 
       const response = await fetch(`${API_URL}/api/disputes/${disputeId}/evidence`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-        body: formData,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({ files: payload }),
       });
 
       if (!response.ok) {
@@ -108,6 +136,68 @@ export function EvidenceViewer({
       setError(err.message);
     } finally {
       setUploading(false);
+    }
+  };
+
+  // The file bytes are not in the list response — ten 6MB photos would be a 60MB
+  // payload for a screen that only draws rows — so each one is fetched on
+  // demand. It also cannot be an <img src> or a plain download link: the route
+  // needs an Authorization header.
+  const loadFile = async (id: number) => {
+    const res = await fetch(`${API_URL}/api/disputes/${disputeId}/evidence/${id}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+    });
+    const body = await res.json();
+    if (!res.ok) throw new Error(body?.error || 'Could not load that file.');
+    return body.data as { dataUrl: string | null; fileName: string; mime: string };
+  };
+
+  const handleView = async (item: Evidence) => {
+    setError('');
+    try {
+      const file = await loadFile(item.id);
+      if (!file.dataUrl) {
+        setError('This file is no longer stored — only the record that it was submitted.');
+        return;
+      }
+      setPreview({ name: file.fileName || item.fileName, mime: file.mime, dataUrl: file.dataUrl });
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  const handleDownload = async (item: Evidence) => {
+    setError('');
+    try {
+      const file = await loadFile(item.id);
+      if (!file.dataUrl) {
+        setError('This file is no longer stored.');
+        return;
+      }
+      const a = document.createElement('a');
+      a.href = file.dataUrl;
+      a.download = file.fileName || item.fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  const handleDelete = async (item: Evidence) => {
+    if (!window.confirm(`Remove "${item.fileName}"? This cannot be undone.`)) return;
+    setError('');
+    try {
+      const res = await fetch(`${API_URL}/api/disputes/${disputeId}/evidence/${item.id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body?.error || 'Could not remove that.');
+      await fetchEvidence();
+    } catch (err: any) {
+      setError(err.message);
     }
   };
 
@@ -301,24 +391,28 @@ export function EvidenceViewer({
                     {item.url && (
                       <>
                         <button
+                          onClick={() => handleView(item)}
                           title="View"
                           className="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100 text-xl"
                         >
                           👁️
                         </button>
-                        <a
-                          href={item.url}
-                          download={item.fileName}
+                        <button
+                          onClick={() => handleDownload(item)}
                           title="Download"
                           className="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100 text-xl"
                         >
                           ⬇️
-                        </a>
+                        </button>
                       </>
                     )}
-                    {canUpload && userType !== 'admin' && (
+                    {/* Only your own, and only while the dispute is still open —
+                        the server enforces both, this just stops offering a
+                        button that would be refused. */}
+                    {canUpload && item.isMine && (
                       <button
-                        title="Delete"
+                        onClick={() => handleDelete(item)}
+                        title="Remove"
                         className="p-2 text-red-500 hover:text-red-700 rounded-lg hover:bg-red-50 text-xl"
                       >
                         🗑️
@@ -334,6 +428,29 @@ export function EvidenceViewer({
           </div>
         )}
       </div>
+
+      {preview && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50"
+          onClick={() => setPreview(null)}
+        >
+          <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center p-4 border-b">
+              <p className="font-semibold text-gray-800 truncate">{preview.name}</p>
+              <button onClick={() => setPreview(null)} className="text-2xl text-gray-500 hover:text-gray-800">
+                ×
+              </button>
+            </div>
+            <div className="p-4">
+              {preview.mime === 'application/pdf' ? (
+                <iframe title={preview.name} src={preview.dataUrl} className="w-full h-[70vh] border rounded" />
+              ) : (
+                <img src={preview.dataUrl} alt={preview.name} className="max-w-full rounded" />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

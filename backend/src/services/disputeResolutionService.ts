@@ -307,6 +307,13 @@ export async function createDispute(params: {
     const disputeId = result.rows[0].id;
     console.log(`[Disputes] Dispute created: ${disputeId} (Priority: ${priority}, Status: ${status})`);
 
+    // Every filing path goes through here, so this is where the errand learns it
+    // is in dispute. It used to be done by the POST /api/disputes route only,
+    // which meant a dispute filed the other way — a staff member raising an issue
+    // and an owner approving it — held the payment but left the errand looking
+    // like any other completed job.
+    await markErrandDisputed(params.errandId);
+
     // Still used to decide whether the other side is asked for a statement
     const tierClassification = await classifyDisputeTier(disputeId);
 

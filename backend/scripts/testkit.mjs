@@ -16,13 +16,25 @@ const DB = 'errandify_local';
 const q = (sql) => execSync(`psql ${DB} -tAc ${JSON.stringify(sql.replace(/\s+/g, ' ').trim())}`, { encoding: 'utf8' })
   .split('\n').map(l => l.trim()).filter(Boolean)
   .filter(l => !/^(INSERT|UPDATE|DELETE|SELECT) \d/.test(l))[0] || '';
-const created = { errands: [], bids: [], orders: [], staff: [], users: [], notifs: [], disputes: [] };
+const created = { errands: [], bids: [], orders: [], staff: [], users: [], notifs: [], disputes: [], companies: [] };
 const rnd = () => Math.random().toString(36).slice(2, 11);
 
 export function makeUser({ name = 'ZZKIT user', role = 'doer' } = {}) {
   const id = q(`INSERT INTO users (display_name, mobile, nric_hash, role, status)
     VALUES ('${name}', '+650${Math.floor(1e8 + Math.random()*9e8)}', 'ZZKIT_${rnd()}', '${role}', 'active') RETURNING id`);
   created.users.push(id); return Number(id);
+}
+
+/**
+ * A disposable company. Always INSERTs a new row with a random UEN — it will
+ * never find and reuse a real company, which is the mistake that once had a
+ * seeder overwrite a live owner.
+ */
+export function makeCompany(ownerUserId, { name = 'ZZKIT Co', certified = true } = {}) {
+  const id = q(`INSERT INTO companies (company_name, uen, owner_user_id, status, certified, certification_date)
+    VALUES ('${name} ${rnd()}', 'ZZKIT${Math.floor(1e7 + Math.random()*9e7)}X', ${ownerUserId},
+            'active', ${certified}, ${certified ? 'NOW()' : 'NULL'}) RETURNING id`);
+  created.companies.push(id); return Number(id);
 }
 
 /** Refuses if the user is already staff of that company — cannot overwrite. */
@@ -87,6 +99,12 @@ export function teardown() {
   del(`DELETE FROM errand_assignments WHERE errand_id = ANY('$IDS')`, created.errands);
   del(`DELETE FROM errands WHERE id = ANY('$IDS')`, created.errands);
   del(`DELETE FROM company_staff WHERE id = ANY('$IDS')`, created.staff);
+  if (created.companies.length) {
+    q(`DELETE FROM company_dispute_requests WHERE company_id = ANY('${ids(created.companies)}')`);
+    q(`DELETE FROM company_orders WHERE company_id = ANY('${ids(created.companies)}')`);
+    q(`DELETE FROM company_staff WHERE company_id = ANY('${ids(created.companies)}')`);
+  }
+  del(`DELETE FROM companies WHERE id = ANY('$IDS')`, created.companies);
   if (created.users.length) {
     q(`DELETE FROM screening_declarations WHERE user_id = ANY('${ids(created.users)}')`);
     q(`DELETE FROM user_category_restrictions WHERE user_id = ANY('${ids(created.users)}')`);

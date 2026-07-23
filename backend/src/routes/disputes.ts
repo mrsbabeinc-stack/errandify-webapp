@@ -17,7 +17,6 @@ import {
   classifyDisputeTier,
   holdPayment,
   releaseHeldPayment,
-  markErrandDisputed,
   closeErrandAfterDispute,
 } from '../services/disputeResolutionService.js';
 import { saveDisputeVerdict } from '../services/disputeVerdictService.js';
@@ -95,11 +94,9 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       return res.status(500).json({ error: 'Failed to create dispute' });
     }
 
-    // Hold payment during dispute, and make the errand itself say it is in
-    // dispute. Holding the money used to be the only signal, which left a
-    // disputed errand looking identical to a clean one on both parties' lists.
+    // The errand is marked disputed inside createDispute(), so every filing path
+    // gets it. This one still holds the payment.
     await holdPayment(parseInt(errandId), `Dispute #${result.disputeId} filed`);
-    await markErrandDisputed(parseInt(errandId));
 
     // Determine who filed the dispute and who should be notified
     const isAskerFiling = userId === errand.asker_id;
@@ -381,7 +378,11 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
 });
 
 // GET /api/disputes/:id/analysis - Get AI analysis (Level 2)
-router.get('/:id/analysis', authMiddleware, async (req: AuthRequest, res: Response) => {
+// Runs Hana over the case and returns her read of it. Admin-only: it was
+// behind authMiddleware alone, so any logged-in user could pull an analysis —
+// including the description and amounts — for any dispute id they guessed.
+// The only caller is the admin dispute screen.
+router.get('/:id/analysis', adminOnly, async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
 
@@ -395,7 +396,9 @@ router.get('/:id/analysis', authMiddleware, async (req: AuthRequest, res: Respon
 });
 
 // POST /api/disputes/:id/escalate - Escalate to Level 3
-router.post('/:id/escalate', authMiddleware, async (req: AuthRequest, res: Response) => {
+// Admin-only for the same reason: any logged-in user could escalate any
+// dispute and set its priority. No screen calls this — it is an operator tool.
+router.post('/:id/escalate', adminOnly, async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const { notes, priority } = req.body;
@@ -793,7 +796,8 @@ router.post('/:id/request-extension', authMiddleware, async (req: AuthRequest, r
     const { reason } = req.body;
 
     const dispute = await db.query(
-      `SELECT id, status, response_deadline, created_at FROM disputes WHERE id = $1`,
+      `SELECT id, status, response_deadline, created_at, defendant_user_id
+         FROM disputes WHERE id = $1`,
       [disputeId]
     );
 
@@ -802,6 +806,12 @@ router.post('/:id/request-extension', authMiddleware, async (req: AuthRequest, r
     }
 
     const d = dispute.rows[0];
+
+    // Only the person being asked to respond can ask for longer to respond.
+    // This was open to any logged-in user, on any dispute.
+    if (Number(d.defendant_user_id) !== parseInt(req.userId || '0', 10)) {
+      return res.status(403).json({ error: 'Only the person asked to respond can request more time.' });
+    }
     const now = new Date();
     const autoResolveTime = new Date(d.created_at.getTime() + 48 * 60 * 60 * 1000); // T+48h
 
@@ -1257,83 +1267,200 @@ router.get('/', adminOnly, async (req: AuthRequest, res: Response) => {
 
 // ============ EVIDENCE SUBMISSION ENDPOINTS ============
 
-// POST /api/disputes/:id/evidence - Submit evidence anytime during investigation (T+0 to T+48h)
+/**
+ * Who is allowed to touch this dispute's evidence, and as which side.
+ *
+ * Evidence is the most sensitive thing in the module — photos of homes, faces,
+ * vehicles, documents — so every read, write and delete goes through this rather
+ * than each handler rolling its own check.
+ */
+async function evidenceAccess(disputeId: number, userId: number) {
+  const result = await db.query(
+    `SELECT d.id, d.filed_by_user_id, d.defendant_user_id, d.raised_by_staff_id,
+            d.settlement_status, d.status,
+            e.asker_id, ab.doer_id
+       FROM disputes d
+       JOIN errands e ON e.id = d.errand_id
+       LEFT JOIN bids ab ON ab.id = e.accepted_bid_id
+      WHERE d.id = $1`,
+    [disputeId]
+  );
+  if (result.rows.length === 0) return { found: false as const };
+
+  const d = result.rows[0];
+  const party = [d.filed_by_user_id, d.defendant_user_id, d.raised_by_staff_id, d.asker_id, d.doer_id]
+    .filter(Boolean)
+    .map(Number)
+    .includes(userId);
+
+  let admin = false;
+  if (!party) {
+    const role = await db.query('SELECT role FROM users WHERE id = $1', [userId]);
+    admin = ['admin', 'super-admin', 'support_l2', 'support_l3'].includes(role.rows[0]?.role);
+  }
+
+  return { found: true as const, dispute: d, party, admin, allowed: party || admin };
+}
+
+// What a browser may send us, and how much of it. Deliberately narrow: these
+// are pictures of what happened, not an attachment store.
+const EVIDENCE_MIME = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'application/pdf'];
+const EVIDENCE_MAX_BYTES = 6_000_000; // ~6MB of decoded file per item
+const EVIDENCE_MAX_PER_PARTY = 10;
+
+// POST /api/disputes/:id/evidence — submit photos or a written note
+//
+// Sent as base64 data URLs in JSON, not multipart. That is the pattern this
+// codebase already uses for the one upload that works (the ACRA company
+// document): there is no object storage here — uploads.ts is still a stub
+// returning a placeholder URL — and no multipart parser is mounted. The old
+// handler read `req.files`, which was therefore always undefined, so every
+// upload since this route was written failed with a misleading validation error.
 router.post('/:id/evidence', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    // Not implemented, and it never was. This handler read `req.files`, but no
-    // multipart parser is mounted on this route, so it was always undefined and
-    // every upload 400'd with "At least one evidence file required". It also
-    // called `this.getFileType(...)`, which throws in a route handler.
-    //
-    // Wiring it up properly means choosing a parser and a storage target, which
-    // is a feature rather than a fix — so it now says so plainly instead of
-    // failing with a misleading validation error.
-    return res.status(501).json({
-      error: 'Evidence upload is not available yet. Please describe what happened in your response, and our team will ask for files if they are needed.',
+    const disputeId = parseInt(req.params.id, 10);
+    const userId = parseInt(req.userId || '0', 10);
+    const { files, description, gps } = req.body || {};
+
+    const access = await evidenceAccess(disputeId, userId);
+    if (!access.found) return res.status(404).json({ error: 'Dispute not found' });
+    if (!access.allowed) {
+      return res.status(403).json({ error: 'Only the people involved in this dispute can add evidence.' });
+    }
+
+    // Once the money has moved the case is closed; new evidence then is a
+    // support conversation, not a submission that could change an outcome.
+    if (access.dispute.settlement_status && access.dispute.settlement_status !== 'not_started') {
+      return res.status(409).json({
+        error: 'This dispute has already been settled, so evidence can no longer be added.',
+      });
+    }
+
+    const list: any[] = Array.isArray(files) ? files : [];
+    const note = typeof description === 'string' ? description.trim() : '';
+
+    if (list.length === 0 && !note) {
+      return res.status(400).json({ error: 'Add a photo or write what happened — one or the other.' });
+    }
+
+    const existing = await db.query(
+      `SELECT count(*)::int AS n FROM dispute_evidence
+        WHERE dispute_id = $1 AND submitted_by_user_id = $2 AND photo_data IS NOT NULL`,
+      [disputeId, userId]
+    );
+    if (Number(existing.rows[0].n) + list.length > EVIDENCE_MAX_PER_PARTY) {
+      return res.status(400).json({
+        error: `You can attach up to ${EVIDENCE_MAX_PER_PARTY} files. You already have ${existing.rows[0].n}.`,
+      });
+    }
+
+    // Validate everything BEFORE writing anything, so a bad third file does not
+    // leave the first two stored.
+    const staged: { mime: string; name: string; data: string; bytes: number }[] = [];
+    for (const f of list) {
+      const data = typeof f?.data === 'string' ? f.data : '';
+      const match = /^data:([a-z0-9/+.-]+);base64,/i.exec(data);
+      if (!match) {
+        return res.status(400).json({ error: `"${f?.name || 'A file'}" was not sent in a format we can read.` });
+      }
+      const mime = match[1].toLowerCase();
+      if (!EVIDENCE_MIME.includes(mime)) {
+        return res.status(400).json({
+          error: `We can take photos (JPEG, PNG, WebP) and PDFs. "${f?.name || 'That file'}" is ${mime}.`,
+        });
+      }
+      // 4 base64 chars encode 3 bytes; close enough to reject before decoding.
+      const bytes = Math.floor(((data.length - match[0].length) * 3) / 4);
+      if (bytes > EVIDENCE_MAX_BYTES) {
+        return res.status(400).json({
+          error: `"${f?.name || 'That file'}" is ${(bytes / 1e6).toFixed(1)}MB. The limit is ${EVIDENCE_MAX_BYTES / 1e6}MB per file.`,
+        });
+      }
+      staged.push({ mime, name: String(f?.name || 'evidence').slice(0, 255), data, bytes });
+    }
+
+    const inserted: number[] = [];
+    for (const f of staged) {
+      const row = await db.query(
+        `INSERT INTO dispute_evidence
+           (dispute_id, evidence_type, submitted_by_user_id, photo_data, photo_mime,
+            photo_filename, photo_bytes, photo_description, photo_timestamp,
+            gps_latitude, gps_longitude, gps_timestamp)
+         VALUES ($1, 'photo', $2, $3, $4, $5, $6, $7, NOW(), $8, $9, $10)
+         RETURNING id`,
+        [
+          disputeId, userId, f.data, f.mime, f.name, f.bytes, note || null,
+          gps?.latitude ?? null, gps?.longitude ?? null, gps?.timestamp ?? null,
+        ]
+      );
+      inserted.push(row.rows[0].id);
+    }
+
+    // A written statement with no photo is still evidence.
+    if (list.length === 0 && note) {
+      const row = await db.query(
+        `INSERT INTO dispute_evidence (dispute_id, evidence_type, submitted_by_user_id, description_text)
+         VALUES ($1, 'statement', $2, $3) RETURNING id`,
+        [disputeId, userId, note]
+      );
+      inserted.push(row.rows[0].id);
+    }
+
+    res.status(201).json({
+      success: true,
+      count: inserted.length,
+      evidenceIds: inserted,
+      message: 'Thanks — this has been added to the case.',
     });
   } catch (error: any) {
     console.error('[Disputes] Evidence submission error:', error);
-    res.status(400).json({ error: error.message || 'Failed to submit evidence' });
+    res.status(500).json({ error: 'Could not save that. Please try again.' });
   }
 });
 
-// GET /api/disputes/:id/evidence - Get all evidence for dispute
+// GET /api/disputes/:id/evidence — the list, metadata only
 //
-// Was routed through DisputeService, which is written against Sequelize while
-// this codebase uses raw pg — importing it crashed the server on boot. Queried
-// directly instead, so the shape the viewer expects is built here.
+// Deliberately does NOT include the file bytes. Ten 6MB photos would be a 60MB
+// JSON response for a screen that only needs to draw a list; the viewer pulls
+// each image from the detail endpoint below when it actually shows it.
 router.get('/:id/evidence', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const disputeId = Number(req.params.id);
-    const { party } = req.query; // Optional filter: 'doer' | 'company'
-
-    // Only people involved in the dispute may read its evidence
-    const access = await db.query(
-      `SELECT d.filed_by_user_id, d.defendant_user_id, d.raised_by_staff_id, e.asker_id, ab.doer_id
-         FROM disputes d
-         JOIN errands e ON e.id = d.errand_id
-         LEFT JOIN bids ab ON ab.id = e.accepted_bid_id
-        WHERE d.id = $1`,
-      [disputeId]
-    );
-    if (access.rows.length === 0) return res.status(404).json({ error: 'Dispute not found' });
-
-    const a = access.rows[0];
     const userId = parseInt(req.userId || '0', 10);
-    const involved = [a.filed_by_user_id, a.defendant_user_id, a.raised_by_staff_id, a.asker_id, a.doer_id]
-      .filter(Boolean)
-      .map(Number)
-      .includes(userId);
+    const { party } = req.query; // optional filter: 'doer' | 'company'
 
-    if (!involved) {
-      const role = await db.query('SELECT role FROM users WHERE id = $1', [userId]);
-      if (!['admin', 'super-admin', 'support_l2', 'support_l3'].includes(role.rows[0]?.role)) {
-        return res.status(403).json({ error: 'You are not involved in this dispute.' });
-      }
-    }
+    const access = await evidenceAccess(disputeId, userId);
+    if (!access.found) return res.status(404).json({ error: 'Dispute not found' });
+    if (!access.allowed) return res.status(403).json({ error: 'You are not involved in this dispute.' });
 
     const result = await db.query(
-      `SELECT ev.*, ab.doer_id
+      `SELECT ev.id, ev.evidence_type, ev.submitted_by_user_id, ev.submitted_at,
+              ev.photo_filename, ev.photo_mime, ev.photo_bytes, ev.photo_description,
+              ev.description_text, ev.gps_latitude, ev.gps_longitude,
+              (ev.photo_data IS NOT NULL) AS has_file
          FROM dispute_evidence ev
-         JOIN disputes d ON d.id = ev.dispute_id
-         JOIN errands e ON e.id = d.errand_id
-         LEFT JOIN bids ab ON ab.id = e.accepted_bid_id
         WHERE ev.dispute_id = $1
         ORDER BY ev.submitted_at DESC`,
       [disputeId]
     );
 
+    const doerId = Number(access.dispute.doer_id);
     const evidence = result.rows
       .map((e: any) => ({
         id: e.id,
-        submittedBy: Number(e.submitted_by_user_id) === Number(e.doer_id) ? 'doer' : 'company',
-        type: e.evidence_type === 'photo' ? 'photo' : 'text',
-        fileName: e.photo_url ? e.photo_url.split('/').pop() : `${e.evidence_type} note`,
-        size: 0,
+        submittedBy: Number(e.submitted_by_user_id) === doerId ? 'doer' : 'company',
+        isMine: Number(e.submitted_by_user_id) === userId,
+        type: e.has_file ? (e.photo_mime === 'application/pdf' ? 'document' : 'photo') : 'text',
+        fileName: e.photo_filename || `${e.evidence_type} note`,
+        mime: e.photo_mime || null,
+        size: Number(e.photo_bytes || 0),
         isCompressed: false,
         uploadedAt: e.submitted_at,
         aiStatus: 'COMPLETED',
-        url: e.photo_url || undefined,
+        note: e.photo_description || e.description_text || null,
+        gps: e.gps_latitude ? { latitude: Number(e.gps_latitude), longitude: Number(e.gps_longitude) } : null,
+        // Needs an Authorization header, so it is fetched rather than used as a src
+        url: e.has_file ? `/api/disputes/${disputeId}/evidence/${e.id}` : undefined,
       }))
       .filter((e: any) => (party === 'doer' || party === 'company' ? e.submittedBy === party : true));
 
@@ -1344,25 +1471,85 @@ router.get('/:id/evidence', authMiddleware, async (req: AuthRequest, res: Respon
   }
 });
 
-// GET /api/disputes/:id/evidence/:evidenceId - not built yet
-router.get('/:id/evidence/:evidenceId', authMiddleware, async (_req: AuthRequest, res: Response) => {
-  res.status(501).json({ error: 'Single evidence detail is not available yet.' });
+// GET /api/disputes/:id/evidence/:evidenceId — one file, as a data URL
+router.get('/:id/evidence/:evidenceId', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const disputeId = parseInt(req.params.id, 10);
+    const evidenceId = parseInt(req.params.evidenceId, 10);
+    const userId = parseInt(req.userId || '0', 10);
+
+    const access = await evidenceAccess(disputeId, userId);
+    if (!access.found) return res.status(404).json({ error: 'Dispute not found' });
+    if (!access.allowed) return res.status(403).json({ error: 'You are not involved in this dispute.' });
+
+    const result = await db.query(
+      `SELECT id, photo_data, photo_mime, photo_filename, photo_bytes, photo_description,
+              description_text, evidence_type, submitted_at
+         FROM dispute_evidence WHERE id = $1 AND dispute_id = $2`,
+      [evidenceId, disputeId]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Evidence not found' });
+
+    const e = result.rows[0];
+    res.json({
+      success: true,
+      data: {
+        id: e.id,
+        type: e.evidence_type,
+        fileName: e.photo_filename,
+        mime: e.photo_mime,
+        size: Number(e.photo_bytes || 0),
+        note: e.photo_description || e.description_text || null,
+        uploadedAt: e.submitted_at,
+        // Null once the retention window has stripped the image; the record of
+        // what was submitted survives it.
+        dataUrl: e.photo_data || null,
+      },
+    });
+  } catch (error: any) {
+    console.error('[Disputes] Evidence detail error:', error);
+    res.status(500).json({ error: 'Could not load that file' });
+  }
 });
 
-// DELETE /api/disputes/:id/evidence/:evidenceId - not built yet
+// DELETE /api/disputes/:id/evidence/:evidenceId
 //
-// This used to return {success: true, message: 'Evidence deleted - TODO'} while
-// deleting nothing, so callers believed evidence had been removed when it had not.
-router.delete('/:id/evidence/:evidenceId', authMiddleware, async (_req: AuthRequest, res: Response) => {
-  res.status(501).json({ error: 'Removing evidence is not available yet. Contact support if you need something taken down.' });
-});
+// Your own, and only while the dispute is still open. Once a decision has been
+// recorded the evidence is part of what was decided on, and letting a party pull
+// it afterwards would leave the reasoning referring to something that no longer
+// exists. Admins are not given a delete here either — a takedown request is a
+// retention decision, not a button.
+router.delete('/:id/evidence/:evidenceId', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const disputeId = parseInt(req.params.id, 10);
+    const evidenceId = parseInt(req.params.evidenceId, 10);
+    const userId = parseInt(req.userId || '0', 10);
 
-// Helper to determine file type from MIME type
-function getFileType(mimeType: string): 'photo' | 'video' | 'text' {
-  if (mimeType?.startsWith('image/')) return 'photo';
-  if (mimeType?.startsWith('video/')) return 'video';
-  return 'text';
-}
+    const access = await evidenceAccess(disputeId, userId);
+    if (!access.found) return res.status(404).json({ error: 'Dispute not found' });
+    if (!access.allowed) return res.status(403).json({ error: 'You are not involved in this dispute.' });
+
+    const owned = await db.query(
+      `SELECT submitted_by_user_id FROM dispute_evidence WHERE id = $1 AND dispute_id = $2`,
+      [evidenceId, disputeId]
+    );
+    if (owned.rows.length === 0) return res.status(404).json({ error: 'Evidence not found' });
+    if (Number(owned.rows[0].submitted_by_user_id) !== userId) {
+      return res.status(403).json({ error: 'You can only remove evidence you added yourself.' });
+    }
+    if (['resolved', 'closed'].includes(access.dispute.status)) {
+      return res.status(409).json({
+        error: 'This dispute has already been decided, so the evidence it was decided on cannot be removed.',
+      });
+    }
+
+    await db.query('DELETE FROM dispute_evidence WHERE id = $1 AND dispute_id = $2', [evidenceId, disputeId]);
+    res.json({ success: true, message: 'Removed.' });
+  } catch (error: any) {
+    console.error('[Disputes] Evidence delete error:', error);
+    res.status(500).json({ error: 'Could not remove that' });
+  }
+});
 
 // GET /api/disputes/:id/fee-preview?doerAmount=120 — live fee breakdown for the
 // resolution form, so the admin sees what the doer actually receives before
