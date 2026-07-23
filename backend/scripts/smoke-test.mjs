@@ -10,6 +10,13 @@
  *
  * Needs the server running and JWT_SECRET in .env. It only reads — nothing in
  * it creates, modifies or deletes data.
+ *
+ * GET /api/user-data/export is deliberately NOT checked here. It serves the
+ * PDPA s21 right of access and now records that the right was exercised in
+ * data_subject_requests, so calling it on every smoke run would file a fake
+ * access request against a real user and pollute the compliance record the
+ * Audit & Compliance screen reads. Exercise it with a disposable user instead
+ * (see the PDPA end-to-end script), not from a read-only health check.
  */
 import { tok, call } from './journey.mjs';
 const U = tok(2), A = tok(9,'admin'), O = tok(12);
@@ -21,7 +28,6 @@ const checks = [
   ['INDIVIDUAL','unread count','GET','/api/messages/unread-count',U],
   ['INDIVIDUAL','my ratings','GET','/api/ratings/user/2',U],
   ['INDIVIDUAL','rating summary','GET','/api/ratings/user/2/summary',U],
-  ['INDIVIDUAL','PDPA data export','GET','/api/user-data/export',U],
   ['INDIVIDUAL','deletion eligibility','GET','/api/users/deletion-eligibility',U],
   ['INDIVIDUAL','screening status','GET','/api/screening/status',U],
   ['INDIVIDUAL','referrals','GET','/api/referrals/me',U],

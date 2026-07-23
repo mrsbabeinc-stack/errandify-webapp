@@ -1043,6 +1043,21 @@ router.post('/delete-account', authMiddleware, async (req: AuthRequest, res: Res
     const result = await anonymiseAccount(userId, 'user_request');
     console.log(`[Deletion] user ${userId} anonymised — ${result.anonymisedFields} fields cleared`);
 
+    // The erasure itself worked, but nothing recorded that it had been asked
+    // for or what was done, so there was nothing to show afterwards. Written
+    // after the anonymisation so a refused or failed request is never logged as
+    // completed, and outside its transaction so bookkeeping cannot roll back a
+    // deletion the person is entitled to.
+    try {
+      await db.query(
+        `INSERT INTO data_subject_requests (user_id, request_type, status, completed_at, outcome)
+         VALUES ($1, 'erasure', 'completed', NOW(), $2)`,
+        [userId, `Account anonymised on request — ${result.anonymisedFields} fields cleared`]
+      );
+    } catch (logErr) {
+      console.error('[PDPA] Failed to record erasure request:', logErr);
+    }
+
     res.json({
       success: true,
       message: 'Your account is closed and your personal details have been removed.',

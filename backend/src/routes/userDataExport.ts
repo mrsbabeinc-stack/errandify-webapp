@@ -167,6 +167,20 @@ router.get('/export', authMiddleware, async (req: AuthRequest, res: Response) =>
       } : null,
     };
 
+    // Record that the s21 right of access was exercised and met. Written after
+    // the export is assembled, so a request that failed is not logged as
+    // fulfilled. Failing to log must not fail the export itself — the person is
+    // entitled to their data whether or not our bookkeeping works.
+    try {
+      await db.query(
+        `INSERT INTO data_subject_requests (user_id, request_type, status, completed_at, outcome)
+         VALUES ($1, 'access', 'completed', NOW(), $2)`,
+        [userId, `Data export served (${errandsResult.rows.length} errands, ${bidsResult.rows.length} offers)`]
+      );
+    } catch (logErr) {
+      console.error('[PDPA] Failed to record access request:', logErr);
+    }
+
     res.json({
       success: true,
       data: exportData,
@@ -177,104 +191,31 @@ router.get('/export', authMiddleware, async (req: AuthRequest, res: Response) =>
   }
 });
 
-// POST /api/user-data/delete - Delete account and anonymize data (PDPA right)
-router.post('/delete', authMiddleware, async (req: AuthRequest, res: Response) => {
-  try {
-    const userId = parseInt(req.userId || '0', 10);
-    const { password } = req.body;
-
-    if (!password) {
-      return res.status(400).json({ error: 'Password required for account deletion' });
-    }
-
-    // Verify password (implement proper password verification)
-    // For now, assume password verification happens in auth middleware
-    // In production, verify password before deletion
-
-    // Start transaction for data cleanup
-    await db.query('BEGIN');
-
-    try {
-      // Anonymize user profile
-      await db.query(
-        `UPDATE users
-         SET display_name = 'Deleted User',
-             email = NULL,
-             phone = NULL,
-             bio = NULL,
-             profile_image_url = NULL,
-             nric_hash = NULL,
-             password_hash = NULL,
-             kyc_status = 'deleted'
-         WHERE id = $1`,
-        [userId]
-      );
-
-      // Anonymize chat messages
-      await db.query(
-        'UPDATE chat_messages SET message = [DELETED] WHERE sender_id = $1',
-        [userId]
-      );
-
-      // Keep disputes and ratings (for platform records) but anonymize
-      await db.query(
-        `UPDATE disputes
-            SET filed_by_user_id = NULL, raised_by_id = NULL, raised_by_staff_id = NULL
-          WHERE filed_by_user_id = $1 OR raised_by_id = $1 OR raised_by_staff_id = $1`,
-        [userId]
-      );
-
-      // Delete personal notifications
-      await db.query(
-        'DELETE FROM notifications WHERE user_id = $1',
-        [userId]
-      );
-
-      // Delete notification preferences
-      await db.query(
-        'DELETE FROM notification_preferences WHERE user_id = $1',
-        [userId]
-      );
-
-      // Delete push subscriptions
-      await db.query(
-        'DELETE FROM push_subscriptions WHERE user_id = $1',
-        [userId]
-      );
-
-      // Delete screening declaration (user's right to be forgotten)
-      await db.query(
-        'DELETE FROM screening_declarations WHERE user_id = $1',
-        [userId]
-      );
-
-      // Delete category restrictions
-      await db.query(
-        'DELETE FROM user_category_restrictions WHERE user_id = $1',
-        [userId]
-      );
-
-      // Log deletion in audit table
-      await db.query(
-        `INSERT INTO audit_log (user_id, action, details, timestamp)
-         VALUES ($1, 'account_deletion', 'User requested account deletion', NOW())`,
-        [userId]
-      );
-
-      await db.query('COMMIT');
-
-      res.json({
-        success: true,
-        message: 'Account deleted successfully. Your data has been anonymized.',
-      });
-    } catch (error) {
-      await db.query('ROLLBACK');
-      throw error;
-    }
-  } catch (error) {
-    console.error('Delete account error:', error);
-    res.status(500).json({ error: 'Failed to delete account' });
-  }
+/*
+ * POST /api/user-data/delete has been removed.
+ *
+ * It was a second account-deletion path, and a broken one. Inside its
+ * transaction it did `INSERT INTO audit_log` — a table that does not exist in
+ * this database — so the insert threw, the transaction rolled back, and the
+ * anonymisation it had just performed was undone. Anyone calling it got a 500
+ * with their personal data fully intact, having been told they were deleting
+ * their account. Nothing in the frontend called it, which is the only reason
+ * this was not a live PDPA s25 failure.
+ *
+ * The real path is POST /api/users/delete-account, which checks deletion
+ * blockers first and delegates to services/accountDeletion.anonymiseAccount().
+ * That one works, is what the app calls, and now records the request in
+ * data_subject_requests. Two deletion paths that anonymise different columns is
+ * not a redundancy worth keeping.
+ *
+ * A 410 rather than a silent removal, so any caller nobody knows about gets
+ * told where to go instead of a bare 404.
+ */
+router.post('/delete', authMiddleware, async (_req: AuthRequest, res: Response) => {
+  res.status(410).json({
+    error: 'This endpoint has been removed. Use POST /api/users/delete-account.',
+    replacement: '/api/users/delete-account',
+  });
 });
 
 export default router;
