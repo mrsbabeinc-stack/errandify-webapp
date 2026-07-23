@@ -47,17 +47,29 @@ const STRIPE_PRICES: Record<string, Record<string, string>> = {
  */
 router.get('/status', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    // Return demo subscription data for silver tier with updated pricing
+    // The real subscription, not a hardcoded silver demo. This endpoint used to
+    // return silver for everyone regardless of their tier, so a Platinum company
+    // saw the wrong plan, wrong commission and wrong benefits on its own screen.
+    const companyId = parseInt((req as any).companyId || '0', 10);
+    const { getCompanySubscription, getTierConfig } = await import('../services/subscriptionService.js');
+    const sub: any = companyId ? await getCompanySubscription(companyId) : null;
+    const active = !!sub && (!sub.expires_at || new Date(sub.expires_at) > new Date());
+
+    if (!active || !sub?.subscription_tier) {
+      return res.json({ success: true, tier: null, is_active: false, milestone_progress: [] });
+    }
+
+    const cfg: any = await getTierConfig(sub.subscription_tier).catch(() => null);
     res.json({
       success: true,
-      tier: 'silver',
-      billing_type: 'annual',
-      renewal_date: '2027-07-19T00:00:00Z',
-      commission_rate: 0.18,
-      ad_credit_monthly: 5000,
-      ad_credit_balance: 5000,
-      ep_multiplier: 2,
-      max_team_members: 5,
+      tier: sub.subscription_tier,
+      billing_cycle: sub.billing_cycle,
+      expires_at: sub.expires_at,
+      pending_tier: sub.pending_tier || null,
+      commission_rate: cfg ? Number(cfg.commission_rate) : null,
+      ad_credit_monthly: cfg ? Number(cfg.ad_credit_monthly) : null,
+      ep_multiplier: cfg ? Number(cfg.ep_multiplier) : null,
+      max_team_members: cfg ? Number(cfg.max_team_members) : null,
       milestone_progress: [],
       is_active: true,
     });

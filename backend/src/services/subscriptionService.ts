@@ -154,22 +154,31 @@ export async function createSubscription(
   stripeSubscriptionId: string,
   stripeCustomerId: string
 ): Promise<CompanySubscription> {
+  // Real columns: subscription_tier, billing_cycle, started_at, expires_at,
+  // stripe_subscription_id. There is no status column — active is derived from
+  // expires_at being in the future. On conflict the company already has a row,
+  // so this upserts rather than failing a re-subscribe.
   const now = new Date();
-  const billingDate = now.getDate();
+  const expires = new Date(now);
+  if (billingType === 'monthly') expires.setMonth(expires.getMonth() + 1);
+  else expires.setFullYear(expires.getFullYear() + 1);
 
-  let renewalDate = new Date(now);
-  if (billingType === 'monthly') {
-    renewalDate.setMonth(renewalDate.getMonth() + 1);
-  } else {
-    renewalDate.setFullYear(renewalDate.getFullYear() + 1);
-  }
-
-  const result = await db.query(
+  await db.query(
     `INSERT INTO company_subscriptions
-     (company_id, current_tier, billing_type, status, billing_date, renewal_date, stripe_subscription_id, stripe_customer_id, created_at, updated_at)
-     VALUES ($1, $2, $3, 'active', $4, $5, $6, $7, NOW(), NOW())`,
-    [companyId, tier, billingType, billingDate, renewalDate, stripeSubscriptionId, stripeCustomerId]
+       (company_id, subscription_tier, billing_cycle, started_at, expires_at, stripe_subscription_id, auto_renew, created_at, updated_at)
+     VALUES ($1, $2, $3, $4, $5, $6, true, NOW(), NOW())
+     ON CONFLICT (company_id) DO UPDATE
+       SET subscription_tier = EXCLUDED.subscription_tier,
+           billing_cycle = EXCLUDED.billing_cycle,
+           started_at = EXCLUDED.started_at,
+           expires_at = EXCLUDED.expires_at,
+           stripe_subscription_id = EXCLUDED.stripe_subscription_id,
+           pending_tier = NULL, pending_effective_date = NULL,
+           updated_at = NOW()`,
+    [companyId, tier, billingType, now, expires, stripeSubscriptionId]
   );
+  // Keep the denormalised mirror on companies in step.
+  await db.query(`UPDATE companies SET subscription_status = $1 WHERE id = $2`, [tier, companyId]);
 
   return getCompanySubscription(companyId) as Promise<CompanySubscription>;
 }
@@ -189,10 +198,14 @@ export async function upgradeSubscription(
   }
 
   // Update to new tier immediately
+  // Upgrade takes effect immediately, and clears any pending downgrade.
   await db.query(
-    'UPDATE company_subscriptions SET current_tier = $1, updated_at = NOW() WHERE company_id = $2',
+    `UPDATE company_subscriptions
+        SET subscription_tier = $1, pending_tier = NULL, pending_effective_date = NULL, updated_at = NOW()
+      WHERE company_id = $2`,
     [newTier, companyId]
   );
+  await db.query(`UPDATE companies SET subscription_status = $1 WHERE id = $2`, [newTier, companyId]);
 
   // Log upgrade
   console.log(`✅ Upgraded company ${companyId} to ${newTier} tier`);
@@ -215,18 +228,20 @@ export async function scheduleDowngrade(
 
   let effectiveDate = new Date();
 
-  if (subscription.billing_type === 'monthly') {
+  if (subscription.billing_cycle === 'monthly') {
     // Month-end for monthly
     effectiveDate = new Date(effectiveDate.getFullYear(), effectiveDate.getMonth() + 1, 0);
   } else {
-    // Renewal date for annual
-    effectiveDate = new Date(subscription.renewal_date);
+    // Current term end for annual
+    effectiveDate = subscription.expires_at ? new Date(subscription.expires_at) : effectiveDate;
   }
 
+  // Downgrade-pending is represented by pending_tier being set — there is no
+  // status column. The lower rate applies only when the pending date arrives.
   await db.query(
     `UPDATE company_subscriptions
-     SET pending_tier = $1, pending_effective_date = $2, status = 'downgrade_pending', updated_at = NOW()
-     WHERE company_id = $3`,
+        SET pending_tier = $1, pending_effective_date = $2, updated_at = NOW()
+      WHERE company_id = $3`,
     [newTier, effectiveDate, companyId]
   );
 
@@ -239,16 +254,19 @@ export async function scheduleDowngrade(
  * Apply pending downgrade (called by cron job)
  */
 export async function applyPendingDowngrade(companyId: number): Promise<void> {
-  await db.query(
+  const done = await db.query(
     `UPDATE company_subscriptions
-     SET current_tier = pending_tier,
-         pending_tier = NULL,
-         pending_effective_date = NULL,
-         status = 'active',
-         updated_at = NOW()
-     WHERE company_id = $1 AND status = 'downgrade_pending' AND pending_effective_date <= NOW()`,
+        SET subscription_tier = pending_tier,
+            pending_tier = NULL,
+            pending_effective_date = NULL,
+            updated_at = NOW()
+      WHERE company_id = $1 AND pending_tier IS NOT NULL AND pending_effective_date <= NOW()
+      RETURNING subscription_tier`,
     [companyId]
   );
+  if (done.rows[0]) {
+    await db.query(`UPDATE companies SET subscription_status = $1 WHERE id = $2`, [done.rows[0].subscription_tier, companyId]);
+  }
 
   console.log(`✅ Applied downgrade for company ${companyId}`);
 }
@@ -268,7 +286,7 @@ export async function cancelSubscription(
 
   let effectiveDate = new Date();
 
-  if (subscription.billing_type === 'monthly') {
+  if (subscription.billing_cycle === 'monthly') {
     // Month-end for monthly
     effectiveDate = new Date(effectiveDate.getFullYear(), effectiveDate.getMonth() + 1, 0);
   } else {
@@ -284,18 +302,22 @@ export async function cancelSubscription(
     } else {
       // Pro-rata refund
       const daysRemaining = Math.ceil(
-        (new Date(subscription.renewal_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+        ((subscription.expires_at ? new Date(subscription.expires_at).getTime() : Date.now()) - Date.now()) / (1000 * 60 * 60 * 24)
       );
       console.log(`💰 Pro-rata refund eligible (${daysRemaining} days remaining)`);
     }
   }
 
+  // No status column and no 'free' tier — cancelling means expiring the row
+  // now, which makes subscriptionActive() false so the company falls back to
+  // the entry rate. The tier is left as-is for history.
   await db.query(
     `UPDATE company_subscriptions
-     SET status = 'canceled', current_tier = 'free', updated_at = NOW()
-     WHERE company_id = $1`,
+        SET expires_at = NOW(), auto_renew = false, updated_at = NOW()
+      WHERE company_id = $1`,
     [companyId]
   );
+  await db.query(`UPDATE companies SET subscription_status = NULL WHERE id = $1`, [companyId]);
 
   console.log(`❌ Canceled subscription for company ${companyId}`);
 
@@ -308,7 +330,7 @@ export async function cancelSubscription(
 export async function processPendingDowngrades(): Promise<void> {
   const pending = await db.query(
     `SELECT company_id FROM company_subscriptions
-     WHERE status = 'downgrade_pending' AND pending_effective_date <= NOW()`
+      WHERE pending_tier IS NOT NULL AND pending_effective_date <= NOW()`
   );
 
   for (const record of pending.rows) {
