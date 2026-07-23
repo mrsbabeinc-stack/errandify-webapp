@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast, ToastContainer } from '../../components/Toast';
 import AdminLayout from '../../components/admin/AdminLayout';
 import DocumentUploadWithOCR from '../../components/DocumentUploadWithOCR';
+import financeAPI, { n } from '../../services/financeAPI';
 
 interface ExpenseClaim {
   id: string;
@@ -21,7 +22,7 @@ interface ExpenseClaim {
     extractedDate?: string;
   };
   department: string;
-  status: 'draft' | 'submitted' | 'manager-approved' | 'accounts-reviewed' | 'approved' | 'reimbursed' | 'rejected';
+  status: 'draft' | 'submitted' | 'manager-approved' | 'accounts-reviewed' | 'reimbursed' | 'rejected';
   managerApprovedBy?: string;
   managerApprovedDate?: string;
   accountsReviewedBy?: string;
@@ -65,128 +66,79 @@ const ExpenseClaimsDashboard: React.FC = () => {
   });
   const [uploadedFile, setUploadedFile] = useState<{ name: string; size: number } | null>(null);
 
-  // Demo staff
-  const staffList = [
-    { id: 'S001', name: 'John Tan' },
-    { id: 'S002', name: 'Sarah Lim' },
-    { id: 'S003', name: 'Mike Wong' },
-  ];
+  const [staffList, setStaffList] = useState<{ id: string; name: string }[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Demo data
+  /**
+   * Real claims. Every claim on this screen was a hardcoded object, and manager
+   * approval, accounts review and reimbursement only rewrote React state — so a
+   * claim could be "reimbursed" without a single row changing anywhere, and no
+   * expense was ever recorded against it. Reimbursement now writes the expense
+   * too, in the same transaction.
+   */
+  const loadClaims = async () => {
+    try {
+      setLoading(true);
+      const [{ claims: rows, summary }, staffRows] = await Promise.all([
+        financeAPI.listClaims(),
+        financeAPI.payrollStaff(),
+      ]);
+
+      setClaims(rows.map(c => ({
+        id: String(c.id),
+        claimId: c.claim_number,
+        staffId: c.staff_id,
+        staffName: c.staff_name,
+        date: c.claim_date,
+        category: c.category,
+        amount: n(c.amount),
+        purpose: c.purpose || '',
+        receipt: {
+          fileName: c.receipt_file_name || '',
+          uploadDate: c.claim_date,
+          extractedAmount: c.receipt_extracted_amount != null ? n(c.receipt_extracted_amount) : undefined,
+          extractedVendor: c.receipt_extracted_vendor || undefined,
+          extractedDate: c.receipt_extracted_date || undefined,
+        },
+        department: c.department || '',
+        status: c.status,
+        managerApprovedBy: c.manager_approved_by_name || undefined,
+        managerApprovedDate: c.manager_approved_at || undefined,
+        accountsReviewedBy: c.accounts_reviewed_by_name || undefined,
+        accountsReviewedDate: c.accounts_reviewed_at || undefined,
+        reimbursementDate: c.reimbursed_at || undefined,
+        reimbursementMethod: c.reimbursement_method || undefined,
+        notes: c.notes || undefined,
+        createdDate: c.claim_date,
+        lastModified: c.claim_date,
+      })));
+
+      setClaimSummary({
+        totalClaims: n(summary.total_claims),
+        totalAmount: n(summary.total_amount),
+        draftClaims: n(summary.draft_claims),
+        pendingApproval: n(summary.pending_approval),
+        approvedClaims: n(summary.approved_claims),
+        reimbursedAmount: n(summary.reimbursed_amount),
+        pendingReimbursement: n(summary.pending_reimbursement),
+      });
+
+      const staffOptions = staffRows.map(s => ({
+        id: s.staff_id,
+        name: `${s.first_name} ${s.last_name}`,
+      }));
+      setStaffList(staffOptions);
+      setSelectedStaffId(prev => (staffOptions.some(s => s.id === prev) ? prev : staffOptions[0]?.id || ''));
+    } catch (err) {
+      showToast(`❌ ${err instanceof Error ? err.message : 'Failed to load claims'}`, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const demoClaims: ExpenseClaim[] = [
-      {
-        id: 'claim_1',
-        claimId: 'CLM-2026-0001',
-        staffId: 'S001',
-        staffName: 'John Tan',
-        date: '2026-07-05',
-        category: 'travel',
-        amount: 85.50,
-        purpose: 'Client meeting - Taxi fare to Marina Bay office',
-        receipt: {
-          fileName: 'grab_receipt_070526.pdf',
-          uploadDate: '2026-07-05',
-          extractedAmount: 85.50,
-          extractedVendor: 'Grab',
-          extractedDate: '2026-07-05',
-        },
-        department: 'Operations',
-        status: 'reimbursed',
-        managerApprovedBy: 'Admin',
-        managerApprovedDate: '2026-07-06',
-        accountsReviewedBy: 'Finance',
-        accountsReviewedDate: '2026-07-07',
-        reimbursementDate: '2026-07-15',
-        reimbursementMethod: 'Bank Transfer',
-        createdDate: '2026-07-05',
-        lastModified: '2026-07-15',
-      },
-      {
-        id: 'claim_2',
-        claimId: 'CLM-2026-0002',
-        staffId: 'S002',
-        staffName: 'Sarah Lim',
-        date: '2026-07-08',
-        category: 'meals',
-        amount: 52.80,
-        purpose: 'Team lunch meeting - Catering for 5 people',
-        receipt: {
-          fileName: 'invoice_catering_070826.pdf',
-          uploadDate: '2026-07-08',
-          extractedAmount: 52.80,
-          extractedVendor: 'Food Court Caterers',
-          extractedDate: '2026-07-08',
-        },
-        department: 'Accounts',
-        status: 'approved',
-        managerApprovedBy: 'Admin',
-        managerApprovedDate: '2026-07-09',
-        accountsReviewedBy: 'Finance',
-        accountsReviewedDate: '2026-07-10',
-        createdDate: '2026-07-08',
-        lastModified: '2026-07-10',
-      },
-      {
-        id: 'claim_3',
-        claimId: 'CLM-2026-0003',
-        staffId: 'S003',
-        staffName: 'Mike Wong',
-        date: '2026-07-12',
-        category: 'supplies',
-        amount: 125.00,
-        purpose: 'Office supplies - Printer cartridges & paper',
-        receipt: {
-          fileName: 'office_depot_receipt_071226.pdf',
-          uploadDate: '2026-07-12',
-          extractedAmount: 125.00,
-          extractedVendor: 'Office Depot',
-          extractedDate: '2026-07-12',
-        },
-        department: 'HR',
-        status: 'manager-approved',
-        managerApprovedBy: 'Admin',
-        managerApprovedDate: '2026-07-13',
-        createdDate: '2026-07-12',
-        lastModified: '2026-07-13',
-      },
-      {
-        id: 'claim_4',
-        claimId: 'CLM-2026-0004',
-        staffId: 'S001',
-        staffName: 'John Tan',
-        date: '2026-07-15',
-        category: 'travel',
-        amount: 150.00,
-        purpose: 'Flight to Singapore for conference - Training workshop',
-        receipt: {
-          fileName: 'flight_receipt_071526.pdf',
-          uploadDate: '2026-07-15',
-          extractedAmount: 150.00,
-          extractedVendor: 'SilkAir',
-          extractedDate: '2026-07-15',
-        },
-        department: 'Operations',
-        status: 'submitted',
-        createdDate: '2026-07-15',
-        lastModified: '2026-07-15',
-      },
-    ];
-
-    setClaims(demoClaims);
-
-    // Calculate summary
-    const summary: ClaimSummary = {
-      totalClaims: demoClaims.length,
-      totalAmount: demoClaims.reduce((sum, c) => sum + c.amount, 0),
-      draftClaims: demoClaims.filter(c => c.status === 'draft').length,
-      pendingApproval: demoClaims.filter(c => c.status === 'submitted' || c.status === 'manager-approved').length,
-      approvedClaims: demoClaims.filter(c => c.status === 'approved').length,
-      reimbursedAmount: demoClaims.filter(c => c.status === 'reimbursed').reduce((sum, c) => sum + c.amount, 0),
-      pendingReimbursement: demoClaims.filter(c => c.status === 'approved' && !c.reimbursementDate).reduce((sum, c) => sum + c.amount, 0),
-    };
-    setClaimSummary(summary);
-    setSelectedStaffId('S001');
+    loadClaims();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Handle file upload simulation
@@ -199,135 +151,84 @@ const ExpenseClaimsDashboard: React.FC = () => {
   };
 
   // Submit expense claim
-  const handleSubmitClaim = () => {
+  const handleSubmitClaim = async () => {
     if (!claimForm.date || !claimForm.category || claimForm.amount <= 0 || !claimForm.purpose.trim() || !uploadedFile) {
       showToast('Please fill in all required fields and upload receipt', 'error');
       return;
     }
-
-    const staff = staffList.find(s => s.id === selectedStaffId);
-    if (!staff) {
+    if (!selectedStaffId) {
       showToast('Staff member not found', 'error');
       return;
     }
 
-    const newClaim: ExpenseClaim = {
-      id: `claim_${Date.now()}`,
-      claimId: `CLM-2026-${String(claims.length + 1).padStart(4, '0')}`,
-      staffId: selectedStaffId,
-      staffName: staff.name,
-      date: claimForm.date,
-      category: claimForm.category,
-      amount: claimForm.amount,
-      purpose: claimForm.purpose,
-      receipt: {
-        fileName: uploadedFile.name,
-        uploadDate: new Date().toISOString().split('T')[0],
-        extractedAmount: claimForm.amount,
-        extractedVendor: 'Auto-detected',
-        extractedDate: claimForm.date,
-      },
-      department: claimForm.department,
-      status: 'submitted',
-      notes: claimForm.notes,
-      createdDate: new Date().toISOString(),
-      lastModified: new Date().toISOString(),
-    };
-
-    setClaims([...claims, newClaim]);
-    setClaimForm({
-      date: new Date().toISOString().split('T')[0],
-      category: 'travel',
-      amount: 0,
-      purpose: '',
-      department: '',
-      notes: '',
-    });
-    setUploadedFile(null);
-    setShowSubmitForm(false);
-    showToast(`✅ Expense claim submitted (${newClaim.claimId})`, 'success');
+    try {
+      const claim = await financeAPI.createClaim({
+        staff_id: selectedStaffId,
+        claim_date: claimForm.date,
+        category: claimForm.category,
+        amount: claimForm.amount,
+        purpose: claimForm.purpose,
+        department: claimForm.department,
+        notes: claimForm.notes,
+        receipt_file_name: uploadedFile.name,
+      });
+      showToast(`✅ Expense claim submitted (${claim.claim_number})`, 'success');
+      setShowSubmitForm(false);
+      setUploadedFile(null);
+      setClaimForm({
+        date: new Date().toISOString().split('T')[0],
+        category: 'travel',
+        amount: 0,
+        purpose: '',
+        department: '',
+        notes: '',
+      });
+      await loadClaims();
+    } catch (err) {
+      showToast(`❌ ${err instanceof Error ? err.message : 'Failed to submit claim'}`, 'error');
+    }
   };
 
-  // Manager approve
-  const handleManagerApprove = (claimId: string) => {
-    setClaims(
-      claims.map(c =>
-        c.id === claimId
-          ? {
-              ...c,
-              status: 'manager-approved' as const,
-              managerApprovedBy: 'Admin',
-              managerApprovedDate: new Date().toISOString().split('T')[0],
-              lastModified: new Date().toISOString(),
-            }
-          : c
-      )
-    );
+  /** Each step asserts the previous one server-side, so a stale list cannot skip a stage. */
+  const runClaimStep = async (
+    claimId: string,
+    step: (id: number) => Promise<unknown>,
+    success: string
+  ) => {
     const claim = claims.find(c => c.id === claimId);
-    showToast(`✅ Claim approved by manager - ${claim?.staffName}`, 'success');
+    try {
+      await step(Number(claimId));
+      showToast(`${success}${claim ? ` - ${claim.staffName}` : ''}`, 'success');
+      await loadClaims();
+    } catch (err) {
+      showToast(`❌ ${err instanceof Error ? err.message : 'Action failed'}`, 'error');
+    }
   };
 
-  // Accounts review
-  const handleAccountsReview = (claimId: string) => {
-    setClaims(
-      claims.map(c =>
-        c.id === claimId
-          ? {
-              ...c,
-              status: 'approved' as const,
-              accountsReviewedBy: 'Finance',
-              accountsReviewedDate: new Date().toISOString().split('T')[0],
-              lastModified: new Date().toISOString(),
-            }
-          : c
-      )
-    );
-    const claim = claims.find(c => c.id === claimId);
-    showToast(`✅ Claim reviewed by accounts - ${claim?.staffName}`, 'success');
-  };
+  const handleManagerApprove = (claimId: string) =>
+    runClaimStep(claimId, id => financeAPI.managerApproveClaim(id), '✅ Claim approved by manager');
 
-  // Process reimbursement
+  const handleAccountsReview = (claimId: string) =>
+    runClaimStep(claimId, id => financeAPI.accountsReviewClaim(id), '✅ Claim reviewed by accounts');
+
   const handleProcessReimbursement = (claimId: string) => {
-    setClaims(
-      claims.map(c =>
-        c.id === claimId
-          ? {
-              ...c,
-              status: 'reimbursed' as const,
-              reimbursementDate: new Date().toISOString().split('T')[0],
-              reimbursementMethod: 'Bank Transfer',
-              lastModified: new Date().toISOString(),
-            }
-          : c
-      )
-    );
     const claim = claims.find(c => c.id === claimId);
-    showToast(`💰 Reimbursement processed - ${claim?.staffName} (SGD ${claim?.amount})`, 'success');
+    return runClaimStep(
+      claimId,
+      id => financeAPI.reimburseClaim(id, 'bank-transfer'),
+      `💰 Reimbursement processed${claim ? ` (SGD ${claim.amount})` : ''}`
+    );
   };
 
-  // Reject claim
-  const handleRejectClaim = (claimId: string) => {
-    setClaims(
-      claims.map(c =>
-        c.id === claimId
-          ? {
-              ...c,
-              status: 'rejected' as const,
-              lastModified: new Date().toISOString(),
-            }
-          : c
-      )
-    );
-    const claim = claims.find(c => c.id === claimId);
-    showToast(`✗ Claim rejected - ${claim?.staffName}`, 'success');
-  };
+  const handleRejectClaim = (claimId: string) =>
+    runClaimStep(claimId, id => financeAPI.rejectClaim(id), '✗ Claim rejected');
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'reimbursed':
         return { bg: '#E8F5E9', color: '#2E7D32', label: '✓ REIMBURSED' };
-      case 'approved':
-        return { bg: '#C8E6C9', color: '#1B5E20', label: '✓ APPROVED' };
+      case 'accounts-reviewed':
+        return { bg: '#C8E6C9', color: '#1B5E20', label: '✓ ACCOUNTS REVIEWED' };
       case 'manager-approved':
         return { bg: '#E3F2FD', color: '#0D47A1', label: '✓ MANAGER APPROVED' };
       case 'submitted':
@@ -892,7 +793,7 @@ const ExpenseClaimsDashboard: React.FC = () => {
             <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '600', color: '#333' }}>Process Reimbursement</h3>
             <div style={{ display: 'grid', gap: '12px' }}>
               {claims
-                .filter(c => c.status === 'approved')
+                .filter(c => c.status === 'accounts-reviewed')
                 .map(claim => (
                   <div key={claim.id} style={{ padding: '16px', background: 'white', border: '2px solid #FFD9B3', borderRadius: '8px' }}>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '16px', alignItems: 'start', marginBottom: '12px' }}>

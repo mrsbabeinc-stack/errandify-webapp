@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdCarousel from '../components/AdCarousel';
 import EventBanner from '../components/EventBanner';
+import HeroBannerStrip from '../components/HeroBannerStrip';
 import AdminThemeWrapper from '../components/AdminThemeWrapper';
+import { consumePendingErrand } from '../utils/referralCapture';
 
 interface HomePageProps {
   userRole: 'asker' | 'doer';
@@ -27,6 +29,19 @@ export default function HomePage({ userRole }: HomePageProps) {
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);
+
+  /**
+   * Someone invited to a specific errand gets taken to it.
+   *
+   * Consumed here rather than at signup because onboarding runs through
+   * verification and screening first — this is simply the first screen a new
+   * member reaches, whatever route they took to get here. One-shot, so a
+   * returning member is never bounced.
+   */
+  useEffect(() => {
+    const errandId = consumePendingErrand();
+    if (errandId) navigate(`/errand/${errandId}`, { replace: true });
+  }, [navigate]);
 
   // Fallback list (used until the DB-backed /api/categories responds)
   const FALLBACK_CATEGORIES: Category[] = [
@@ -102,6 +117,13 @@ export default function HomePage({ userRole }: HomePageProps) {
         {/* AD CAROUSEL - 4 Banner Hero Section */}
         <div style={{marginBottom: isMobile ? '6px' : '10px'}}>
           <AdCarousel />
+        </div>
+
+        {/* Hero banners authored in admin → Communications. Renders nothing
+            when none is live, so the layout is unchanged until one is. */}
+        <div style={{marginBottom: isMobile ? '6px' : '10px'}}>
+          <HeroBannerStrip location={userRole === 'doer' ? 'doer-dashboard' : 'asker-dashboard'} />
+          <HeroBannerStrip location="home" />
         </div>
 
         {/* Quick Actions */}

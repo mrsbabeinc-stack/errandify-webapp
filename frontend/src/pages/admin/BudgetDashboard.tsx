@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast, ToastContainer } from '../../components/Toast';
 import AdminLayout from '../../components/admin/AdminLayout';
+import financeAPI, { n } from '../../services/financeAPI';
 
 interface BudgetAllocation {
   category: string;
@@ -23,7 +24,7 @@ interface Budget {
   total_budget: number;
   total_spent: number;
   allocations: BudgetAllocation[];
-  status: 'active' | 'archived' | 'approved' | 'pending_approval';
+  status: 'active' | 'archived' | 'pending_approval' | 'rejected';
   approval_status: 'approved' | 'pending' | 'rejected';
   approved_by?: string;
   approval_date?: string;
@@ -58,97 +59,59 @@ const BudgetDashboard: React.FC = () => {
     loadBudgets();
   }, [selectedPeriod, selectedDept]);
 
+  /**
+   * Real budgets. This screen kept three fake departments in the source and
+   * appended anything the user created to localStorage, so "Marketing is over
+   * budget" was a hardcoded string and the spend figures were never compared
+   * against a single actual expense. Actuals now come from the approved expense
+   * rows for the same department, category and period.
+   */
   const loadBudgets = async () => {
     try {
       setLoading(true);
-      // Load from localStorage or use mock data
-      const saved = localStorage.getItem('budgets');
-      let mockBudgets: Budget[] = [
-        {
-          budget_id: 1,
-          budget_number: 'BDG-2026-001',
-          department: 'Operations',
-          cost_center: 'CC-001',
-          manager_name: 'John Smith',
-          manager_id: 'EMP-001',
-          period: '2026-07',
-          fiscal_year: 2026,
-          total_budget: 50000,
-          total_spent: 38500,
-          status: 'active',
-          approval_status: 'approved',
-          approved_by: 'CFO',
-          approval_date: '2026-06-15',
-          created_by: 'Manager 1',
-          created_date: new Date().toISOString(),
-          allocations: [
-            { category: 'Salaries', allocated: 30000, actual: 28500, variance: 1500, status: 'on_track' },
-            { category: 'Equipment', allocated: 10000, actual: 7200, variance: 2800, status: 'on_track' },
-            { category: 'Travel', allocated: 5000, actual: 1800, variance: 3200, status: 'on_track' },
-            { category: 'Utilities', allocated: 5000, actual: 1000, variance: 4000, status: 'on_track' },
-          ],
-        },
-        {
-          budget_id: 2,
-          budget_number: 'BDG-2026-002',
-          department: 'Marketing',
-          cost_center: 'CC-002',
-          manager_name: 'Jane Doe',
-          manager_id: 'EMP-002',
-          period: '2026-07',
-          fiscal_year: 2026,
-          total_budget: 25000,
-          total_spent: 26800,
-          status: 'active',
-          approval_status: 'approved',
-          approved_by: 'CFO',
-          approval_date: '2026-06-15',
-          created_by: 'Manager 2',
-          created_date: new Date().toISOString(),
-          allocations: [
-            { category: 'Digital Ads', allocated: 15000, actual: 16200, variance: -1200, status: 'over_budget' },
-            { category: 'Content', allocated: 7000, actual: 8100, variance: -1100, status: 'warning' },
-            { category: 'Events', allocated: 3000, actual: 2500, variance: 500, status: 'on_track' },
-          ],
-        },
-        {
-          budget_id: 3,
-          budget_number: 'BDG-2026-003',
-          department: 'HR',
-          cost_center: 'CC-003',
-          manager_name: 'Bob Wilson',
-          manager_id: 'EMP-003',
-          period: '2026-07',
-          fiscal_year: 2026,
-          total_budget: 15000,
-          total_spent: 12300,
-          status: 'active',
-          approval_status: 'approved',
-          approved_by: 'CFO',
-          approval_date: '2026-06-15',
-          created_by: 'Manager 3',
-          created_date: new Date().toISOString(),
-          allocations: [
-            { category: 'Training', allocated: 8000, actual: 6500, variance: 1500, status: 'on_track' },
-            { category: 'Recruitment', allocated: 5000, actual: 4200, variance: 800, status: 'on_track' },
-            { category: 'Wellness', allocated: 2000, actual: 1600, variance: 400, status: 'on_track' },
-          ],
-        },
-      ];
-
-      if (saved) {
-        const savedBudgets = JSON.parse(saved);
-        mockBudgets = [...mockBudgets, ...savedBudgets];
-      }
-
-      const filtered = selectedDept === 'all'
-        ? mockBudgets
-        : mockBudgets.filter(b => b.department === selectedDept);
-      setBudgets(filtered);
+      const rows = await financeAPI.listBudgets({
+        period: selectedPeriod,
+        department: selectedDept,
+      });
+      setBudgets(rows.map(b => ({
+        budget_id: b.id,
+        budget_number: b.budget_number,
+        department: b.department,
+        cost_center: b.cost_center || '',
+        manager_name: b.manager_name || '',
+        manager_id: b.manager_id || '',
+        period: b.period,
+        fiscal_year: b.fiscal_year,
+        total_budget: n(b.total_budget),
+        total_spent: n(b.total_spent),
+        status: b.status,
+        approval_status: b.approval_status,
+        approved_by: b.approved_by_name || undefined,
+        approval_date: b.approval_date || undefined,
+        created_by: '',
+        created_date: b.created_at,
+        allocations: (b.allocations || []).map(a => ({
+          category: a.category,
+          allocated: n(a.allocated),
+          actual: n(a.actual),
+          variance: n(a.variance),
+          status: a.status,
+        })),
+      })));
     } catch (error) {
-      showToast('Failed to load budgets', 'error');
+      showToast(`❌ ${error instanceof Error ? error.message : 'Failed to load budgets'}`, 'error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleApproveBudget = async (budgetId: number, approve: boolean) => {
+    try {
+      await financeAPI.decideBudget(budgetId, approve);
+      showToast(approve ? '✅ Budget approved' : '✗ Budget rejected', 'success');
+      await loadBudgets();
+    } catch (error) {
+      showToast(`❌ ${error instanceof Error ? error.message : 'Failed to update budget'}`, 'error');
     }
   };
 
@@ -161,8 +124,7 @@ const BudgetDashboard: React.FC = () => {
     }
 
     try {
-      const newBudget: Budget = {
-        budget_id: Date.now(),
+      await financeAPI.createBudget({
         budget_number: formData.budget_number,
         department: formData.department,
         cost_center: formData.cost_center,
@@ -171,31 +133,13 @@ const BudgetDashboard: React.FC = () => {
         period: formData.period,
         fiscal_year: formData.fiscal_year,
         total_budget: Number(formData.total_budget),
-        total_spent: 0,
-        status: 'pending_approval',
-        approval_status: 'pending',
-        created_by: 'Current User',
-        created_date: new Date().toISOString(),
-        allocations: formData.categories
+        categories: formData.categories
           .filter(c => c.category && c.allocated)
-          .map(c => ({
-            category: c.category,
-            allocated: Number(c.allocated),
-            actual: 0,
-            variance: Number(c.allocated),
-            status: 'on_track',
-          })),
-      };
-
-      // Save to localStorage
-      const saved = localStorage.getItem('budgets') || '[]';
-      const allBudgets = JSON.parse(saved);
-      allBudgets.push(newBudget);
-      localStorage.setItem('budgets', JSON.stringify(allBudgets));
+          .map(c => ({ category: c.category, allocated: Number(c.allocated) })),
+      });
 
       showToast(`✅ Budget ${formData.budget_number} created (pending approval)`, 'success');
 
-      // Reset form
       setFormData({
         budget_number: '',
         department: '',
@@ -208,10 +152,11 @@ const BudgetDashboard: React.FC = () => {
         categories: [{ category: '', allocated: '' }],
       });
 
+      setSelectedPeriod(formData.period);
       setViewMode('overview');
-      loadBudgets();
+      await loadBudgets();
     } catch (error) {
-      showToast('❌ Failed to create budget', 'error');
+      showToast(`❌ ${error instanceof Error ? error.message : 'Failed to create budget'}`, 'error');
     }
   };
 
@@ -928,6 +873,33 @@ const BudgetDashboard: React.FC = () => {
                       <div style={{ fontSize: '11px', color: '#999', marginTop: '4px' }}>
                         {percentUsed}% used
                       </div>
+                      {budget.approval_status === 'pending' && (
+                        <div
+                          style={{ display: 'flex', gap: '4px', justifyContent: 'center', marginTop: '6px' }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <button
+                            onClick={() => handleApproveBudget(budget.budget_id, true)}
+                            style={{
+                              padding: '4px 8px', background: '#4CAF50', color: 'white',
+                              border: 'none', borderRadius: '3px', fontSize: '10px',
+                              fontWeight: 600, cursor: 'pointer',
+                            }}
+                          >
+                            ✓ Approve
+                          </button>
+                          <button
+                            onClick={() => handleApproveBudget(budget.budget_id, false)}
+                            style={{
+                              padding: '4px 8px', background: '#fff', color: '#C62828',
+                              border: '1px solid #C62828', borderRadius: '3px', fontSize: '10px',
+                              fontWeight: 600, cursor: 'pointer',
+                            }}
+                          >
+                            ✗ Reject
+                          </button>
+                        </div>
+                      )}
                     </div>
 
                     {/* Status */}

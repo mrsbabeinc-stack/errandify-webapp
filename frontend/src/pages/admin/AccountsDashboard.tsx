@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast, ToastContainer } from '../../components/Toast';
 import AdminLayout from '../../components/admin/AdminLayout';
+import financeAPI, { n, FinanceSummary } from '../../services/financeAPI';
 
 interface IncomeEntry {
   id: string;
@@ -150,462 +151,324 @@ const AccountsDashboard: React.FC = () => {
     value: '',
   });
 
-  // Demo data
+  const [loading, setLoading] = useState(true);
+  const [summary, setSummary] = useState<FinanceSummary | null>(null);
+
+  /**
+   * Real data. This screen used to seed itself with six hardcoded demo arrays
+   * and every button mutated React state, so an income entry, an approval or a
+   * new recurring rule was gone on refresh — there was no finance table at all.
+   */
+  const loadAll = async () => {
+    try {
+      setLoading(true);
+      const [inc, exp, rec, tagRows, ledgerRows, recons, summaryRow] = await Promise.all([
+        financeAPI.listIncome(),
+        financeAPI.listExpenses(),
+        financeAPI.listRecurring(),
+        financeAPI.listTags(),
+        financeAPI.ledger(),
+        financeAPI.listReconciliations(),
+        financeAPI.summary(selectedPeriod),
+      ]);
+      setSummary(summaryRow);
+
+      setIncome(inc.map(r => ({
+        id: String(r.id),
+        date: r.entry_date,
+        amount: n(r.amount),
+        source: r.source,
+        reference: r.reference || '',
+        description: r.description || '',
+        notes: r.notes || '',
+        tags: r.tags || [],
+        gstApplicable: r.gst_applicable,
+        gstAmount: n(r.gst_amount),
+        invoiceNo: r.invoice_no || '',
+        paymentStatus: r.payment_status,
+        createdAt: r.created_at,
+        lastModified: r.created_at,
+      })));
+
+      setExpenses(exp.map(r => ({
+        id: String(r.id),
+        date: r.entry_date,
+        amount: n(r.amount),
+        category: r.category,
+        vendor: r.vendor || '',
+        description: r.description || '',
+        department: r.department || '',
+        tags: r.tags || [],
+        approvalStatus: r.approval_status,
+        approvedBy: r.approved_by_name || undefined,
+        approvalDate: r.approval_date || undefined,
+        gstAmount: n(r.gst_amount),
+        receiptNo: r.receipt_no || undefined,
+        createdAt: r.created_at,
+        lastModified: r.created_at,
+      })));
+
+      setRecurringExpenses(rec.map(r => ({
+        id: String(r.id),
+        name: r.name,
+        amount: n(r.amount),
+        category: r.category,
+        vendor: r.vendor || '',
+        frequency: r.frequency,
+        startDate: r.start_date,
+        endDate: r.end_date || undefined,
+        department: r.department || '',
+        description: r.description || '',
+        nextDueDate: r.next_due_date,
+        lastProcessedDate: r.last_processed_date || undefined,
+        isActive: r.is_active,
+        approvalStatus: r.approval_status,
+        createdAt: r.start_date,
+        lastModified: r.next_due_date,
+        autoApprove: r.auto_approve,
+      })));
+
+      setTags(tagRows.map(t => ({
+        id: String(t.id),
+        name: t.name,
+        type: t.tag_type,
+        value: t.value || '',
+      })));
+
+      setLedger(ledgerRows.map(l => ({
+        id: l.id,
+        date: l.date,
+        type: l.type,
+        description: l.description,
+        debit: l.debit,
+        credit: l.credit,
+        balance: l.balance,
+        category: l.category,
+        reference: l.reference,
+      })));
+
+      setReconciliations(recons.map(r => ({
+        id: String(r.id),
+        date: r.recon_date,
+        accountType: r.account_type,
+        expectedBalance: n(r.expected_balance),
+        actualBalance: n(r.actual_balance),
+        variance: n(r.variance),
+        status: r.status,
+        notes: r.notes || '',
+      })));
+    } catch (err) {
+      showToast(`❌ ${err instanceof Error ? err.message : 'Failed to load accounts'}`, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // The month/quarter/year selector drives the KPI row; before this it changed
+  // nothing at all.
   useEffect(() => {
-    const demoIncome: IncomeEntry[] = [
-      {
-        id: 'inc_1',
-        date: '2026-07-10',
-        amount: 15000,
-        source: 'Service Revenue',
-        reference: 'INV-001',
-        invoiceNo: 'INV-20260710-001',
-        description: 'Monthly service fees from clients A-D',
-        notes: 'Regular monthly recurring revenue',
-        tags: ['service', 'recurring', 'core-business'],
-        paymentStatus: 'received',
-        createdAt: '2026-07-10',
-        lastModified: '2026-07-10',
-      },
-      {
-        id: 'inc_2',
-        date: '2026-07-05',
-        amount: 6000,
-        source: 'Product Sales',
-        reference: 'PO-2026-042',
-        invoiceNo: 'INV-20260705-002',
-        description: 'Software licensing sales',
-        notes: 'One-time license purchase',
-        tags: ['product', 'licensing'],
-        paymentStatus: 'received',
-        createdAt: '2026-07-05',
-        lastModified: '2026-07-05',
-      },
-      {
-        id: 'inc_3',
-        date: '2026-07-12',
-        amount: 3500,
-        source: 'Consulting Revenue',
-        reference: 'CONS-026',
-        invoiceNo: 'INV-20260712-003',
-        description: 'Advisory services for client X',
-        notes: 'Project-based consulting',
-        tags: ['consulting', 'services'],
-        paymentStatus: 'pending',
-        createdAt: '2026-07-12',
-        lastModified: '2026-07-12',
-      },
-    ];
+    loadAll();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPeriod]);
 
-    const demoExpenses: ExpenseEntry[] = [
-      {
-        id: 'exp_1',
-        date: '2026-07-08',
-        amount: 2500,
-        category: 'Office & Administration',
-        vendor: 'Tech Office Supplies Ltd',
-        description: 'Monthly office supplies and equipment',
-        department: 'Operations',
-        tags: ['office', 'recurring'],
-        approvalStatus: 'approved',
-        approvedBy: 'Admin User',
-        approvalDate: '2026-07-08',
-        createdAt: '2026-07-08',
-        lastModified: '2026-07-08',
-      },
-      {
-        id: 'exp_2',
-        date: '2026-07-09',
-        amount: 1800,
-        category: 'Travel & Transport',
-        vendor: 'Singapore Airlines',
-        description: 'Business travel - client meeting in JB',
-        department: 'Sales',
-        tags: ['travel', 'client-visit'],
-        approvalStatus: 'pending',
-        createdAt: '2026-07-09',
-        lastModified: '2026-07-09',
-      },
-      {
-        id: 'exp_3',
-        date: '2026-07-11',
-        amount: 450,
-        category: 'Utilities',
-        vendor: 'SP Group',
-        description: 'Monthly utilities (electricity, water, gas)',
-        department: 'Operations',
-        tags: ['utilities', 'recurring'],
-        approvalStatus: 'approved',
-        approvedBy: 'Admin User',
-        approvalDate: '2026-07-11',
-        createdAt: '2026-07-11',
-        lastModified: '2026-07-11',
-      },
-    ];
-
-    const demoLedger: LedgerEntry[] = [
-      { id: 'l1', date: '2026-07-10', type: 'income', description: 'Service Revenue', debit: 0, credit: 15000, balance: 15000, category: 'Revenue', reference: 'INV-001' },
-      { id: 'l2', date: '2026-07-05', type: 'income', description: 'Product Sales', debit: 0, credit: 6000, balance: 21000, category: 'Revenue', reference: 'PO-2026-042' },
-      { id: 'l3', date: '2026-07-08', type: 'expense', description: 'Office Supplies', debit: 2500, credit: 0, balance: 18500, category: 'Operations', reference: 'EXP-001' },
-      { id: 'l4', date: '2026-07-09', type: 'expense', description: 'Travel Expenses', debit: 1800, credit: 0, balance: 16700, category: 'Operations', reference: 'EXP-002' },
-      { id: 'l5', date: '2026-07-11', type: 'expense', description: 'Utilities', debit: 450, credit: 0, balance: 16250, category: 'Operations', reference: 'EXP-003' },
-    ];
-
-    const demoReconciliations: AccountReconciliation[] = [
-      {
-        id: 'rec_1',
-        date: '2026-07-15',
-        accountType: 'Operating Account',
-        expectedBalance: 16250,
-        actualBalance: 16250,
-        variance: 0,
-        status: 'reconciled',
-        notes: 'July reconciliation complete. All transactions verified.',
-      },
-      {
-        id: 'rec_2',
-        date: '2026-06-30',
-        accountType: 'Operating Account',
-        expectedBalance: 24500,
-        actualBalance: 24500,
-        variance: 0,
-        status: 'reconciled',
-        notes: 'June reconciliation complete.',
-      },
-      {
-        id: 'rec_3',
-        date: '2026-07-15',
-        accountType: 'Petty Cash',
-        expectedBalance: 1500,
-        actualBalance: 1465,
-        variance: -35,
-        status: 'variance',
-        notes: 'Minor variance - pending explanation',
-      },
-    ];
-
-    const demoTags: Tag[] = [
-      { id: 't1', name: 'Recurring', type: 'category', value: 'recurring' },
-      { id: 't2', name: 'One-time', type: 'category', value: 'onetime' },
-      { id: 't3', name: 'Headquarters', type: 'location', value: 'hq' },
-      { id: 't4', name: 'Branch Office', type: 'location', value: 'branch' },
-      { id: 't5', name: 'Core Business', type: 'purpose', value: 'core-business' },
-      { id: 't6', name: 'Support', type: 'purpose', value: 'support' },
-      { id: 't7', name: 'Finance Team', type: 'staff', value: 'finance' },
-      { id: 't8', name: 'HR Team', type: 'staff', value: 'hr' },
-    ];
-
-    const demoRecurring: RecurringExpense[] = [
-      {
-        id: 'rec_1',
-        name: 'Office Rent',
-        amount: 5000,
-        category: 'Office & Administration',
-        vendor: 'PropertyCo Singapore',
-        frequency: 'monthly',
-        startDate: '2026-01-01',
-        department: 'Operations',
-        description: 'Monthly office rent at Marina Bay',
-        nextDueDate: '2026-08-01',
-        lastProcessedDate: '2026-07-01',
-        isActive: true,
-        approvalStatus: 'approved',
-        createdAt: '2026-01-01',
-        lastModified: '2026-07-01',
-        autoApprove: true,
-      },
-      {
-        id: 'rec_2',
-        name: 'Utilities',
-        amount: 450,
-        category: 'Utilities',
-        vendor: 'SP Group',
-        frequency: 'monthly',
-        startDate: '2026-02-01',
-        department: 'Operations',
-        description: 'Electricity, water, gas utilities',
-        nextDueDate: '2026-08-11',
-        lastProcessedDate: '2026-07-11',
-        isActive: true,
-        approvalStatus: 'approved',
-        createdAt: '2026-02-01',
-        lastModified: '2026-07-11',
-        autoApprove: true,
-      },
-      {
-        id: 'rec_3',
-        name: 'Internet & Telecoms',
-        amount: 280,
-        category: 'Office & Administration',
-        vendor: 'Singtel',
-        frequency: 'monthly',
-        startDate: '2026-03-01',
-        department: 'Operations',
-        description: 'Broadband and mobile subscriptions',
-        nextDueDate: '2026-08-01',
-        lastProcessedDate: '2026-07-01',
-        isActive: true,
-        approvalStatus: 'approved',
-        createdAt: '2026-03-01',
-        lastModified: '2026-07-01',
-        autoApprove: true,
-      },
-      {
-        id: 'rec_4',
-        name: 'Software Subscription',
-        amount: 150,
-        category: 'Office & Administration',
-        vendor: 'Microsoft/Adobe',
-        frequency: 'monthly',
-        startDate: '2026-04-01',
-        department: 'Operations',
-        description: 'MS Office 365 and Adobe Creative Suite',
-        nextDueDate: '2026-08-01',
-        lastProcessedDate: '2026-07-01',
-        isActive: true,
-        approvalStatus: 'approved',
-        createdAt: '2026-04-01',
-        lastModified: '2026-07-01',
-        autoApprove: true,
-      },
-      {
-        id: 'rec_5',
-        name: 'Marketing Campaign',
-        amount: 2000,
-        category: 'Marketing',
-        vendor: 'Digital Marketing Agency',
-        frequency: 'monthly',
-        startDate: '2026-05-01',
-        department: 'Sales',
-        description: 'Social media and digital marketing',
-        nextDueDate: '2026-08-01',
-        lastProcessedDate: '2026-07-01',
-        isActive: true,
-        approvalStatus: 'pending',
-        createdAt: '2026-05-01',
-        lastModified: '2026-07-01',
-        autoApprove: false,
-      },
-      {
-        id: 'rec_6',
-        name: 'Annual Insurance',
-        amount: 3500,
-        category: 'Insurance',
-        vendor: 'Singapore Insurance Co',
-        frequency: 'annual',
-        startDate: '2026-01-15',
-        department: 'Operations',
-        description: 'Business liability and property insurance',
-        nextDueDate: '2027-01-15',
-        lastProcessedDate: '2026-01-15',
-        isActive: true,
-        approvalStatus: 'approved',
-        createdAt: '2026-01-15',
-        lastModified: '2026-01-15',
-        autoApprove: false,
-      },
-    ];
-
-    setIncome(demoIncome);
-    setExpenses(demoExpenses);
-    setLedger(demoLedger);
-    setReconciliations(demoReconciliations);
-    setTags(demoTags);
-    setRecurringExpenses(demoRecurring);
-  }, []);
-
-  // KPI Calculations
-  const totalIncome = income.reduce((sum, i) => sum + i.amount, 0);
-  const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
-  const netBalance = totalIncome - totalExpenses;
-  const incomeReceived = income.filter(i => i.paymentStatus === 'received').reduce((sum, i) => sum + i.amount, 0);
-  const expensesApproved = expenses.filter(e => e.approvalStatus === 'approved').reduce((sum, e) => sum + e.amount, 0);
-  const expensesPending = expenses.filter(e => e.approvalStatus === 'pending').reduce((sum, e) => sum + e.amount, 0);
+  /**
+   * KPIs come from /summary, the same endpoint the reports and the HR/Accounts
+   * dashboards read. They used to be summed in the browser over every row in
+   * the table, which counted pending and rejected expenses as spend — so this
+   * screen reported a different total expense figure from the P&L for the same
+   * period. One definition, one number, everywhere: an expense is spend once it
+   * is approved.
+   */
+  const totalIncome = summary?.totalIncome ?? 0;
+  const totalExpenses = summary?.totalExpenses ?? 0;
+  const netBalance = summary?.netProfit ?? 0;
+  const incomeReceived = summary?.incomeReceived ?? 0;
+  const expensesApproved = totalExpenses;
+  const expensesPending = summary?.pendingExpenseValue ?? 0;
   const currentBalance = ledger.length > 0 ? ledger[ledger.length - 1].balance : 0;
 
-  const handleAddIncome = () => {
+  const handleAddIncome = async () => {
     if (!incomeForm.amount || !incomeForm.source) {
       showToast('❌ Please fill in amount and source', 'error');
       return;
     }
-    const newIncome: IncomeEntry = {
-      id: `inc_${Date.now()}`,
-      ...incomeForm,
-      tags: [],
-      paymentStatus: incomeForm.paymentStatus,
-      createdAt: new Date().toISOString(),
-      lastModified: new Date().toISOString(),
-    };
-    setIncome([...income, newIncome]);
-    showToast('✅ Income entry recorded', 'success');
-    setShowIncomeForm(false);
-    setIncomeForm({
-      date: new Date().toISOString().split('T')[0],
-      amount: 0,
-      source: '',
-      reference: '',
-      description: '',
-      notes: '',
-      invoiceNo: '',
-      paymentStatus: 'pending',
-    });
+    try {
+      await financeAPI.createIncome({
+        entry_date: incomeForm.date,
+        amount: incomeForm.amount,
+        source: incomeForm.source,
+        reference: incomeForm.reference,
+        invoice_no: incomeForm.invoiceNo,
+        description: incomeForm.description,
+        notes: incomeForm.notes,
+        payment_status: incomeForm.paymentStatus,
+      });
+      showToast('✅ Income entry recorded', 'success');
+      setShowIncomeForm(false);
+      setIncomeForm({
+        date: new Date().toISOString().split('T')[0],
+        amount: 0,
+        source: '',
+        reference: '',
+        description: '',
+        notes: '',
+        invoiceNo: '',
+        paymentStatus: 'pending',
+      });
+      await loadAll();
+    } catch (err) {
+      showToast(`❌ ${err instanceof Error ? err.message : 'Failed to record income'}`, 'error');
+    }
   };
 
-  const handleAddExpense = () => {
+  const handleAddExpense = async () => {
     if (!expenseForm.amount || !expenseForm.category || !expenseForm.vendor) {
       showToast('❌ Please fill in all required fields', 'error');
       return;
     }
-    const newExpense: ExpenseEntry = {
-      id: `exp_${Date.now()}`,
-      ...expenseForm,
-      tags: [],
-      approvalStatus: 'pending',
-      createdAt: new Date().toISOString(),
-      lastModified: new Date().toISOString(),
-    };
-    setExpenses([...expenses, newExpense]);
-    showToast('✅ Expense recorded (pending approval)', 'success');
-    setShowExpenseForm(false);
-    setExpenseForm({
-      date: new Date().toISOString().split('T')[0],
-      amount: 0,
-      category: '',
-      vendor: '',
-      description: '',
-      department: '',
-    });
+    try {
+      await financeAPI.createExpense({
+        entry_date: expenseForm.date,
+        amount: expenseForm.amount,
+        category: expenseForm.category,
+        vendor: expenseForm.vendor,
+        description: expenseForm.description,
+        department: expenseForm.department,
+      });
+      showToast('✅ Expense recorded (pending approval)', 'success');
+      setShowExpenseForm(false);
+      setExpenseForm({
+        date: new Date().toISOString().split('T')[0],
+        amount: 0,
+        category: '',
+        vendor: '',
+        description: '',
+        department: '',
+      });
+      await loadAll();
+    } catch (err) {
+      showToast(`❌ ${err instanceof Error ? err.message : 'Failed to record expense'}`, 'error');
+    }
   };
 
-  const handleAddTag = () => {
+  const handleAddTag = async () => {
     if (!tagForm.name || !tagForm.value) {
       showToast('❌ Please fill in tag details', 'error');
       return;
     }
-    const newTag: Tag = {
-      id: `tag_${Date.now()}`,
-      name: tagForm.name,
-      type: tagForm.type,
-      value: tagForm.value,
-    };
-    setTags([...tags, newTag]);
-    showToast('✅ Tag created', 'success');
-    setShowTagForm(false);
-    setTagForm({ name: '', type: 'category', value: '' });
+    try {
+      await financeAPI.createTag({ name: tagForm.name, tag_type: tagForm.type, value: tagForm.value });
+      showToast('✅ Tag created', 'success');
+      setShowTagForm(false);
+      setTagForm({ name: '', type: 'category', value: '' });
+      await loadAll();
+    } catch (err) {
+      showToast(`❌ ${err instanceof Error ? err.message : 'Failed to create tag'}`, 'error');
+    }
   };
 
-  const approveExpense = (expenseId: string) => {
-    setExpenses(
-      expenses.map(e =>
-        e.id === expenseId
-          ? { ...e, approvalStatus: 'approved', approvedBy: 'Admin User', approvalDate: new Date().toISOString().split('T')[0] }
-          : e
-      )
-    );
-    showToast('✅ Expense approved', 'success');
+  const approveExpense = async (expenseId: string) => {
+    try {
+      await financeAPI.approveExpense(Number(expenseId));
+      showToast('✅ Expense approved', 'success');
+      await loadAll();
+    } catch (err) {
+      showToast(`❌ ${err instanceof Error ? err.message : 'Failed to approve expense'}`, 'error');
+    }
   };
 
-  const rejectExpense = (expenseId: string) => {
-    setExpenses(
-      expenses.map(e => (e.id === expenseId ? { ...e, approvalStatus: 'rejected' } : e))
-    );
-    showToast('✅ Expense rejected', 'success');
+  const rejectExpense = async (expenseId: string) => {
+    try {
+      await financeAPI.rejectExpense(Number(expenseId));
+      showToast('✅ Expense rejected', 'success');
+      await loadAll();
+    } catch (err) {
+      showToast(`❌ ${err instanceof Error ? err.message : 'Failed to reject expense'}`, 'error');
+    }
   };
 
-  const handleAddRecurring = () => {
+  const handleAddRecurring = async () => {
     if (!recurringForm.name || !recurringForm.amount || !recurringForm.category || !recurringForm.vendor) {
       showToast('❌ Please fill in all required fields', 'error');
       return;
     }
-
-    const nextDueDate = calculateNextDueDate(recurringForm.startDate, recurringForm.frequency);
-
-    const newRecurring: RecurringExpense = {
-      id: `rec_${Date.now()}`,
-      name: recurringForm.name,
-      amount: recurringForm.amount,
-      category: recurringForm.category,
-      vendor: recurringForm.vendor,
-      frequency: recurringForm.frequency,
-      startDate: recurringForm.startDate,
-      endDate: recurringForm.endDate || undefined,
-      department: recurringForm.department,
-      description: recurringForm.description,
-      nextDueDate: nextDueDate,
-      isActive: true,
-      approvalStatus: 'pending',
-      createdAt: new Date().toISOString(),
-      lastModified: new Date().toISOString(),
-      autoApprove: recurringForm.autoApprove,
-    };
-
-    setRecurringExpenses([...recurringExpenses, newRecurring]);
-    showToast('✅ Recurring expense created (awaiting approval)', 'success');
-    setShowRecurringForm(false);
-    setRecurringForm({
-      name: '',
-      amount: 0,
-      category: '',
-      vendor: '',
-      frequency: 'monthly',
-      startDate: new Date().toISOString().split('T')[0],
-      endDate: '',
-      department: '',
-      description: '',
-      autoApprove: false,
-    });
-  };
-
-  const calculateNextDueDate = (startDate: string, frequency: string): string => {
-    const date = new Date(startDate);
-    switch (frequency) {
-      case 'daily':
-        date.setDate(date.getDate() + 1);
-        break;
-      case 'weekly':
-        date.setDate(date.getDate() + 7);
-        break;
-      case 'biweekly':
-        date.setDate(date.getDate() + 14);
-        break;
-      case 'monthly':
-        date.setMonth(date.getMonth() + 1);
-        break;
-      case 'quarterly':
-        date.setMonth(date.getMonth() + 3);
-        break;
-      case 'annual':
-        date.setFullYear(date.getFullYear() + 1);
-        break;
+    try {
+      await financeAPI.createRecurring({
+        name: recurringForm.name,
+        amount: recurringForm.amount,
+        category: recurringForm.category,
+        vendor: recurringForm.vendor,
+        frequency: recurringForm.frequency,
+        start_date: recurringForm.startDate,
+        end_date: recurringForm.endDate || null,
+        department: recurringForm.department,
+        description: recurringForm.description,
+        auto_approve: recurringForm.autoApprove,
+      });
+      showToast('✅ Recurring expense created (awaiting approval)', 'success');
+      setShowRecurringForm(false);
+      setRecurringForm({
+        name: '',
+        amount: 0,
+        category: '',
+        vendor: '',
+        frequency: 'monthly',
+        startDate: new Date().toISOString().split('T')[0],
+        endDate: '',
+        department: '',
+        description: '',
+        autoApprove: false,
+      });
+      await loadAll();
+    } catch (err) {
+      showToast(`❌ ${err instanceof Error ? err.message : 'Failed to create recurring expense'}`, 'error');
     }
-    return date.toISOString().split('T')[0];
   };
 
-  const approveRecurring = (recurringId: string) => {
-    setRecurringExpenses(
-      recurringExpenses.map(r =>
-        r.id === recurringId ? { ...r, approvalStatus: 'approved' } : r
-      )
-    );
-    showToast('✅ Recurring expense approved', 'success');
+  const approveRecurring = async (recurringId: string) => {
+    try {
+      await financeAPI.approveRecurring(Number(recurringId));
+      showToast('✅ Recurring expense approved', 'success');
+      await loadAll();
+    } catch (err) {
+      showToast(`❌ ${err instanceof Error ? err.message : 'Failed to approve'}`, 'error');
+    }
   };
 
-  const pauseRecurring = (recurringId: string) => {
-    setRecurringExpenses(
-      recurringExpenses.map(r =>
-        r.id === recurringId ? { ...r, isActive: false } : r
-      )
-    );
-    showToast('⏸️ Recurring expense paused', 'success');
+  const pauseRecurring = async (recurringId: string) => {
+    try {
+      await financeAPI.setRecurringActive(Number(recurringId), false);
+      showToast('⏸️ Recurring expense paused', 'success');
+      await loadAll();
+    } catch (err) {
+      showToast(`❌ ${err instanceof Error ? err.message : 'Failed to pause'}`, 'error');
+    }
   };
 
-  const resumeRecurring = (recurringId: string) => {
-    setRecurringExpenses(
-      recurringExpenses.map(r =>
-        r.id === recurringId ? { ...r, isActive: true } : r
-      )
-    );
-    showToast('▶️ Recurring expense resumed', 'success');
+  const resumeRecurring = async (recurringId: string) => {
+    try {
+      await financeAPI.setRecurringActive(Number(recurringId), true);
+      showToast('▶️ Recurring expense resumed', 'success');
+      await loadAll();
+    } catch (err) {
+      showToast(`❌ ${err instanceof Error ? err.message : 'Failed to resume'}`, 'error');
+    }
+  };
+
+  /** Materialises every approved recurring rule that has fallen due. */
+  const runRecurringNow = async () => {
+    try {
+      const created = await financeAPI.runRecurring();
+      showToast(
+        created > 0
+          ? `✅ ${created} recurring expense${created === 1 ? '' : 's'} posted`
+          : 'Nothing due right now',
+        'success'
+      );
+      await loadAll();
+    } catch (err) {
+      showToast(`❌ ${err instanceof Error ? err.message : 'Failed to run recurring expenses'}`, 'error');
+    }
   };
 
   return (
@@ -636,6 +499,7 @@ const AccountsDashboard: React.FC = () => {
           </div>
           <p style={{ fontSize: '14px', color: '#666', margin: '8px 0 0 0' }}>
             Income tracking, expense management, ledger entries, reconciliation, ACRA-compliant
+            {loading && <span style={{ marginLeft: '8px', color: '#FF6B35' }}>· loading…</span>}
           </p>
         </div>
 
@@ -748,7 +612,7 @@ const AccountsDashboard: React.FC = () => {
                   </div>
                   <div style={{ borderTop: '1px solid #FFD9B3', paddingTop: '6px', display: 'flex', justifyContent: 'space-between', fontWeight: '600' }}>
                     <span>Sources: {income.length}</span>
-                    <span>{income.length > 0 ? (totalIncome / income.length).toLocaleString('en-SG', { maximumFractionDigits: 0 }) : 0} avg</span>
+                    <span>{income.length > 0 ? (income.reduce((a, i) => a + i.amount, 0) / income.length).toLocaleString('en-SG', { maximumFractionDigits: 0 }) : 0} avg</span>
                   </div>
                 </div>
               </div>
@@ -770,7 +634,7 @@ const AccountsDashboard: React.FC = () => {
                   </div>
                   <div style={{ borderTop: '1px solid #FFD9B3', paddingTop: '6px', display: 'flex', justifyContent: 'space-between', fontWeight: '600' }}>
                     <span>Items: {expenses.length}</span>
-                    <span>{expenses.length > 0 ? (totalExpenses / expenses.length).toLocaleString('en-SG', { maximumFractionDigits: 0 }) : 0} avg</span>
+                    <span>{expenses.length > 0 ? (expenses.reduce((a, e) => a + e.amount, 0) / expenses.length).toLocaleString('en-SG', { maximumFractionDigits: 0 }) : 0} avg</span>
                   </div>
                 </div>
               </div>
@@ -1018,21 +882,39 @@ const AccountsDashboard: React.FC = () => {
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: '#333' }}>Recurring Expenses</h3>
-              <button
-                onClick={() => setShowRecurringForm(!showRecurringForm)}
-                style={{
-                  padding: '8px 16px',
-                  background: '#9C27B0',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  fontSize: '12px',
-                }}
-              >
-                {showRecurringForm ? '✕ Cancel' : '+ New Recurring'}
-              </button>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  onClick={runRecurringNow}
+                  title="Post every approved rule that has fallen due as a real expense"
+                  style={{
+                    padding: '8px 16px',
+                    background: '#fff',
+                    color: '#9C27B0',
+                    border: '1px solid #9C27B0',
+                    borderRadius: '4px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    fontSize: '12px',
+                  }}
+                >
+                  ⚡ Process Due
+                </button>
+                <button
+                  onClick={() => setShowRecurringForm(!showRecurringForm)}
+                  style={{
+                    padding: '8px 16px',
+                    background: '#9C27B0',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    fontSize: '12px',
+                  }}
+                >
+                  {showRecurringForm ? '✕ Cancel' : '+ New Recurring'}
+                </button>
+              </div>
             </div>
 
             {/* KPI Cards for Recurring */}

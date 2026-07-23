@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast, ToastContainer } from '../../components/Toast';
 import AdminLayout from '../../components/admin/AdminLayout';
-import { leaveAPI } from '../../services/adminAPI';
+import { leaveAPI, staffAPI, holidayAPI } from '../../services/adminAPI';
 
 interface LeaveBalance {
   staffId: string;
@@ -38,6 +38,53 @@ interface PublicHoliday {
   name: string;
 }
 
+type LeaveType = LeaveRequest['leaveType'];
+
+/**
+ * The API stores leave_type as a human label; this screen keys off slugs.
+ * Annual and Sick don't round-trip through plain slugification ("Annual Leave"
+ * would become "annual-leave", not "annual"), so they are named explicitly and
+ * everything else falls back to the general rule.
+ */
+const TYPE_LABELS: Record<string, string> = {
+  annual: 'Annual Leave',
+  sick: 'Sick Leave',
+};
+
+const typeToLabel = (type: string): string =>
+  TYPE_LABELS[type] ||
+  type.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+
+const labelToType = (label: string): LeaveType => {
+  if (!label) return 'annual';
+  const match = Object.entries(TYPE_LABELS).find(
+    ([, v]) => v.toLowerCase() === label.toLowerCase()
+  );
+  if (match) return match[0] as LeaveType;
+  return label.toLowerCase().replace(/\s+/g, '-') as LeaveType;
+};
+
+// Dates arrive as plain YYYY-MM-DD; guard anyway in case a timestamp slips in.
+const dateOnly = (v: string | null | undefined): string =>
+  v ? String(v).split('T')[0] : '';
+
+const toLeaveRequest = (row: any): LeaveRequest => ({
+  id: String(row.id),
+  staffId: row.staff_id,
+  staffName: row.staff_name || '',
+  leaveType: labelToType(row.leave_type),
+  startDate: dateOnly(row.start_date),
+  endDate: dateOnly(row.end_date),
+  daysRequested: Number(row.days_count) || 0,
+  reason: row.reason || '',
+  status: (row.status || 'pending') as LeaveRequest['status'],
+  approvedBy: row.approved_by || undefined,
+  approvalDate: dateOnly(row.last_modified) || undefined,
+  notes: row.notes || undefined,
+  createdDate: row.created_at || '',
+  lastModified: row.last_modified || '',
+});
+
 const LeaveManagementDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { toasts, showToast, removeToast } = useToast();
@@ -53,121 +100,82 @@ const LeaveManagementDashboard: React.FC = () => {
   const [showNewRequestForm, setShowNewRequestForm] = useState(false);
   const [selectedStaffId, setSelectedStaffId] = useState('');
   const [requestForm, setRequestForm] = useState({
-    leaveType: 'annual' as const,
+    // Widened to LeaveType: `as const` pinned this to the literal 'annual', so
+    // the sick-leave balance check below was dead code the compiler flagged as
+    // an impossible comparison.
+    leaveType: 'annual' as LeaveType,
     startDate: new Date().toISOString().split('T')[0],
     endDate: new Date().toISOString().split('T')[0],
     reason: '',
   });
 
-  // Demo data
+  const [loading, setLoading] = useState(true);
+
+  /**
+   * Everything below used to be invented: three fictional employees with
+   * fictional balances and three fictional requests. Requests, balances and
+   * holidays now all come from the API.
+   *
+   * The backend stores leave_type as a display label ("Annual Leave") while
+   * this screen keys off slugs ("annual"), so the two are mapped at the edge.
+   */
+  const loadAll = async () => {
+    try {
+      setLoading(true);
+      const [leaveRes, staffRes, holidayRes] = await Promise.all([
+        leaveAPI.getAll(),
+        staffAPI.getAll(),
+        holidayAPI.getAll(new Date().getFullYear()),
+      ]);
+
+      const requests: LeaveRequest[] = (leaveRes.data || []).map(toLeaveRequest);
+      setLeaveRequests(requests);
+
+      // Balances are derived from each staff member's entitlement minus the
+      // days already approved, rather than stored separately.
+      const staff = staffRes.data || [];
+      const balances: LeaveBalance[] = staff.map((st: any) => {
+        const approved = requests.filter(
+          r => r.staffId === st.staff_id && r.status === 'approved'
+        );
+        const usedOf = (type: string) =>
+          approved.filter(r => r.leaveType === type)
+                  .reduce((sum, r) => sum + r.daysRequested, 0);
+
+        const annualEnt = Number(st.annual_leave_entitlement) || 0;
+        const sickEnt = Number(st.sick_leave_entitlement) || 0;
+        const annualUsed = usedOf('annual');
+        const sickUsed = usedOf('sick');
+
+        return {
+          staffId: st.staff_id,
+          staffName: `${st.first_name} ${st.last_name}`.trim(),
+          year: new Date().getFullYear(),
+          annualLeaveEntitlement: annualEnt,
+          annualLeaveUsed: annualUsed,
+          annualLeaveRemaining: annualEnt - annualUsed,
+          sickLeaveEntitlement: sickEnt,
+          sickLeaveUsed: sickUsed,
+          sickLeaveRemaining: sickEnt - sickUsed,
+        };
+      });
+
+      setLeaveBalances(balances);
+      setSelectedStaffId(prev => prev || balances[0]?.staffId || '');
+
+      setPublicHolidays(
+        (holidayRes.data || []).map((h: any) => ({ date: h.date, name: h.name }))
+      );
+    } catch (error: any) {
+      console.error('Failed to load leave data:', error);
+      showToast(`⚠️ ${error.message || 'Could not load leave data'}`, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    // Demo leave balances
-    const demoBalances: LeaveBalance[] = [
-      {
-        staffId: 'S001',
-        staffName: 'John Tan',
-        year: 2026,
-        annualLeaveEntitlement: 12,
-        annualLeaveUsed: 3,
-        annualLeaveRemaining: 9,
-        sickLeaveEntitlement: 4,
-        sickLeaveUsed: 1,
-        sickLeaveRemaining: 3,
-      },
-      {
-        staffId: 'S002',
-        staffName: 'Sarah Lim',
-        year: 2026,
-        annualLeaveEntitlement: 12,
-        annualLeaveUsed: 5,
-        annualLeaveRemaining: 7,
-        sickLeaveEntitlement: 4,
-        sickLeaveUsed: 0,
-        sickLeaveRemaining: 4,
-      },
-      {
-        staffId: 'S003',
-        staffName: 'Mike Wong',
-        year: 2026,
-        annualLeaveEntitlement: 12,
-        annualLeaveUsed: 2,
-        annualLeaveRemaining: 10,
-        sickLeaveEntitlement: 4,
-        sickLeaveUsed: 2,
-        sickLeaveRemaining: 2,
-      },
-    ];
-
-    // Demo leave requests
-    const demoRequests: LeaveRequest[] = [
-      {
-        id: 'lr_1',
-        staffId: 'S001',
-        staffName: 'John Tan',
-        leaveType: 'annual',
-        startDate: '2026-07-13',
-        endDate: '2026-07-15',
-        daysRequested: 3,
-        reason: 'Family vacation',
-        status: 'approved',
-        approvedBy: 'Admin',
-        approvalDate: '2026-07-10',
-        createdDate: '2026-07-08',
-        lastModified: '2026-07-10',
-      },
-      {
-        id: 'lr_2',
-        staffId: 'S002',
-        staffName: 'Sarah Lim',
-        leaveType: 'sick',
-        startDate: '2026-07-20',
-        endDate: '2026-07-20',
-        daysRequested: 1,
-        reason: 'Medical appointment',
-        status: 'pending',
-        createdDate: '2026-07-19',
-        lastModified: '2026-07-19',
-      },
-      {
-        id: 'lr_3',
-        staffId: 'S003',
-        staffName: 'Mike Wong',
-        leaveType: 'annual',
-        startDate: '2026-08-01',
-        endDate: '2026-08-05',
-        daysRequested: 5,
-        reason: 'Holiday trip to Japan',
-        status: 'pending',
-        createdDate: '2026-07-15',
-        lastModified: '2026-07-15',
-      },
-    ];
-
-    // Singapore Public Holidays 2026
-    const demoPublicHolidays: PublicHoliday[] = [
-      { date: '2026-01-01', name: 'New Year Day' },
-      { date: '2026-01-29', name: 'Chinese New Year' },
-      { date: '2026-01-30', name: 'Chinese New Year (Replacement)' },
-      { date: '2026-04-10', name: 'Good Friday' },
-      { date: '2026-05-01', name: 'Labour Day' },
-      { date: '2026-05-24', name: 'Vesak Day' },
-      { date: '2026-07-07', name: 'Hari Raya Puasa' },
-      { date: '2026-08-09', name: 'National Day' },
-      { date: '2026-09-16', name: 'Malaysia Day' },
-      { date: '2026-10-24', name: 'Deepavali' },
-      { date: '2026-12-25', name: 'Christmas Day' },
-    ];
-
-    console.log('[LeaveManagementDashboard] 📊 Initializing demo data');
-    console.log('[LeaveManagementDashboard] Demo balances:', demoBalances);
-    console.log('[LeaveManagementDashboard] Demo requests:', demoRequests);
-
-    setLeaveBalances(demoBalances);
-    setLeaveRequests(demoRequests);
-    setPublicHolidays(demoPublicHolidays);
-    setSelectedStaffId(demoBalances[0]?.staffId || '');
-
-    console.log('[LeaveManagementDashboard] ✅ Initial state set with', demoBalances.length, 'staff members');
+    loadAll();
   }, []);
 
   // Calculate days between dates
@@ -178,7 +186,7 @@ const LeaveManagementDashboard: React.FC = () => {
   };
 
   // Handle new leave request
-  const handleSubmitLeaveRequest = () => {
+  const handleSubmitLeaveRequest = async () => {
     console.log('[LeaveManagementDashboard] 🚀 Submit clicked!');
     console.log('[LeaveManagementDashboard] selectedStaffId:', selectedStaffId);
     console.log('[LeaveManagementDashboard] requestForm:', requestForm);
@@ -211,119 +219,72 @@ const LeaveManagementDashboard: React.FC = () => {
       return;
     }
 
-    const newRequest: LeaveRequest = {
-      id: `lr_${Date.now()}`,
-      staffId: selectedStaffId,
-      staffName: staff.staffName,
-      leaveType: requestForm.leaveType,
-      startDate: requestForm.startDate,
-      endDate: requestForm.endDate,
-      daysRequested,
-      reason: requestForm.reason,
-      status: 'pending',
-      createdDate: new Date().toISOString(),
-      lastModified: new Date().toISOString(),
-    };
+    try {
+      await leaveAPI.create({
+        staff_id: selectedStaffId,
+        staff_name: staff.staffName,
+        leave_type: typeToLabel(requestForm.leaveType),
+        start_date: requestForm.startDate,
+        end_date: requestForm.endDate,
+        reason: requestForm.reason,
+        is_recurring: false,
+        period: 'full-day',
+      });
 
-    // Try to submit via API
-    leaveAPI.create({
-      staff_id: selectedStaffId,
-      staff_name: staff.staffName,
-      leave_type: requestForm.leaveType === 'annual' ? 'Annual Leave' :
-                 requestForm.leaveType === 'sick' ? 'Sick Leave' :
-                 requestForm.leaveType.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
-      start_date: requestForm.startDate,
-      end_date: requestForm.endDate,
-      reason: requestForm.reason,
-      is_recurring: false,
-      period: 'full-day',
-    }).then(() => {
-      console.log('[LeaveManagementDashboard] Leave request saved to API');
-    }).catch((error) => {
-      console.log('[LeaveManagementDashboard] API save failed, using local storage only:', error);
-    });
+      // Reload rather than pushing a locally-built row: the server assigns the
+      // id and computes days_count. The old code added the request to state
+      // even when the POST failed, which is why a backend that had been
+      // 500-ing on every create still looked like it was working.
+      await loadAll();
 
-    console.log('[LeaveManagementDashboard] ✅ Creating new request:', newRequest);
-    setLeaveRequests([...leaveRequests, newRequest]);
-    console.log('[LeaveManagementDashboard] ✅ Request added to state');
-    console.log('[LeaveManagementDashboard] leaveRequests count after:', leaveRequests.length + 1);
-
-    setRequestForm({
-      leaveType: 'annual',
-      startDate: new Date().toISOString().split('T')[0],
-      endDate: new Date().toISOString().split('T')[0],
-      reason: '',
-    });
-    console.log('[LeaveManagementDashboard] ✅ Form reset');
-
-    setShowNewRequestForm(false);
-    console.log('[LeaveManagementDashboard] ✅ Form hidden');
-
-    setActiveTab('requests'); // Switch to requests tab to show the new request
-    console.log('[LeaveManagementDashboard] ✅ Switched to requests tab');
-
-    showToast(`✅ Leave request submitted for ${staff.staffName}`, 'success');
-    console.log('[LeaveManagementDashboard] ✅ SUCCESS - Request submitted!');
+      setRequestForm({
+        leaveType: 'annual',
+        startDate: new Date().toISOString().split('T')[0],
+        endDate: new Date().toISOString().split('T')[0],
+        reason: '',
+      });
+      setShowNewRequestForm(false);
+      setActiveTab('requests');
+      showToast(`✅ Leave request submitted for ${staff.staffName}`, 'success');
+    } catch (error: any) {
+      showToast(`❌ ${error.message || 'Could not submit leave request'}`, 'error');
+    }
   };
 
   // Approve leave request
-  const handleApproveRequest = (requestId: string) => {
+  const handleApproveRequest = async (requestId: string) => {
     const request = leaveRequests.find(r => r.id === requestId);
     if (!request) return;
 
-    // Update leave balances
-    const updatedBalances = leaveBalances.map(balance => {
-      if (balance.staffId === request.staffId && request.leaveType === 'annual') {
-        return {
-          ...balance,
-          annualLeaveUsed: balance.annualLeaveUsed + request.daysRequested,
-          annualLeaveRemaining: balance.annualLeaveRemaining - request.daysRequested,
-        };
-      }
-      if (balance.staffId === request.staffId && request.leaveType === 'sick') {
-        return {
-          ...balance,
-          sickLeaveUsed: balance.sickLeaveUsed + request.daysRequested,
-          sickLeaveRemaining: balance.sickLeaveRemaining - request.daysRequested,
-        };
-      }
-      return balance;
-    });
-
-    // Update request
-    setLeaveRequests(
-      leaveRequests.map(r =>
-        r.id === requestId
-          ? {
-              ...r,
-              status: 'approved' as const,
-              approvedBy: 'Admin',
-              approvalDate: new Date().toISOString().split('T')[0],
-              lastModified: new Date().toISOString(),
-            }
-          : r
-      )
-    );
-
-    setLeaveBalances(updatedBalances);
-    showToast(`✅ Leave request approved for ${request.staffName}`, 'success');
+    try {
+      await leaveAPI.update(Number(requestId), {
+        status: 'approved',
+        approved_by: 'Admin',
+      });
+      // Balances are derived from approved requests, so reloading refreshes
+      // both the request and the balance it consumes.
+      await loadAll();
+      showToast(`✅ Leave request approved for ${request.staffName}`, 'success');
+    } catch (error: any) {
+      showToast(`❌ ${error.message || 'Could not approve request'}`, 'error');
+    }
   };
 
   // Reject leave request
-  const handleRejectRequest = (requestId: string) => {
-    setLeaveRequests(
-      leaveRequests.map(r =>
-        r.id === requestId
-          ? {
-              ...r,
-              status: 'rejected' as const,
-              lastModified: new Date().toISOString(),
-            }
-          : r
-      )
-    );
+  const handleRejectRequest = async (requestId: string) => {
     const request = leaveRequests.find(r => r.id === requestId);
-    showToast(`✅ Leave request rejected for ${request?.staffName}`, 'success');
+    if (!request) return;
+
+    try {
+      await leaveAPI.update(Number(requestId), {
+        status: 'rejected',
+        approved_by: 'Admin',
+      });
+      await loadAll();
+      showToast(`✅ Leave request rejected for ${request.staffName}`, 'success');
+    } catch (error: any) {
+      showToast(`❌ ${error.message || 'Could not reject request'}`, 'error');
+    }
   };
 
   // Get pending requests count

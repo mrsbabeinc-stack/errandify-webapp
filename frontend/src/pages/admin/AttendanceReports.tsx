@@ -2,6 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast, ToastContainer } from '../../components/Toast';
 import AdminLayout from '../../components/admin/AdminLayout';
+import { attendanceAPI } from '../../services/adminAPI';
+
+/** "2026-07" -> the first and last dates of that month. */
+const monthBounds = (month: string): { start: string; end: string } => {
+  const [y, m] = month.split('-').map(Number);
+  const last = new Date(y, m, 0).getDate(); // day 0 of next month = last of this
+  return { start: `${month}-01`, end: `${month}-${String(last).padStart(2, '0')}` };
+};
 
 interface ReportData {
   staff_id: string;
@@ -29,49 +37,76 @@ const AttendanceReports: React.FC = () => {
   const loadReportData = async () => {
     try {
       setLoading(true);
-      // Mock data
-      const mockData: ReportData[] = [
-        {
-          staff_id: 'S001',
-          staff_name: 'John Doe',
-          present_days: 18,
-          late_days: 2,
-          absent_days: 0,
-          half_days: 1,
-          total_hours: 164.0,
-          on_leave_days: 1,
-        },
-        {
-          staff_id: 'S002',
-          staff_name: 'Jane Smith',
-          present_days: 17,
-          late_days: 1,
-          absent_days: 1,
-          half_days: 0,
-          total_hours: 152.0,
-          on_leave_days: 2,
-        },
-        {
-          staff_id: 'S003',
-          staff_name: 'Bob Wilson',
-          present_days: 19,
-          late_days: 0,
-          absent_days: 0,
-          half_days: 2,
-          total_hours: 172.0,
-          on_leave_days: 0,
-        },
-      ];
-      setReportData(mockData);
-    } catch (error) {
-      showToast('Failed to load report data', 'error');
+      // Was three hardcoded employees. Real per-staff totals, aggregated
+      // server-side over the selected month.
+      const { start, end } = monthBounds(selectedMonth);
+      const res = await attendanceAPI.getReport(start, end);
+
+      let rows: ReportData[] = (res.data || []).map((r: any) => ({
+        staff_id: r.staff_id,
+        staff_name: r.staff_name,
+        present_days: Number(r.days_present) || 0,
+        late_days: Number(r.days_late) || 0,
+        absent_days: Number(r.days_absent) || 0,
+        half_days: 0,
+        total_hours: Number(r.total_hours) || 0,
+        on_leave_days: Number(r.days_on_leave) || 0,
+      }));
+
+      // The report type now actually filters, rather than relabelling the
+      // same three rows.
+      if (reportType === 'late-arrivals') {
+        rows = rows.filter(r => r.late_days > 0).sort((a, b) => b.late_days - a.late_days);
+      } else if (reportType === 'absences') {
+        rows = rows.filter(r => r.absent_days > 0).sort((a, b) => b.absent_days - a.absent_days);
+      }
+
+      setReportData(rows);
+    } catch (error: any) {
+      console.error('Failed to load report:', error);
+      showToast(error.message || 'Failed to load report data', 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  const downloadReport = (format: 'pdf' | 'csv') => {
-    showToast(`📥 Report downloaded as ${format.toUpperCase()}`, 'success');
+  /**
+   * Builds the CSV in the browser from the rows on screen and downloads it.
+   * This button previously only showed a "downloaded" toast — no file was ever
+   * produced.
+   */
+  const downloadReport = () => {
+    if (reportData.length === 0) {
+      showToast('Nothing to export for this period', 'error');
+      return;
+    }
+
+    const headers = ['Staff ID', 'Staff Name', 'Present', 'Late', 'Absent', 'On Leave', 'Total Hours'];
+    const escape = (v: string | number) => {
+      const str = String(v);
+      return /[",\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
+    };
+
+    const csv = [
+      headers.join(','),
+      ...reportData.map(r =>
+        [r.staff_id, r.staff_name, r.present_days, r.late_days, r.absent_days, r.on_leave_days, r.total_hours]
+          .map(escape)
+          .join(',')
+      ),
+    ].join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `attendance-${reportType}-${selectedMonth}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    showToast(`Exported ${reportData.length} row${reportData.length === 1 ? '' : 's'}`, 'success');
   };
 
   const getReportTitle = () => {
@@ -158,8 +193,11 @@ const AttendanceReports: React.FC = () => {
             }}
           />
           <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px' }}>
+            {/* The PDF button that sat here produced no file — it only showed
+                a "downloaded" toast. Printing the page is a real route to a
+                PDF and needs no extra dependency. */}
             <button
-              onClick={() => downloadReport('pdf')}
+              onClick={() => window.print()}
               style={{
                 padding: '8px 16px',
                 background: '#E91E63',
@@ -171,10 +209,10 @@ const AttendanceReports: React.FC = () => {
                 fontWeight: '600',
               }}
             >
-              📄 PDF
+              🖨️ Print
             </button>
             <button
-              onClick={() => downloadReport('csv')}
+              onClick={downloadReport}
               style={{
                 padding: '8px 16px',
                 background: '#4CAF50',

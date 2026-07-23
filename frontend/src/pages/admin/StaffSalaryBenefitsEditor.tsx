@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast, ToastContainer } from '../../components/Toast';
 import AdminLayout from '../../components/admin/AdminLayout';
+import { staffAPI, salaryAPI } from '../../services/adminAPI';
 
 interface Benefit {
-  id: string;
+  id: number;
   name: string;
   type: 'allowance' | 'deduction' | 'benefit';
   amount: number;
@@ -13,7 +14,7 @@ interface Benefit {
 }
 
 interface StaffSalary {
-  id: string;
+  id: number | null;
   staffId: string;
   staffName: string;
   position: string;
@@ -27,16 +28,52 @@ interface StaffSalary {
   notes?: string;
   lastModified: string;
   modifiedBy: string;
+  // Populated by the list endpoint, which returns counts rather than the rows.
+  allowanceCount?: number;
 }
 
 interface Staff {
-  id: string;
+  id: number;
   staffId: string;
   firstName: string;
   lastName: string;
   position: string;
   department: string;
 }
+
+/**
+ * The API speaks snake_case and returns NUMERIC columns as strings; the view
+ * below was written against camelCase numbers. Mapping at this boundary keeps
+ * the change to the data layer instead of rewriting every field in the render.
+ */
+const num = (v: unknown) => Number(v) || 0;
+
+const toBenefit = (row: any, type: Benefit['type']): Benefit => ({
+  id: row.id,
+  name: row.name,
+  type,
+  amount: num(row.amount),
+  frequency: (row.frequency as Benefit['frequency']) || 'monthly',
+  description: row.description || '',
+});
+
+const toSalary = (row: any): StaffSalary => ({
+  id: row.id ?? null,
+  staffId: row.staff_id,
+  staffName: row.staff_name || '',
+  position: row.position || '',
+  department: row.department || '',
+  baseSalary: num(row.base_salary),
+  allowances: (row.allowances || []).map((a: any) => toBenefit(a, 'allowance')),
+  deductions: (row.deductions || []).map((d: any) => toBenefit(d, 'deduction')),
+  benefits: (row.benefits || []).map((b: any) => toBenefit(b, 'benefit')),
+  totalAllowances: num(row.total_allowances),
+  grossSalary: num(row.gross_salary),
+  notes: row.notes || undefined,
+  lastModified: row.last_modified || '',
+  modifiedBy: 'Admin',
+  allowanceCount: num(row.allowance_count),
+});
 
 const STANDARD_ALLOWANCES = [
   { name: 'Transport Allowance', type: 'allowance' as const },
@@ -84,105 +121,114 @@ const StaffSalaryBenefitsEditor: React.FC = () => {
     description: '',
   });
 
-  // Demo data
+  const [loading, setLoading] = useState(true);
+
+  // Staff and their salary summaries both come from the API. This screen
+  // previously rendered four invented employees with invented salaries.
+  const loadAll = async () => {
+    try {
+      setLoading(true);
+      const [staffRes, salaryRes] = await Promise.all([
+        staffAPI.getAll(),
+        salaryAPI.getAll(),
+      ]);
+
+      setStaffList(
+        (staffRes.data || []).map((r: any) => ({
+          id: r.id,
+          staffId: r.staff_id,
+          firstName: r.first_name,
+          lastName: r.last_name,
+          position: r.position || '',
+          department: r.department || '',
+        }))
+      );
+      setSalaryData((salaryRes.data || []).map(toSalary));
+    } catch (error: any) {
+      console.error('Failed to load salary data:', error);
+      showToast(`⚠️ ${error.message || 'Could not load salary data'}`, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const demoStaff: Staff[] = [
-      { id: 'staff_1', staffId: 'S001', firstName: 'John', lastName: 'Tan', position: 'Operations Manager', department: 'Operations' },
-      { id: 'staff_2', staffId: 'S002', firstName: 'Sarah', lastName: 'Lim', position: 'Accounts Manager', department: 'Accounts' },
-      { id: 'staff_3', staffId: 'S003', firstName: 'Mike', lastName: 'Wong', position: 'HR Manager', department: 'HR' },
-      { id: 'staff_4', staffId: 'S004', firstName: 'Amy', lastName: 'Ooi', position: 'Marketing Specialist', department: 'Marketing' },
-    ];
-
-    const demoSalaries: StaffSalary[] = [
-      {
-        id: 'salary_1',
-        staffId: 'S001',
-        staffName: 'John Tan',
-        position: 'Operations Manager',
-        department: 'Operations',
-        baseSalary: 4500,
-        allowances: [
-          { id: 'allow_1', name: 'Transport Allowance', type: 'allowance', amount: 300, frequency: 'monthly', description: 'Daily commute support' },
-          { id: 'allow_2', name: 'Housing Allowance', type: 'allowance', amount: 500, frequency: 'monthly', description: 'Accommodation support' },
-        ],
-        deductions: [],
-        benefits: [
-          { id: 'ben_1', name: 'Health Insurance', type: 'benefit', amount: 200, frequency: 'monthly', description: 'Group health plan' },
-        ],
-        totalAllowances: 800,
-        grossSalary: 5300,
-        lastModified: '2026-07-10',
-        modifiedBy: 'Admin',
-      },
-      {
-        id: 'salary_2',
-        staffId: 'S002',
-        staffName: 'Sarah Lim',
-        position: 'Accounts Manager',
-        department: 'Accounts',
-        baseSalary: 5000,
-        allowances: [
-          { id: 'allow_3', name: 'Transport Allowance', type: 'allowance', amount: 300, frequency: 'monthly', description: '' },
-          { id: 'allow_4', name: 'Housing Allowance', type: 'allowance', amount: 600, frequency: 'monthly', description: '' },
-          { id: 'allow_5', name: 'Meal Allowance', type: 'allowance', amount: 200, frequency: 'monthly', description: 'Lunch subsidy' },
-        ],
-        deductions: [],
-        benefits: [
-          { id: 'ben_2', name: 'Health Insurance', type: 'benefit', amount: 200, frequency: 'monthly', description: '' },
-          { id: 'ben_3', name: 'Annual Bonus', type: 'benefit', amount: 5000, frequency: 'annually', description: 'Performance bonus' },
-          { id: 'ben_4', name: 'Errandify Points (EP)', type: 'benefit', amount: 500, frequency: 'monthly', description: 'EP allocation as employee benefit' },
-        ],
-        totalAllowances: 1100,
-        grossSalary: 6100,
-        lastModified: '2026-07-05',
-        modifiedBy: 'Admin',
-      },
-    ];
-
-    setStaffList(demoStaff);
-    setSalaryData(demoSalaries);
+    loadAll();
   }, []);
 
-  const handleSelectStaff = (staff: Staff) => {
-    const existing = salaryData.find(s => s.staffId === staff.staffId);
-    if (existing) {
-      setSelectedStaff(existing);
-      setEditForm({ baseSalary: existing.baseSalary });
-    } else {
-      const newSalary: StaffSalary = {
-        id: `salary_${Date.now()}`,
-        staffId: staff.staffId,
-        staffName: `${staff.firstName} ${staff.lastName}`,
-        position: staff.position,
-        department: staff.department,
-        baseSalary: 0,
-        allowances: [],
-        deductions: [],
-        benefits: [],
-        totalAllowances: 0,
-        grossSalary: 0,
-        lastModified: new Date().toISOString(),
-        modifiedBy: 'Admin',
-      };
-      setSelectedStaff(newSalary);
+  /**
+   * The allowance/benefit/deduction endpoints all 404 without a staff_salary
+   * row to hang off, so the row has to exist before the first one is added.
+   */
+  const ensureSalaryRecord = async (staff: StaffSalary) => {
+    if (staff.id !== null) return staff.id;
+    await salaryAPI.updateSalary(staff.staffId, {
+      staff_name: staff.staffName,
+      position: staff.position,
+      department: staff.department,
+      base_salary: staff.baseSalary,
+    } as any);
+    const fresh = await salaryAPI.getSalary(staff.staffId);
+    const mapped = toSalary(fresh.data);
+    setSelectedStaff(mapped);
+    return mapped.id;
+  };
+
+  const refreshSelected = async (staffId: string) => {
+    const fresh = await salaryAPI.getSalary(staffId);
+    setSelectedStaff(toSalary(fresh.data));
+  };
+
+  const handleSelectStaff = async (staff: Staff) => {
+    const blank: StaffSalary = {
+      id: null,
+      staffId: staff.staffId,
+      staffName: `${staff.firstName} ${staff.lastName}`,
+      position: staff.position,
+      department: staff.department,
+      baseSalary: 0,
+      allowances: [],
+      deductions: [],
+      benefits: [],
+      totalAllowances: 0,
+      grossSalary: 0,
+      lastModified: '',
+      modifiedBy: 'Admin',
+    };
+
+    setActiveTab('edit');
+
+    try {
+      const res = await salaryAPI.getSalary(staff.staffId);
+      const mapped = toSalary(res.data);
+      setSelectedStaff(mapped);
+      setEditForm({ baseSalary: mapped.baseSalary });
+    } catch {
+      // 404 simply means this staff member has no salary record yet; the row
+      // gets created on the first save.
+      setSelectedStaff(blank);
       setEditForm({ baseSalary: 0 });
     }
-    setActiveTab('edit');
   };
 
-  const handleUpdateBaseSalary = () => {
+  const handleUpdateBaseSalary = async () => {
     if (!selectedStaff) return;
-    const updated = {
-      ...selectedStaff,
-      baseSalary: editForm.baseSalary,
-      grossSalary: editForm.baseSalary + selectedStaff.totalAllowances,
-      lastModified: new Date().toISOString(),
-    };
-    setSelectedStaff(updated);
-    showToast(`✅ Base salary updated to SGD $${editForm.baseSalary.toLocaleString()}`, 'success');
+    try {
+      await salaryAPI.updateSalary(selectedStaff.staffId, {
+        staff_name: selectedStaff.staffName,
+        position: selectedStaff.position,
+        department: selectedStaff.department,
+        base_salary: editForm.baseSalary,
+        notes: selectedStaff.notes,
+      } as any);
+      await refreshSelected(selectedStaff.staffId);
+      showToast(`✅ Base salary updated to SGD $${editForm.baseSalary.toLocaleString()}`, 'success');
+    } catch (error: any) {
+      showToast(`❌ ${error.message || 'Could not update base salary'}`, 'error');
+    }
   };
 
-  const handleAddBenefit = () => {
+  const handleAddBenefit = async () => {
     if (!newBenefit.name || newBenefit.amount <= 0) {
       showToast('❌ Please enter benefit name and amount', 'error');
       return;
@@ -190,69 +236,59 @@ const StaffSalaryBenefitsEditor: React.FC = () => {
 
     if (!selectedStaff) return;
 
-    const benefit: Benefit = {
-      id: `${benefitType}_${Date.now()}`,
+    const payload = {
       name: newBenefit.name,
-      type: benefitType,
       amount: newBenefit.amount,
       frequency: newBenefit.frequency,
       description: newBenefit.description,
     };
 
-    let updated = { ...selectedStaff };
+    try {
+      await ensureSalaryRecord(selectedStaff);
 
-    if (benefitType === 'allowance') {
-      updated.allowances = [...updated.allowances, benefit];
-      updated.totalAllowances = updated.allowances.reduce((sum, a) => sum + a.amount, 0);
-    } else if (benefitType === 'benefit') {
-      updated.benefits = [...updated.benefits, benefit];
-    } else if (benefitType === 'deduction') {
-      updated.deductions = [...updated.deductions, benefit];
+      if (benefitType === 'allowance') {
+        await salaryAPI.addAllowance(selectedStaff.staffId, payload);
+      } else if (benefitType === 'benefit') {
+        await salaryAPI.addBenefit(selectedStaff.staffId, payload);
+      } else {
+        await salaryAPI.addDeduction(selectedStaff.staffId, payload);
+      }
+
+      await refreshSelected(selectedStaff.staffId);
+      setNewBenefit({ name: '', amount: 0, frequency: 'monthly', description: '' });
+      setShowAddBenefit(false);
+      showToast(`✅ ${benefitType === 'allowance' ? 'Allowance' : benefitType === 'benefit' ? 'Benefit' : 'Deduction'} added`, 'success');
+    } catch (error: any) {
+      showToast(`❌ ${error.message || 'Could not add entry'}`, 'error');
     }
-
-    updated.grossSalary = updated.baseSalary + updated.totalAllowances;
-    updated.lastModified = new Date().toISOString();
-
-    setSelectedStaff(updated);
-    setNewBenefit({ name: '', amount: 0, frequency: 'monthly', description: '' });
-    setShowAddBenefit(false);
-    showToast(`✅ ${benefitType === 'allowance' ? 'Allowance' : benefitType === 'benefit' ? 'Benefit' : 'Deduction'} added`, 'success');
   };
 
-  const handleRemoveBenefit = (id: string, type: 'allowance' | 'deduction' | 'benefit') => {
+  const handleRemoveBenefit = async (id: number, type: 'allowance' | 'deduction' | 'benefit') => {
     if (!selectedStaff) return;
 
-    let updated = { ...selectedStaff };
+    try {
+      if (type === 'allowance') {
+        await salaryAPI.removeAllowance(id);
+      } else if (type === 'benefit') {
+        await salaryAPI.removeBenefit(id);
+      } else {
+        await salaryAPI.removeDeduction(id);
+      }
 
-    if (type === 'allowance') {
-      updated.allowances = updated.allowances.filter(a => a.id !== id);
-      updated.totalAllowances = updated.allowances.reduce((sum, a) => sum + a.amount, 0);
-    } else if (type === 'benefit') {
-      updated.benefits = updated.benefits.filter(b => b.id !== id);
-    } else if (type === 'deduction') {
-      updated.deductions = updated.deductions.filter(d => d.id !== id);
+      await refreshSelected(selectedStaff.staffId);
+      showToast(`✅ ${type} removed`, 'success');
+    } catch (error: any) {
+      showToast(`❌ ${error.message || 'Could not remove entry'}`, 'error');
     }
-
-    updated.grossSalary = updated.baseSalary + updated.totalAllowances;
-    updated.lastModified = new Date().toISOString();
-
-    setSelectedStaff(updated);
-    showToast(`✅ ${type} removed`, 'success');
   };
 
-  const handleSaveAndExit = () => {
+  // Every edit above is already persisted, so this only refreshes the list the
+  // user is returning to.
+  const handleSaveAndExit = async () => {
     if (!selectedStaff) return;
-
-    const existing = salaryData.findIndex(s => s.staffId === selectedStaff.staffId);
-    if (existing >= 0) {
-      const updated = [...salaryData];
-      updated[existing] = selectedStaff;
-      setSalaryData(updated);
-    } else {
-      setSalaryData([...salaryData, selectedStaff]);
-    }
-
-    showToast(`✅ Salary & benefits saved for ${selectedStaff.staffName}`, 'success');
+    const name = selectedStaff.staffName;
+    await loadAll();
+    showToast(`✅ Salary & benefits saved for ${name}`, 'success');
     setSelectedStaff(null);
     setActiveTab('list');
   };
@@ -319,7 +355,8 @@ const StaffSalaryBenefitsEditor: React.FC = () => {
             <div style={{ display: 'grid', gap: '12px' }}>
               {staffList.map(staff => {
                 const salary = salaryData.find(s => s.staffId === staff.staffId);
-                const hasData = !!salary && (salary.baseSalary > 0 || salary.allowances.length > 0);
+                // The list endpoint returns counts, not the allowance rows.
+                const hasData = !!salary && (salary.baseSalary > 0 || (salary.allowanceCount ?? 0) > 0);
                 return (
                   <div
                     key={staff.id}

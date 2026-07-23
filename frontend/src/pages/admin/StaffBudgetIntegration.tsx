@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast, ToastContainer } from '../../components/Toast';
 import AdminLayout from '../../components/admin/AdminLayout';
+import financeAPI, { n } from '../../services/financeAPI';
 
 interface StaffCost {
   staff_id: string;
@@ -20,6 +21,7 @@ interface BudgetAllocation {
   headcount: number;
   avg_salary: number;
   total_labor_budget: number;
+  has_staff_line: boolean;
   actual_cost: number;
   variance: number;
   variance_percent: number;
@@ -31,33 +33,60 @@ const StaffBudgetIntegration: React.FC = () => {
   const [staff, setStaff] = useState<StaffCost[]>([]);
   const [budgets, setBudgets] = useState<BudgetAllocation[]>([]);
   const [activeTab, setActiveTab] = useState<'staff' | 'budgets'>('staff');
+  const [loading, setLoading] = useState(true);
+  const [period, setPeriod] = useState(new Date().toISOString().slice(0, 7));
 
   useEffect(() => {
     loadData();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [period]);
 
+  /**
+   * Real staff cost against real budget. The five employees and two department
+   * allocations here were fabricated, down to a 5.6% variance that was simply
+   * typed in. Cost is now salary + allowances + employer CPF per active staff
+   * member, and the allocation is the approved budget for the same period.
+   */
   const loadData = async () => {
-    const savedStaff = localStorage.getItem('staff_budget_staff') || '[]';
-    const savedBudgets = localStorage.getItem('staff_budget_allocations') || '[]';
+    try {
+      setLoading(true);
+      const data = await financeAPI.staffCosts(period);
+      setStaff(data.staff.map(s => ({
+        staff_id: s.staff_id,
+        staff_name: s.staff_name,
+        designation: s.position || '—',
+        salary: n(s.base_salary) + n(s.allowances),
+        cpf_employer: n(s.cpf_employer),
+        total_cost: n(s.monthly_cost),
+        department: s.department || 'Unassigned',
+      })));
 
-    let mockStaff: StaffCost[] = [
-      { staff_id: 'EMP-001', staff_name: 'John Tan', designation: 'Manager', salary: 8000, cpf_employer: 1100, total_cost: 9100, department: 'Operations' },
-      { staff_id: 'EMP-002', staff_name: 'Sarah Lee', designation: 'Senior Executive', salary: 6500, cpf_employer: 894, total_cost: 7394, department: 'Finance' },
-      { staff_id: 'EMP-003', staff_name: 'Mike Wong', designation: 'Executive', salary: 5000, cpf_employer: 688, total_cost: 5688, department: 'Operations' },
-      { staff_id: 'EMP-004', staff_name: 'Lisa Chen', designation: 'Executive', salary: 5000, cpf_employer: 688, total_cost: 5688, department: 'Finance' },
-      { staff_id: 'EMP-005', staff_name: 'James Kim', designation: 'Executive', salary: 4500, cpf_employer: 619, total_cost: 5119, department: 'Operations' },
-    ];
+      const headcount = new Map<string, number>();
+      for (const row of data.staff) {
+        const dept = row.department || 'Unassigned';
+        headcount.set(dept, (headcount.get(dept) || 0) + 1);
+      }
 
-    let mockBudgets: BudgetAllocation[] = [
-      { allocation_id: 1, department: 'Operations', cost_center: 'CC-001', headcount: 3, avg_salary: 5833, total_labor_budget: 175000, actual_cost: 165240, variance: 9760, variance_percent: 5.6 },
-      { allocation_id: 2, department: 'Finance', cost_center: 'CC-002', headcount: 2, avg_salary: 5750, total_labor_budget: 115000, actual_cost: 113082, variance: 1918, variance_percent: 1.7 },
-    ];
-
-    if (savedStaff !== '[]') mockStaff = JSON.parse(savedStaff);
-    if (savedBudgets !== '[]') mockBudgets = JSON.parse(savedBudgets);
-
-    setStaff(mockStaff);
-    setBudgets(mockBudgets);
+      setBudgets(data.allocations.map((a, idx) => {
+        const heads = headcount.get(a.department) || 0;
+        return {
+          allocation_id: idx + 1,
+          department: a.department,
+          cost_center: '—',
+          headcount: heads,
+          avg_salary: heads > 0 ? Math.round(a.actual / heads) : 0,
+          total_labor_budget: a.allocated,
+          has_staff_line: a.has_staff_line,
+          actual_cost: a.actual,
+          variance: a.variance,
+          variance_percent: a.allocated > 0 ? Math.round((a.variance / a.allocated) * 1000) / 10 : 0,
+        };
+      }));
+    } catch (err) {
+      showToast(`❌ ${err instanceof Error ? err.message : 'Failed to load staff costs'}`, 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const totalStaffCost = staff.reduce((sum, s) => sum + s.total_cost, 0);
@@ -72,9 +101,18 @@ const StaffBudgetIntegration: React.FC = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
           <div>
             <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#333', margin: '0 0 4px 0' }}>👥 Staff → Budget Integration</h1>
-            <p style={{ fontSize: '14px', color: '#666', margin: 0 }}>Auto-calculate labor budgets from staff costs & headcount</p>
+            <p style={{ fontSize: '14px', color: '#666', margin: 0 }}>Staff cost (salary + allowances + employer CPF) against the approved budget{loading ? ' · loading…' : ''}</p>
           </div>
-          <button onClick={() => navigate(-1)} style={{ fontSize: '20px', background: 'none', border: 'none', cursor: 'pointer', color: '#FF6B35', fontWeight: '700' }}>←</button>
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <input
+              type="month"
+              value={period}
+              onChange={(e) => setPeriod(e.target.value)}
+              title="Budget period to compare against"
+              style={{ padding: '8px 10px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '13px' }}
+            />
+            <button onClick={() => navigate(-1)} style={{ fontSize: '20px', background: 'none', border: 'none', cursor: 'pointer', color: '#FF6B35', fontWeight: '700' }}>←</button>
+          </div>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '12px', marginBottom: '24px' }}>
@@ -148,11 +186,18 @@ const StaffBudgetIntegration: React.FC = () => {
                     <td style={{ padding: '12px', fontSize: '12px' }}><div style={{ fontWeight: '600', color: '#333' }}>{budget.department}</div><div style={{ fontSize: '11px', color: '#666' }}>{budget.cost_center}</div></td>
                     <td style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: '600', color: '#FF6B35' }}>{budget.headcount}</td>
                     <td style={{ padding: '12px', textAlign: 'right', fontSize: '12px', color: '#333' }}>SGD {budget.avg_salary.toLocaleString()}</td>
-                    <td style={{ padding: '12px', textAlign: 'right', fontSize: '12px', fontWeight: '600', color: '#333' }}>SGD {budget.total_labor_budget.toLocaleString()}</td>
+                    <td style={{ padding: '12px', textAlign: 'right', fontSize: '12px', fontWeight: '600', color: budget.has_staff_line ? '#333' : '#E65100' }}>
+                      {budget.has_staff_line ? `SGD ${budget.total_labor_budget.toLocaleString()}` : '—'}
+                      {!budget.has_staff_line && (
+                        <div style={{ fontSize: '10px', fontWeight: 400, color: '#E65100' }}>no staff line in budget</div>
+                      )}
+                    </td>
                     <td style={{ padding: '12px', textAlign: 'right', fontSize: '12px', fontWeight: '600', color: '#FF6B35' }}>SGD {budget.actual_cost.toLocaleString()}</td>
-                    <td style={{ padding: '12px', textAlign: 'right', fontSize: '12px', fontWeight: '600', color: budget.variance > 0 ? '#4CAF50' : '#E65100' }}>SGD {budget.variance.toLocaleString()}</td>
-                    <td style={{ padding: '12px', textAlign: 'right', fontSize: '12px', fontWeight: '600', color: budget.variance_percent > 0 ? '#4CAF50' : '#E65100', background: budget.variance_percent > 0 ? '#E8F5E9' : '#FFF3E0', borderRadius: '4px' }}>
-                      {budget.variance_percent > 0 ? '+' : ''}{budget.variance_percent.toFixed(1)}%
+                    <td style={{ padding: '12px', textAlign: 'right', fontSize: '12px', fontWeight: '600', color: budget.variance >= 0 ? '#4CAF50' : '#E65100' }}>
+                      {budget.has_staff_line ? `SGD ${budget.variance.toLocaleString()}` : '—'}
+                    </td>
+                    <td style={{ padding: '12px', textAlign: 'right', fontSize: '12px', fontWeight: '600', color: budget.variance_percent >= 0 ? '#4CAF50' : '#E65100', background: budget.has_staff_line ? (budget.variance_percent >= 0 ? '#E8F5E9' : '#FFF3E0') : 'transparent', borderRadius: '4px' }}>
+                      {budget.has_staff_line ? `${budget.variance_percent > 0 ? '+' : ''}${budget.variance_percent.toFixed(1)}%` : '—'}
                     </td>
                   </tr>
                 ))}
@@ -164,7 +209,8 @@ const StaffBudgetIntegration: React.FC = () => {
         <div style={{ marginTop: '24px', padding: '16px', background: '#E8F5E9', borderRadius: '8px', border: '1px solid #4CAF50' }}>
           <p style={{ fontSize: '12px', color: '#2E7D32', margin: '0 0 8px 0', fontWeight: '600' }}>ℹ️ Integration Features</p>
           <ul style={{ fontSize: '12px', color: '#2E7D32', margin: 0, paddingLeft: '20px' }}>
-            <li>Auto-calculates labor budget from staff costs (Salary + CPF Employer)</li>
+            <li>Calculates labour cost per staff member: salary + allowances + employer CPF</li>
+            <li>Compares against the budget's staff/salary allocation only — a department with no staff line shows “—”, not a false surplus drawn from rent and utilities</li>
             <li>Groups by department & cost center</li>
             <li>Tracks headcount per department</li>
             <li>Calculates average salary & total annual budget</li>

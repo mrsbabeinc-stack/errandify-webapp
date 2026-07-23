@@ -126,16 +126,24 @@ export default function SingPassSimulator() {
     const redirectUri = searchParams.get('redirect_uri');
     const state = searchParams.get('state');
 
-    // Simulate OAuth callback by redirecting to the callback endpoint
-    if (redirectUri) {
-      // Redirect to callback handler with authorization code
-      const callbackUrl = `${redirectUri}?code=singpass_auth_code_${Date.now()}_${Math.random().toString(36).substr(2, 9)}&state=${state || 'state'}`;
-      window.location.href = callbackUrl;
-    } else {
-      // Fallback: use default callback URL
-      const callbackUrl = `/auth/singpass-callback?code=singpass_auth_code_${Date.now()}_${Math.random().toString(36).substr(2, 9)}&state=${state || 'state'}`;
-      window.location.href = callbackUrl;
-    }
+    /*
+     * The chosen NRIC travels in the mock authorization code.
+     *
+     * This screen offers three identities, but the code carried only a
+     * timestamp — and the backend's simulator branch answered with a
+     * hardcoded S1234567A no matter which one you picked. So every simulated
+     * login was the same person, and the two other identities were unreachable
+     * decoration. That also made it impossible to exercise signup at all,
+     * because S1234567A already has an account: the flow could only ever take
+     * the "user already exists" path.
+     *
+     * Real Singpass codes are opaque and this one is not; it is only ever
+     * accepted by the development branch of the callback, which is gated on
+     * the `singpass_auth_code` prefix.
+     */
+    const mockCode = `singpass_auth_code_${nric}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const base = redirectUri || '/auth/singpass-callback';
+    window.location.href = `${base}?code=${mockCode}&state=${state || 'state'}`;
   };
 
   return (

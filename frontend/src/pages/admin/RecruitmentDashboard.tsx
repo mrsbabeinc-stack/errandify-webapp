@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast, ToastContainer } from '../../components/Toast';
 import AdminLayout from '../../components/admin/AdminLayout';
+import { jobOpeningAPI } from '../../services/adminAPI';
 
 interface JobOpening {
   id: string;
@@ -108,144 +109,49 @@ const RecruitmentDashboard: React.FC = () => {
     linkExpireDays: 7,
   });
 
-  // Demo data
+  /**
+   * Openings come from the API. The candidate list below still does not:
+   * the invite-link/scoring flow this screen models has no store yet, so
+   * `applications` stays empty rather than showing invented candidates.
+   * Real applications are visible on the Recruitment Applications screen,
+   * which reads /api/recruitment/applications.
+   */
+  const loadOpenings = async () => {
+    try {
+      const res = await jobOpeningAPI.getAll();
+      setJobOpenings(
+        (res.data || []).map((o: any) => ({
+          id: String(o.id),
+          title: o.title,
+          department: o.department || '',
+          reportingTo: o.reporting_to || '',
+          teamSize: Number(o.team_size) || 0,
+          jobDescription: o.job_description || '',
+          requirements: o.requirements || '',
+          responsibilities: o.responsibilities || '',
+          salaryRange: {
+            min: Number(o.salary_min) || 0,
+            max: Number(o.salary_max) || 0,
+          },
+          workArrangement: (o.work_arrangement || 'onsite') as JobOpening['workArrangement'],
+          screeningQuestions: [],
+          // The database calls the live state 'open'; this screen calls it
+          // 'published'.
+          status: (o.status === 'open' ? 'published' : o.status) as JobOpening['status'],
+          createdAt: o.created_at || '',
+          publishedAt: o.published_at || undefined,
+          closedAt: o.closed_at || undefined,
+          candidatesCount: Number(o.candidates_count) || 0,
+        }))
+      );
+    } catch (error: any) {
+      console.error('Failed to load job openings:', error);
+      showToast(`⚠️ ${error.message || 'Could not load job openings'}`, 'error');
+    }
+  };
+
   useEffect(() => {
-    const demoJobs: JobOpening[] = [
-      {
-        id: 'job_1',
-        title: 'Senior Software Engineer',
-        department: 'IT',
-        reportingTo: 'VP Engineering',
-        teamSize: 5,
-        jobDescription: 'Seeking experienced software engineer to lead our platform development...',
-        requirements: '5+ years experience, React, Node.js, System design',
-        responsibilities: 'Design and develop scalable systems, mentor junior engineers, code reviews',
-        salaryRange: { min: 120000, max: 180000 },
-        workArrangement: 'hybrid',
-        screeningQuestions: [
-          {
-            id: 'q1',
-            category: 'technical',
-            question: 'Describe your experience with React and state management libraries',
-            questionType: 'text',
-            weightage: 5,
-          },
-          {
-            id: 'q2',
-            category: 'experience',
-            question: 'Tell us about your most complex system design project',
-            questionType: 'text',
-            weightage: 4,
-          },
-          {
-            id: 'q3',
-            category: 'behavioral',
-            question: 'How do you handle disagreements with team members on technical decisions?',
-            questionType: 'text',
-            weightage: 3,
-          },
-          {
-            id: 'q4',
-            category: 'availability',
-            question: 'What is your notice period and availability to start?',
-            questionType: 'text',
-            weightage: 2,
-          },
-        ],
-        status: 'published',
-        createdAt: '2026-07-10',
-        publishedAt: '2026-07-12',
-        candidatesCount: 3,
-      },
-      {
-        id: 'job_2',
-        title: 'Sales Executive',
-        department: 'Sales',
-        reportingTo: 'Sales Manager',
-        teamSize: 8,
-        jobDescription: 'Looking for dynamic sales professional to drive B2B growth...',
-        requirements: '3+ years sales, B2B experience, CRM proficiency',
-        responsibilities: 'Generate new leads, close deals, manage client relationships',
-        salaryRange: { min: 60000, max: 100000 },
-        workArrangement: 'flexible',
-        screeningQuestions: [],
-        status: 'draft',
-        createdAt: '2026-07-14',
-        candidatesCount: 0,
-      },
-    ];
-
-    const demoCandidates: CandidateApplication[] = [
-      {
-        id: 'app_1',
-        jobId: 'job_1',
-        candidateName: 'John Chen',
-        candidateEmail: 'john.chen@email.com',
-        candidatePhone: '+65-9123-4567',
-        resumeUrl: 'resume_john.pdf',
-        inviteLink: 'errandify.com/recruit/job-12345/candidate-abc789',
-        inviteLinkExpiry: '2026-07-22',
-        uniqueId: 'abc789',
-        status: 'completed',
-        linkSentDate: '2026-07-15',
-        firstAccessDate: '2026-07-15',
-        completionDate: '2026-07-16',
-        score: 82,
-        answers: [
-          { questionId: 'q1', answer: '7 years React, Redux, Context API experience' },
-          { questionId: 'q2', answer: 'Built microservices platform handling 1M+ users' },
-          { questionId: 'q3', answer: 'Discuss calmly, present data-driven arguments' },
-          { questionId: 'q4', answer: 'Notice period: 2 weeks, available immediately after' },
-        ],
-        recommendation: 'pass',
-        redFlags: [],
-        interviewScheduled: '2026-07-20 2:00 PM',
-        createdAt: '2026-07-15',
-      },
-      {
-        id: 'app_2',
-        jobId: 'job_1',
-        candidateName: 'Sarah Lim',
-        candidateEmail: 'sarah.lim@email.com',
-        candidatePhone: '+65-8765-4321',
-        resumeUrl: 'resume_sarah.pdf',
-        inviteLink: 'errandify.com/recruit/job-12345/candidate-def456',
-        inviteLinkExpiry: '2026-07-22',
-        uniqueId: 'def456',
-        status: 'completed',
-        linkSentDate: '2026-07-15',
-        firstAccessDate: '2026-07-15',
-        completionDate: '2026-07-16',
-        score: 65,
-        answers: [
-          { questionId: 'q1', answer: '4 years React, limited state management' },
-          { questionId: 'q2', answer: 'Worked on moderate-scale projects' },
-          { questionId: 'q3', answer: 'Usually goes along with team decisions' },
-          { questionId: 'q4', answer: 'Notice period: 1 month' },
-        ],
-        recommendation: 'flag',
-        redFlags: ['Experience below 5 years', 'Limited system design background'],
-        createdAt: '2026-07-15',
-      },
-      {
-        id: 'app_3',
-        jobId: 'job_1',
-        candidateName: 'Mike Wong',
-        candidateEmail: 'mike.wong@email.com',
-        candidatePhone: '+65-9876-5432',
-        inviteLink: 'errandify.com/recruit/job-12345/candidate-ghi789',
-        inviteLinkExpiry: '2026-07-22',
-        uniqueId: 'ghi789',
-        status: 'sent',
-        linkSentDate: '2026-07-16',
-        createdAt: '2026-07-16',
-        answers: [],
-        redFlags: [],
-      },
-    ];
-
-    setJobOpenings(demoJobs);
-    setApplications(demoCandidates);
+    loadOpenings();
   }, []);
 
   const generateScreeningQuestions = (roleOverview: string, responsibilities: string, requirements: string): ScreeningQuestion[] => {
@@ -367,25 +273,42 @@ const RecruitmentDashboard: React.FC = () => {
       interviewAnswers.requirements
     );
 
-    const newJob: JobOpening = {
-      id: `job_${Date.now()}`,
-      title: jobForm.title,
-      department: jobForm.department,
-      reportingTo: jobForm.reportingTo,
-      teamSize: jobForm.teamSize,
-      workArrangement: jobForm.workArrangement,
-      salaryRange: { min: jobForm.salaryMin, max: jobForm.salaryMax },
-      jobDescription: `${interviewAnswers.roleOverview}\n\nResponsibilities:\n${interviewAnswers.responsibilities}\n\nRequirements:\n${interviewAnswers.requirements}`,
-      responsibilities: interviewAnswers.responsibilities,
-      requirements: interviewAnswers.requirements,
-      screeningQuestions: questions,
-      status: 'draft',
-      createdAt: new Date().toISOString(),
-      candidatesCount: 0,
-    };
+    void (async () => {
+      try {
+        const created = await jobOpeningAPI.create({
+          title: jobForm.title,
+          department: jobForm.department,
+          reporting_to: jobForm.reportingTo,
+          team_size: jobForm.teamSize,
+          work_arrangement: jobForm.workArrangement,
+          salary_min: jobForm.salaryMin,
+          salary_max: jobForm.salaryMax,
+          job_description: `${interviewAnswers.roleOverview}\n\nResponsibilities:\n${interviewAnswers.responsibilities}\n\nRequirements:\n${interviewAnswers.requirements}`,
+          responsibilities: interviewAnswers.responsibilities,
+          requirements: interviewAnswers.requirements,
+        });
 
-    setJobOpenings([...jobOpenings, newJob]);
-    showToast('✅ Job opening created with AI-generated screening questions', 'success');
+        // Questions are persisted against the opening rather than living in
+        // component state, so they survive a reload and can be scored later.
+        const openingId = created.data.id;
+        for (const q of questions) {
+          await jobOpeningAPI.addQuestion(openingId, {
+            category: q.category,
+            question: q.question,
+            question_type: q.questionType,
+            options: q.options,
+            weightage: q.weightage,
+            expected_answer: q.expectedAnswer,
+          });
+        }
+
+        await loadOpenings();
+        showToast('✅ Job opening created with screening questions', 'success');
+      } catch (error: any) {
+        showToast(`❌ ${error.message || 'Could not create job opening'}`, 'error');
+      }
+    })();
+
     setShowJobForm(false);
     setInterviewStep(0);
     setJobForm({
@@ -404,52 +327,52 @@ const RecruitmentDashboard: React.FC = () => {
     });
   };
 
-  const handlePublishJob = (jobId: string) => {
-    setJobOpenings(
-      jobOpenings.map(job =>
-        job.id === jobId
-          ? { ...job, status: 'published', publishedAt: new Date().toISOString() }
-          : job
-      )
-    );
-    showToast('✅ Job opening published', 'success');
+  const handlePublishJob = async (jobId: string) => {
+    try {
+      // The server maps "published" onto the DB's 'open', which is the state
+      // application intake checks before accepting a candidate.
+      await jobOpeningAPI.update(Number(jobId), { status: 'published' });
+      await loadOpenings();
+      showToast('✅ Job opening published', 'success');
+    } catch (error: any) {
+      showToast(`❌ ${error.message || 'Could not publish job opening'}`, 'error');
+    }
   };
 
-  const handleInviteCandidate = () => {
+  const handleInviteCandidate = async () => {
     if (!selectedJobForInvite || !inviteForm.candidateName || !inviteForm.candidateEmail) {
       showToast('❌ Please fill in all required fields', 'error');
       return;
     }
 
-    const uniqueId = generateUniqueId();
-    const expiryDate = new Date();
-    expiryDate.setDate(expiryDate.getDate() + inviteForm.linkExpireDays);
+    try {
+      // The link used to be a cosmetic string built from Date.now() that
+      // resolved to nothing. The server now issues a real random token and
+      // stores the invite; this returns the path to send the candidate.
+      const res = await jobOpeningAPI.invite(Number(selectedJobForInvite), {
+        candidate_name: inviteForm.candidateName,
+        candidate_email: inviteForm.candidateEmail,
+      });
 
-    const newApp: CandidateApplication = {
-      id: `app_${Date.now()}`,
-      jobId: selectedJobForInvite,
-      candidateName: inviteForm.candidateName,
-      candidateEmail: inviteForm.candidateEmail,
-      candidatePhone: inviteForm.candidatePhone,
-      inviteLink: `errandify.com/recruit/job-${selectedJobForInvite.slice(0, 5)}/candidate-${uniqueId}`,
-      inviteLinkExpiry: expiryDate.toISOString().split('T')[0],
-      uniqueId: uniqueId,
-      status: 'sent',
-      linkSentDate: new Date().toISOString().split('T')[0],
-      answers: [],
-      redFlags: [],
-      createdAt: new Date().toISOString(),
-    };
+      const link = `${window.location.origin}${res.data.invite_path}`;
+      try {
+        await navigator.clipboard.writeText(link);
+        showToast(`✅ Invite created for ${inviteForm.candidateName} — link copied to clipboard`, 'success');
+      } catch {
+        // Clipboard can be blocked; the link still has to be visible.
+        showToast(`✅ Invite created. Link: ${link}`, 'success');
+      }
 
-    setApplications([...applications, newApp]);
-    showToast(`✅ Invite sent to ${inviteForm.candidateName}\n📧 Email: ${inviteForm.candidateEmail}\n🔗 Unique Link: ${newApp.inviteLink}`, 'success');
-    setShowInviteForm(false);
-    setInviteForm({
-      candidateName: '',
-      candidateEmail: '',
-      candidatePhone: '',
-      linkExpireDays: 7,
-    });
+      setShowInviteForm(false);
+      setInviteForm({
+        candidateName: '',
+        candidateEmail: '',
+        candidatePhone: '',
+        linkExpireDays: 7,
+      });
+    } catch (error: any) {
+      showToast(`❌ ${error.message || 'Could not create invite'}`, 'error');
+    }
   };
 
   const generateInterviewPrep = (application: CandidateApplication, job: JobOpening): InterviewPrep => {

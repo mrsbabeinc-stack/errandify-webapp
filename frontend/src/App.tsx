@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'r
 import { MyCasesPage } from './pages/MyCasesPage';
 import { useState, useEffect } from 'react';
 import { initPushNotifications } from './utils/pushNotifications';
+import { captureReferralFromUrl } from './utils/referralCapture';
 import './styles/CompanyModuleTheme.css';
 import Layout from './components/Layout';
 import NotificationListener from './components/NotificationListener';
@@ -33,6 +34,8 @@ import ReviewPage from './pages/ReviewPage';
 import MyProfilePage from './pages/MyProfilePage';
 import ReferralPage from './pages/ReferralPage';
 import ReferralTracking from './pages/admin/ReferralTracking';
+import LeadGeneration from './pages/admin/LeadGeneration';
+import InterestPage from './pages/InterestPage';
 import PayoutSettingsPage from './pages/PayoutSettingsPage';
 import TransactionHistoryPage from './pages/TransactionHistoryPage';
 import ErrandifyPointsPage from './pages/ErrandifyPointsPage';
@@ -151,6 +154,8 @@ import RecruitmentApplicationsDashboard from './pages/admin/RecruitmentApplicati
 import JoinUsPage from './pages/JoinUsPage';
 import StaffAttendanceClockIn from './pages/StaffAttendanceClockIn';
 import StaffAttendanceHistory from './pages/StaffAttendanceHistory';
+import CandidateScreening from './pages/CandidateScreening';
+import StaffOnboardingPage from './pages/StaffOnboardingPage';
 import BudgetDashboard from './pages/admin/BudgetDashboard';
 import APARDashboard from './pages/admin/APARDashboard';
 import ApprovalWorkflows from './pages/admin/ApprovalWorkflows';
@@ -176,6 +181,13 @@ export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState<UserRole>('asker');
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
+  // Before anything else: an invite link may have brought them here, and the
+  // Singpass round trip is about to wipe the query string. Runs on every entry
+  // URL, so /join?ref=, /?ref= and /errand/12?ref= all attribute.
+  useEffect(() => {
+    captureReferralFromUrl();
+  }, []);
 
   useEffect(() => {
     // Check if user is already authenticated
@@ -333,6 +345,35 @@ export default function App() {
           path="/login"
           element={<Navigate to="/auth" replace />}
         />
+
+        {/*
+          Where invite links land. Neither of these routes existed, so every
+          referral link ever shared — from the Referral page, from an errand's
+          WhatsApp share button, from the backend's own generated link — hit a
+          dead URL.
+
+          Two paths because two were already in circulation: the backend built
+          /signup?ref= in users.ts and /join?ref= in referralService.ts. /join
+          is canonical now; /signup stays so links already sent still work.
+
+          The ref is captured at the app root above, before this redirect, so
+          dropping the query string here is safe.
+        */}
+        <Route path="/join" element={<Navigate to="/auth" replace />} />
+        <Route path="/signup" element={<Navigate to="/auth" replace />} />
+
+        {/* Pre-launch interest form. Public and outside the app shell — the
+            people it is for have no account, which is the whole point. Takes
+            ?src= so each poster, QR code or chat group is attributable. */}
+        <Route path="/interest" element={<InterestPage />} />
+
+        {/* Candidate screening — public and outside the app shell. The token in
+            the URL is the only credential; candidates have no account. */}
+        <Route path="/screening/:token" element={<CandidateScreening />} />
+        {/* Public: a newly hired employee has no login yet. The link is
+            unguessable and expiring, and they confirm their identity before
+            the form opens. */}
+        <Route path="/onboarding/:token" element={<StaffOnboardingPage />} />
 
         {/* SingPass Simulator - Realistic SingPass authentication experience */}
         <Route
@@ -549,6 +590,7 @@ export default function App() {
         <Route path="/admin/manage/discounts" element={isAuthenticated && isAdmin ? <DiscountCodesPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin/reports" element={isAuthenticated && isAdmin ? <ReportsPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin/referral-tracking" element={isAuthenticated && isAdmin ? <ReferralTracking /> : <Navigate to="/login" replace />} />
+        <Route path="/admin/growth/leads" element={isAuthenticated && isAdmin ? <LeadGeneration /> : <Navigate to="/login" replace />} />
         <Route path="/admin/payment-management" element={isAuthenticated && isAdmin ? <AdminPaymentManagement /> : <Navigate to="/login" replace />} />
 
         {/* Operations & Management Routes (TIER 1) */}
@@ -649,8 +691,10 @@ export default function App() {
         <Route path="/advertising/create" element={isAuthenticated ? <CreateCampaignPage /> : <Navigate to="/login" replace />} />
 
         <Route path="/staff/dashboard" element={isAuthenticated ? <DoerActiveErrands /> : <Navigate to="/login" replace />} />
-        <Route path="/staff/clock-in" element={isAuthenticated ? <StaffAttendanceClockIn /> : <Navigate to="/login" replace />} />
-        <Route path="/staff/attendance-history" element={isAuthenticated ? <StaffAttendanceHistory /> : <Navigate to="/login" replace />} />
+        {/* Clock-in and attendance history moved into the Layout route group
+            below: Layout renders an <Outlet />, so wrapping a page in it as a
+            child never gave these two the nav shell — it only made them fail
+            to typecheck. */}
         <Route path="/apply-leave" element={isAuthenticated ? <StaffLeaveApplication /> : <Navigate to="/login" replace />} />
 
         {/* Main dashboard layout - for asker/doer AND admin users */}
@@ -664,6 +708,8 @@ export default function App() {
           }
         >
           <Route path="/home" element={<HomePage userRole={userRole as 'asker' | 'doer'} />} />
+          <Route path="/staff/clock-in" element={<StaffAttendanceClockIn />} />
+          <Route path="/staff/attendance-history" element={<StaffAttendanceHistory />} />
           <Route path="/errands" element={<ErrandsPage userRole={userRole as 'asker' | 'doer'} />} />
           <Route path="/errand/:id" element={<ErrandDetailPage userRole={userRole as 'asker' | 'doer'} />} />
           {/* Where people track issues they've reported — the page existed but was never routed */}

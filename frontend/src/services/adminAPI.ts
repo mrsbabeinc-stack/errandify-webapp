@@ -1,5 +1,40 @@
 const API_BASE = '/api/admin';
 
+/**
+ * Every call in this file went out with no Authorization header, while all the
+ * routers behind /api/admin require an admin token. The result was that the
+ * whole HR module 401'd against a backend that was working correctly: staff,
+ * salary, holidays, leaves and RBAC screens rendered empty or threw.
+ *
+ * The header is attached here rather than at each call site so that a request
+ * added later cannot forget it — the same reasoning as the router-level guard
+ * in routes/staffManagement.ts.
+ */
+async function request(path: string, init: RequestInit = {}) {
+  const token = localStorage.getItem('token');
+  const headers: Record<string, string> = {
+    ...(init.body ? { 'Content-Type': 'application/json' } : {}),
+    ...((init.headers as Record<string, string>) || {}),
+  };
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  const response = await fetch(`${API_BASE}${path}`, { ...init, headers });
+
+  if (!response.ok) {
+    // Prefer the server's own message; callers surface it in a toast.
+    let message = `Request failed (${response.status})`;
+    try {
+      const body = await response.json();
+      if (body?.error) message = body.error;
+    } catch {
+      // Non-JSON error body — keep the status-code message.
+    }
+    throw new Error(message);
+  }
+
+  return response.json();
+}
+
 export interface StaffInfo {
   id?: number;
   staff_id?: string;
@@ -31,6 +66,7 @@ export interface SalaryRecord {
   notes?: string;
   allowances?: Allowance[];
   benefits?: Benefit[];
+  deductions?: Deduction[];
 }
 
 export interface Allowance {
@@ -45,6 +81,14 @@ export interface Benefit {
   id?: number;
   name: string;
   amount?: number;
+  frequency?: string;
+  description?: string;
+}
+
+export interface Deduction {
+  id?: number;
+  name: string;
+  amount: number;
   frequency?: string;
   description?: string;
 }
@@ -89,231 +133,167 @@ export interface LeaveRequest {
 
 // Staff Management APIs
 export const staffAPI = {
-  async getAll() {
-    const response = await fetch(`${API_BASE}/staff`);
-    if (!response.ok) throw new Error('Failed to fetch staff');
-    return response.json();
+  getAll() {
+    return request('/staff');
   },
 
-  async getById(id: number) {
-    const response = await fetch(`${API_BASE}/staff/${id}`);
-    if (!response.ok) throw new Error('Failed to fetch staff');
-    return response.json();
+  getById(id: number) {
+    return request(`/staff/${id}`);
   },
 
-  async create(data: StaffInfo) {
-    const response = await fetch(`${API_BASE}/staff`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) throw new Error('Failed to create staff');
-    return response.json();
+  create(data: StaffInfo) {
+    return request('/staff', { method: 'POST', body: JSON.stringify(data) });
   },
 
-  async update(id: number, data: Partial<StaffInfo>) {
-    const response = await fetch(`${API_BASE}/staff/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) throw new Error('Failed to update staff');
-    return response.json();
+  update(id: number, data: Partial<StaffInfo>) {
+    return request(`/staff/${id}`, { method: 'PUT', body: JSON.stringify(data) });
   },
 
-  async delete(id: number) {
-    const response = await fetch(`${API_BASE}/staff/${id}`, {
-      method: 'DELETE',
-    });
-    if (!response.ok) throw new Error('Failed to delete staff');
-    return response.json();
+  delete(id: number) {
+    return request(`/staff/${id}`, { method: 'DELETE' });
   },
 };
 
 // Salary & Benefits APIs
 export const salaryAPI = {
-  async getSalary(staffId: string) {
-    const response = await fetch(`${API_BASE}/salary/${staffId}`);
-    if (!response.ok) throw new Error('Failed to fetch salary');
-    return response.json();
+  getAll() {
+    return request('/salary');
   },
 
-  async updateSalary(staffId: string, data: Partial<SalaryRecord>) {
-    const response = await fetch(`${API_BASE}/salary/${staffId}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) throw new Error('Failed to update salary');
-    return response.json();
+  getSalary(staffId: string) {
+    return request(`/salary/${staffId}`);
   },
 
-  async addAllowance(staffId: string, allowance: Allowance) {
-    const response = await fetch(`${API_BASE}/salary/${staffId}/allowances`, {
+  updateSalary(staffId: string, data: Partial<SalaryRecord>) {
+    return request(`/salary/${staffId}`, { method: 'POST', body: JSON.stringify(data) });
+  },
+
+  addAllowance(staffId: string, allowance: Allowance) {
+    return request(`/salary/${staffId}/allowances`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(allowance),
     });
-    if (!response.ok) throw new Error('Failed to add allowance');
-    return response.json();
   },
 
-  async removeAllowance(allowanceId: number) {
-    const response = await fetch(`${API_BASE}/allowances/${allowanceId}`, {
-      method: 'DELETE',
-    });
-    if (!response.ok) throw new Error('Failed to remove allowance');
-    return response.json();
+  removeAllowance(allowanceId: number) {
+    return request(`/allowances/${allowanceId}`, { method: 'DELETE' });
   },
 
-  async addBenefit(staffId: string, benefit: Benefit) {
-    const response = await fetch(`${API_BASE}/salary/${staffId}/benefits`, {
+  addBenefit(staffId: string, benefit: Benefit) {
+    return request(`/salary/${staffId}/benefits`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(benefit),
     });
-    if (!response.ok) throw new Error('Failed to add benefit');
-    return response.json();
   },
 
-  async removeBenefit(benefitId: number) {
-    const response = await fetch(`${API_BASE}/benefits/${benefitId}`, {
-      method: 'DELETE',
+  removeBenefit(benefitId: number) {
+    return request(`/benefits/${benefitId}`, { method: 'DELETE' });
+  },
+
+  addDeduction(staffId: string, deduction: Deduction) {
+    return request(`/salary/${staffId}/deductions`, {
+      method: 'POST',
+      body: JSON.stringify(deduction),
     });
-    if (!response.ok) throw new Error('Failed to remove benefit');
-    return response.json();
+  },
+
+  removeDeduction(deductionId: number) {
+    return request(`/deductions/${deductionId}`, { method: 'DELETE' });
   },
 };
 
 // Holiday APIs
 export const holidayAPI = {
-  async getAll(year?: number, type?: string) {
-    let url = `${API_BASE}/holidays`;
+  getAll(year?: number, type?: string) {
+    let url = '/holidays';
     const params = new URLSearchParams();
     if (year) params.append('year', year.toString());
     if (type && type !== 'all') params.append('type', type);
     if (params.toString()) url += `?${params.toString()}`;
 
-    const response = await fetch(url);
-    if (!response.ok) throw new Error('Failed to fetch holidays');
-    return response.json();
+    return request(url);
   },
 
-  async getStats() {
-    const response = await fetch(`${API_BASE}/holidays/stats/summary`);
-    if (!response.ok) throw new Error('Failed to fetch stats');
-    return response.json();
+  getStats() {
+    return request('/holidays/stats/summary');
   },
 
-  async create(holiday: Holiday) {
-    const response = await fetch(`${API_BASE}/holidays`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(holiday),
-    });
-    if (!response.ok) throw new Error('Failed to create holiday');
-    return response.json();
+  create(holiday: Holiday) {
+    return request('/holidays', { method: 'POST', body: JSON.stringify(holiday) });
   },
 
-  async update(id: number, holiday: Partial<Holiday>) {
-    const response = await fetch(`${API_BASE}/holidays/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(holiday),
-    });
-    if (!response.ok) throw new Error('Failed to update holiday');
-    return response.json();
+  update(id: number, holiday: Partial<Holiday>) {
+    return request(`/holidays/${id}`, { method: 'PUT', body: JSON.stringify(holiday) });
   },
 
-  async delete(id: number) {
-    const response = await fetch(`${API_BASE}/holidays/${id}`, {
-      method: 'DELETE',
-    });
-    if (!response.ok) throw new Error('Failed to delete holiday');
-    return response.json();
+  delete(id: number) {
+    return request(`/holidays/${id}`, { method: 'DELETE' });
   },
 };
 
 // RBAC APIs
 export const rbacAPI = {
-  async getRoles() {
-    const response = await fetch(`${API_BASE}/roles`);
-    if (!response.ok) throw new Error('Failed to fetch roles');
-    return response.json();
+  getRoles() {
+    return request('/roles');
   },
 
-  async getPermissions() {
-    const response = await fetch(`${API_BASE}/permissions`);
-    if (!response.ok) throw new Error('Failed to fetch permissions');
-    return response.json();
+  getPermissions() {
+    return request('/permissions');
   },
 
-  async createRole(role: Role) {
-    const response = await fetch(`${API_BASE}/roles`, {
+  createRole(role: Role) {
+    return request('/roles', { method: 'POST', body: JSON.stringify(role) });
+  },
+
+  updateRole(id: number, role: Partial<Role>) {
+    return request(`/roles/${id}`, { method: 'PUT', body: JSON.stringify(role) });
+  },
+
+  deleteRole(id: number) {
+    return request(`/roles/${id}`, { method: 'DELETE' });
+  },
+
+  /**
+   * '/rbac-users', not '/users'. admin.ts is mounted first on /api/admin and
+   * serves GET /users for platform user management, so this call was silently
+   * returning the platform user list — with no roles on it — instead of the
+   * RBAC one. routes/rbac.ts renamed its own route for exactly that reason.
+   */
+  getUsers() {
+    return request('/rbac-users');
+  },
+
+  getRolePermissions(roleId: number | string) {
+    return request(`/roles/${roleId}/permissions`);
+  },
+
+  setRolePermissions(roleId: number | string, permissionIds: number[]) {
+    return request(`/roles/${roleId}/permissions`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(role),
+      body: JSON.stringify({ permissionIds }),
     });
-    if (!response.ok) throw new Error('Failed to create role');
-    return response.json();
   },
 
-  async updateRole(id: number, role: Partial<Role>) {
-    const response = await fetch(`${API_BASE}/roles/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(role),
-    });
-    if (!response.ok) throw new Error('Failed to update role');
-    return response.json();
+  assignRoleToUser(userId: number, roleId: number) {
+    return request(`/users/${userId}/roles/${roleId}`, { method: 'POST' });
   },
 
-  async deleteRole(id: number) {
-    const response = await fetch(`${API_BASE}/roles/${id}`, {
-      method: 'DELETE',
-    });
-    if (!response.ok) throw new Error('Failed to delete role');
-    return response.json();
+  removeRoleFromUser(userId: number, roleId: number) {
+    return request(`/users/${userId}/roles/${roleId}`, { method: 'DELETE' });
   },
 
-  async getUsers() {
-    const response = await fetch(`${API_BASE}/users`);
-    if (!response.ok) throw new Error('Failed to fetch users');
-    return response.json();
-  },
-
-  async assignRoleToUser(userId: number, roleId: number) {
-    const response = await fetch(`${API_BASE}/users/${userId}/roles/${roleId}`, {
+  checkPermission(userId: number, permissionCode: string) {
+    return request('/check-permission', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-    });
-    if (!response.ok) throw new Error('Failed to assign role');
-    return response.json();
-  },
-
-  async removeRoleFromUser(userId: number, roleId: number) {
-    const response = await fetch(`${API_BASE}/users/${userId}/roles/${roleId}`, {
-      method: 'DELETE',
-    });
-    if (!response.ok) throw new Error('Failed to remove role');
-    return response.json();
-  },
-
-  async checkPermission(userId: number, permissionCode: string) {
-    const response = await fetch(`${API_BASE}/check-permission`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId, permissionCode }),
     });
-    if (!response.ok) throw new Error('Failed to check permission');
-    return response.json();
   },
 };
 
 // Leave Management APIs
 export const leaveAPI = {
-  async getAll(status?: string, staffId?: string, startDate?: string, endDate?: string) {
-    let url = `${API_BASE}/leaves`;
+  getAll(status?: string, staffId?: string, startDate?: string, endDate?: string) {
+    let url = '/leaves';
     const params = new URLSearchParams();
     if (status) params.append('status', status);
     if (staffId) params.append('staffId', staffId);
@@ -321,48 +301,153 @@ export const leaveAPI = {
     if (endDate) params.append('endDate', endDate);
     if (params.toString()) url += `?${params.toString()}`;
 
-    const response = await fetch(url);
-    if (!response.ok) throw new Error('Failed to fetch leave requests');
-    return response.json();
+    return request(url);
   },
 
-  async getById(id: number) {
-    const response = await fetch(`${API_BASE}/leaves/${id}`);
-    if (!response.ok) throw new Error('Failed to fetch leave request');
-    return response.json();
+  getById(id: number) {
+    return request(`/leaves/${id}`);
   },
 
-  async create(leave: LeaveRequest) {
-    const response = await fetch(`${API_BASE}/leaves`, {
+  create(leave: LeaveRequest) {
+    return request('/leaves', { method: 'POST', body: JSON.stringify(leave) });
+  },
+
+  update(id: number, leave: Partial<LeaveRequest>) {
+    return request(`/leaves/${id}`, { method: 'PUT', body: JSON.stringify(leave) });
+  },
+
+  delete(id: number) {
+    return request(`/leaves/${id}`, { method: 'DELETE' });
+  },
+
+  getLeaveBalance(staffId: string) {
+    return request(`/leave-balance/${staffId}`);
+  },
+};
+
+// Probation APIs
+export const probationAPI = {
+  getAll(status?: string) {
+    const query = status && status !== 'all' ? `?status=${encodeURIComponent(status)}` : '';
+    return request(`/probation${query}`);
+  },
+
+  create(data: { staff_id: string; start_date: string; probation_length_days: number }) {
+    return request('/probation', { method: 'POST', body: JSON.stringify(data) });
+  },
+
+  review(
+    id: number,
+    data: { status?: string; review_score?: number | null; reviewer_notes?: string; reviewed_by?: string }
+  ) {
+    return request(`/probation/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+  },
+
+  delete(id: number) {
+    return request(`/probation/${id}`, { method: 'DELETE' });
+  },
+};
+
+// Attendance & timesheet APIs
+export const attendanceAPI = {
+  getAll(params: { startDate?: string; endDate?: string; staffId?: string; status?: string } = {}) {
+    const search = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (v && v !== 'all') search.append(k, v);
+    });
+    const query = search.toString();
+    return request(`/attendance${query ? `?${query}` : ''}`);
+  },
+
+  getSummary(date?: string) {
+    return request(`/attendance/summary${date ? `?date=${date}` : ''}`);
+  },
+
+  getReport(startDate: string, endDate: string) {
+    return request(`/attendance/report?startDate=${startDate}&endDate=${endDate}`);
+  },
+
+  save(data: {
+    staff_id: string;
+    work_date: string;
+    clock_in?: string | null;
+    clock_out?: string | null;
+    break_minutes?: number;
+    status?: string;
+    notes?: string;
+  }) {
+    return request('/attendance', { method: 'POST', body: JSON.stringify(data) });
+  },
+
+  delete(id: number) {
+    return request(`/attendance/${id}`, { method: 'DELETE' });
+  },
+};
+
+// Job opening APIs
+export const jobOpeningAPI = {
+  getAll(status?: string) {
+    const query = status && status !== 'all' ? `?status=${encodeURIComponent(status)}` : '';
+    return request(`/job-openings${query}`);
+  },
+
+  getById(id: number) {
+    return request(`/job-openings/${id}`);
+  },
+
+  create(data: Record<string, unknown>) {
+    return request('/job-openings', { method: 'POST', body: JSON.stringify(data) });
+  },
+
+  update(id: number, data: Record<string, unknown>) {
+    return request(`/job-openings/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+  },
+
+  delete(id: number) {
+    return request(`/job-openings/${id}`, { method: 'DELETE' });
+  },
+
+  addQuestion(id: number, data: Record<string, unknown>) {
+    return request(`/job-openings/${id}/questions`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(leave),
+      body: JSON.stringify(data),
     });
-    if (!response.ok) throw new Error('Failed to create leave request');
-    return response.json();
   },
 
-  async update(id: number, leave: Partial<LeaveRequest>) {
-    const response = await fetch(`${API_BASE}/leaves/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(leave),
-    });
-    if (!response.ok) throw new Error('Failed to update leave request');
-    return response.json();
+  deleteQuestion(questionId: number) {
+    return request(`/job-openings/questions/${questionId}`, { method: 'DELETE' });
   },
 
-  async delete(id: number) {
-    const response = await fetch(`${API_BASE}/leaves/${id}`, {
-      method: 'DELETE',
+  invite(id: number, candidate: { candidate_name: string; candidate_email: string }) {
+    return request(`/job-openings/${id}/invites`, {
+      method: 'POST',
+      body: JSON.stringify(candidate),
     });
-    if (!response.ok) throw new Error('Failed to delete leave request');
-    return response.json();
   },
 
-  async getLeaveBalance(staffId: string) {
-    const response = await fetch(`${API_BASE}/leave-balance/${staffId}`);
-    if (!response.ok) throw new Error('Failed to fetch leave balance');
-    return response.json();
+  invites(id: number) {
+    return request(`/job-openings/${id}/invites`);
+  },
+
+  inviteAnswers(inviteId: number) {
+    return request(`/invites/${inviteId}/answers`);
+  },
+};
+
+export const timesheetAPI = {
+  getAll(status?: string) {
+    const query = status && status !== 'all' ? `?status=${encodeURIComponent(status)}` : '';
+    return request(`/timesheets${query}`);
+  },
+
+  generate(weekStart: string, staffId?: string) {
+    return request('/timesheets/generate', {
+      method: 'POST',
+      body: JSON.stringify({ week_start: weekStart, staff_id: staffId }),
+    });
+  },
+
+  review(id: number, data: { status: string; approved_by?: string; review_notes?: string }) {
+    return request(`/timesheets/${id}`, { method: 'PUT', body: JSON.stringify(data) });
   },
 };

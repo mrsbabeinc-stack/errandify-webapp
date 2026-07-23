@@ -4,30 +4,47 @@ import axios from 'axios';
 import { useToast, ToastContainer } from '../../components/Toast';
 import AdminLayout from '../../components/admin/AdminLayout';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
+type Channel = 'push' | 'inapp' | 'email' | 'sms';
+
 interface NotificationGroup {
-  id: string;
+  id: number;
   name: string;
   description: string;
-  channels: ('push' | 'inapp' | 'email' | 'sms')[];
+  /** The rule that decides membership — resolved server-side on every read. */
+  segment: string;
+  segmentLabel?: string;
+  channels: Channel[];
   userCount: number;
   createdAt: string;
 }
 
 interface Notification {
-  id: string;
+  id: number;
   title: string;
   message: string;
   type: 'announcement' | 'alert' | 'reminder' | 'promotion';
-  groupId: string;
-  channels: ('push' | 'inapp' | 'email' | 'sms')[];
+  groupId: number | null;
+  groupName?: string | null;
+  segment: string;
+  channels: Channel[];
   status: 'draft' | 'scheduled' | 'sent' | 'error';
   scheduledTime?: string;
   sentCount: number;
   errorCount: number;
   createdAt: string;
   sentAt?: string;
-  errorLog?: string;
+  errorLog?: string | null;
 }
+
+const SEGMENT_OPTIONS = [
+  { key: 'all-users', label: 'Every active account' },
+  { key: 'doers', label: 'Anyone whose offer has been accepted' },
+  { key: 'askers', label: 'Anyone who has posted an errand' },
+  { key: 'new-users', label: 'Joined in the last 30 days' },
+  { key: 'vip', label: '1,000+ Errandify Points' },
+];
 
 export default function NotificationsManagement() {
   const navigate = useNavigate();
@@ -39,7 +56,7 @@ export default function NotificationsManagement() {
   const [newMessage, setNewMessage] = useState('');
   const [newType, setNewType] = useState<'announcement' | 'alert' | 'reminder' | 'promotion'>('announcement');
   const [selectedGroupId, setSelectedGroupId] = useState('');
-  const [selectedChannels, setSelectedChannels] = useState<('push' | 'inapp' | 'email' | 'sms')[]>(['push', 'inapp']);
+  const [selectedChannels, setSelectedChannels] = useState<Channel[]>(['push', 'inapp']);
   const [scheduledTime, setScheduledTime] = useState('');
   const [aiSuggestion, setAiSuggestion] = useState('');
 
@@ -48,6 +65,7 @@ export default function NotificationsManagement() {
   const [showGroupForm, setShowGroupForm] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
   const [newGroupDesc, setNewGroupDesc] = useState('');
+  const [newGroupSegment, setNewGroupSegment] = useState('all-users');
   const [editingGroup, setEditingGroup] = useState<NotificationGroup | null>(null);
 
   // State - Search/Filter
@@ -57,81 +75,48 @@ export default function NotificationsManagement() {
 
   // State - UI
   const [selectedNotif, setSelectedNotif] = useState<Notification | null>(null);
-  const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [loadingId, setLoadingId] = useState<string | number | null>(null);
   const [activeTab, setActiveTab] = useState<'create' | 'groups'>('create');
 
-  // Load data
+  /**
+   * Broadcasts and groups used to live in localStorage. A notification "sent"
+   * there flipped a status field and picked its own delivery count out of
+   * Math.random() — no user ever received one. Groups were worse: their sizes
+   * were invented on first load and a new group was given a random count
+   * between 100 and 5,100.
+   */
+  const authHeaders = () => ({
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${localStorage.getItem('token')}`,
+  });
+
+  const loadGroups = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/marcom/groups`, { headers: authHeaders() });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      setGroups(json.data || []);
+    } catch (err) {
+      console.error('Could not load groups:', err);
+      showToast('Could not load audience groups', 'error');
+    }
+  };
+
+  const loadNotifications = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/marcom/broadcasts`, { headers: authHeaders() });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      setNotifications(json.data || []);
+    } catch (err) {
+      console.error('Could not load notifications:', err);
+      showToast('Could not load notifications', 'error');
+    }
+  };
+
   useEffect(() => {
-    const savedNotifs = localStorage.getItem('notificationsManagement');
-    const savedGroups = localStorage.getItem('notificationGroups');
-
-    if (savedNotifs) {
-      setNotifications(JSON.parse(savedNotifs));
-    } else {
-      const demoNotifs: Notification[] = [
-        {
-          id: 'n_1',
-          title: 'System Maintenance',
-          message: 'Scheduled maintenance tomorrow 2-4 AM SGT. Service will be unavailable.',
-          type: 'alert',
-          groupId: 'g_1',
-          channels: ['push', 'email'],
-          status: 'sent',
-          sentCount: 12450,
-          errorCount: 3,
-          createdAt: new Date(Date.now() - 3600000).toISOString(),
-          sentAt: new Date(Date.now() - 3600000).toISOString(),
-        },
-        {
-          id: 'n_2',
-          title: 'New Feature: AI Errand Matching',
-          message: 'Get matched with perfect errands using our smart AI. Earn more with less effort!',
-          type: 'announcement',
-          groupId: 'g_2',
-          channels: ['push', 'inapp'],
-          status: 'sent',
-          sentCount: 5234,
-          errorCount: 0,
-          createdAt: new Date(Date.now() - 604800000).toISOString(),
-          sentAt: new Date(Date.now() - 604800000).toISOString(),
-        },
-      ];
-      setNotifications(demoNotifs);
-      localStorage.setItem('notificationsManagement', JSON.stringify(demoNotifs));
-    }
-
-    if (savedGroups) {
-      setGroups(JSON.parse(savedGroups));
-    } else {
-      const demoGroups: NotificationGroup[] = [
-        {
-          id: 'g_1',
-          name: 'All Users',
-          description: 'Every user on Errandify',
-          channels: ['push', 'email', 'sms'],
-          userCount: 24500,
-          createdAt: new Date(Date.now() - 2592000000).toISOString(),
-        },
-        {
-          id: 'g_2',
-          name: 'Doers',
-          description: 'Active errand takers',
-          channels: ['push', 'inapp'],
-          userCount: 8750,
-          createdAt: new Date(Date.now() - 2592000000).toISOString(),
-        },
-        {
-          id: 'g_3',
-          name: 'New Users',
-          description: 'Joined in last 30 days',
-          channels: ['push', 'inapp', 'email'],
-          userCount: 2340,
-          createdAt: new Date(Date.now() - 1209600000).toISOString(),
-        },
-      ];
-      setGroups(demoGroups);
-      localStorage.setItem('notificationGroups', JSON.stringify(demoGroups));
-    }
+    loadGroups();
+    loadNotifications();
   }, []);
 
   // AI suggestion for message based on title
@@ -170,128 +155,159 @@ export default function NotificationsManagement() {
     showToast('Message updated with AI suggestion', 'success');
   };
 
-  // Handle create notification
   const handleCreateNotification = async () => {
     if (!newTitle.trim() || !newMessage.trim() || !selectedGroupId) {
       showToast('Fill all fields and select a group', 'warning');
       return;
     }
-
+    setLoadingId('create-notif');
     try {
-      setLoadingId('create-notif');
+      const res = await fetch(`${API_URL}/api/marcom/broadcasts`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({
+          title: newTitle,
+          message: newMessage,
+          type: newType,
+          groupId: Number(selectedGroupId),
+          channels: selectedChannels,
+          scheduledTime: scheduledTime || null,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
 
-      // Mock API call
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await loadNotifications();
+      showToast(scheduledTime ? '📅 Notification scheduled' : '✓ Saved as draft — press Send when ready', 'success');
 
-      const notif: Notification = {
-        id: `n_${Date.now()}`,
-        title: newTitle,
-        message: newMessage,
-        type: newType,
-        groupId: selectedGroupId,
-        channels: selectedChannels,
-        status: scheduledTime ? 'scheduled' : 'draft',
-        scheduledTime: scheduledTime || undefined,
-        sentCount: 0,
-        errorCount: 0,
-        createdAt: new Date().toISOString(),
-      };
+      const a = json.audience;
+      if (a && a.reachable < a.audience) {
+        showToast(
+          `${a.audience - a.reachable} of ${a.audience} excluded: a promotion goes only to people who opted in`,
+          'warning'
+        );
+      }
 
-      const updated = [...notifications, notif];
-      setNotifications(updated);
-      localStorage.setItem('notificationsManagement', JSON.stringify(updated));
-
-      showToast(scheduledTime ? '📅 Notification scheduled!' : '✓ Notification created (draft)', 'success');
       setNewTitle('');
       setNewMessage('');
       setAiSuggestion('');
       setScheduledTime('');
       setSelectedChannels(['push', 'inapp']);
-    } catch (error) {
-      showToast('Failed to create notification', 'error');
+    } catch (error: any) {
+      showToast(error.message || 'Failed to create notification', 'error');
     } finally {
       setLoadingId(null);
     }
   };
 
-  // Handle send notification
-  const handleSendNotification = async (notifId: string) => {
+  /**
+   * Sends for real: in-app rows and push for everyone in the audience, email
+   * where the channel was ticked. There is no undo, hence the confirmation.
+   */
+  const handleSendNotification = async (notifId: number) => {
+    const notif = notifications.find((n) => n.id === notifId);
+    const group = groups.find((g) => g.id === notif?.groupId);
+    const to = group ? `${group.name} (${group.userCount} people)` : 'this audience';
+    if (!window.confirm(`Send "${notif?.title}" to ${to}? This cannot be undone.`)) return;
+
+    setLoadingId(notifId);
     try {
-      setLoadingId(notifId);
+      const res = await fetch(`${API_URL}/api/marcom/broadcasts/${notifId}/send`, {
+        method: 'POST',
+        headers: authHeaders(),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
 
-      // Mock API call with 5% error rate
-      await new Promise(resolve => setTimeout(resolve, 800));
-
-      const hasErrors = Math.random() < 0.05;
-
-      const updated = notifications.map(n =>
-        n.id === notifId
-          ? {
-              ...n,
-              status: hasErrors ? 'error' : 'sent',
-              sentCount: hasErrors ? n.sentCount + Math.floor(Math.random() * 100) : (groups.find(g => g.id === n.groupId)?.userCount || 0),
-              errorCount: hasErrors ? Math.floor(Math.random() * 5) + 1 : 0,
-              sentAt: new Date().toISOString(),
-              errorLog: hasErrors ? 'Failed to send to 3 users: Invalid email format (2), Network timeout (1)' : undefined,
-            }
-          : n
-      );
-
-      setNotifications(updated);
-      localStorage.setItem('notificationsManagement', JSON.stringify(updated));
-
-      if (hasErrors) {
-        showToast('⚠️ Sent with errors - check error log', 'warning');
-      } else {
-        showToast('✓ Notification sent successfully!', 'success');
+      await loadNotifications();
+      const d = json.data;
+      showToast(`✓ Reached ${d.sent} of ${d.attempted}${d.failed ? `, ${d.failed} failed` : ''}`, d.failed ? 'warning' : 'success');
+      (d.skipped || []).forEach((s: string) => showToast(s, 'warning'));
+      if (json.deliveryMode === 'logged-only' && notif?.channels?.includes('email')) {
+        showToast('No email provider configured — email was logged, not delivered', 'warning');
       }
-    } catch (error) {
-      showToast('Failed to send notification', 'error');
+    } catch (error: any) {
+      showToast(error.message || 'Failed to send notification', 'error');
     } finally {
       setLoadingId(null);
     }
   };
 
-  // Group management
-  const handleSaveGroup = () => {
+  const handleDeleteNotification = async (notifId: number) => {
+    if (!window.confirm('Delete this notification?')) return;
+    setLoadingId(notifId);
+    try {
+      const res = await fetch(`${API_URL}/api/marcom/broadcasts/${notifId}`, {
+        method: 'DELETE',
+        headers: authHeaders(),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
+      await loadNotifications();
+      showToast('✓ Deleted', 'success');
+    } catch (error: any) {
+      showToast(error.message || 'Failed to delete', 'error');
+    } finally {
+      setLoadingId(null);
+    }
+  };
+
+  // Group management. A group is a named audience *rule*, so what is saved is
+  // the rule — the size is counted from the users table on every read.
+  const handleSaveGroup = async () => {
     if (!newGroupName.trim()) {
       showToast('Enter group name', 'warning');
       return;
     }
-
     try {
-      if (editingGroup) {
-        const updated = groups.map(g => g.id === editingGroup.id ? { ...editingGroup, name: newGroupName, description: newGroupDesc } : g);
-        setGroups(updated);
-        showToast('✓ Group updated', 'success');
-      } else {
-        const newGroup: NotificationGroup = {
-          id: `g_${Date.now()}`,
-          name: newGroupName,
-          description: newGroupDesc,
-          channels: ['push', 'inapp'],
-          userCount: Math.floor(Math.random() * 5000) + 100,
-          createdAt: new Date().toISOString(),
-        };
-        setGroups([...groups, newGroup]);
-        showToast('✓ Group created', 'success');
-      }
-      localStorage.setItem('notificationGroups', JSON.stringify(groups));
+      const body = JSON.stringify({
+        name: newGroupName,
+        description: newGroupDesc,
+        segment: newGroupSegment,
+      });
+      const res = editingGroup
+        ? await fetch(`${API_URL}/api/marcom/groups/${editingGroup.id}`, {
+            method: 'PATCH', headers: authHeaders(), body,
+          })
+        : await fetch(`${API_URL}/api/marcom/groups`, {
+            method: 'POST', headers: authHeaders(), body,
+          });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
+
+      await loadGroups();
+      showToast(editingGroup ? '✓ Group updated' : '✓ Group created', 'success');
       setNewGroupName('');
       setNewGroupDesc('');
+      setNewGroupSegment('all-users');
       setEditingGroup(null);
       setShowGroupForm(false);
-    } catch (error) {
-      showToast('Failed to save group', 'error');
+    } catch (error: any) {
+      showToast(error.message || 'Failed to save group', 'error');
     }
   };
 
-  const handleDeleteGroup = (groupId: string) => {
-    if (window.confirm('Delete this group? Notifications targeting it will be unaffected.')) {
-      const updated = groups.filter(g => g.id !== groupId);
-      setGroups(updated);
-      localStorage.setItem('notificationGroups', JSON.stringify(updated));
+  const handleEditGroup = (group: NotificationGroup) => {
+    setEditingGroup(group);
+    setNewGroupName(group.name);
+    setNewGroupDesc(group.description || '');
+    setNewGroupSegment(group.segment || 'all-users');
+    setShowGroupForm(true);
+  };
+
+  const handleDeleteGroup = async (groupId: number) => {
+    if (!window.confirm('Delete this group? Notifications already sent to it are unaffected.')) return;
+    try {
+      const res = await fetch(`${API_URL}/api/marcom/groups/${groupId}`, {
+        method: 'DELETE',
+        headers: authHeaders(),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
+      await loadGroups();
       showToast('✓ Group deleted', 'success');
+    } catch (error: any) {
+      showToast(error.message || 'Failed to delete group', 'error');
     }
   };
 
@@ -629,31 +645,39 @@ export default function NotificationsManagement() {
                         </div>
                       </div>
                       <div style={{ fontSize: '11px', color: '#999', marginBottom: '8px' }}>
-                        Channels: {(group.channels || []).join(', ').toUpperCase()}
+                        Rule: {group.segmentLabel || group.segment} • Channels:{' '}
+                        {(group.channels || []).join(', ').toUpperCase()}
                       </div>
+                      {/* These two buttons had no onClick at all. */}
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                        <button style={{
-                          padding: '6px 12px',
-                          background: '#2196F3',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
-                          fontSize: '12px',
-                          fontWeight: '600',
-                          cursor: 'pointer',
-                        }}>
+                        <button
+                          onClick={() => handleEditGroup(group)}
+                          style={{
+                            padding: '6px 12px',
+                            background: '#2196F3',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            fontSize: '12px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                          }}
+                        >
                           ✏️ Edit
                         </button>
-                        <button style={{
-                          padding: '6px 12px',
-                          background: '#F44336',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
-                          fontSize: '12px',
-                          fontWeight: '600',
-                          cursor: 'pointer',
-                        }}>
+                        <button
+                          onClick={() => handleDeleteGroup(group.id)}
+                          style={{
+                            padding: '6px 12px',
+                            background: '#F44336',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            fontSize: '12px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                          }}
+                        >
                           🗑️ Delete
                         </button>
                       </div>
@@ -766,8 +790,15 @@ export default function NotificationsManagement() {
                     </div>
 
                     <div style={{ fontSize: '11px', color: '#999', marginBottom: '8px' }}>
-                      {statusIcons[notif.status]} {notif.status.toUpperCase()} • {group?.name || 'Unknown'} • {(notif.channels || []).join(', ').toUpperCase()}
+                      {statusIcons[notif.status]} {notif.status.toUpperCase()} •{' '}
+                      {notif.groupName || group?.name || 'Audience removed'} •{' '}
+                      {(notif.channels || []).join(', ').toUpperCase()}
                     </div>
+                    {notif.errorLog && (
+                      <pre style={{ fontSize: '10px', color: '#C1440E', background: '#FFF3F0', padding: '6px', borderRadius: '4px', marginBottom: '8px', whiteSpace: 'pre-wrap' }}>
+                        {notif.errorLog}
+                      </pre>
+                    )}
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div style={{ fontSize: '11px', color: '#666' }}>
@@ -788,27 +819,47 @@ export default function NotificationsManagement() {
                           </>
                         )}
                       </div>
-                      {notif.status === 'draft' && (
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        {notif.status !== 'sent' && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSendNotification(notif.id);
+                            }}
+                            disabled={loadingId === notif.id}
+                            style={{
+                              padding: '4px 12px',
+                              background: loadingId === notif.id ? '#ccc' : '#FF6B35',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '4px',
+                              fontSize: '11px',
+                              fontWeight: '600',
+                              cursor: loadingId === notif.id ? 'wait' : 'pointer',
+                            }}
+                          >
+                            {loadingId === notif.id ? 'Sending...' : 'Send'}
+                          </button>
+                        )}
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleSendNotification(notif.id);
+                            handleDeleteNotification(notif.id);
                           }}
-                          disabled={loadingId === notif.id}
                           style={{
                             padding: '4px 12px',
-                            background: loadingId === notif.id ? '#ccc' : '#FF6B35',
+                            background: '#F44336',
                             color: 'white',
                             border: 'none',
                             borderRadius: '4px',
                             fontSize: '11px',
                             fontWeight: '600',
-                            cursor: loadingId === notif.id ? 'wait' : 'pointer',
+                            cursor: 'pointer',
                           }}
                         >
-                          {loadingId === notif.id ? 'Sending...' : 'Send'}
+                          Delete
                         </button>
-                      )}
+                      </div>
                     </div>
                   </div>
                 );
@@ -860,6 +911,29 @@ export default function NotificationsManagement() {
                     resize: 'vertical',
                   }}
                 />
+                {/*
+                  A group is a name for one of these rules. Without this the
+                  screen could name an audience but not say who is in it, which
+                  is how the old version ended up inventing member counts.
+                */}
+                <label style={{ fontSize: '11px', fontWeight: '600', color: '#333' }}>
+                  Who is in this group?
+                </label>
+                <select
+                  value={newGroupSegment}
+                  onChange={(e) => setNewGroupSegment(e.target.value)}
+                  style={{
+                    padding: '8px 12px',
+                    border: '2px solid #FFD9B3',
+                    borderRadius: '6px',
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {SEGMENT_OPTIONS.map((s) => (
+                    <option key={s.key} value={s.key}>{s.label}</option>
+                  ))}
+                </select>
                 <button
                   onClick={handleSaveGroup}
                   style={{

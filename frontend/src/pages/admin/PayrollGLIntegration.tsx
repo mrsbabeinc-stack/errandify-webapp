@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast, ToastContainer } from '../../components/Toast';
 import AdminLayout from '../../components/admin/AdminLayout';
+import financeAPI, { n } from '../../services/financeAPI';
 
 interface PayrollRun {
   payroll_id: number;
@@ -32,58 +33,63 @@ const PayrollGLIntegration: React.FC = () => {
   const [payrolls, setPayrolls] = useState<PayrollRun[]>([]);
   const [glEntries, setGLEntries] = useState<GLEntry[]>([]);
   const [activeTab, setActiveTab] = useState<'payroll' | 'entries'>('payroll');
-  const [selectedPayroll, setSelectedPayroll] = useState<PayrollRun | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadData();
   }, []);
 
+  /**
+   * Real payroll runs and GL entries. This screen invented three payroll runs
+   * of ~SGD 185k with 20 employees and wrote "posted" into localStorage — no GL
+   * entry existed, and the numbers matched nothing in the payroll module.
+   */
   const loadData = async () => {
-    const savedPayrolls = localStorage.getItem('payroll_gl_payrolls') || '[]';
-    const savedEntries = localStorage.getItem('payroll_gl_entries') || '[]';
-
-    let mockPayrolls: PayrollRun[] = [
-      { payroll_id: 1, payroll_period: '2026-07', total_gross: 185000, total_deductions: 35000, total_net: 150000, employee_count: 20, status: 'approved', gl_status: 'posted' },
-      { payroll_id: 2, payroll_period: '2026-06', total_gross: 180000, total_deductions: 34000, total_net: 146000, employee_count: 20, status: 'approved', gl_status: 'posted' },
-      { payroll_id: 3, payroll_period: '2026-08', total_gross: 190000, total_deductions: 36000, total_net: 154000, employee_count: 20, status: 'approved', gl_status: 'pending' },
-    ];
-
-    let mockEntries: GLEntry[] = [
-      { entry_id: 1, payroll_id: 1, date: '2026-07-31', account_name: 'Salary Expense', account_code: '5110', debit: 185000, credit: 0, description: 'Jul Payroll - Gross Salary', status: 'posted' },
-      { entry_id: 2, payroll_id: 1, date: '2026-07-31', account_name: 'CPF Payable', account_code: '2150', debit: 0, credit: 18500, description: 'Jul Payroll - Employer CPF', status: 'posted' },
-      { entry_id: 3, payroll_id: 1, date: '2026-07-31', account_name: 'Income Tax Payable', account_code: '2160', debit: 0, credit: 12000, description: 'Jul Payroll - Income Tax', status: 'posted' },
-      { entry_id: 4, payroll_id: 1, date: '2026-07-31', account_name: 'Cash / Bank', account_code: '1010', debit: 0, credit: 150000, description: 'Jul Payroll - Net Salary Payment', status: 'posted' },
-      { entry_id: 5, payroll_id: 3, date: '2026-08-31', account_name: 'Salary Expense', account_code: '5110', debit: 190000, credit: 0, description: 'Aug Payroll - Gross Salary', status: 'pending' },
-      { entry_id: 6, payroll_id: 3, date: '2026-08-31', account_name: 'CPF Payable', account_code: '2150', debit: 0, credit: 19000, description: 'Aug Payroll - Employer CPF', status: 'pending' },
-      { entry_id: 7, payroll_id: 3, date: '2026-08-31', account_name: 'Cash / Bank', account_code: '1010', debit: 0, credit: 154000, description: 'Aug Payroll - Net Salary Payment', status: 'pending' },
-    ];
-
-    if (savedPayrolls !== '[]') mockPayrolls = JSON.parse(savedPayrolls);
-    if (savedEntries !== '[]') mockEntries = [...mockEntries, ...JSON.parse(savedEntries)];
-
-    setPayrolls(mockPayrolls);
-    setGLEntries(mockEntries);
+    try {
+      setLoading(true);
+      const [runs, entries] = await Promise.all([
+        financeAPI.payrollRuns(),
+        financeAPI.glEntries('payroll'),
+      ]);
+      const counts = await Promise.all(
+        runs.map(r => financeAPI.payrollItems(r.id).then(items => items.length).catch(() => 0))
+      );
+      setPayrolls(runs.map((r, idx) => ({
+        payroll_id: r.id,
+        payroll_period: r.period,
+        total_gross: n(r.total_gross),
+        total_deductions: n(r.total_deductions),
+        total_net: n(r.total_net),
+        employee_count: counts[idx],
+        status: r.status === 'posted' ? 'posted' : 'approved',
+        gl_status: r.status === 'posted' ? 'posted' : 'pending',
+      })));
+      setGLEntries(entries.map(e => ({
+        entry_id: e.id,
+        payroll_id: e.source_id || 0,
+        date: e.entry_date,
+        account_name: e.account_name,
+        account_code: e.account_code,
+        debit: n(e.debit),
+        credit: n(e.credit),
+        description: e.description || '',
+        status: 'posted',
+      })));
+    } catch (err) {
+      showToast(`❌ ${err instanceof Error ? err.message : 'Failed to load payroll data'}`, 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handlePostPayroll = (payroll: PayrollRun) => {
-    const updated = payrolls.map(p =>
-      p.payroll_id === payroll.payroll_id
-        ? { ...p, gl_status: 'posted' as const }
-        : p
-    );
-    setPayrolls(updated);
-
-    const updatedEntries = glEntries.map(e =>
-      e.payroll_id === payroll.payroll_id
-        ? { ...e, status: 'posted' as const }
-        : e
-    );
-    setGLEntries(updatedEntries);
-
-    localStorage.setItem('payroll_gl_payrolls', JSON.stringify(updated.filter(p => p.payroll_id > 3)));
-    localStorage.setItem('payroll_gl_entries', JSON.stringify(updatedEntries.filter(e => e.entry_id > 7)));
-
-    showToast(`✅ Payroll ${payroll.payroll_period} posted to GL`, 'success');
+  const handlePostPayroll = async (payroll: PayrollRun) => {
+    try {
+      await financeAPI.postPayroll(payroll.payroll_id);
+      showToast(`✅ Payroll ${payroll.payroll_period} posted to GL`, 'success');
+      await loadData();
+    } catch (err) {
+      showToast(`❌ ${err instanceof Error ? err.message : 'Failed to post payroll'}`, 'error');
+    }
   };
 
   const totalGross = payrolls.reduce((sum, p) => sum + p.total_gross, 0);
@@ -98,7 +104,7 @@ const PayrollGLIntegration: React.FC = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
           <div>
             <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#333', margin: '0 0 4px 0' }}>💼 Payroll → GL Integration</h1>
-            <p style={{ fontSize: '14px', color: '#666', margin: 0 }}>Auto-create GL entries from payroll runs (Salary, CPF, Tax, Bank)</p>
+            <p style={{ fontSize: '14px', color: '#666', margin: 0 }}>Post payroll runs to the general ledger (Salary, CPF, Net payable){loading ? ' · loading…' : ''}</p>
           </div>
           <button onClick={() => navigate(-1)} style={{ fontSize: '20px', background: 'none', border: 'none', cursor: 'pointer', color: '#FF6B35', fontWeight: '700' }}>←</button>
         </div>
@@ -198,9 +204,9 @@ const PayrollGLIntegration: React.FC = () => {
         <div style={{ marginTop: '24px', padding: '16px', background: '#E8F5E9', borderRadius: '8px', border: '1px solid #4CAF50' }}>
           <p style={{ fontSize: '12px', color: '#2E7D32', margin: '0 0 8px 0', fontWeight: '600' }}>ℹ️ Integration Features</p>
           <ul style={{ fontSize: '12px', color: '#2E7D32', margin: 0, paddingLeft: '20px' }}>
-            <li>Auto-generates GL entries for: Salary Expense (5110), CPF Payable (2150), Tax Payable (2160), Bank/Cash (1010)</li>
-            <li>Maintains debit-credit balance: Gross salary → Deductions → Net payment</li>
-            <li>Tracks posting status: Pending until manually posted to GL</li>
+            <li>Generates GL entries for: Salaries &amp; Wages (5000), CPF Employer (5010), CPF Payable (2100), Net Salaries Payable (2000)</li>
+            <li>Refuses to post unless debits equal credits</li>
+            <li>A run stays editable until it is posted, then it is frozen</li>
             <li>Full audit trail with dates and descriptions</li>
             <li>Ready for ACRA compliance reporting</li>
           </ul>

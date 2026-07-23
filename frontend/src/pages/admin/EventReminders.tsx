@@ -6,11 +6,29 @@ import { useToast, ToastContainer } from '../../components/Toast';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { eventOptimizer, Event, EventSignup, EventEngagementFeature } from '../../utils/eventOptimizer';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
+/** Which reminder can be sent, and what it is called on screen. */
+const REMINDER_KINDS = [
+  { kind: '7day', label: '7 days before' },
+  { kind: '24hour', label: '24 hours before' },
+  { kind: '1hour', label: '1 hour before' },
+  { kind: 'dayof', label: 'On the day' },
+] as const;
+
+interface ReminderRecord {
+  kind: string;
+  sentCount: number;
+  sentAt: string;
+}
+
 export default function EventReminders() {
   const navigate = useNavigate();
   const { toasts, showToast, removeToast } = useToast();
   const [activeTab, setActiveTab] = useState<'events' | 'create' | 'ai-assist'>('events');
   const [events, setEvents] = useState<Event[]>([]);
+  const [reminders, setReminders] = useState<Record<string, ReminderRecord[]>>({});
+  const [busy, setBusy] = useState<string | null>(null);
 
   // Create event form state
   const [newEventName, setNewEventName] = useState('');
@@ -49,57 +67,108 @@ export default function EventReminders() {
   // Edit state
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  useEffect(() => {
-    const saved = localStorage.getItem('events');
-    if (saved) {
-      setEvents(JSON.parse(saved));
-    } else {
-      const demoEvents: Event[] = [
-        {
-          id: 'evt_1',
-          name: 'Community Networking Breakfast',
-          description: 'Join fellow members for a warm breakfast gathering to share stories and build connections.',
-          type: 'offline',
-          location: 'The Pinnacle@Duxton, Marina Bay, Singapore',
-          startDate: '2026-07-25',
-          startTime: '08:00',
-          endTime: '10:00',
-          cutoffDate: '2026-07-23',
-          cutoffTime: '17:00',
-          cost: 15,
-          minPax: 20,
-          maxPax: 100,
-          currentSignups: 45,
-          status: 'active',
-          createdAt: new Date(Date.now() - 604800000).toISOString(),
-          signups: [],
-          remindersSent: false,
-        },
-        {
-          id: 'evt_2',
-          name: 'Virtual Skills Workshop - Financial Planning',
-          description: 'Learn financial planning tips from industry experts in this interactive online workshop.',
-          type: 'online',
-          onlineLink: 'https://meet.google.com/xyz',
-          startDate: '2026-07-30',
-          startTime: '19:00',
-          endTime: '20:30',
-          cutoffDate: '2026-07-28',
-          cutoffTime: '18:00',
-          cost: 0,
-          minPax: 15,
-          maxPax: 200,
-          currentSignups: 87,
-          status: 'active',
-          createdAt: new Date(Date.now() - 432000000).toISOString(),
-          signups: [],
-          remindersSent: false,
-        },
-      ];
-      setEvents(demoEvents);
-      localStorage.setItem('events', JSON.stringify(demoEvents));
+  /**
+   * Events used to be kept in localStorage under the key 'events', which meant
+   * this screen ran a second, private event system: an event created here was
+   * invisible to the Events screen, to MyKampung, and to every user. Both
+   * screens now read and write community_events through /api/events.
+   *
+   * `type` means something different at each end — here it is online/offline
+   * (how you attend), while community_events.type is meetup/workshop/etc.
+   * (what it is). The API calls the first one `format`, so that is what this
+   * maps to; see migration 038.
+   */
+  const authHeaders = () => ({
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${localStorage.getItem('token')}`,
+  });
+
+  const fromApi = (e: any): Event => ({
+    id: String(e.id),
+    name: e.title,
+    description: e.description || '',
+    type: e.format === 'online' ? 'online' : 'offline',
+    location: e.location || undefined,
+    onlineLink: e.onlineLink || undefined,
+    startDate: e.date || '',
+    startTime: e.time || '',
+    endTime: e.endTime || '',
+    cutoffDate: e.cutoffDate || '',
+    cutoffTime: e.cutoffTime || '',
+    cost: Number(e.cost) || 0,
+    minPax: Number(e.minPax) || 0,
+    maxPax: Number(e.maxPax) || 0,
+    currentSignups: Number(e.attendees) || 0,
+    status: e.status,
+    createdAt: e.createdAt,
+    signups: [],
+    remindersSent: Boolean(e.remindersSent),
+  });
+
+  const loadEvents = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/events/all`, { headers: authHeaders() });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      const rows = (json.data || []).map(fromApi);
+      setEvents(rows);
+
+      // What has already gone out, per event, so a reminder cannot be sent
+      // twice by accident and the admin can see the history.
+      const histories = await Promise.all(
+        rows.map(async (ev: Event) => {
+          try {
+            const r = await fetch(`${API_URL}/api/marcom/events/${ev.id}/reminders`, {
+              headers: authHeaders(),
+            });
+            if (!r.ok) return [ev.id, []] as const;
+            const j = await r.json();
+            return [ev.id, j.data || []] as const;
+          } catch {
+            return [ev.id, []] as const;
+          }
+        })
+      );
+      setReminders(Object.fromEntries(histories));
+    } catch (err) {
+      console.error('Could not load events:', err);
+      showToast('Could not load events', 'error');
     }
-  }, []);
+  };
+
+  useEffect(() => { loadEvents(); }, []);
+
+  /**
+   * Sends one reminder to everyone signed up. Attendees only — a reminder for
+   * an event you did not join would be marketing, not a reminder. There is no
+   * recall on a sent message, hence the confirmation and the server-side
+   * uniqueness check.
+   */
+  const handleSendReminder = async (event: Event, kind: string, label: string) => {
+    if (!window.confirm(
+      `Send the "${label}" reminder for "${event.name}" to its ${event.currentSignups} attendee(s)?\n\nThis cannot be undone, and each reminder can only be sent once.`
+    )) return;
+
+    setBusy(`${event.id}:${kind}`);
+    try {
+      const res = await fetch(`${API_URL}/api/marcom/events/${event.id}/reminders`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ kind }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
+      await loadEvents();
+      showToast(`✅ Reminder sent to ${json.data.sent} of ${json.data.attempted}`, 'success');
+      if (json.deliveryMode === 'logged-only') {
+        showToast('No email provider configured — the email half was logged, not delivered', 'warning');
+      }
+    } catch (err: any) {
+      showToast(err.message || 'Could not send that reminder', 'error');
+    } finally {
+      setBusy(null);
+    }
+  };
 
   const handleGenerateDescription = async () => {
     if (!aiTopic.trim()) {
@@ -146,7 +215,7 @@ export default function EventReminders() {
     setAiEngagementLoading(false);
   };
 
-  const handleCreateEvent = () => {
+  const handleCreateEvent = async () => {
     if (!newEventName.trim() || !newDescription.trim() || !newStartDate || !newCutoffDate) {
       showToast('⚠️ Fill in all required fields', 'error');
       return;
@@ -157,56 +226,77 @@ export default function EventReminders() {
       return;
     }
 
-    const newEvent: Event = {
-      id: `evt_${Date.now()}`,
-      name: newEventName,
-      description: newDescription,
-      type: newEventType,
-      location: newLocation || undefined,
-      onlineLink: newEventType === 'online' ? eventOptimizer.generateAccessLink(`evt_${Date.now()}`) : undefined,
-      startDate: newStartDate,
-      startTime: newStartTime,
-      endTime: newEndTime,
-      cutoffDate: newCutoffDate,
-      cutoffTime: newCutoffTime,
-      cost: parseFloat(newCost),
-      minPax: parseInt(newMinPax),
-      maxPax: parseInt(newMaxPax),
-      currentSignups: 0,
-      status: 'draft',
-      createdAt: new Date().toISOString(),
-      signups: [],
-      remindersSent: false,
-    };
+    setBusy('create');
+    try {
+      const res = await fetch(`${API_URL}/api/events`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({
+          title: newEventName,
+          description: newDescription,
+          format: newEventType,
+          location: newLocation || null,
+          onlineLink: newEventType === 'online'
+            ? eventOptimizer.generateAccessLink(`evt_${Date.now()}`)
+            : null,
+          date: newStartDate,
+          time: newStartTime,
+          endTime: newEndTime,
+          cutoffDate: newCutoffDate,
+          cutoffTime: newCutoffTime,
+          cost: parseFloat(newCost) || 0,
+          minPax: parseInt(newMinPax) || null,
+          maxPax: parseInt(newMaxPax) || null,
+          status: 'draft',
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
 
-    const updated = [...events, newEvent];
-    setEvents(updated);
-    localStorage.setItem('events', JSON.stringify(updated));
+      await loadEvents();
+      setNewEventName('');
+      setNewDescription('');
+      setNewLocation('');
+      setNewStartDate('');
+      setNewCutoffDate('');
+      setNewCost('0');
+      setNewMinPax('10');
+      setNewMaxPax('50');
+      setAiTopic('');
+      setSuggestedFeatures([]);
+      setGeneratedBannerUrl('');
+      setCustomEventBannerRequirements('');
 
-    // Reset form
-    setNewEventName('');
-    setNewDescription('');
-    setNewLocation('');
-    setNewStartDate('');
-    setNewCutoffDate('');
-    setNewCost('0');
-    setNewMinPax('10');
-    setNewMaxPax('50');
-    setAiTopic('');
-    setSuggestedFeatures([]);
-    setGeneratedBannerUrl('');
-    setCustomEventBannerRequirements('');
-
-    showToast('✅ Event created!', 'success');
-    setActiveTab('events');
+      showToast('✅ Event saved as a draft — press Publish to open signups', 'success');
+      setActiveTab('events');
+    } catch (err: any) {
+      showToast(err.message || 'Could not create that event', 'error');
+    } finally {
+      setBusy(null);
+    }
   };
 
-  const handleDeleteEvent = (id: string) => {
-    if (confirm('Delete this event?')) {
-      const updated = events.filter(e => e.id !== id);
-      setEvents(updated);
-      localStorage.setItem('events', JSON.stringify(updated));
+  const handleDeleteEvent = async (id: string) => {
+    const event = events.find((e) => e.id === id);
+    if (!confirm(
+      event?.currentSignups
+        ? `Delete "${event.name}"? ${event.currentSignups} person(s) have signed up and their registration goes with it.`
+        : 'Delete this event?'
+    )) return;
+    setBusy(id);
+    try {
+      const res = await fetch(`${API_URL}/api/events/${id}`, {
+        method: 'DELETE',
+        headers: authHeaders(),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
+      await loadEvents();
       showToast('🗑️ Event deleted', 'success');
+    } catch (err: any) {
+      showToast(err.message || 'Could not delete that event', 'error');
+    } finally {
+      setBusy(null);
     }
   };
 
@@ -289,7 +379,7 @@ Be specific, actionable, and data-driven. Keep it under 200 words.`;
 Event: "${newEventName}"
 Type: ${newEventType}
 Description: "${newDescription.substring(0, 200)}"
-Cost: ${newCost > 0 ? '$' + newCost : 'FREE'}
+Cost: ${Number(newCost) > 0 ? '$' + newCost : 'FREE'}
 Audience: ${aiAudience || 'Professional community'}
 ${customEventBannerRequirements.trim() ? `Custom Requirements: ${customEventBannerRequirements}` : ''}
 
@@ -379,13 +469,23 @@ Format as numbered list with bold headers. Keep it practical and specific to THI
     setConversionLoading(false);
   };
 
-  const handlePublishEvent = (id: string) => {
-    const updated = events.map(e =>
-      e.id === id ? { ...e, status: 'active' as const } : e
-    );
-    setEvents(updated);
-    localStorage.setItem('events', JSON.stringify(updated));
-    showToast('📤 Event published!', 'success');
+  const handlePublishEvent = async (id: string) => {
+    setBusy(id);
+    try {
+      const res = await fetch(`${API_URL}/api/events/${id}`, {
+        method: 'PATCH',
+        headers: authHeaders(),
+        body: JSON.stringify({ status: 'active' }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
+      await loadEvents();
+      showToast('📤 Published — it is now on MyKampung and open for signups', 'success');
+    } catch (err: any) {
+      showToast(err.message || 'Could not publish that event', 'error');
+    } finally {
+      setBusy(null);
+    }
   };
 
   const statusColors = {
@@ -724,6 +824,55 @@ Format as numbered list with bold headers. Keep it practical and specific to THI
                         </button>
                       )}
                     </div>
+
+                    {/*
+                      The reminders half of this screen, which never existed:
+                      the page was called Event Reminders and had no way to
+                      send one. Each kind sends once, to attendees only, and
+                      the record of what went out lives on the server.
+                    */}
+                    {event.status === 'active' && (
+                      <div style={{ padding: '12px', background: '#FFF8F5', borderRadius: '8px', border: '1px solid #FFD9B3', marginBottom: '12px' }}>
+                        <div style={{ fontSize: '13px', fontWeight: '600', color: '#333', marginBottom: '8px' }}>
+                          ⏰ Reminders — {event.currentSignups} attendee(s)
+                        </div>
+                        {event.currentSignups === 0 ? (
+                          <div style={{ fontSize: '12px', color: '#999' }}>
+                            Nobody has signed up yet, so there is no one to remind.
+                          </div>
+                        ) : (
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
+                            {REMINDER_KINDS.map(({ kind, label }) => {
+                              const sent = (reminders[event.id] || []).find((r) => r.kind === kind);
+                              const busyHere = busy === `${event.id}:${kind}`;
+                              return (
+                                <button
+                                  key={kind}
+                                  onClick={() => handleSendReminder(event, kind, label)}
+                                  disabled={Boolean(sent) || busyHere}
+                                  title={sent
+                                    ? `Sent to ${sent.sentCount} on ${new Date(sent.sentAt).toLocaleString()}`
+                                    : `Send the ${label} reminder now`}
+                                  style={{
+                                    padding: '8px 10px',
+                                    background: sent ? '#E8F5E9' : busyHere ? '#ccc' : '#FF6B35',
+                                    color: sent ? '#2e7d32' : 'white',
+                                    border: sent ? '1px solid #A5D6A7' : 'none',
+                                    borderRadius: '6px',
+                                    fontWeight: '600',
+                                    fontSize: '12px',
+                                    cursor: sent || busyHere ? 'default' : 'pointer',
+                                    textAlign: 'left',
+                                  }}
+                                >
+                                  {sent ? `✓ ${label} — ${sent.sentCount} sent` : busyHere ? 'Sending…' : `Send ${label}`}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     {/* AI Insights Display */}
                     {selectedEventForInsights === event.id && (aiInsights || conversionTips) && (

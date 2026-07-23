@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast, ToastContainer } from '../../components/Toast';
 import AdminLayout from '../../components/admin/AdminLayout';
+import { timesheetAPI } from '../../services/adminAPI';
 
 interface ApprovalQueueItem {
   queue_id: number;
@@ -11,10 +12,19 @@ interface ApprovalQueueItem {
   week_start: string;
   week_end: string;
   total_hours: number;
+  overtime_hours: number;
   submitted_date: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'draft' | 'pending' | 'approved' | 'rejected';
   rejection_reason?: string;
 }
+
+/** ISO weeks start Monday; used to default the generate prompt. */
+const mondayOf = (d: Date): string => {
+  const copy = new Date(d);
+  const offset = (copy.getDay() + 6) % 7; // Sun=0 -> 6, Mon=1 -> 0
+  copy.setDate(copy.getDate() - offset);
+  return copy.toISOString().split('T')[0];
+};
 
 const TimesheetApprovalQueue: React.FC = () => {
   const navigate = useNavigate();
@@ -33,46 +43,27 @@ const TimesheetApprovalQueue: React.FC = () => {
   const loadApprovalQueue = async () => {
     try {
       setLoading(true);
-      // Mock data
-      const mockData: ApprovalQueueItem[] = [
-        {
-          queue_id: 1,
-          timesheet_id: 1,
-          staff_id: 'S001',
-          staff_name: 'John Doe',
-          week_start: '2026-07-15',
-          week_end: '2026-07-19',
-          total_hours: 42.0,
-          submitted_date: '2026-07-20',
-          status: 'pending',
-        },
-        {
-          queue_id: 2,
-          timesheet_id: 2,
-          staff_id: 'S002',
-          staff_name: 'Jane Smith',
-          week_start: '2026-07-15',
-          week_end: '2026-07-19',
-          total_hours: 32.0,
-          submitted_date: '2026-07-20',
-          status: 'pending',
-        },
-        {
-          queue_id: 3,
-          timesheet_id: 3,
-          staff_id: 'S003',
-          staff_name: 'Bob Wilson',
-          week_start: '2026-07-08',
-          week_end: '2026-07-12',
-          total_hours: 40.0,
-          submitted_date: '2026-07-13',
-          status: 'approved',
-        },
-      ];
-      const filtered = filterStatus === 'all' ? mockData : mockData.filter(item => item.status === filterStatus);
-      setQueueItems(filtered);
-    } catch (error) {
-      showToast('Failed to load approval queue', 'error');
+      // Was three hardcoded timesheets, and "approving" one only showed a
+      // toast — nothing was written anywhere.
+      const res = await timesheetAPI.getAll(filterStatus);
+      setQueueItems(
+        (res.data || []).map((t: any) => ({
+          queue_id: t.id,
+          timesheet_id: t.id,
+          staff_id: t.staff_id,
+          staff_name: t.staff_name,
+          week_start: t.week_start,
+          week_end: t.week_end,
+          total_hours: Number(t.total_hours) || 0,
+          overtime_hours: Number(t.overtime_hours) || 0,
+          submitted_date: t.submitted_at ? String(t.submitted_at).split('T')[0] : '',
+          status: t.status,
+          rejection_reason: t.review_notes || undefined,
+        }))
+      );
+    } catch (error: any) {
+      console.error('Failed to load approval queue:', error);
+      showToast(error.message || 'Failed to load approval queue', 'error');
     } finally {
       setLoading(false);
     }
@@ -90,16 +81,57 @@ const TimesheetApprovalQueue: React.FC = () => {
     setIsReviewing(true);
   };
 
-  const submitApproval = (action: 'approve' | 'reject') => {
+  const submitApproval = async (action: 'approve' | 'reject') => {
     if (!selectedItem) return;
     if (action === 'reject' && !approvalNotes.trim()) {
       showToast('❌ Please provide a reason for rejection', 'error');
       return;
     }
-    showToast(`✅ Timesheet ${action === 'approve' ? 'approved' : 'rejected'} for ${selectedItem.staff_name}`, 'success');
-    setIsReviewing(false);
-    setSelectedItem(null);
-    loadApprovalQueue();
+
+    try {
+      await timesheetAPI.review(selectedItem.timesheet_id, {
+        status: action === 'approve' ? 'approved' : 'rejected',
+        approved_by: 'Admin',
+        review_notes: approvalNotes.trim() || undefined,
+      });
+      showToast(`✅ Timesheet ${action === 'approve' ? 'approved' : 'rejected'} for ${selectedItem.staff_name}`, 'success');
+      setIsReviewing(false);
+      setSelectedItem(null);
+      await loadApprovalQueue();
+    } catch (error: any) {
+      showToast(`❌ ${error.message || 'Could not record decision'}`, 'error');
+    }
+  };
+
+  /**
+   * Builds the week's timesheets from attendance already recorded, so there is
+   * something to approve without a staff-facing submit flow.
+   */
+  const handleGenerateWeek = async () => {
+    const weekStart = window.prompt(
+      'Generate timesheets for the week starting (YYYY-MM-DD):',
+      mondayOf(new Date())
+    );
+    if (!weekStart) return;
+
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(weekStart)) {
+      showToast('❌ Please use the format YYYY-MM-DD', 'error');
+      return;
+    }
+
+    try {
+      const res = await timesheetAPI.generate(weekStart);
+      const count = res.data?.generated ?? 0;
+      showToast(
+        count > 0
+          ? `✅ ${count} timesheet${count === 1 ? '' : 's'} generated for week of ${weekStart}`
+          : 'No timesheets generated — that week may already be approved',
+        count > 0 ? 'success' : 'error'
+      );
+      await loadApprovalQueue();
+    } catch (error: any) {
+      showToast(`❌ ${error.message || 'Could not generate timesheets'}`, 'error');
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -207,6 +239,26 @@ const TimesheetApprovalQueue: React.FC = () => {
               {filter.label}
             </button>
           ))}
+
+          {/* Nothing else creates timesheets — there is no staff-facing submit
+              flow yet — so the queue needs a way to roll a week's attendance
+              up into approvable sheets. */}
+          <button
+            onClick={handleGenerateWeek}
+            style={{
+              padding: '8px 16px',
+              marginLeft: 'auto',
+              background: '#4CAF50',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '12px',
+              fontWeight: '600',
+            }}
+          >
+            ⚙️ Generate from attendance
+          </button>
         </div>
 
         {!isReviewing ? (

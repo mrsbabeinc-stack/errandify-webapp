@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import HanaAnimatedAvatar from './HanaAnimatedAvatar';
-import { loadResponsiveVoice } from '../main';
+import { loadResponsiveVoice } from '../utils/responsiveVoice';
 
 interface TaskData {
   title: string;

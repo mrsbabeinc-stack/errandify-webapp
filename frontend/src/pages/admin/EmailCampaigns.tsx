@@ -5,8 +5,10 @@ import AdminLayout from '../../components/admin/AdminLayout';
 import ScheduleCalendar from '../../components/ScheduleCalendar';
 import { campaignNotificationService } from '../../utils/campaignNotificationService';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 interface Campaign {
-  id: string;
+  id: number;
   name: string;
   subject: string;
   content: string;
@@ -14,18 +16,28 @@ interface Campaign {
   status: 'draft' | 'scheduled' | 'sent' | 'failed';
   createdAt: string;
   sentAt?: string;
+  /** Counted from delivery records, not stored — see /api/marcom/campaigns. */
   openRate: number;
   clickRate: number;
-  recipientSegment: 'all-users' | 'doers' | 'askers' | 'vip';
-  scheduledDate?: string;
-  scheduledTime?: string;
-  frequency?: 'weekly' | 'biweekly' | 'monthly';
-  engagementScore?: number;
+  delivered: number;
+  sentCount: number;
+  errorCount: number;
+  errorLog?: string | null;
+  recipientSegment: 'all-users' | 'doers' | 'askers' | 'new-users' | 'vip';
+  scheduledAt?: string;
   templateType: 'promotional' | 'announcement' | 'reminder' | 'transactional';
   fromName: string;
   fromEmail: string;
   imageUrl?: string;
   imageAlt?: string;
+}
+
+interface Segment {
+  key: string;
+  label: string;
+  audience: number;
+  reachable: number;
+  withEmail: number;
 }
 
 export default function EmailCampaigns() {
@@ -46,10 +58,15 @@ export default function EmailCampaigns() {
   const [imageAlt, setImageAlt] = useState('');
 
   // Edit state
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [editName, setEditName] = useState('');
   const [editSubject, setEditSubject] = useState('');
   const [editContent, setEditContent] = useState('');
+
+  // Audience + delivery reality, both read from the server
+  const [segments, setSegments] = useState<Segment[]>([]);
+  const [deliveryMode, setDeliveryMode] = useState<'delivered' | 'logged-only'>('logged-only');
+  const [busyId, setBusyId] = useState<number | 'create' | null>(null);
 
   // AI state
   const [aiPrompt, setAiPrompt] = useState('');
@@ -62,86 +79,99 @@ export default function EmailCampaigns() {
   // Several variants so the admin can pick, rather than accepting the first
   const [imageOptions, setImageOptions] = useState<string[]>([]);
 
-  useEffect(() => {
-    const saved = localStorage.getItem('emailCampaigns');
-    if (saved) {
-      setCampaigns(JSON.parse(saved));
-    } else {
-      const demoCampaigns: Campaign[] = [
-        {
-          id: 'c_1',
-          name: 'Welcome New Users',
-          subject: 'Welcome to Errandify!',
-          content: 'Hi! Welcome to our community.',
-          recipientCount: 2345,
-          status: 'sent',
-          createdAt: new Date(Date.now() - 604800000).toISOString(),
-          sentAt: new Date(Date.now() - 604800000).toISOString(),
-          openRate: 42,
-          clickRate: 18,
-          recipientSegment: 'all-users',
-          templateType: 'promotional',
-          fromName: 'Errandify',
-          fromEmail: 'noreply@errandify.com',
-        },
-      ];
-      setCampaigns(demoCampaigns);
-      localStorage.setItem('emailCampaigns', JSON.stringify(demoCampaigns));
-    }
-  }, []);
+  /**
+   * Campaigns used to live in localStorage, so one written on this laptop did
+   * not exist on any other and no campaign has ever been sent to anyone.
+   */
+  const authHeaders = () => ({
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${localStorage.getItem('token')}`,
+  });
 
-  const handleCreateCampaign = () => {
+  const loadCampaigns = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/marcom/campaigns`, { headers: authHeaders() });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      setCampaigns(json.data || []);
+      setDeliveryMode(json.deliveryMode || 'logged-only');
+    } catch (err) {
+      console.error('Could not load campaigns:', err);
+      alert('Could not load campaigns. Check that you are still signed in.');
+    }
+  };
+
+  /**
+   * Audience sizes for the currently selected template type. Promotional mail
+   * is filtered to people who opted in, so the number moves when the template
+   * changes — that is the consent rule showing its work, not a glitch.
+   */
+  const loadSegments = async (templateType: string) => {
+    try {
+      const res = await fetch(
+        `${API_URL}/api/marcom/segments?kind=${encodeURIComponent(templateType)}`,
+        { headers: authHeaders() }
+      );
+      if (!res.ok) return;
+      const json = await res.json();
+      setSegments(json.data || []);
+    } catch (err) {
+      console.error('Could not load audience sizes:', err);
+    }
+  };
+
+  useEffect(() => { loadCampaigns(); }, []);
+  useEffect(() => { loadSegments(template); }, [template]);
+
+  const selectedSegment = segments.find((s) => s.key === segment);
+
+  const handleCreateCampaign = async () => {
     if (!name.trim() || !subject.trim() || !content.trim()) {
       alert('Please fill in campaign name, subject, and content');
       return;
     }
+    setBusyId('create');
+    try {
+      const res = await fetch(`${API_URL}/api/marcom/campaigns`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({
+          name, subject, content, fromName, fromEmail,
+          recipientSegment: segment, templateType: template,
+          imageUrl: imageUrl || null, imageAlt: imageAlt || null,
+          scheduledAt: scheduledDate || null,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
 
-    const newCampaign: Campaign = {
-      id: `c_${Date.now()}`,
-      name,
-      subject,
-      content,
-      recipientCount: 1000,
-      status: scheduledDate ? 'scheduled' : 'draft',
-      createdAt: new Date().toISOString(),
-      scheduledDate: scheduledDate || undefined,
-      openRate: 0,
-      clickRate: 0,
-      recipientSegment: segment as any,
-      templateType: template as any,
-      fromName,
-      fromEmail,
-      imageUrl,
-      imageAlt,
-    };
+      campaignNotificationService.showCampaignCreatedToast();
+      await loadCampaigns();
 
-    const updated = [...campaigns, newCampaign];
-    setCampaigns(updated);
-    localStorage.setItem('emailCampaigns', JSON.stringify(updated));
+      setName('');
+      setSubject('');
+      setContent('');
+      setFromName('Errandify');
+      setFromEmail('noreply@errandify.com');
+      setSegment('all-users');
+      setTemplate('promotional');
+      setScheduledDate('');
+      setImageUrl('');
+      setImageAlt('');
 
-    // Send notifications
-    campaignNotificationService.showCampaignCreatedToast();
-
-    const token = localStorage.getItem('token') || '';
-    if (token) {
-      campaignNotificationService.notifyCampaignCreated(newCampaign, token);
-      if (scheduledDate) {
-        campaignNotificationService.notifyScheduledCampaign(newCampaign, token);
-      }
+      const a = json.audience;
+      alert(
+        `✅ Campaign saved as ${scheduledDate ? 'scheduled' : 'a draft'}.\n\n` +
+        `It will go to ${a.withEmail} of ${a.audience} people in that audience.` +
+        (a.reachable < a.audience
+          ? `\n\n${a.audience - a.reachable} are excluded because they have not opted in to marketing email.`
+          : '')
+      );
+    } catch (err: any) {
+      alert(err.message || 'Could not create that campaign');
+    } finally {
+      setBusyId(null);
     }
-
-    setName('');
-    setSubject('');
-    setContent('');
-    setFromName('Errandify');
-    setFromEmail('noreply@errandify.com');
-    setSegment('all-users');
-    setTemplate('promotional');
-    setScheduledDate('');
-    setImageUrl('');
-    setImageAlt('');
-
-    alert('✅ Campaign created! Notifications sent.');
   };
 
   const handleEditCampaign = (campaign: Campaign) => {
@@ -151,31 +181,86 @@ export default function EmailCampaigns() {
     setEditContent(campaign.content);
   };
 
-  const handleSaveEdit = (campaignId: string) => {
+  const handleSaveEdit = async (campaignId: number) => {
     if (!editName.trim() || !editSubject.trim() || !editContent.trim()) {
       alert('Please fill in all fields');
       return;
     }
-
-    const updated = campaigns.map(c =>
-      c.id === campaignId
-        ? { ...c, name: editName, subject: editSubject, content: editContent }
-        : c
-    );
-    setCampaigns(updated);
-    localStorage.setItem('emailCampaigns', JSON.stringify(updated));
-    setEditingId(null);
-    alert('✅ Campaign updated!');
+    setBusyId(campaignId);
+    try {
+      const res = await fetch(`${API_URL}/api/marcom/campaigns/${campaignId}`, {
+        method: 'PATCH',
+        headers: authHeaders(),
+        body: JSON.stringify({ name: editName, subject: editSubject, content: editContent }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
+      setEditingId(null);
+      await loadCampaigns();
+    } catch (err: any) {
+      alert(err.message || 'Could not update that campaign');
+    } finally {
+      setBusyId(null);
+    }
   };
 
-  const handleDeleteCampaign = (campaignId: string) => {
+  const handleDeleteCampaign = async (campaignId: number) => {
     if (!window.confirm('Delete this campaign?')) return;
-    const updated = campaigns.filter(c => c.id !== campaignId);
-    setCampaigns(updated);
-    localStorage.setItem('emailCampaigns', JSON.stringify(updated));
+    setBusyId(campaignId);
+    try {
+      const res = await fetch(`${API_URL}/api/marcom/campaigns/${campaignId}`, {
+        method: 'DELETE',
+        headers: authHeaders(),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
+      campaignNotificationService.showCampaignDeletedToast();
+      await loadCampaigns();
+    } catch (err: any) {
+      alert(err.message || 'Could not delete that campaign');
+    } finally {
+      setBusyId(null);
+    }
+  };
 
-    campaignNotificationService.showCampaignDeletedToast();
-    alert('✅ Campaign deleted!');
+  /**
+   * Sending is the one action here with no undo, so it confirms with the
+   * audience size first and the server refuses a second attempt.
+   */
+  const handleSendCampaign = async (campaign: Campaign) => {
+    const seg = segments.find((s) => s.key === campaign.recipientSegment);
+    const to = seg ? `${seg.withEmail} recipient(s)` : 'this campaign’s audience';
+    const warning = deliveryMode === 'logged-only'
+      ? '\n\nNote: no email provider is configured, so messages will be logged by the server rather than delivered.'
+      : '\n\nThis cannot be undone.';
+    if (!window.confirm(`Send "${campaign.name}" to ${to}?${warning}`)) return;
+
+    setBusyId(campaign.id);
+    try {
+      const res = await fetch(`${API_URL}/api/marcom/campaigns/${campaign.id}/send`, {
+        method: 'POST',
+        headers: authHeaders(),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
+
+      // campaignNotificationService.notifyCampaignSent is deliberately not
+      // called: it POSTs to /api/notifications/campaign-sent, which does not
+      // exist. The send route already records the outcome server-side.
+      const d = json.data;
+      await loadCampaigns();
+      alert(
+        `${d.sent} of ${d.attempted} messages ${json.deliveryMode === 'delivered' ? 'sent' : 'logged'}` +
+        (d.failed > 0 ? `\n${d.failed} failed — see the campaign’s error log.` : '') +
+        (json.deliveryMode === 'logged-only'
+          ? '\n\nNo email provider is configured, so nothing left the server.'
+          : '')
+      );
+    } catch (err: any) {
+      alert(err.message || 'Could not send that campaign');
+    } finally {
+      setBusyId(null);
+    }
   };
 
   /**
@@ -288,6 +373,17 @@ Make content warm, engaging, community-focused. Keep subject under 60 characters
         <div style={{ marginBottom: '20px' }}>
           <h2 style={{ fontSize: '20px', fontWeight: '700', color: '#333' }}>📧 Email Campaigns</h2>
           <p style={{ fontSize: '14px', color: '#666' }}>Create and manage email campaigns</p>
+          {/*
+            Said plainly rather than discovered after a send: services/email.ts
+            logs and returns success when no provider is configured, so a
+            "Sent" badge on that setup means the server wrote it to a log.
+          */}
+          {deliveryMode === 'logged-only' && (
+            <div style={{ marginTop: '10px', padding: '10px 12px', background: '#FFF8E1', border: '1px solid #FFD54F', borderRadius: '6px', fontSize: '13px', color: '#6b5200' }}>
+              No email provider is configured on this server. Sending records the campaign and
+              writes each message to the server log — nothing reaches an inbox.
+            </div>
+          )}
         </div>
 
         {/* TAB NAVIGATION */}
@@ -503,10 +599,18 @@ Make content warm, engaging, community-focused. Keep subject under 60 characters
                     onChange={(e) => setSegment(e.target.value)}
                     style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px' }}
                   >
-                    <option value="all-users">All Users</option>
-                    <option value="doers">Doers</option>
-                    <option value="askers">Askers</option>
-                    <option value="vip">VIP</option>
+                    {segments.length === 0 ? (
+                      <option value="all-users">All Users</option>
+                    ) : (
+                      segments.map((s) => (
+                        <option key={s.key} value={s.key}>
+                          {s.key === 'all-users' ? 'All Users'
+                            : s.key === 'new-users' ? 'New Users'
+                            : s.key.charAt(0).toUpperCase() + s.key.slice(1)}
+                          {' '}({s.withEmail})
+                        </option>
+                      ))
+                    )}
                   </select>
                   <select
                     value={template}
@@ -525,20 +629,38 @@ Make content warm, engaging, community-focused. Keep subject under 60 characters
                     style={{ padding: '10px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '14px' }}
                   />
                 </div>
+                {/*
+                  What this campaign would actually reach, before it is saved.
+                  The old form showed nothing and stored a flat 1,000.
+                */}
+                {selectedSegment && (
+                  <div style={{ fontSize: '12px', color: '#666', background: '#FFF8F5', padding: '10px', borderRadius: '6px', border: '1px solid #FFD9B3' }}>
+                    <strong>{selectedSegment.label}</strong> — {selectedSegment.audience} account(s),
+                    {' '}{selectedSegment.withEmail} with an email address.
+                    {selectedSegment.reachable < selectedSegment.audience && (
+                      <div style={{ marginTop: '6px', color: '#C1440E' }}>
+                        {selectedSegment.audience - selectedSegment.reachable} excluded: promotional email
+                        goes only to people who have opted in. Choose Announcement, Reminder or
+                        Transactional for service messages.
+                      </div>
+                    )}
+                  </div>
+                )}
                 <button
                   onClick={handleCreateCampaign}
+                  disabled={busyId === 'create'}
                   style={{
                     padding: '12px',
-                    background: 'linear-gradient(135deg, #FF6B35 0%, #FF8C5A 100%)',
+                    background: busyId === 'create' ? '#ccc' : 'linear-gradient(135deg, #FF6B35 0%, #FF8C5A 100%)',
                     color: 'white',
                     border: 'none',
                     borderRadius: '6px',
                     fontWeight: '600',
-                    cursor: 'pointer',
+                    cursor: busyId === 'create' ? 'not-allowed' : 'pointer',
                     fontSize: '16px',
                   }}
                 >
-                  + Create Campaign
+                  {busyId === 'create' ? 'Saving…' : '+ Create Campaign'}
                 </button>
               </div>
             </div>
@@ -637,10 +759,38 @@ Make content warm, engaging, community-focused. Keep subject under 60 characters
                         </div>
                       </div>
 
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                      {campaign.status === 'sent' && (
+                        <div style={{ fontSize: '11px', color: '#666', marginBottom: '8px' }}>
+                          Sent {campaign.sentAt ? new Date(campaign.sentAt).toLocaleString() : ''} —
+                          {' '}{campaign.sentCount} delivered
+                          {campaign.errorCount > 0 && `, ${campaign.errorCount} failed`}
+                        </div>
+                      )}
+                      {campaign.errorLog && (
+                        <pre style={{ fontSize: '11px', color: '#C1440E', background: '#FFF3F0', padding: '8px', borderRadius: '4px', marginBottom: '8px', whiteSpace: 'pre-wrap' }}>
+                          {campaign.errorLog}
+                        </pre>
+                      )}
+
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+                        <button
+                          onClick={() => handleSendCampaign(campaign)}
+                          disabled={campaign.status === 'sent' || busyId === campaign.id}
+                          title={campaign.status === 'sent' ? 'Already sent' : 'Send to this audience now'}
+                          style={{
+                            padding: '8px',
+                            background: campaign.status === 'sent' ? '#ccc' : '#4CAF50',
+                            color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600',
+                            cursor: campaign.status === 'sent' ? 'not-allowed' : 'pointer', fontSize: '12px',
+                          }}
+                        >
+                          {campaign.status === 'sent' ? '✓ Sent' : busyId === campaign.id ? 'Sending…' : '📤 Send now'}
+                        </button>
                         <button
                           onClick={() => handleEditCampaign(campaign)}
-                          style={{ padding: '8px', background: '#2196F3', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer', fontSize: '12px' }}
+                          disabled={campaign.status === 'sent'}
+                          title={campaign.status === 'sent' ? 'A sent campaign is a record of what people received' : 'Edit'}
+                          style={{ padding: '8px', background: campaign.status === 'sent' ? '#ccc' : '#2196F3', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: campaign.status === 'sent' ? 'not-allowed' : 'pointer', fontSize: '12px' }}
                         >
                           ✏️ Edit
                         </button>
@@ -721,12 +871,16 @@ Make content warm, engaging, community-focused. Keep subject under 60 characters
 
                       <div style={{ fontSize: '11px', color: '#999', marginBottom: '8px' }}>
                         📅 Created: {new Date(campaign.createdAt).toLocaleString()}
-                        {campaign.scheduledDate && (
+                        {campaign.scheduledAt && (
                           <>
                             <br />
-                            ⏰ Scheduled: {new Date(`${campaign.scheduledDate}T${campaign.scheduledTime || '09:00'}`).toLocaleString()}
-                            {campaign.frequency && ` • Frequency: ${campaign.frequency}`}
-                            {campaign.engagementScore && ` • Expected: ${campaign.engagementScore}%`}
+                            ⏰ Scheduled: {new Date(campaign.scheduledAt).toLocaleString()}
+                          </>
+                        )}
+                        {campaign.sentAt && (
+                          <>
+                            <br />
+                            📤 Sent: {new Date(campaign.sentAt).toLocaleString()}
                           </>
                         )}
                       </div>

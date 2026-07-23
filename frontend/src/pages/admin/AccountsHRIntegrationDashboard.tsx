@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast, ToastContainer } from '../../components/Toast';
 import AdminLayout from '../../components/admin/AdminLayout';
+import financeAPI from '../../services/financeAPI';
+import { rbacAPI } from '../../services/adminAPI';
 
 interface DashboardMetric {
   title: string;
@@ -13,17 +15,16 @@ interface DashboardMetric {
 
 interface SystemStatus {
   name: string;
-  status: 'operational' | 'warning' | 'critical';
-  lastSync: string;
-  dataPoints: number;
-  syncHealth: number;
+  status: 'operational' | 'warning' | 'idle';
+  records: number;
+  pending: number;
 }
 
 interface RolePermissions {
   role: string;
   icon: string;
   permissions: string[];
-  canAccess: string[];
+  description: string;
 }
 
 interface DataSyncLog {
@@ -39,7 +40,6 @@ const AccountsHRIntegrationDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { toasts, showToast, removeToast } = useToast();
   const [activeTab, setActiveTab] = useState<'overview' | 'systems' | 'permissions' | 'logs'>('overview');
-  const [syncInProgress, setSyncInProgress] = useState(false);
 
   // State
   const [metrics, setMetrics] = useState<DashboardMetric[]>([]);
@@ -47,217 +47,118 @@ const AccountsHRIntegrationDashboard: React.FC = () => {
   const [rolePermissions, setRolePermissions] = useState<RolePermissions[]>([]);
   const [syncLogs, setSyncLogs] = useState<DataSyncLog[]>([]);
 
+  const [loading, setLoading] = useState(true);
+
+  /**
+   * Real cross-module figures. Every number on this screen was invented — 20
+   * staff, SGD 247,500 in the bank, "8 modules synced, last full sync 2 mins
+   * ago". There is no sync process at all: HR and Accounts read one database.
+   * What is shown now is how many rows each module holds, how many are waiting
+   * on someone, and what actually happened most recently.
+   */
+  const loadAll = async () => {
+    try {
+      setLoading(true);
+      const [metricsData, summary, modules, activity, rolesResponse] = await Promise.all([
+        financeAPI.integrationMetrics(),
+        financeAPI.summary('month'),
+        financeAPI.moduleStatus(),
+        financeAPI.activity(20),
+        rbacAPI.getRoles().catch(() => null),
+      ]);
+
+      const sgd = (v: number) => `SGD ${v.toLocaleString('en-SG', { maximumFractionDigits: 0 })}`;
+      setMetrics([
+        {
+          title: 'Active Staff',
+          value: String(metricsData.activeStaff),
+          trend: 'stable',
+          trendValue: `${metricsData.totalStaff} on record`,
+          color: '#2196F3',
+        },
+        {
+          title: 'Monthly Payroll',
+          value: sgd(metricsData.monthlyPayroll),
+          trend: 'stable',
+          trendValue: metricsData.latestPayrollPeriod
+            ? `Latest run: ${metricsData.latestPayrollPeriod}`
+            : 'No run generated yet',
+          color: '#4CAF50',
+        },
+        {
+          title: 'Net This Month',
+          value: sgd(summary.netProfit),
+          trend: summary.netProfit >= 0 ? 'up' : 'down',
+          trendValue: `${sgd(summary.totalIncome)} in, ${sgd(summary.totalExpenses)} out`,
+          color: '#FF6B35',
+        },
+        {
+          title: 'Leave This Month',
+          value: String(metricsData.leaveThisMonth),
+          trend: 'stable',
+          trendValue: `${metricsData.pendingLeave} awaiting approval`,
+          color: '#9C27B0',
+        },
+        {
+          title: 'Receivables',
+          value: sgd(summary.receivables),
+          trend: 'stable',
+          trendValue: 'Invoiced, not yet received',
+          color: '#FF9800',
+        },
+        {
+          title: 'Expense Claims Pending',
+          value: String(metricsData.claimsPending),
+          trend: 'stable',
+          trendValue: sgd(metricsData.claimsPendingValue),
+          color: '#F44336',
+        },
+      ]);
+
+      setSystemStatus(modules.map(m => ({
+        name: m.name,
+        // Nothing is "critical" — a module with items waiting needs attention,
+        // a module with no rows yet is simply unused.
+        status: m.pending > 0 ? 'warning' : m.records > 0 ? 'operational' : 'idle',
+        records: m.records,
+        pending: m.pending,
+      })));
+
+      setSyncLogs(activity.map((a, idx) => ({
+        id: `act_${idx}`,
+        module: a.module,
+        action: a.action,
+        timestamp: a.at ? new Date(a.at).toLocaleString('en-SG') : '',
+        status: a.status,
+        records: Number(a.records) || 0,
+      })));
+
+      const roles = rolesResponse?.data || rolesResponse?.roles || [];
+      setRolePermissions(
+        Array.isArray(roles) && roles.length > 0
+          ? roles.map((role: any) => ({
+              role: role.name,
+              icon: '🔑',
+              permissions: Array.isArray(role.permissions) ? role.permissions : [],
+              description: role.description || '',
+            }))
+          : []
+      );
+    } catch (err) {
+      showToast(`❌ ${err instanceof Error ? err.message : 'Failed to load integration data'}`, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    // Demo metrics
-    const demoMetrics: DashboardMetric[] = [
-      {
-        title: 'Total Staff',
-        value: '20',
-        trend: 'up',
-        trendValue: '+3 this month',
-        color: '#2196F3',
-      },
-      {
-        title: 'Monthly Payroll',
-        value: 'SGD 62,800',
-        trend: 'stable',
-        trendValue: 'On budget',
-        color: '#4CAF50',
-      },
-      {
-        title: 'Accounts Balance',
-        value: 'SGD 247,500',
-        trend: 'up',
-        trendValue: '+12% vs last month',
-        color: '#FF6B35',
-      },
-      {
-        title: 'Leave Utilization',
-        value: '34%',
-        trend: 'stable',
-        trendValue: '6.8 days/person used',
-        color: '#9C27B0',
-      },
-      {
-        title: 'Invoices Outstanding',
-        value: 'SGD 45,200',
-        trend: 'down',
-        trendValue: '-8% (Collections up)',
-        color: '#FF9800',
-      },
-      {
-        title: 'Expense Claims Pending',
-        value: '3',
-        trend: 'down',
-        trendValue: 'All <SGD 500',
-        color: '#F44336',
-      },
-    ];
-
-    const demoSystemStatus: SystemStatus[] = [
-      {
-        name: 'Accounts Module',
-        status: 'operational',
-        lastSync: '2 mins ago',
-        dataPoints: 45,
-        syncHealth: 100,
-      },
-      {
-        name: 'HR Module',
-        status: 'operational',
-        lastSync: '3 mins ago',
-        dataPoints: 20,
-        syncHealth: 100,
-      },
-      {
-        name: 'Payroll Module',
-        status: 'operational',
-        lastSync: '5 mins ago',
-        dataPoints: 60,
-        syncHealth: 98,
-      },
-      {
-        name: 'Leave Management',
-        status: 'operational',
-        lastSync: '1 min ago',
-        dataPoints: 35,
-        syncHealth: 100,
-      },
-      {
-        name: 'Expense Claims',
-        status: 'operational',
-        lastSync: '4 mins ago',
-        dataPoints: 12,
-        syncHealth: 99,
-      },
-      {
-        name: 'Financial Reports',
-        status: 'operational',
-        lastSync: 'On demand',
-        dataPoints: 128,
-        syncHealth: 100,
-      },
-      {
-        name: 'Invoicing Module',
-        status: 'operational',
-        lastSync: '7 mins ago',
-        dataPoints: 42,
-        syncHealth: 99,
-      },
-      {
-        name: 'AI Reports Engine',
-        status: 'operational',
-        lastSync: '10 mins ago',
-        dataPoints: 156,
-        syncHealth: 98,
-      },
-    ];
-
-    const demoRolePermissions: RolePermissions[] = [
-      {
-        role: 'Admin',
-        icon: '👤',
-        permissions: ['Full access to all modules', 'Configure settings', 'Manage staff', 'Override approvals'],
-        canAccess: [
-          'Accounts',
-          'HR',
-          'Payroll',
-          'Leave Management',
-          'Expense Claims',
-          'Financial Reports',
-          'Invoicing',
-          'AI Reports',
-        ],
-      },
-      {
-        role: 'Finance Manager',
-        icon: '💰',
-        permissions: ['View all financials', 'Approve expenses', 'Generate reports', 'View invoicing'],
-        canAccess: [
-          'Accounts (view & edit)',
-          'Payroll (view only)',
-          'Expense Claims (approve)',
-          'Financial Reports',
-          'Invoicing',
-          'AI Reports (analytics)',
-        ],
-      },
-      {
-        role: 'HR Manager',
-        icon: '👥',
-        permissions: ['Manage staff', 'Approve leave', 'View payroll', 'Manage benefits'],
-        canAccess: [
-          'HR (full)',
-          'Leave Management (approve)',
-          'Payroll (view only)',
-          'Expense Claims (view)',
-          'AI Reports (HR analytics)',
-        ],
-      },
-      {
-        role: 'Staff Member',
-        icon: '🧑',
-        permissions: ['Submit leave requests', 'Submit expense claims', 'View own payslip'],
-        canAccess: ['Leave Management (submit)', 'Expense Claims (submit)', 'Payroll (own only)'],
-      },
-    ];
-
-    const demoSyncLogs: DataSyncLog[] = [
-      {
-        id: 'sync_001',
-        module: 'Payroll → Financial Reports',
-        action: 'Sync salary expenses to P&L',
-        timestamp: '2026-07-15 10:30:45',
-        status: 'success',
-        records: 20,
-      },
-      {
-        id: 'sync_002',
-        module: 'Expense Claims → Accounts',
-        action: 'Post approved claims to ledger',
-        timestamp: '2026-07-15 10:15:20',
-        status: 'success',
-        records: 3,
-      },
-      {
-        id: 'sync_003',
-        module: 'Leave Management → HR',
-        action: 'Update leave balances',
-        timestamp: '2026-07-15 09:45:30',
-        status: 'success',
-        records: 20,
-      },
-      {
-        id: 'sync_004',
-        module: 'Invoicing → Financial Reports',
-        action: 'Sync revenue to P&L',
-        timestamp: '2026-07-15 09:30:15',
-        status: 'success',
-        records: 8,
-      },
-      {
-        id: 'sync_005',
-        module: 'Accounts → AI Reports',
-        action: 'Export financial data for analysis',
-        timestamp: '2026-07-15 09:00:00',
-        status: 'success',
-        records: 128,
-      },
-    ];
-
-    setMetrics(demoMetrics);
-    setSystemStatus(demoSystemStatus);
-    setRolePermissions(demoRolePermissions);
-    setSyncLogs(demoSyncLogs);
+    loadAll();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleRunSync = async () => {
-    setSyncInProgress(true);
-    // Simulate sync
-    setTimeout(() => {
-      showToast('✅ Full system sync completed. All modules synchronized.', 'success');
-      setSyncInProgress(false);
-    }, 3000);
+  const handleRefresh = async () => {
+    await loadAll();
+    showToast('✅ Refreshed from the database', 'success');
   };
 
   const getStatusColor = (status: string) => {
@@ -319,30 +220,30 @@ const AccountsHRIntegrationDashboard: React.FC = () => {
 
         {/* Info Banner */}
         <div style={{ padding: '12px 16px', background: '#E3F2FD', border: '2px solid #1976D2', borderRadius: '6px', marginBottom: '16px', fontSize: '12px', color: '#0D47A1' }}>
-          <strong>✅ All Systems Operational:</strong> 8 modules synced. Accounts & HR system fully integrated and production-ready. Last full sync: 2 mins ago.
+          <strong>ℹ️ One database, no sync:</strong> HR, Payroll and Accounts read the same tables — nothing is copied between them, so these figures are the live records, not a snapshot.
         </div>
 
         {/* Sync Control */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', padding: '12px 16px', background: '#FFF8F5', borderRadius: '8px', border: '2px solid #FFD9B3' }}>
           <div>
-            <div style={{ fontWeight: '600', fontSize: '14px', color: '#333', marginBottom: '2px' }}>Data Synchronization</div>
-            <div style={{ fontSize: '12px', color: '#666' }}>Last sync: 2 minutes ago • Next auto-sync: 5 mins</div>
+            <div style={{ fontWeight: '600', fontSize: '14px', color: '#333', marginBottom: '2px' }}>Live figures</div>
+            <div style={{ fontSize: '12px', color: '#666' }}>Read straight from the database on load{loading ? ' · loading…' : ''}</div>
           </div>
           <button
-            onClick={handleRunSync}
-            disabled={syncInProgress}
+            onClick={handleRefresh}
+            disabled={loading}
             style={{
               padding: '8px 20px',
-              background: syncInProgress ? '#ccc' : '#FF6B35',
+              background: loading ? '#ccc' : '#FF6B35',
               color: 'white',
               border: 'none',
               borderRadius: '4px',
               fontWeight: '600',
-              cursor: syncInProgress ? 'wait' : 'pointer',
+              cursor: loading ? 'wait' : 'pointer',
               fontSize: '12px',
             }}
           >
-            {syncInProgress ? '⏳ Syncing...' : '🔄 Run Sync Now'}
+            {loading ? '⏳ Loading…' : '🔄 Refresh'}
           </button>
         </div>
 
@@ -367,7 +268,7 @@ const AccountsHRIntegrationDashboard: React.FC = () => {
               {tab === 'overview' && '📊 Overview'}
               {tab === 'systems' && '⚙️ Module Status'}
               {tab === 'permissions' && '🔐 Role Permissions'}
-              {tab === 'logs' && '📋 Sync Logs'}
+              {tab === 'logs' && '📋 Activity'}
             </button>
           ))}
         </div>
@@ -412,9 +313,10 @@ const AccountsHRIntegrationDashboard: React.FC = () => {
                       {statusColor.icon} {system.name}
                     </div>
                     <div style={{ fontSize: '11px', color: statusColor.text, display: 'grid', gap: '2px' }}>
-                      <div>Last Sync: {system.lastSync}</div>
-                      <div>Data Points: {system.dataPoints}</div>
-                      <div style={{ fontWeight: '600' }}>Sync Health: {system.syncHealth}%</div>
+                      <div>Records: {system.records.toLocaleString()}</div>
+                      <div style={{ fontWeight: '600' }}>
+                        {system.pending > 0 ? `${system.pending} awaiting action` : 'Nothing outstanding'}
+                      </div>
                     </div>
                   </div>
                 );
@@ -426,7 +328,7 @@ const AccountsHRIntegrationDashboard: React.FC = () => {
         {/* SYSTEMS TAB */}
         {activeTab === 'systems' && (
           <div>
-            <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '600', color: '#333' }}>Module Status & Synchronization</h3>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '600', color: '#333' }}>Module Records</h3>
 
             <div style={{ display: 'grid', gap: '12px' }}>
               {systemStatus.map((system, idx) => {
@@ -439,21 +341,21 @@ const AccountsHRIntegrationDashboard: React.FC = () => {
                           {statusColor.icon} {system.name}
                         </div>
                         <div style={{ fontSize: '12px', color: '#666' }}>
-                          Data Points: <strong>{system.dataPoints}</strong> • Last Sync: <strong>{system.lastSync}</strong>
+                          Records: <strong>{system.records.toLocaleString()}</strong>
                         </div>
                       </div>
                       <div style={{ textAlign: 'center' }}>
                         <div style={{ fontSize: '22px', fontWeight: '700', color: statusColor.text }}>
-                          {system.syncHealth}%
+                          {system.pending}
                         </div>
-                        <div style={{ fontSize: '11px', color: statusColor.text, fontWeight: '600' }}>Sync Health</div>
+                        <div style={{ fontSize: '11px', color: statusColor.text, fontWeight: '600' }}>Awaiting action</div>
                       </div>
                     </div>
                     {/* Health bar */}
                     <div style={{ width: '100%', height: '8px', background: '#eee', borderRadius: '4px', overflow: 'hidden' }}>
                       <div
                         style={{
-                          width: `${system.syncHealth}%`,
+                          width: `${system.records > 0 ? Math.round(((system.records - system.pending) / system.records) * 100) : 0}%`,
                           height: '100%',
                           background: statusColor.text,
                           transition: 'width 0.3s',
@@ -466,7 +368,7 @@ const AccountsHRIntegrationDashboard: React.FC = () => {
             </div>
 
             <div style={{ marginTop: '24px', padding: '16px', background: '#E3F2FD', borderRadius: '6px', border: '2px solid #1976D2', fontSize: '12px', color: '#0D47A1' }}>
-              <strong>✅ All Systems Operational:</strong> Data synchronization running smoothly. No conflicts detected. Auto-sync every 5 minutes. Real-time data consistency verified.
+              <strong>ℹ️ How to read this:</strong> the bar shows the share of each module's records that need no further action. A module with no records has simply not been used yet.
             </div>
           </div>
         )}
@@ -476,6 +378,11 @@ const AccountsHRIntegrationDashboard: React.FC = () => {
           <div>
             <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '600', color: '#333' }}>Role-Based Access Control (RBAC)</h3>
 
+            {rolePermissions.length === 0 && (
+              <div style={{ padding: '16px', background: '#FFF8F5', border: '2px dashed #FFD9B3', borderRadius: '8px', fontSize: '13px', color: '#666' }}>
+                No roles configured. Roles listed here are the real RBAC roles from the database — create them under Roles &amp; Permissions.
+              </div>
+            )}
             <div style={{ display: 'grid', gap: '16px' }}>
               {rolePermissions.map((role, idx) => (
                 <div key={idx} style={{ padding: '16px', background: 'white', border: '2px solid #FFD9B3', borderRadius: '8px' }}>
@@ -485,42 +392,28 @@ const AccountsHRIntegrationDashboard: React.FC = () => {
 
                   {/* Permissions */}
                   <div style={{ marginBottom: '12px' }}>
+                    {role.description && (
+                      <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>{role.description}</div>
+                    )}
                     <div style={{ fontSize: '12px', fontWeight: '600', color: '#666', marginBottom: '6px' }}>Permissions:</div>
-                    <ul style={{ margin: 0, paddingLeft: '16px', fontSize: '12px', color: '#666', display: 'grid', gap: '3px' }}>
-                      {role.permissions.map((perm, pidx) => (
-                        <li key={pidx}>{perm}</li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {/* Module Access */}
-                  <div>
-                    <div style={{ fontSize: '12px', fontWeight: '600', color: '#666', marginBottom: '6px' }}>Can Access:</div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '6px' }}>
-                      {role.canAccess.map((access, aidx) => (
-                        <div
-                          key={aidx}
-                          style={{
-                            padding: '6px 10px',
-                            background: '#FFF8F5',
-                            border: '1px solid #FFD9B3',
-                            borderRadius: '3px',
-                            fontSize: '11px',
-                            color: '#FF6B35',
-                            fontWeight: '600',
-                          }}
-                        >
-                          ✓ {access}
-                        </div>
-                      ))}
-                    </div>
+                    {role.permissions.length > 0 ? (
+                      <ul style={{ margin: 0, paddingLeft: '16px', fontSize: '12px', color: '#666', display: 'grid', gap: '3px' }}>
+                        {role.permissions.map((perm, pidx) => (
+                          <li key={pidx}>{perm}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <div style={{ fontSize: '12px', color: '#999', fontStyle: 'italic' }}>
+                        None granted yet — assign them under Roles &amp; Permissions.
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
             </div>
 
             <div style={{ marginTop: '24px', padding: '16px', background: '#E8F5E9', borderRadius: '6px', border: '2px solid #2E7D32', fontSize: '12px', color: '#2E7D32' }}>
-              <strong>🔐 RBAC Status:</strong> All 4 roles configured. Role-based module access enforced on all routes. Audit logging enabled for all access attempts.
+              <strong>🔐 RBAC:</strong> {rolePermissions.length} role{rolePermissions.length === 1 ? '' : 's'} defined in the database. This list reflects what is configured — it is not a check that every route enforces it.
             </div>
           </div>
         )}
@@ -528,7 +421,7 @@ const AccountsHRIntegrationDashboard: React.FC = () => {
         {/* LOGS TAB */}
         {activeTab === 'logs' && (
           <div>
-            <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '600', color: '#333' }}>Data Synchronization Logs</h3>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: '600', color: '#333' }}>Recent Finance Activity</h3>
 
             <div style={{ display: 'grid', gap: '12px' }}>
               {syncLogs.map(log => (
@@ -556,14 +449,14 @@ const AccountsHRIntegrationDashboard: React.FC = () => {
                   </div>
                   <div style={{ fontSize: '11px', color: '#999', display: 'flex', justifyContent: 'space-between' }}>
                     <span>{log.timestamp}</span>
-                    <span>{log.records} records synced</span>
+                    <span>{log.records} record{log.records === 1 ? '' : 's'}</span>
                   </div>
                 </div>
               ))}
             </div>
 
             <div style={{ marginTop: '16px', padding: '12px', background: '#F5F5F5', borderRadius: '4px', fontSize: '11px', color: '#666', textAlign: 'center' }}>
-              Showing latest 5 sync operations • Full audit trail retained for 1 year
+              Newest first, across income, expenses, claims, payroll and budgets
             </div>
           </div>
         )}

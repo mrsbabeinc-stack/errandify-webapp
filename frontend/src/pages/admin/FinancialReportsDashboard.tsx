@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast, ToastContainer } from '../../components/Toast';
 import AdminLayout from '../../components/admin/AdminLayout';
+import financeAPI from '../../services/financeAPI';
 
 interface ProfitLossReport {
   period: string;
@@ -63,10 +64,21 @@ interface CashFlowReport {
     totalOutflows: number;
   };
   closingBalance: number;
-  runway30Day: number;
-  runway60Day: number;
-  runway90Day: number;
+  runway30Day: number | null;
+  runway60Day: number | null;
+  runway90Day: number | null;
 }
+
+/**
+ * Runway reads in MONTHS of cash at the observed burn rate. The server used to
+ * return a dollar figure here while the screen appended "months", which is how
+ * this once displayed "12429.0 months".
+ */
+const formatRunway = (months: number | null): string =>
+  months == null ? '—' : `${months.toFixed(1)} months`;
+
+const runwayColour = (months: number | null): string =>
+  months == null ? '#666' : months >= 6 ? '#4CAF50' : months >= 3 ? '#FF9800' : '#F44336';
 
 const FinancialReportsDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -85,103 +97,119 @@ const FinancialReportsDashboard: React.FC = () => {
   const [cashFlows, setCashFlows] = useState<CashFlowReport[]>([]);
   const [currentCashFlow, setCurrentCashFlow] = useState<CashFlowReport | null>(null);
 
-  // Initialize demo data
+  const [loading, setLoading] = useState(true);
+
+  /** "2026-07" -> "July 2026" */
+  const monthLabel = (period: string): string => {
+    const [y, m] = period.split('-').map(Number);
+    return new Date(y, (m || 1) - 1, 1).toLocaleDateString('en-SG', { month: 'long', year: 'numeric' });
+  };
+
+  /** Last day of the month, as a local calendar date. */
+  const endOfPeriod = (period: string): string => {
+    const [y, m] = period.split('-').map(Number);
+    const d = new Date(y, m, 0);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+
+  /**
+   * Real statements. All three reports were hardcoded objects — the P&L showed
+   * a $2,600 profit and the balance sheet $50,000 of contributed capital that
+   * existed nowhere. They are now derived from the income, expense, claim and
+   * payroll rows for the period, so they move when the books move.
+   */
+  const loadReports = async (period: string) => {
+    try {
+      setLoading(true);
+      const [pl, bs, cf] = await Promise.all([
+        financeAPI.profitLoss(period),
+        financeAPI.balanceSheet(endOfPeriod(period)),
+        financeAPI.cashFlow(period),
+      ]);
+      const labelled = { ...pl, period: monthLabel(pl.period) };
+      const cfLabelled = { ...cf, period: monthLabel(cf.period) };
+      setPlReports([labelled]);
+      setCurrentPL(labelled);
+      setBalanceSheet(bs);
+      setCashFlows([cfLabelled]);
+      setCurrentCashFlow(cfLabelled);
+    } catch (err) {
+      showToast(`❌ ${err instanceof Error ? err.message : 'Failed to build reports'}`, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    // Demo P&L
-    const demoPlReports: ProfitLossReport[] = [
-      {
-        period: 'July 2026',
-        revenue: {
-          serviceRevenue: 15000,
-          productSales: 5000,
-          otherRevenue: 1000,
-          totalRevenue: 21000,
-        },
-        expenses: {
-          salaries: 14300,
-          cpfEmployer: 2100,
-          officeSupplies: 500,
-          utilities: 400,
-          travel: 300,
-          marketing: 600,
-          other: 200,
-          totalExpenses: 18400,
-        },
-        netProfitLoss: 2600,
-      },
-    ];
+    loadReports(selectedPeriod);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPeriod]);
 
-    // Demo Balance Sheet
-    const demoBalanceSheet: BalanceSheetReport = {
-      asOfDate: '2026-07-31',
-      assets: {
-        cash: 45000,
-        accountsReceivable: 5000,
-        equipment: 15000,
-        totalAssets: 65000,
-      },
-      liabilities: {
-        accountsPayable: 3000,
-        salaryAccrual: 0,
-        taxesOwed: 2000,
-        cpfPayable: 2100,
-        totalLiabilities: 7100,
-      },
-      equity: {
-        capitalContributed: 50000,
-        retainedEarnings: 7900,
-        totalEquity: 57900,
-      },
+  const handleGenerateReports = async () => {
+    await loadReports(selectedPeriod);
+    showToast(`📊 Reports rebuilt for ${monthLabel(selectedPeriod)}`, 'success');
+  };
+
+  /** A real file, not a toast — the old handlers only claimed to export. */
+  const downloadCSV = (filename: string, rows: (string | number)[][]) => {
+    const escape = (v: string | number) => {
+      const s = String(v ?? '');
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
     };
-
-    // Demo Cash Flow
-    const demoCashFlows: CashFlowReport[] = [
-      {
-        period: 'July 2026',
-        openingBalance: 42400,
-        inflows: {
-          revenueReceived: 20000,
-          otherInflows: 500,
-          totalInflows: 20500,
-        },
-        outflows: {
-          salariesPaid: 14300,
-          cpfRemittance: 2100,
-          taxesPaid: 1000,
-          operatingExpenses: 1200,
-          capitalExpenditure: 0,
-          totalOutflows: 18600,
-        },
-        closingBalance: 44300,
-        runway30Day: 2.4,
-        runway60Day: 1.2,
-        runway90Day: 0.8,
-      },
-    ];
-
-    setPlReports(demoPlReports);
-    setCurrentPL(demoPlReports[0]);
-    setBalanceSheet(demoBalanceSheet);
-    setCashFlows(demoCashFlows);
-    setCurrentCashFlow(demoCashFlows[0]);
-  }, []);
-
-  const handleGenerateReports = () => {
-    const [year, month] = selectedPeriod.split('-');
-    const monthName = new Date(`${year}-${month}-01`).toLocaleDateString('en-SG', {
-      month: 'long',
-      year: 'numeric',
-    });
-
-    showToast(`📊 Generated reports for ${monthName}`, 'success');
+    const csv = rows.map(r => r.map(escape).join(',')).join('\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
-  const handleExportPDF = (reportType: string) => {
-    showToast(`📥 Exporting ${reportType} as PDF...`, 'success');
-  };
-
-  const handleExportExcel = (reportType: string) => {
-    showToast(`📥 Exporting ${reportType} as Excel...`, 'success');
+  const handleExportCSV = () => {
+    const rows: (string | number)[][] = [['Report', 'Line', 'Amount (SGD)']];
+    if (currentPL) {
+      rows.push(['Profit & Loss', 'Period', currentPL.period]);
+      rows.push(['Profit & Loss', 'Service revenue', currentPL.revenue.serviceRevenue]);
+      rows.push(['Profit & Loss', 'Product sales', currentPL.revenue.productSales]);
+      rows.push(['Profit & Loss', 'Other revenue', currentPL.revenue.otherRevenue]);
+      rows.push(['Profit & Loss', 'Total revenue', currentPL.revenue.totalRevenue]);
+      rows.push(['Profit & Loss', 'Salaries', currentPL.expenses.salaries]);
+      rows.push(['Profit & Loss', 'CPF employer', currentPL.expenses.cpfEmployer]);
+      rows.push(['Profit & Loss', 'Office supplies', currentPL.expenses.officeSupplies]);
+      rows.push(['Profit & Loss', 'Utilities', currentPL.expenses.utilities]);
+      rows.push(['Profit & Loss', 'Travel', currentPL.expenses.travel]);
+      rows.push(['Profit & Loss', 'Marketing', currentPL.expenses.marketing]);
+      rows.push(['Profit & Loss', 'Other', currentPL.expenses.other]);
+      rows.push(['Profit & Loss', 'Total expenses', currentPL.expenses.totalExpenses]);
+      rows.push(['Profit & Loss', 'Net profit / (loss)', currentPL.netProfitLoss]);
+    }
+    if (balanceSheet) {
+      rows.push(['Balance Sheet', 'As of', balanceSheet.asOfDate]);
+      rows.push(['Balance Sheet', 'Cash', balanceSheet.assets.cash]);
+      rows.push(['Balance Sheet', 'Accounts receivable', balanceSheet.assets.accountsReceivable]);
+      rows.push(['Balance Sheet', 'Total assets', balanceSheet.assets.totalAssets]);
+      rows.push(['Balance Sheet', 'Accounts payable', balanceSheet.liabilities.accountsPayable]);
+      rows.push(['Balance Sheet', 'Salary accrual', balanceSheet.liabilities.salaryAccrual]);
+      rows.push(['Balance Sheet', 'CPF payable', balanceSheet.liabilities.cpfPayable]);
+      rows.push(['Balance Sheet', 'Taxes owed', balanceSheet.liabilities.taxesOwed]);
+      rows.push(['Balance Sheet', 'Total liabilities', balanceSheet.liabilities.totalLiabilities]);
+      rows.push(['Balance Sheet', 'Retained earnings', balanceSheet.equity.retainedEarnings]);
+      rows.push(['Balance Sheet', 'Total equity', balanceSheet.equity.totalEquity]);
+    }
+    if (currentCashFlow) {
+      rows.push(['Cash Flow', 'Opening balance', currentCashFlow.openingBalance]);
+      rows.push(['Cash Flow', 'Revenue received', currentCashFlow.inflows.revenueReceived]);
+      rows.push(['Cash Flow', 'Other inflows', currentCashFlow.inflows.otherInflows]);
+      rows.push(['Cash Flow', 'Total inflows', currentCashFlow.inflows.totalInflows]);
+      rows.push(['Cash Flow', 'Salaries paid', currentCashFlow.outflows.salariesPaid]);
+      rows.push(['Cash Flow', 'CPF remittance', currentCashFlow.outflows.cpfRemittance]);
+      rows.push(['Cash Flow', 'Taxes paid', currentCashFlow.outflows.taxesPaid]);
+      rows.push(['Cash Flow', 'Operating expenses', currentCashFlow.outflows.operatingExpenses]);
+      rows.push(['Cash Flow', 'Total outflows', currentCashFlow.outflows.totalOutflows]);
+      rows.push(['Cash Flow', 'Closing balance', currentCashFlow.closingBalance]);
+    }
+    downloadCSV(`financial-reports-${selectedPeriod}.csv`, rows);
+    showToast('📥 Downloaded financial-reports CSV', 'success');
   };
 
   return (
@@ -257,7 +285,7 @@ const FinancialReportsDashboard: React.FC = () => {
               Generate
             </button>
             <button
-              onClick={() => handleExportPDF('P&L')}
+              onClick={() => window.print()}
               style={{
                 padding: '10px 16px',
                 background: '#2196F3',
@@ -269,10 +297,10 @@ const FinancialReportsDashboard: React.FC = () => {
                 fontSize: '12px',
               }}
             >
-              📄 PDF
+              🖨️ Print / PDF
             </button>
             <button
-              onClick={() => handleExportExcel('P&L')}
+              onClick={handleExportCSV}
               style={{
                 padding: '10px 16px',
                 background: '#00796B',
@@ -284,7 +312,7 @@ const FinancialReportsDashboard: React.FC = () => {
                 fontSize: '12px',
               }}
             >
-              📊 Excel
+              📊 CSV
             </button>
           </div>
         </div>
@@ -603,28 +631,31 @@ const FinancialReportsDashboard: React.FC = () => {
 
                 {/* Runway Forecast */}
                 <div style={{ padding: '16px', background: '#FFF8F5', borderRadius: '8px', border: '2px solid #FFD9B3' }}>
-                  <h3 style={{ margin: '0 0 12px 0', fontSize: '13px', fontWeight: '700', color: '#333' }}>CASH RUNWAY FORECAST</h3>
+                  <h3 style={{ margin: '0 0 4px 0', fontSize: '13px', fontWeight: '700', color: '#333' }}>CASH RUNWAY</h3>
+                  <div style={{ fontSize: '11px', color: '#999', marginBottom: '12px' }}>
+                    How many months the closing cash balance lasts at the rate money actually went out. Not a forecast — no future commitments are modelled.
+                  </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', fontSize: '12px' }}>
                     <div>
-                      <div style={{ color: '#666', marginBottom: '4px' }}>30-Day Runway</div>
-                      <div style={{ fontWeight: '600', fontSize: '16px', color: currentCashFlow.runway30Day > 1 ? '#4CAF50' : '#F44336' }}>
-                        {currentCashFlow.runway30Day.toFixed(1)} months
+                      <div style={{ color: '#666', marginBottom: '4px' }}>Runway (1-month burn)</div>
+                      <div style={{ fontWeight: '600', fontSize: '16px', color: runwayColour(currentCashFlow.runway30Day) }}>
+                        {formatRunway(currentCashFlow.runway30Day)}
                       </div>
-                      <div style={{ fontSize: '11px', color: '#999', marginTop: '2px' }}>At current burn rate</div>
+                      <div style={{ fontSize: '11px', color: '#999', marginTop: '2px' }}>Cash ÷ last month's paid expenses</div>
                     </div>
                     <div>
-                      <div style={{ color: '#666', marginBottom: '4px' }}>60-Day Runway</div>
-                      <div style={{ fontWeight: '600', fontSize: '16px', color: currentCashFlow.runway60Day > 1 ? '#4CAF50' : '#F44336' }}>
-                        {currentCashFlow.runway60Day.toFixed(1)} months
+                      <div style={{ color: '#666', marginBottom: '4px' }}>Runway (2-month burn)</div>
+                      <div style={{ fontWeight: '600', fontSize: '16px', color: runwayColour(currentCashFlow.runway60Day) }}>
+                        {formatRunway(currentCashFlow.runway60Day)}
                       </div>
-                      <div style={{ fontSize: '11px', color: '#999', marginTop: '2px' }}>Projection</div>
+                      <div style={{ fontSize: '11px', color: '#999', marginTop: '2px' }}>Averaged over 2 months</div>
                     </div>
                     <div>
-                      <div style={{ color: '#666', marginBottom: '4px' }}>90-Day Runway</div>
-                      <div style={{ fontWeight: '600', fontSize: '16px', color: currentCashFlow.runway90Day > 1 ? '#4CAF50' : '#F44336' }}>
-                        {currentCashFlow.runway90Day.toFixed(1)} months
+                      <div style={{ color: '#666', marginBottom: '4px' }}>Runway (3-month burn)</div>
+                      <div style={{ fontWeight: '600', fontSize: '16px', color: runwayColour(currentCashFlow.runway90Day) }}>
+                        {formatRunway(currentCashFlow.runway90Day)}
                       </div>
-                      <div style={{ fontSize: '11px', color: '#999', marginTop: '2px' }}>Long-term outlook</div>
+                      <div style={{ fontSize: '11px', color: '#999', marginTop: '2px' }}>Averaged over 3 months</div>
                     </div>
                   </div>
                 </div>

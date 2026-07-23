@@ -1,31 +1,54 @@
 import React, { useState, useEffect } from 'react';
 
 interface SystemStatus {
-  api: 'healthy' | 'degraded' | 'down';
-  database: 'healthy' | 'degraded' | 'down';
-  cache: 'healthy' | 'degraded' | 'down';
+  api: 'healthy' | 'degraded' | 'down' | 'unknown';
+  database: 'healthy' | 'degraded' | 'down' | 'unknown';
   lastSync: string;
 }
 
+/**
+ * These lights used to be hardcoded to 'healthy' and never checked anything —
+ * the interval only refreshed the clock, so the footer reported a green API and
+ * a green database even while every request on the page was failing. It now
+ * calls /health, which pings the database, and goes red when that call fails.
+ *
+ * The third light was "Cache". There is no cache tier in this stack, so rather
+ * than report the health of something that does not exist, it is gone.
+ */
 export const AdminFooter: React.FC = () => {
   const [status, setStatus] = useState<SystemStatus>({
-    api: 'healthy',
-    database: 'healthy',
-    cache: 'healthy',
-    lastSync: new Date().toLocaleTimeString()
+    api: 'unknown',
+    database: 'unknown',
+    lastSync: '—'
   });
 
   useEffect(() => {
-    // Poll system status every 30 seconds
-    const interval = setInterval(() => {
-      // In production, call actual health check API
-      setStatus(prev => ({
-        ...prev,
-        lastSync: new Date().toLocaleTimeString()
-      }));
-    }, 30000);
+    let cancelled = false;
 
-    return () => clearInterval(interval);
+    const check = async () => {
+      try {
+        const response = await fetch('/health', { cache: 'no-store' });
+        const body = await response.json().catch(() => null);
+        if (cancelled) return;
+        setStatus({
+          api: response.ok ? 'healthy' : 'degraded',
+          database: body?.database === 'healthy' ? 'healthy' : body?.database ? 'down' : 'unknown',
+          lastSync: new Date().toLocaleTimeString()
+        });
+      } catch {
+        if (cancelled) return;
+        // The request never landed — the API is unreachable, and we cannot say
+        // anything about the database from here.
+        setStatus({ api: 'down', database: 'unknown', lastSync: new Date().toLocaleTimeString() });
+      }
+    };
+
+    check();
+    const interval = setInterval(check, 30000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
   }, []);
 
   const getStatusIcon = (status: string) => {
@@ -47,13 +70,10 @@ export const AdminFooter: React.FC = () => {
           <span className="status-item">
             {getStatusIcon(status.database)} Database
           </span>
-          <span className="status-item">
-            {getStatusIcon(status.cache)} Cache
-          </span>
         </div>
 
         <div className="footer-info">
-          <span className="sync-time">Last sync: {status.lastSync}</span>
+          <span className="sync-time">Checked: {status.lastSync}</span>
           <span className="footer-text">Errandify Admin v1.0</span>
         </div>
       </div>

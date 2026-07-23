@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast, ToastContainer } from '../../components/Toast';
 import AdminLayout from '../../components/admin/AdminLayout';
+import financeAPI, { n } from '../../services/financeAPI';
 
 interface LeaveRecord {
   leave_id: number;
@@ -11,6 +12,9 @@ interface LeaveRecord {
   start_date: string;
   end_date: string;
   days: number;
+  calendar_days: number;
+  daily_rate: number;
+  suggested_deduction: number;
   status: 'approved' | 'pending';
   paid: boolean;
   deduction_applied: boolean;
@@ -34,68 +38,75 @@ const LeavePayrollIntegration: React.FC = () => {
   const [leaves, setLeaves] = useState<LeaveRecord[]>([]);
   const [deductions, setDeductions] = useState<PayrollDeduction[]>([]);
   const [activeTab, setActiveTab] = useState<'leaves' | 'deductions'>('leaves');
+  const [loading, setLoading] = useState(true);
+  const [period, setPeriod] = useState(new Date().toISOString().slice(0, 7));
 
   useEffect(() => {
     loadData();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [period]);
 
+  /**
+   * Real approved leave and the deductions raised against it. The old screen
+   * invented three employees and priced every deduction at a hardcoded SGD 200
+   * a day regardless of who it was — the rate now comes from the staff member's
+   * own base salary over 22 working days, computed server-side.
+   */
   const loadData = async () => {
-    const savedLeaves = localStorage.getItem('leave_payroll_leaves') || '[]';
-    const savedDeductions = localStorage.getItem('leave_payroll_deductions') || '[]';
-
-    let mockLeaves: LeaveRecord[] = [
-      { leave_id: 1, employee_id: 'EMP-001', employee_name: 'John Tan', leave_type: 'Unpaid Leave', start_date: '2026-07-01', end_date: '2026-07-03', days: 3, status: 'approved', paid: false, deduction_applied: true },
-      { leave_id: 2, employee_id: 'EMP-002', employee_name: 'Sarah Lee', leave_type: 'Medical Leave', start_date: '2026-07-05', end_date: '2026-07-05', days: 1, status: 'approved', paid: true, deduction_applied: false },
-      { leave_id: 3, employee_id: 'EMP-003', employee_name: 'Mike Wong', leave_type: 'Unpaid Leave', start_date: '2026-07-15', end_date: '2026-07-17', days: 3, status: 'approved', paid: false, deduction_applied: false },
-    ];
-
-    let mockDeductions: PayrollDeduction[] = [
-      { deduction_id: 1, payroll_id: 1, employee_id: 'EMP-001', employee_name: 'John Tan', leave_type: 'Unpaid Leave', days: 3, daily_rate: 200, deduction_amount: 600, payroll_period: '2026-07' },
-    ];
-
-    if (savedLeaves !== '[]') mockLeaves = JSON.parse(savedLeaves);
-    if (savedDeductions !== '[]') mockDeductions = [...mockDeductions, ...JSON.parse(savedDeductions)];
-
-    setLeaves(mockLeaves);
-    setDeductions(mockDeductions);
+    try {
+      setLoading(true);
+      const [candidates, existing] = await Promise.all([
+        financeAPI.leaveDeductionCandidates(period),
+        financeAPI.listDeductions(),
+      ]);
+      setLeaves(candidates.map(l => ({
+        leave_id: l.id,
+        employee_id: l.staff_id,
+        employee_name: l.staff_name,
+        leave_type: l.leave_type,
+        start_date: l.start_date,
+        end_date: l.end_date,
+        days: l.days,
+        calendar_days: l.calendar_days,
+        daily_rate: l.daily_rate,
+        suggested_deduction: l.suggested_deduction,
+        status: 'approved',
+        paid: !l.is_unpaid,
+        deduction_applied: !!l.deduction_id,
+      })));
+      setDeductions(existing.map(d => ({
+        deduction_id: d.id,
+        payroll_id: 0,
+        employee_id: d.staff_id,
+        employee_name: d.staff_name,
+        leave_type: d.leave_type,
+        days: n(d.unpaid_days),
+        daily_rate: n(d.daily_rate),
+        deduction_amount: n(d.amount),
+        payroll_period: d.period,
+      })));
+    } catch (err) {
+      showToast(`❌ ${err instanceof Error ? err.message : 'Failed to load leave data'}`, 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleApplyDeduction = (leave: LeaveRecord) => {
+  const handleApplyDeduction = async (leave: LeaveRecord) => {
     if (leave.paid) {
       showToast('⚠️ Paid leave does not require deduction', 'error');
       return;
     }
-
-    const dailyRate = 200;
-    const deductionAmount = leave.days * dailyRate;
-
-    const newDeduction: PayrollDeduction = {
-      deduction_id: Date.now(),
-      payroll_id: parseInt(new Date().getMonth().toString()),
-      employee_id: leave.employee_id,
-      employee_name: leave.employee_name,
-      leave_type: leave.leave_type,
-      days: leave.days,
-      daily_rate: dailyRate,
-      deduction_amount: deductionAmount,
-      payroll_period: new Date().toISOString().split('T')[0].substring(0, 7),
-    };
-
-    const updatedLeaves = leaves.map(l =>
-      l.leave_id === leave.leave_id
-        ? { ...l, deduction_applied: true }
-        : l
-    );
-
-    const updated = [...deductions, newDeduction];
-
-    setLeaves(updatedLeaves);
-    setDeductions(updated);
-
-    localStorage.setItem('leave_payroll_leaves', JSON.stringify(updatedLeaves.filter(l => l.leave_id > 3)));
-    localStorage.setItem('leave_payroll_deductions', JSON.stringify(updated.filter(d => d.deduction_id > 1)));
-
-    showToast(`✅ Payroll deduction created: ${leave.employee_name} - SGD ${deductionAmount}`, 'success');
+    try {
+      const deduction = await financeAPI.createLeaveDeduction(leave.leave_id);
+      showToast(
+        `✅ Deduction created: ${leave.employee_name} — SGD ${n(deduction.amount).toLocaleString()}`,
+        'success'
+      );
+      await loadData();
+    } catch (err) {
+      showToast(`❌ ${err instanceof Error ? err.message : 'Failed to create deduction'}`, 'error');
+    }
   };
 
   const totalUnpaidDays = leaves.filter(l => !l.paid && l.status === 'approved').reduce((sum, l) => sum + l.days, 0);
@@ -109,9 +120,18 @@ const LeavePayrollIntegration: React.FC = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
           <div>
             <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#333', margin: '0 0 4px 0' }}>🏖️ Leave → Payroll Integration</h1>
-            <p style={{ fontSize: '14px', color: '#666', margin: 0 }}>Auto-apply salary deductions for unpaid/partial leave</p>
+            <p style={{ fontSize: '14px', color: '#666', margin: 0 }}>Price unpaid leave against the staff member's own daily rate and carry it into payroll{loading ? ' · loading…' : ''}</p>
           </div>
-          <button onClick={() => navigate(-1)} style={{ fontSize: '20px', background: 'none', border: 'none', cursor: 'pointer', color: '#FF6B35', fontWeight: '700' }}>←</button>
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <input
+              type="month"
+              value={period}
+              onChange={(e) => setPeriod(e.target.value)}
+              title="Leave starting in this month"
+              style={{ padding: '8px 10px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '13px' }}
+            />
+            <button onClick={() => navigate(-1)} style={{ fontSize: '20px', background: 'none', border: 'none', cursor: 'pointer', color: '#FF6B35', fontWeight: '700' }}>←</button>
+          </div>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '24px' }}>
@@ -143,9 +163,11 @@ const LeavePayrollIntegration: React.FC = () => {
                   <th style={{ padding: '12px', textAlign: 'left', fontSize: '12px', fontWeight: '600' }}>Employee</th>
                   <th style={{ padding: '12px', textAlign: 'left', fontSize: '12px', fontWeight: '600' }}>Leave Type</th>
                   <th style={{ padding: '12px', textAlign: 'left', fontSize: '12px', fontWeight: '600' }}>Date Range</th>
-                  <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: '600' }}>Days</th>
+                  <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: '600' }}>Working days</th>
+                  <th style={{ padding: '12px', textAlign: 'right', fontSize: '12px', fontWeight: '600' }}>Daily rate</th>
+                  <th style={{ padding: '12px', textAlign: 'right', fontSize: '12px', fontWeight: '600' }}>Deduction</th>
                   <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: '600' }}>Paid</th>
-                  <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: '600' }}>Deduction Applied</th>
+                  <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: '600' }}>Applied</th>
                   <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: '600' }}>Action</th>
                 </tr>
               </thead>
@@ -155,7 +177,20 @@ const LeavePayrollIntegration: React.FC = () => {
                     <td style={{ padding: '12px', fontSize: '12px', fontWeight: '600', color: '#333' }}>{leave.employee_name}</td>
                     <td style={{ padding: '12px', fontSize: '12px', color: '#666' }}>{leave.leave_type}</td>
                     <td style={{ padding: '12px', fontSize: '12px', color: '#666' }}>{leave.start_date} → {leave.end_date}</td>
-                    <td style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: '600', color: '#FF6B35' }}>{leave.days}</td>
+                    <td style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: '600', color: '#FF6B35' }}>
+                      {leave.days}
+                      {leave.calendar_days !== leave.days && (
+                        <div style={{ fontSize: '10px', fontWeight: 400, color: '#999' }}>
+                          of {leave.calendar_days} calendar
+                        </div>
+                      )}
+                    </td>
+                    <td style={{ padding: '12px', textAlign: 'right', fontSize: '12px', color: '#666' }}>
+                      SGD {leave.daily_rate.toLocaleString('en-SG', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td style={{ padding: '12px', textAlign: 'right', fontSize: '12px', fontWeight: '600', color: leave.paid ? '#999' : '#E65100' }}>
+                      {leave.paid ? '—' : `SGD ${leave.suggested_deduction.toLocaleString('en-SG', { minimumFractionDigits: 2 })}`}
+                    </td>
                     <td style={{ padding: '12px', textAlign: 'center', fontSize: '11px', background: leave.paid ? '#E8F5E9' : '#FFF3E0', color: leave.paid ? '#2E7D32' : '#E65100', fontWeight: '600', borderRadius: '4px' }}>
                       {leave.paid ? '✓ Yes' : '✗ No'}
                     </td>
@@ -206,9 +241,11 @@ const LeavePayrollIntegration: React.FC = () => {
         <div style={{ marginTop: '24px', padding: '16px', background: '#E8F5E9', borderRadius: '8px', border: '1px solid #4CAF50' }}>
           <p style={{ fontSize: '12px', color: '#2E7D32', margin: '0 0 8px 0', fontWeight: '600' }}>ℹ️ Integration Features</p>
           <ul style={{ fontSize: '12px', color: '#2E7D32', margin: 0, paddingLeft: '20px' }}>
-            <li>Auto-applies deduction for unpaid leave (Unpaid Leave, No-pay, etc.)</li>
-            <li>Skips deduction for paid leave (Medical, Annual, Maternity)</li>
-            <li>Calculates deduction: Days × Daily Rate (SGD 200/day standard)</li>
+            <li>Raises a deduction for approved unpaid leave, when you click Apply</li>
+            <li>Skips paid leave (medical, annual, maternity) — that pay is already in the salary</li>
+            <li>Counts working days only: weekends and gazetted holidays inside the leave are not deducted</li>
+            <li>Travelling, food and housing allowances are excluded from the gross rate, as the Act requires</li>
+            <li>Deduction = working days × the staff member's daily gross rate of pay, i.e. 12 × monthly gross ÷ (52 × 5) per the Employment Act</li>
             <li>Creates payroll deduction record linked to leave record</li>
             <li>Tracks deduction status: Applied/Not Applied</li>
             <li>Prevents duplicate deductions</li>

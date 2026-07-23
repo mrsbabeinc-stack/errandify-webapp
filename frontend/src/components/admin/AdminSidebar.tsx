@@ -82,6 +82,7 @@ const menuItems: MenuItem[] = [
     label: 'Growth & Acquisition',
     icon: '📈',
     children: [
+      { id: 'lead-generation', label: 'Lead Generation', icon: '🎯', path: '/admin/growth/leads' },
       { id: 'referral-tracking', label: 'Referral Tracking', icon: '🎁', path: '/admin/referral-tracking' },
     ]
   },

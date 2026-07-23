@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast, ToastContainer } from '../../components/Toast';
 import AdminLayout from '../../components/admin/AdminLayout';
+import financeAPI, { n, PayrollItem, PayrollRun, PaymentBatch, BankReadinessRow, OnboardingStatusRow, OnboardingInvite } from '../../services/financeAPI';
 
 interface Staff {
   id: string;
@@ -54,6 +55,7 @@ interface Payslip {
   grossSalary: number;
   cpfEmployee: number;
   incomeTax: number;
+  leaveDeduction: number;
   totalDeductions: number;
   netSalary: number;
   cpfBreakdown: CPFBreakdown;
@@ -63,10 +65,62 @@ interface Payslip {
   status: 'draft' | 'generated' | 'sent' | 'paid';
 }
 
+/** "2026-07" -> "July 2026" */
+const monthLabel = (period: string): string => {
+  const [y, m] = period.split('-').map(Number);
+  return new Date(y, (m || 1) - 1, 1).toLocaleDateString('en-SG', { month: 'long', year: 'numeric' });
+};
+
+/** Server payroll item -> the shape this screen renders. */
+const toPayslip = (item: PayrollItem & { period?: string; payment_date?: string | null }): Payslip => {
+  const period = item.period || '';
+  const [year] = period.split('-').map(Number);
+  return {
+    id: String(item.id),
+    staffId: item.staff_id,
+    staffName: item.staff_name,
+    // Just the month name: the JSX renders `{month} {year}` alongside it.
+    month: period ? monthLabel(period).replace(/\s+\d{4}$/, '') : '',
+    year: year || new Date().getFullYear(),
+    baseSalary: n(item.base_salary),
+    transportAllowance: n(item.transport_allowance),
+    housingAllowance: n(item.housing_allowance),
+    otherAllowances: n(item.other_allowances),
+    grossSalary: n(item.gross_salary),
+    cpfEmployee: n(item.cpf_employee),
+    incomeTax: n(item.income_tax),
+    leaveDeduction: n(item.leave_deduction),
+    totalDeductions: n(item.total_deductions),
+    netSalary: n(item.net_salary),
+    cpfBreakdown: item.cpf_breakdown as CPFBreakdown,
+    taxBreakdown: item.tax_breakdown as TaxBreakdown,
+    generatedDate: period,
+    paymentDate: item.payment_date || '',
+    status: (item.status as Payslip['status']) || 'generated',
+  };
+};
+
+const BATCH_STEPS: Record<string, { label: string; bg: string; fg: string }> = {
+  awaiting_approval: { label: 'AWAITING APPROVAL', bg: '#FFF3E0', fg: '#E65100' },
+  approved: { label: 'APPROVED — READY TO SEND', bg: '#E3F2FD', fg: '#0D47A1' },
+  exported: { label: 'WITH THE BANK', bg: '#EDE7F6', fg: '#4527A0' },
+  settled: { label: 'PAID', bg: '#E8F5E9', fg: '#2E7D32' },
+  cancelled: { label: 'CANCELLED', bg: '#FFEBEE', fg: '#C62828' },
+};
+
+const btn = (bg: string): React.CSSProperties => ({
+  padding: '8px 14px', background: bg, color: 'white', border: 'none',
+  borderRadius: '4px', fontWeight: 600, fontSize: '12px', cursor: 'pointer',
+});
+const btnOutline = (colour: string): React.CSSProperties => ({
+  padding: '8px 14px', background: '#fff', color: colour, border: `1px solid ${colour}`,
+  borderRadius: '4px', fontWeight: 600, fontSize: '12px', cursor: 'pointer',
+});
+
 const PayrollDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { toasts, showToast, removeToast } = useToast();
-  const [activeTab, setActiveTab] = useState<'salary-setup' | 'payroll-run' | 'payslips'>('salary-setup');
+  const [activeTab, setActiveTab] = useState<'salary-setup' | 'payroll-run' | 'payslips' | 'payments'>('salary-setup');
 
   // Staff state
   const [staff, setStaff] = useState<Staff[]>([]);
@@ -83,58 +137,74 @@ const PayrollDashboard: React.FC = () => {
   // Payroll run state
   const [payrollMonth, setPayrollMonth] = useState<string>(new Date().toISOString().split('T')[0]);
   const [generatedPayslips, setGeneratedPayslips] = useState<Payslip[]>([]);
+  const [currentRun, setCurrentRun] = useState<PayrollRun | null>(null);
 
-  // Demo data
-  useEffect(() => {
-    const demoStaff: Staff[] = [
-      {
-        id: 'staff_1',
-        staffId: 'S001',
-        firstName: 'John',
-        lastName: 'Tan',
-        baseSalary: 4500,
-        transportAllowance: 300,
-        housingAllowance: 500,
-        otherAllowances: 0,
-        cpfMembershipNo: 'S1234567A',
-        employmentType: 'permanent',
-        status: 'active',
-      },
-      {
-        id: 'staff_2',
-        staffId: 'S002',
-        firstName: 'Sarah',
-        lastName: 'Lim',
-        baseSalary: 5000,
-        transportAllowance: 400,
-        housingAllowance: 600,
-        otherAllowances: 100,
-        cpfMembershipNo: 'S2345678B',
-        employmentType: 'permanent',
-        status: 'active',
-      },
-      {
-        id: 'staff_3',
-        staffId: 'S003',
-        firstName: 'Mike',
-        lastName: 'Wong',
-        baseSalary: 4800,
-        transportAllowance: 350,
-        housingAllowance: 500,
-        otherAllowances: 50,
-        cpfMembershipNo: 'S3456789C',
-        employmentType: 'permanent',
-        status: 'active',
-      },
-    ];
+  const [loading, setLoading] = useState(true);
 
-    setStaff(demoStaff);
-    if (demoStaff.length > 0) {
-      setSelectedStaff(demoStaff[0]);
+  /**
+   * Real staff and payslips. This screen used to hold three hardcoded employees
+   * and generate payslips into React state — the numbers were never stored, so
+   * a payroll "run" was a rendering, not a record.
+   */
+  const loadAll = async () => {
+    try {
+      setLoading(true);
+      const [staffRows, payslipRows] = await Promise.all([
+        financeAPI.payrollStaff(),
+        financeAPI.payslips(),
+      ]);
+
+      const mapped: Staff[] = staffRows.map(s => ({
+        id: String(s.id),
+        staffId: s.staff_id,
+        firstName: s.first_name,
+        lastName: s.last_name,
+        baseSalary: n(s.base_salary),
+        transportAllowance: n(s.transport_allowance),
+        housingAllowance: n(s.housing_allowance),
+        otherAllowances: n(s.other_allowances),
+        cpfMembershipNo: s.cpf_membership_no || '',
+        employmentType: (s.employment_type as Staff['employmentType']) || 'permanent',
+        status: (String(s.status || '').toLowerCase() as Staff['status']) || 'active',
+      }));
+      setStaff(mapped);
+      // Seed the edit form from whoever is selected. Without this the three
+      // allowance inputs sat at 0 on load, so the "Total Monthly Compensation"
+      // preview read zero for a staff member who had allowances, and saving
+      // without touching the dropdown would have wiped them.
+      const keep = selectedStaff ? mapped.find(m => m.id === selectedStaff.id) : null;
+      const active = keep || mapped[0] || null;
+      setSelectedStaff(active);
+      if (active) {
+        setSalaryForm({
+          transportAllowance: active.transportAllowance,
+          housingAllowance: active.housingAllowance,
+          otherAllowances: active.otherAllowances,
+        });
+      }
+
+      setPayslips(payslipRows.map(toPayslip));
+    } catch (err) {
+      showToast(`❌ ${err instanceof Error ? err.message : 'Failed to load payroll'}`, 'error');
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    loadAll();
+    loadPayments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // CPF Calculation Engine (Singapore 2024 rates)
+  /**
+   * Preview only. The payslip figures that get stored are computed by
+   * services/financeService.ts on the server — this mirrors those rates so the
+   * setup screen can show the split live, and must be kept in step with it.
+   * Income tax is deliberately not modelled here: Singapore has no PAYE, so
+   * nothing is withheld and the old browser-side calculation was subtracting a
+   * tax that no employer actually deducts.
+   */
   const calculateCPF = (baseSalary: number): CPFBreakdown => {
     const OW = Math.min(baseSalary, 6000); // Ordinary Wage capped at $6,000
     const AW = Math.min(baseSalary - OW, 6600); // Additional Wage max $6,600
@@ -156,118 +226,188 @@ const PayrollDashboard: React.FC = () => {
     };
   };
 
-  // Income Tax Calculation (Singapore 2026 YA rates)
-  const calculateTax = (grossSalary: number, cpfDeduction: number): TaxBreakdown => {
-    const monthlyGross = grossSalary;
-    const annualGross = monthlyGross * 12;
-    const annualCPFDeduction = cpfDeduction * 12;
-    const taxableIncome = annualGross - annualCPFDeduction;
-
-    let annualTax = 0;
-    let taxRate = 0;
-
-    // Singapore tax brackets 2026
-    if (taxableIncome <= 20000) {
-      annualTax = 0;
-      taxRate = 0;
-    } else if (taxableIncome <= 30000) {
-      annualTax = (taxableIncome - 20000) * 0.05;
-      taxRate = 5;
-    } else if (taxableIncome <= 40000) {
-      annualTax = 500 + (taxableIncome - 30000) * 0.1;
-      taxRate = 10;
-    } else if (taxableIncome <= 80000) {
-      annualTax = 1500 + (taxableIncome - 40000) * 0.15;
-      taxRate = 15;
-    } else if (taxableIncome <= 120000) {
-      annualTax = 7500 + (taxableIncome - 80000) * 0.2;
-      taxRate = 20;
-    } else {
-      annualTax = 15500 + (taxableIncome - 120000) * 0.22;
-      taxRate = 22;
-    }
-
-    const monthlyTax = Math.round((annualTax / 12) * 100) / 100;
-
-    return {
-      annualGross,
-      monthlyGross,
-      annualCPFDeduction,
-      taxableIncome,
-      monthlyTax,
-      annualTax,
-      taxRate,
+  /** Downloads the payslip as CSV. The button previously did nothing at all. */
+  const downloadPayslip = (payslip: Payslip) => {
+    const rows: (string | number)[][] = [
+      ['Payslip', `${payslip.staffId} — ${payslip.staffName}`],
+      ['Period', `${payslip.month} ${payslip.year}`],
+      ['Payment date', payslip.paymentDate],
+      [],
+      ['Earnings', 'SGD'],
+      ['Base salary', payslip.baseSalary],
+      ['Transport allowance', payslip.transportAllowance],
+      ['Housing allowance', payslip.housingAllowance],
+      ['Other allowances', payslip.otherAllowances],
+      ['Gross salary', payslip.grossSalary],
+      [],
+      ['Deductions', 'SGD'],
+      ['CPF (employee)', payslip.cpfEmployee],
+      ['Unpaid leave', payslip.leaveDeduction],
+      ['Total deductions', payslip.totalDeductions],
+      [],
+      ['Net salary', payslip.netSalary],
+      [],
+      ['Employer CPF (not deducted from pay)', payslip.cpfBreakdown?.employerTotal ?? 0],
+      ['Projected annual income tax (NOT withheld — no PAYE in Singapore)', payslip.taxBreakdown?.annualTax ?? 0],
+    ];
+    const escape = (v: string | number) => {
+      const str = String(v ?? '');
+      return /[",\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
     };
+    const csv = rows.map(r => r.map(escape).join(',')).join('\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `payslip-${payslip.staffId}-${payslip.generatedDate || payslip.year}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // ---- Paying staff -------------------------------------------------------
+  const [batches, setBatches] = useState<PaymentBatch[]>([]);
+  const [payrollRuns, setPayrollRuns] = useState<PayrollRun[]>([]);
+  const [bankReadiness, setBankReadiness] = useState<BankReadinessRow[]>([]);
+  const [onboarding, setOnboarding] = useState<OnboardingStatusRow[]>([]);
+  const [inviteLink, setInviteLink] = useState<OnboardingInvite | null>(null);
+
+  const loadPayments = async () => {
+    try {
+      const [b, r, ready, onb] = await Promise.all([
+        financeAPI.paymentBatches(),
+        financeAPI.payrollRuns(),
+        financeAPI.bankReadiness(),
+        financeAPI.onboardingStatus().catch(() => ({ staff: [] as OnboardingStatusRow[] })),
+      ]);
+      setBatches(b);
+      setPayrollRuns(r);
+      setBankReadiness(ready.staff);
+      setOnboarding(onb.staff);
+    } catch (err) {
+      showToast(`❌ ${err instanceof Error ? err.message : 'Failed to load payments'}`, 'error');
+    }
+  };
+
+  /**
+   * Issues an onboarding link. The token comes back once and is only hashed
+   * server-side, so it is put on screen to copy rather than stored anywhere.
+   */
+  const handleSendOnboarding = async (row: OnboardingStatusRow) => {
+    try {
+      const invite = await financeAPI.createOnboardingInvite(row.staff_id);
+      setInviteLink(invite);
+      showToast(`✅ Link created for ${row.staff_name} — copy it now, it is not shown again`, 'success');
+      await loadPayments();
+    } catch (err) {
+      showToast(`❌ ${err instanceof Error ? err.message : 'Failed to create invite'}`, 'error');
+    }
+  };
+
+  const handleCreateBatch = async (run: PayrollRun) => {
+    try {
+      const batch = await financeAPI.createPaymentBatch(run.id);
+      showToast(`✅ ${batch.reference} created — it needs a second admin to approve it`, 'success');
+      await loadPayments();
+    } catch (err) {
+      showToast(`❌ ${err instanceof Error ? err.message : 'Failed to create batch'}`, 'error');
+    }
+  };
+
+  const handleApproveBatch = async (batch: PaymentBatch) => {
+    try {
+      await financeAPI.approvePaymentBatch(batch.id);
+      showToast(`✅ ${batch.reference} approved`, 'success');
+      await loadPayments();
+    } catch (err) {
+      showToast(`❌ ${err instanceof Error ? err.message : 'Failed to approve'}`, 'error');
+    }
+  };
+
+  const handleCancelBatch = async (batch: PaymentBatch) => {
+    const reason = window.prompt(`Cancel ${batch.reference}? Give a reason for the record:`);
+    if (reason === null) return;
+    try {
+      await financeAPI.cancelPaymentBatch(batch.id, reason || undefined);
+      showToast(`${batch.reference} cancelled`, 'success');
+      await loadPayments();
+    } catch (err) {
+      showToast(`❌ ${err instanceof Error ? err.message : 'Failed to cancel'}`, 'error');
+    }
+  };
+
+  const handleExportBatch = async (batch: PaymentBatch) => {
+    try {
+      await financeAPI.exportPaymentBatch(batch.id, batch.reference);
+      showToast(`📥 ${batch.reference}.csv downloaded — upload it in your bank's portal`, 'success');
+      await loadPayments();
+    } catch (err) {
+      showToast(`❌ ${err instanceof Error ? err.message : 'Failed to export'}`, 'error');
+    }
+  };
+
+  const handleSettleBatch = async (batch: PaymentBatch) => {
+    const ref = window.prompt(
+      `Record settlement for ${batch.reference}.\n\nEnter the reference your bank gave for this batch — it is the evidence the money went out:`
+    );
+    if (!ref) return;
+    try {
+      const result = await financeAPI.settlePaymentBatch(batch.id, ref.trim());
+      showToast(
+        `✅ ${result.paid_count} payment${result.paid_count === 1 ? '' : 's'} settled (SGD ${result.paid_total.toLocaleString('en-SG', { minimumFractionDigits: 2 })}). Net Salaries Payable cleared.`,
+        'success'
+      );
+      await loadPayments();
+      await loadAll();
+    } catch (err) {
+      showToast(`❌ ${err instanceof Error ? err.message : 'Failed to record settlement'}`, 'error');
+    }
   };
 
   // Update salary allowances
-  const handleSalaryUpdate = () => {
+  const handleSalaryUpdate = async () => {
     if (!selectedStaff) return;
-
-    const updated = staff.map(s =>
-      s.id === selectedStaff.id
-        ? {
-            ...s,
-            transportAllowance: salaryForm.transportAllowance,
-            housingAllowance: salaryForm.housingAllowance,
-            otherAllowances: salaryForm.otherAllowances,
-          }
-        : s
-    );
-
-    setStaff(updated);
-    setSelectedStaff(updated.find(s => s.id === selectedStaff.id) || null);
-    setSalaryForm({ transportAllowance: 0, housingAllowance: 0, otherAllowances: 0 });
-    showToast('✅ Salary structure updated', 'success');
+    try {
+      await financeAPI.setAllowances(selectedStaff.staffId, {
+        transport_allowance: salaryForm.transportAllowance,
+        housing_allowance: salaryForm.housingAllowance,
+        other_allowances: salaryForm.otherAllowances,
+      });
+      showToast('✅ Salary structure updated', 'success');
+      await loadAll();
+    } catch (err) {
+      showToast(`❌ ${err instanceof Error ? err.message : 'Failed to update allowances'}`, 'error');
+    }
   };
 
-  // Generate payslips for all staff
-  const handleGeneratePayroll = () => {
+  // Generate payslips for all active staff
+  const handleGeneratePayroll = async () => {
     if (!payrollMonth) {
       showToast('Please select a month', 'error');
       return;
     }
+    const period = payrollMonth.slice(0, 7);
+    try {
+      const result = await financeAPI.generatePayroll(period);
+      const items = result.items.map(item => toPayslip({ ...item, period, payment_date: result.run.payment_date }));
+      setGeneratedPayslips(items);
+      setCurrentRun(result.run);
+      showToast(`✅ Generated ${items.length} payslips for ${monthLabel(period)}`, 'success');
+      await loadAll();
+    } catch (err) {
+      showToast(`❌ ${err instanceof Error ? err.message : 'Failed to generate payroll'}`, 'error');
+    }
+  };
 
-    const [year, month] = payrollMonth.split('-');
-    const monthName = new Date(`${year}-${month}-01`).toLocaleDateString('en-SG', {
-      month: 'long',
-      year: 'numeric',
-    });
-
-    const newPayslips: Payslip[] = staff
-      .filter(s => s.status === 'active')
-      .map(s => {
-        const grossSalary =
-          s.baseSalary + s.transportAllowance + s.housingAllowance + s.otherAllowances;
-        const cpfBreakdown = calculateCPF(s.baseSalary);
-        const taxBreakdown = calculateTax(grossSalary, cpfBreakdown.employeeTotal);
-
-        return {
-          id: `payslip_${Date.now()}_${s.staffId}`,
-          staffId: s.staffId,
-          staffName: `${s.firstName} ${s.lastName}`,
-          month: monthName,
-          year: parseInt(year),
-          baseSalary: s.baseSalary,
-          transportAllowance: s.transportAllowance,
-          housingAllowance: s.housingAllowance,
-          otherAllowances: s.otherAllowances,
-          grossSalary: Math.round(grossSalary * 100) / 100,
-          cpfEmployee: cpfBreakdown.employeeTotal,
-          incomeTax: taxBreakdown.monthlyTax,
-          totalDeductions: Math.round((cpfBreakdown.employeeTotal + taxBreakdown.monthlyTax) * 100) / 100,
-          netSalary: Math.round((grossSalary - cpfBreakdown.employeeTotal - taxBreakdown.monthlyTax) * 100) / 100,
-          cpfBreakdown,
-          taxBreakdown,
-          generatedDate: new Date().toISOString(),
-          paymentDate: new Date(parseInt(year), parseInt(month), 28).toISOString(),
-          status: 'generated',
-        };
-      });
-
-    setGeneratedPayslips(newPayslips);
-    setPayslips([...payslips, ...newPayslips]);
-    showToast(`✅ Generated ${newPayslips.length} payslips for ${monthName}`, 'success');
+  /** Posts the run to the general ledger and freezes it. */
+  const handlePostPayroll = async () => {
+    if (!currentRun) return;
+    try {
+      const run = await financeAPI.postPayroll(currentRun.id);
+      setCurrentRun(run);
+      showToast(`✅ Payroll ${run.period} posted to the general ledger`, 'success');
+      await loadAll();
+    } catch (err) {
+      showToast(`❌ ${err instanceof Error ? err.message : 'Failed to post payroll'}`, 'error');
+    }
   };
 
   const totalMonthlyPayroll = staff
@@ -310,13 +450,14 @@ const PayrollDashboard: React.FC = () => {
             </button>
           </div>
           <p style={{ fontSize: '14px', color: '#666', margin: '8px 0 0 0' }}>
-            CPF Calculations, Payslip Generation, Tax Withholding
+            CPF calculations, payslip generation, general-ledger posting
+            {loading && <span style={{ marginLeft: '8px', color: '#FF6B35' }}>· loading…</span>}
           </p>
         </div>
 
         {/* Compliance Banner */}
         <div style={{ padding: '12px 16px', background: '#E3F2FD', border: '2px solid #1976D2', borderRadius: '6px', marginBottom: '16px', fontSize: '12px', color: '#0D47A1' }}>
-          <strong>🇸🇬 CPF & Tax Compliance:</strong> All calculations per MOM 2024 CPF rates and IRAS 2026 tax brackets. CPF remittance due by 14th of following month. Tax withheld monthly.
+          <strong>🇸🇬 CPF &amp; Tax:</strong> CPF at the private-sector rates for employees aged 55 and under, computed on <strong>base salary only</strong> — if any allowance below is a fixed wage component rather than a reimbursement, it is CPF-payable and is currently being missed. Income tax is <strong>not</strong> withheld: Singapore has no PAYE, so the tax figures are an annual projection for the employee, not a deduction. Confirm both with your accountant before running payroll for real.
         </div>
 
         {/* KPI Cards */}
@@ -342,7 +483,7 @@ const PayrollDashboard: React.FC = () => {
 
         {/* Tabs */}
         <div style={{ display: 'flex', gap: '4px', marginBottom: '24px', borderBottom: '2px solid #FFD9B3' }}>
-          {(['salary-setup', 'payroll-run', 'payslips'] as const).map(tab => (
+          {(['salary-setup', 'payroll-run', 'payslips', 'payments'] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -361,6 +502,7 @@ const PayrollDashboard: React.FC = () => {
               {tab === 'salary-setup' && '⚙️ Salary Setup'}
               {tab === 'payroll-run' && '▶️ Payroll Run'}
               {tab === 'payslips' && '📄 Payslips'}
+              {tab === 'payments' && '💳 Payments'}
             </button>
           ))}
         </div>
@@ -579,8 +721,8 @@ const PayrollDashboard: React.FC = () => {
                   <strong>ℹ️ Payroll Process:</strong>
                   <ul style={{ margin: '8px 0 0 16px', paddingLeft: '0' }}>
                     <li>Generates payslips for all active staff</li>
-                    <li>Calculates CPF (OW/AW splits per MOM 2024)</li>
-                    <li>Withholds income tax (IRAS 2026 brackets)</li>
+                    <li>Calculates CPF (OW/AW split) and applies any unpaid-leave deductions</li>
+                    <li>Projects annual income tax (IRAS resident bands) — shown, not deducted</li>
                     <li>Due date: 14th of following month (MOM requirement)</li>
                   </ul>
                 </div>
@@ -607,9 +749,35 @@ const PayrollDashboard: React.FC = () => {
             {/* Generated Payslips Preview */}
             {generatedPayslips.length > 0 && (
               <div>
-                <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#333', marginBottom: '12px' }}>
-                  Generated Payslips ({generatedPayslips.length})
-                </h3>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                  <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#333', margin: 0 }}>
+                    Generated Payslips ({generatedPayslips.length})
+                  </h3>
+                  {currentRun && (
+                    currentRun.status === 'posted' ? (
+                      <span style={{ fontSize: '12px', fontWeight: '600', color: '#4CAF50' }}>
+                        ✓ Posted to GL{currentRun.posted_at ? ` on ${new Date(currentRun.posted_at).toLocaleDateString('en-SG')}` : ''}
+                      </span>
+                    ) : (
+                      <button
+                        onClick={handlePostPayroll}
+                        title="Write the double entry to the general ledger and freeze this run"
+                        style={{
+                          padding: '8px 16px',
+                          background: '#2196F3',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          fontSize: '12px',
+                        }}
+                      >
+                        📘 Post to General Ledger
+                      </button>
+                    )
+                  )}
+                </div>
                 <div style={{ display: 'grid', gap: '12px' }}>
                   {generatedPayslips.map(payslip => (
                     <div key={payslip.id} style={{ padding: '16px', background: 'white', border: '2px solid #FFD9B3', borderRadius: '8px' }}>
@@ -624,7 +792,7 @@ const PayrollDashboard: React.FC = () => {
                           <div style={{ fontSize: '11px', color: '#999', display: 'grid', gap: '2px' }}>
                             <div>Gross: SGD ${payslip.grossSalary.toLocaleString()}</div>
                             <div>CPF Employee: SGD ${payslip.cpfEmployee.toLocaleString()}</div>
-                            <div>Tax Withheld: SGD ${payslip.incomeTax.toLocaleString()}</div>
+                            <div>Est. tax (not deducted): SGD ${payslip.incomeTax.toLocaleString()}</div>
                             <div style={{ fontWeight: '600', marginTop: '4px' }}>Net Salary: SGD ${payslip.netSalary.toLocaleString()}</div>
                           </div>
                         </div>
@@ -697,7 +865,7 @@ const PayrollDashboard: React.FC = () => {
                           </div>
                         </div>
                         <div>
-                          <div style={{ color: '#666', marginBottom: '2px' }}>Income Tax</div>
+                          <div style={{ color: '#666', marginBottom: '2px' }}>Income Tax (projection)</div>
                           <div style={{ fontWeight: '600', color: '#333' }}>SGD ${payslip.incomeTax.toLocaleString()}</div>
                           <div style={{ fontSize: '10px', color: '#999', marginTop: '4px' }}>
                             Annual: ${payslip.taxBreakdown.annualTax.toLocaleString()}<br />
@@ -716,6 +884,7 @@ const PayrollDashboard: React.FC = () => {
                       </div>
 
                       <button
+                        onClick={() => downloadPayslip(payslip)}
                         style={{
                           width: '100%',
                           padding: '8px 12px',
@@ -728,11 +897,186 @@ const PayrollDashboard: React.FC = () => {
                           fontSize: '12px',
                         }}
                       >
-                        📥 Download PDF
+                        📥 Download payslip (CSV)
                       </button>
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* PAYMENTS TAB */}
+        {activeTab === 'payments' && (
+          <div>
+            <div style={{ padding: '12px 16px', background: '#E3F2FD', border: '2px solid #1976D2', borderRadius: '6px', marginBottom: '16px', fontSize: '12px', color: '#0D47A1' }}>
+              <strong>💳 How salary reaches a bank account:</strong> a posted run is turned into a bank
+              bulk-credit batch, a <strong>second</strong> admin approves it, the file is downloaded and uploaded to
+              your corporate banking portal (DBS IDEAL / OCBC Velocity / UOB BIBPlus), and the bank's
+              reference is recorded here — which marks the payslips paid and clears Net Salaries Payable.
+              Nothing in this system transmits money on its own.
+            </div>
+
+            {/* Onboarding — the employee supplies their own details */}
+            <div style={{ padding: '16px', background: '#fff', borderRadius: '8px', border: '2px solid #FFD9B3', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
+                <h3 style={{ margin: 0, fontSize: '15px', color: '#333' }}>Staff onboarding</h3>
+                <span style={{ fontSize: '12px', color: '#666' }}>
+                  {onboarding.filter(o => o.complete).length} of {onboarding.length} complete
+                </span>
+              </div>
+              <p style={{ fontSize: '12px', color: '#666', margin: '0 0 12px 0', lineHeight: 1.6 }}>
+                Send a link and the staff member fills in their own bank details, address and emergency
+                contact. Better than typing an account number on their behalf — they can check it against
+                their own banking app, and nobody here has to handle it.
+              </p>
+
+              {onboarding.length === 0 ? (
+                <div style={{ fontSize: '12px', color: '#888' }}>No active staff.</div>
+              ) : (
+                <div style={{ display: 'grid', gap: '8px' }}>
+                  {onboarding.map(o => (
+                    <div key={o.staff_id} style={{
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px',
+                      padding: '10px 12px', borderRadius: '6px', flexWrap: 'wrap',
+                      background: o.complete ? '#F1F8E9' : '#FFF3E0',
+                      border: `1px solid ${o.complete ? '#AED581' : '#FFCC80'}`,
+                    }}>
+                      <div>
+                        <div style={{ fontSize: '13px', fontWeight: 600, color: '#333' }}>
+                          {o.staff_id} · {o.staff_name}
+                        </div>
+                        <div style={{ fontSize: '11px', color: o.complete ? '#33691E' : '#E65100', marginTop: '2px' }}>
+                          {o.complete
+                            ? '✓ Everything on file'
+                            : `Still needed: ${o.outstanding.join(', ')}`}
+                          {o.invite_status === 'sent' && ' · link sent, not opened yet'}
+                          {o.invite_status === 'verified' && ' · started filling it in'}
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        {!o.can_be_invited && (
+                          <span style={{ fontSize: '11px', color: '#C62828' }}>
+                            Needs an NRIC on file first
+                          </span>
+                        )}
+                        {o.can_be_invited && (
+                          <button
+                            onClick={() => handleSendOnboarding(o)}
+                            style={o.complete ? btnOutline('#666') : btn('#FF6B35')}
+                          >
+                            {o.invite_status ? '↻ New link' : o.complete ? '↻ Re-invite' : '✉️ Send link'}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {inviteLink && (
+                <div style={{ marginTop: '14px', padding: '12px', background: '#E3F2FD', border: '2px solid #1976D2', borderRadius: '6px' }}>
+                  <div style={{ fontSize: '12px', fontWeight: 600, color: '#0D47A1', marginBottom: '6px' }}>
+                    Link for {inviteLink.staff_name} — copy it now, it is not shown again
+                  </div>
+                  <input
+                    readOnly
+                    value={`${window.location.origin}${inviteLink.invite_path}`}
+                    onFocus={(e) => e.currentTarget.select()}
+                    style={{ width: '100%', padding: '8px', fontSize: '11px', fontFamily: 'monospace', border: '1px solid #90CAF9', borderRadius: '4px', boxSizing: 'border-box' }}
+                  />
+                  <div style={{ fontSize: '11px', color: '#0D47A1', marginTop: '6px' }}>
+                    They will be asked for the last 4 characters of their NRIC before the form opens.
+                    Expires {new Date(inviteLink.expires_at).toLocaleDateString('en-SG')}.
+                    Only the hash is stored — if this is lost, send a new link.
+                  </div>
+                  <button onClick={() => setInviteLink(null)} style={{ ...btnOutline('#0D47A1'), marginTop: '8px' }}>
+                    Done
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Create a batch from a posted run */}
+            <div style={{ padding: '16px', background: '#FFF8F5', borderRadius: '8px', border: '2px solid #FFD9B3', marginBottom: '16px' }}>
+              <h3 style={{ margin: '0 0 12px 0', fontSize: '15px', color: '#333' }}>Create a payment batch</h3>
+              {payrollRuns.filter(r => r.status === 'posted' && !batches.some(b => b.payroll_run_id === r.id && b.status !== 'cancelled')).length === 0 ? (
+                <div style={{ fontSize: '12px', color: '#666' }}>
+                  No posted run is waiting to be paid. Generate a run, post it to the general ledger, then pay it.
+                </div>
+              ) : (
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  {payrollRuns
+                    .filter(r => r.status === 'posted' && !batches.some(b => b.payroll_run_id === r.id && b.status !== 'cancelled'))
+                    .map(run => (
+                      <button
+                        key={run.id}
+                        onClick={() => handleCreateBatch(run)}
+                        style={{ padding: '8px 14px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: '4px', fontWeight: 600, fontSize: '12px', cursor: 'pointer' }}
+                      >
+                        💳 Pay {run.period} — SGD {n(run.total_net).toLocaleString('en-SG', { minimumFractionDigits: 2 })}
+                      </button>
+                    ))}
+                </div>
+              )}
+            </div>
+
+            {/* Batches */}
+            {batches.length === 0 ? (
+              <div style={{ padding: '32px', textAlign: 'center', background: '#FFF8F5', borderRadius: '8px', border: '2px dashed #FFD9B3', fontSize: '13px', color: '#666' }}>
+                No payment batches yet.
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gap: '12px' }}>
+                {batches.map(batch => {
+                  const step = BATCH_STEPS[batch.status];
+                  return (
+                    <div key={batch.id} style={{ padding: '16px', background: 'white', border: '2px solid #FFD9B3', borderRadius: '8px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '16px', flexWrap: 'wrap' }}>
+                        <div>
+                          <div style={{ fontWeight: 700, fontSize: '14px', color: '#333' }}>
+                            {batch.reference}
+                            <span style={{ marginLeft: '8px', padding: '2px 8px', borderRadius: '3px', fontSize: '11px', background: step.bg, color: step.fg }}>
+                              {step.label}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                            {batch.item_count} payment{batch.item_count === 1 ? '' : 's'} · SGD{' '}
+                            {n(batch.total_amount).toLocaleString('en-SG', { minimumFractionDigits: 2 })} · value date {batch.value_date}
+                          </div>
+                          <div style={{ fontSize: '11px', color: '#999', marginTop: '4px' }}>
+                            Created by {batch.created_by_name || '—'}
+                            {batch.approved_by_name && ` · approved by ${batch.approved_by_name}`}
+                            {batch.bank_reference && ` · bank ref ${batch.bank_reference}`}
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                          {batch.status === 'awaiting_approval' && (
+                            <>
+                              <button onClick={() => handleApproveBatch(batch)} style={btn('#4CAF50')}>✓ Approve</button>
+                              <button onClick={() => handleCancelBatch(batch)} style={btnOutline('#C62828')}>✗ Cancel</button>
+                            </>
+                          )}
+                          {(batch.status === 'approved' || batch.status === 'exported' || batch.status === 'settled') && (
+                            <button onClick={() => handleExportBatch(batch)} style={btn('#2196F3')}>
+                              📥 {batch.status === 'approved' ? 'Download bank file' : 'Download again'}
+                            </button>
+                          )}
+                          {batch.status === 'exported' && (
+                            <button onClick={() => handleSettleBatch(batch)} style={btn('#FF6B35')}>✓ Record settlement</button>
+                          )}
+                        </div>
+                      </div>
+                      {batch.status === 'exported' && (
+                        <div style={{ marginTop: '10px', padding: '8px 10px', background: '#FFF3E0', borderRadius: '4px', fontSize: '11px', color: '#E65100' }}>
+                          Upload this file in your bank's portal and authorise it there. Once the bank confirms,
+                          record its reference here — until then the salaries are still owed.
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

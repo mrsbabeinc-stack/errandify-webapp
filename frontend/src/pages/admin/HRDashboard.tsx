@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast, ToastContainer } from '../../components/Toast';
 import AdminLayout from '../../components/admin/AdminLayout';
+import { staffAPI } from '../../services/adminAPI';
 
 interface Staff {
   id: string;
@@ -47,103 +48,77 @@ const HRDashboard: React.FC = () => {
     cpfMembershipNo: '',
   });
 
-  // Demo data
-  useEffect(() => {
-    const demoStaff: Staff[] = [
-      {
-        id: 'staff_1',
-        staffId: 'S001',
-        firstName: 'John',
-        lastName: 'Tan',
-        email: 'john.tan@errandify.sg',
-        phone: '+65 9123 4567',
-        nric: 'S1234567A',
-        department: 'Operations',
-        position: 'Operations Manager',
-        employmentType: 'permanent',
-        hireDate: '2023-06-15',
-        status: 'active',
-        baseSalary: 4500,
-        annualLeaveEntitlement: 12,
-        sickLeaveEntitlement: 4,
-        cpfMembershipNo: 'S1234567A',
-        createdAt: new Date().toISOString(),
-        lastModified: new Date().toISOString(),
-      },
-      {
-        id: 'staff_2',
-        staffId: 'S002',
-        firstName: 'Sarah',
-        lastName: 'Lim',
-        email: 'sarah.lim@errandify.sg',
-        phone: '+65 8765 4321',
-        nric: 'S2345678B',
-        department: 'Accounts',
-        position: 'Accounts Manager',
-        employmentType: 'permanent',
-        hireDate: '2024-01-10',
-        status: 'active',
-        baseSalary: 5000,
-        annualLeaveEntitlement: 12,
-        sickLeaveEntitlement: 4,
-        cpfMembershipNo: 'S2345678B',
-        createdAt: new Date().toISOString(),
-        lastModified: new Date().toISOString(),
-      },
-      {
-        id: 'staff_3',
-        staffId: 'S003',
-        firstName: 'Mike',
-        lastName: 'Wong',
-        email: 'mike.wong@errandify.sg',
-        phone: '+65 9876 5432',
-        nric: 'S3456789C',
-        department: 'HR',
-        position: 'HR Manager',
-        employmentType: 'permanent',
-        hireDate: '2023-03-20',
-        status: 'active',
-        baseSalary: 4800,
-        annualLeaveEntitlement: 12,
-        sickLeaveEntitlement: 4,
-        cpfMembershipNo: 'S3456789C',
-        createdAt: new Date().toISOString(),
-        lastModified: new Date().toISOString(),
-      },
-    ];
+  const [loading, setLoading] = useState(true);
 
-    setStaff(demoStaff);
+  // Was three invented employees. Staff now comes from the same store the
+  // Staff Management screen writes to, so the two agree.
+  const loadStaff = async () => {
+    try {
+      setLoading(true);
+      const res = await staffAPI.getAll();
+      setStaff(
+        (res.data || []).map((r: any) => ({
+          id: String(r.id),
+          staffId: r.staff_id,
+          firstName: r.first_name,
+          lastName: r.last_name,
+          email: r.email,
+          phone: r.phone || '',
+          nric: r.nric || undefined,
+          department: r.department || '',
+          position: r.position || '',
+          hireDate: r.hire_date ? String(r.hire_date).split('T')[0] : '',
+          employmentType: (r.employment_type || 'permanent').toLowerCase() as Staff['employmentType'],
+          status: (r.status || 'active') as Staff['status'],
+          baseSalary: Number(r.base_salary) || 0,
+          annualLeaveEntitlement: Number(r.annual_leave_entitlement) || 0,
+          sickLeaveEntitlement: Number(r.sick_leave_entitlement) || 0,
+          cpfMembershipNo: r.cpf_membership_no || undefined,
+          createdAt: r.created_at || '',
+          lastModified: r.last_modified || '',
+        }))
+      );
+    } catch (error: any) {
+      console.error('Failed to load staff:', error);
+      showToast(error.message || 'Could not load staff', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadStaff();
   }, []);
 
-  // Staff handlers
-  const handleAddStaff = () => {
+  const handleAddStaff = async () => {
     if (!staffForm.firstName.trim() || !staffForm.email.trim()) {
       showToast('Please fill in required fields', 'error');
       return;
     }
 
-    const newStaff: Staff = {
-      id: `staff_${Date.now()}`,
-      staffId: `S${String(staff.length + 1).padStart(3, '0')}`,
-      firstName: staffForm.firstName,
-      lastName: staffForm.lastName,
-      email: staffForm.email,
-      phone: staffForm.phone,
-      nric: staffForm.nric,
-      department: staffForm.department,
-      position: staffForm.position,
-      employmentType: staffForm.employmentType,
-      hireDate: staffForm.hireDate,
-      status: 'active',
-      baseSalary: staffForm.baseSalary,
-      annualLeaveEntitlement: 12,
-      sickLeaveEntitlement: 4,
-      cpfMembershipNo: staffForm.cpfMembershipNo,
-      createdAt: new Date().toISOString(),
-      lastModified: new Date().toISOString(),
-    };
+    try {
+      // The server allocates staff_id. Deriving it from the list length here
+      // produced a duplicate the moment anyone had been deleted.
+      await staffAPI.create({
+        first_name: staffForm.firstName,
+        last_name: staffForm.lastName,
+        email: staffForm.email,
+        phone: staffForm.phone,
+        nric: staffForm.nric,
+        department: staffForm.department,
+        position: staffForm.position,
+        employment_type: staffForm.employmentType,
+        hire_date: staffForm.hireDate,
+        base_salary: staffForm.baseSalary,
+        cpf_membership_no: staffForm.cpfMembershipNo,
+      });
+      await loadStaff();
+      showToast('✅ Staff member added', 'success');
+    } catch (error: any) {
+      showToast(`❌ ${error.message || 'Could not add staff member'}`, 'error');
+      return;
+    }
 
-    setStaff([...staff, newStaff]);
     setStaffForm({
       firstName: '',
       lastName: '',
@@ -400,7 +375,10 @@ const HRDashboard: React.FC = () => {
 
                       <div style={{ fontSize: '11px', color: '#999', display: 'grid', gap: '3px', marginBottom: '8px' }}>
                         <div><strong>Contact:</strong> 📧 {member.email} | 📱 {member.phone}</div>
-                        {member.nric && <div><strong>NRIC:</strong> {member.nric}</div>}
+                        {/* NRIC is no longer sent with the roster — it is not
+                            needed to identify someone in a list, and the list
+                            endpoint stopped disclosing it. It remains on the
+                            individual record behind Staff Management. */}
                         {member.cpfMembershipNo && <div><strong>CPF No:</strong> {member.cpfMembershipNo}</div>}
                         <div><strong>Hire Date:</strong> {new Date(member.hireDate).toLocaleDateString('en-SG')}</div>
                         {member.baseSalary && <div><strong>Monthly Salary:</strong> SGD ${member.baseSalary.toLocaleString()}</div>}

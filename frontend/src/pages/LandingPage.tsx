@@ -70,12 +70,22 @@ export default function LandingPage() {
           </button>
 
           {/* Sign In Link */}
-          <p className="text-sm text-gray-700 text-center mb-4">
+          <p className="text-sm text-gray-700 text-center mb-3">
             Already have an account?{' '}
             <a href="/login" className="text-errandify-orange font-bold hover:underline">
               Sign in
             </a>
           </p>
+
+          {/* Pre-launch interest capture. Sits below the primary CTA on
+              purpose: someone ready to sign up should sign up, and only those
+              who are not ready should be caught by the list. */}
+          <a
+            href="/interest"
+            className="w-full max-w-xs text-center border-2 border-errandify-orange text-errandify-orange py-2.5 rounded-full font-bold text-sm hover:bg-orange-50 transition-all mb-4"
+          >
+            Not in your area yet? Join the list
+          </a>
 
           {/* Divider */}
           <div className="w-full max-w-xs border-t border-gray-300 mb-3"></div>

@@ -33,21 +33,21 @@ interface ApplicationData {
   last_name: string;
   email: string;
   phone?: string;
-  nric?: string;
   date_of_birth?: string;
-  nationality?: string;
-
-  // Address
   home_address?: string;
   city?: string;
   postal_code?: string;
   country?: string;
-  residential_status?: string;
 
-  // Emergency Contact
-  emergency_contact_name?: string;
-  emergency_contact_relationship?: string;
-  emergency_contact_phone?: string;
+  /** 'authorised' | 'requires_sponsorship' — asked instead of nationality. */
+  work_authorisation?: string;
+  /** Can they do the essential duties, with or without adjustment. */
+  can_perform_duties?: boolean;
+  adjustments_needed?: string;
+
+  // NRIC, residential status and emergency contacts are deliberately absent.
+  // They are collected at hire, into the staff record — see the note on the
+  // intake route in backend/src/routes/recruitment.ts.
 
   // Employment
   position_applied?: string;
@@ -70,15 +70,6 @@ interface ApplicationData {
   cv_file?: File;
 
   // Health & Declaration
-  health_declaration?: {
-    has_medical_condition?: boolean;
-    medical_details?: string;
-    has_disabilities?: boolean;
-    disability_details?: string;
-    workplace_adjustments?: string;
-    medical_conditions_list?: string[];
-  };
-
   agreements?: {
     agree_to_terms?: boolean;
     agree_to_privacy?: boolean;
@@ -97,7 +88,7 @@ const JobApplicationForm: React.FC = () => {
   const navigate = useNavigate();
   const { toasts, showToast, removeToast } = useToast();
 
-  const [currentStep, setCurrentStep] = useState<'cv_upload' | 'personal' | 'address' | 'employment' | 'education' | 'contact' | 'referee' | 'health' | 'declaration' | 'review'>('cv_upload');
+  const [currentStep, setCurrentStep] = useState<'cv_upload' | 'personal' | 'eligibility' | 'employment' | 'education' | 'referee' | 'declaration' | 'review'>('cv_upload');
   const [loading, setLoading] = useState(false);
   const [jobDetails, setJobDetails] = useState<any>(null);
   const [cvExtracted, setCvExtracted] = useState(false);
@@ -108,17 +99,14 @@ const JobApplicationForm: React.FC = () => {
     last_name: '',
     email: '',
     phone: '',
-    nric: '',
     date_of_birth: '',
-    nationality: 'Singaporean',
     home_address: '',
     city: '',
     postal_code: '',
     country: 'Singapore',
-    residential_status: 'Work Permit',
-    emergency_contact_name: '',
-    emergency_contact_relationship: '',
-    emergency_contact_phone: '',
+    work_authorisation: '',
+    can_perform_duties: undefined,
+    adjustments_needed: '',
     position_applied: '',
     expected_salary: 0,
     notice_period_days: 30,
@@ -130,14 +118,6 @@ const JobApplicationForm: React.FC = () => {
     employment_history: [],
     education_records: [],
     referee_contacts: [],
-    health_declaration: {
-      has_medical_condition: false,
-      medical_details: '',
-      has_disabilities: false,
-      disability_details: '',
-      workplace_adjustments: '',
-      medical_conditions_list: [],
-    },
     agreements: {
       agree_to_terms: false,
       agree_to_privacy: false,
@@ -362,7 +342,11 @@ const JobApplicationForm: React.FC = () => {
     }
   };
 
-  const steps = ['cv_upload', 'personal', 'address', 'employment', 'education', 'contact', 'referee', 'health', 'declaration', 'review'] as const;
+  // Address, emergency contact and the health/disability declaration were
+  // removed: they cannot bear on a hiring decision, and asking for a
+  // disability before an offer is what a discrimination complaint would point
+  // at. All three are collected at hire, into the staff record.
+  const steps = ['cv_upload', 'personal', 'eligibility', 'employment', 'education', 'referee', 'declaration', 'review'] as const;
   const currentIndex = steps.indexOf(currentStep);
   const progress = ((currentIndex + 1) / steps.length) * 100;
 
@@ -510,12 +494,10 @@ const JobApplicationForm: React.FC = () => {
             >
               {step === 'cv_upload' && '📄 CV'}
               {step === 'personal' && '👤 Personal'}
-              {step === 'address' && '🏠 Address'}
+              {step === 'eligibility' && '✅ Eligibility'}
               {step === 'employment' && '💼 Employment History'}
               {step === 'education' && '🎓 Education'}
-              {step === 'contact' && '📞 Contact'}
               {step === 'referee' && '👥 References'}
-              {step === 'health' && '⚕️ Health'}
               {step === 'declaration' && '✔️ Declaration'}
               {step === 'review' && '👀 Review'}
             </button>
@@ -646,77 +628,104 @@ const JobApplicationForm: React.FC = () => {
                   <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '4px', color: '#666' }}>Date of Birth</label>
                   <input type="date" value={form.date_of_birth} onChange={e => setForm({ ...form, date_of_birth: e.target.value })} style={formFieldStyle} />
                 </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '4px', color: '#666' }}>NRIC</label>
-                  <input type="text" placeholder="e.g., S1234567A" value={form.nric} onChange={e => setForm({ ...form, nric: e.target.value })} style={formFieldStyle} />
-                </div>
-                <div style={{ gridColumn: '1 / -1' }}>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '4px', color: '#666' }}>Nationality</label>
-                  <select value={form.nationality} onChange={e => setForm({ ...form, nationality: e.target.value })} style={formFieldStyle}>
-                    {NATIONALITIES.map(n => <option key={n} value={n}>{n}</option>)}
-                  </select>
-                </div>
+                {/* NRIC and nationality used to be asked here too.
+                    NRIC is barred at this stage by PDPC's NRIC guidelines; age
+                    and nationality are the protected characteristics the Fair
+                    Consideration Framework is most concerned with, and none of
+                    the three helps decide a shortlist. They are collected at
+                    hire instead. */}
               </div>
             </div>
           )}
 
-          {/* ADDRESS */}
-          {currentStep === 'address' && (
+          {/* ELIGIBILITY — the lawful replacements for nationality and the
+              health declaration, plus the address fields. Work authorisation
+              asks the question actually needed (can you work here, do we need
+              to sponsor a pass) without recording nationality. The capability
+              question asks whether you can do the job, not what is wrong with
+              you; the adjustments box exists to support the applicant, and is
+              carried onto the staff record if they are hired. */}
+          {currentStep === 'eligibility' && (
             <div>
-              <h3 style={{ marginBottom: '16px', fontSize: '16px', fontWeight: '600', color: '#333' }}>🏠 Home Address</h3>
+              <h3 style={{ marginBottom: '16px', fontSize: '16px', fontWeight: '600', color: '#333' }}>✅ Eligibility &amp; Location</h3>
+
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px', color: '#666' }}>
+                  Are you legally authorised to work in Singapore? *
+                </label>
+                <div style={{ display: 'grid', gap: '6px' }}>
+                  {[
+                    { v: 'authorised', l: 'Yes — I am a citizen, PR, or already hold a valid pass' },
+                    { v: 'requires_sponsorship', l: 'No — I would need a work pass sponsored' },
+                  ].map(o => (
+                    <label key={o.v} style={{ display: 'flex', gap: '8px', alignItems: 'center', fontSize: '13px', color: '#333' }}>
+                      <input
+                        type="radio"
+                        name="work_authorisation"
+                        value={o.v}
+                        checked={form.work_authorisation === o.v}
+                        onChange={e => setForm({ ...form, work_authorisation: e.target.value })}
+                      />
+                      {o.l}
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '6px', color: '#666' }}>
+                  Can you carry out the essential duties of this role, with or without reasonable adjustments? *
+                </label>
+                <div style={{ display: 'flex', gap: '16px' }}>
+                  {[{ v: true, l: 'Yes' }, { v: false, l: 'No' }].map(o => (
+                    <label key={String(o.v)} style={{ display: 'flex', gap: '6px', alignItems: 'center', fontSize: '13px', color: '#333' }}>
+                      <input
+                        type="radio"
+                        name="can_perform_duties"
+                        checked={form.can_perform_duties === o.v}
+                        onChange={() => setForm({ ...form, can_perform_duties: o.v })}
+                      />
+                      {o.l}
+                    </label>
+                  ))}
+                </div>
+                <p style={{ fontSize: '11px', color: '#999', margin: '8px 0 0 0' }}>
+                  We do not ask about medical conditions or disabilities at this stage.
+                </p>
+              </div>
+
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '4px', color: '#666' }}>
+                  Any adjustments you would like for the interview? (optional)
+                </label>
+                <textarea
+                  value={form.adjustments_needed}
+                  onChange={e => setForm({ ...form, adjustments_needed: e.target.value })}
+                  placeholder="e.g. step-free access, a written test instead of a verbal one"
+                  style={{ ...formFieldStyle, minHeight: '70px' }}
+                />
+              </div>
+
+              <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: '600', color: '#333' }}>Where you are based</h4>
               <div style={{ display: 'grid', gap: '12px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '4px', color: '#666' }}>Street Address</label>
-                  <textarea value={form.home_address} onChange={e => setForm({ ...form, home_address: e.target.value })} style={{ ...formFieldStyle, minHeight: '80px' }} />
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '4px', color: '#666' }}>Address</label>
+                  <textarea value={form.home_address} onChange={e => setForm({ ...form, home_address: e.target.value })} style={{ ...formFieldStyle, minHeight: '70px' }} />
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '4px', color: '#666' }}>City</label>
-                    <input type="text" value={form.city} onChange={e => setForm({ ...form, city: e.target.value })} style={formFieldStyle} />
-                  </div>
                   <div>
                     <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '4px', color: '#666' }}>Postal Code</label>
                     <input type="text" value={form.postal_code} onChange={e => setForm({ ...form, postal_code: e.target.value })} style={formFieldStyle} />
                   </div>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                   <div>
                     <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '4px', color: '#666' }}>Country</label>
                     <input type="text" value={form.country} onChange={e => setForm({ ...form, country: e.target.value })} style={formFieldStyle} />
                   </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '4px', color: '#666' }}>Residential Status</label>
-                    <select value={form.residential_status} onChange={e => setForm({ ...form, residential_status: e.target.value })} style={formFieldStyle}>
-                      {RESIDENTIAL_STATUS.map(s => <option key={s} value={s}>{s}</option>)}
-                    </select>
-                  </div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* EMERGENCY CONTACT */}
-          {currentStep === 'contact' && (
-            <div>
-              <h3 style={{ marginBottom: '16px', fontSize: '16px', fontWeight: '600', color: '#333' }}>📞 Emergency Contact</h3>
-              <div style={{ display: 'grid', gap: '12px' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '4px', color: '#666' }}>Contact Name</label>
-                  <input type="text" value={form.emergency_contact_name} onChange={e => setForm({ ...form, emergency_contact_name: e.target.value })} style={formFieldStyle} />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '4px', color: '#666' }}>Relationship</label>
-                  <input type="text" placeholder="e.g., Spouse, Parent" value={form.emergency_contact_relationship} onChange={e => setForm({ ...form, emergency_contact_relationship: e.target.value })} style={formFieldStyle} />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '4px', color: '#666' }}>Phone Number</label>
-                  <input type="tel" value={form.emergency_contact_phone} onChange={e => setForm({ ...form, emergency_contact_phone: e.target.value })} style={formFieldStyle} />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* EMPLOYMENT */}
           {currentStep === 'employment' && (
             <div>
               <h3 style={{ marginBottom: '16px', fontSize: '16px', fontWeight: '600', color: '#333' }}>💼 Employment History</h3>
@@ -1104,95 +1113,16 @@ const JobApplicationForm: React.FC = () => {
             </div>
           )}
 
-          {/* HEALTH DECLARATION */}
-          {currentStep === 'health' && (
-            <div>
-              <h3 style={{ marginBottom: '16px', fontSize: '16px', fontWeight: '600', color: '#333' }}>⚕️ Health Declaration</h3>
-              <div style={{ display: 'grid', gap: '16px' }}>
-                <div style={{ padding: '12px', background: '#FFF3E0', borderRadius: '6px', fontSize: '12px', color: '#E65100' }}>
-                  ℹ️ This information is confidential and helps us provide necessary workplace accommodations. It will not affect hiring decisions.
-                </div>
+          {/* The health/disability declaration that stood here has been removed.
+              It asked every applicant about medical conditions and disabilities
+              before any offer, reassuring them it "will not affect hiring
+              decisions" — which is the argument against collecting it at this
+              point, not for it. Where it genuinely cannot affect the outcome,
+              PDPA minimisation says do not ask yet; where it could, asking it
+              pre-offer is the evidence a discrimination complaint rests on.
+              Job-relevant medical checks and any workplace adjustments are
+              handled after an offer. */}
 
-                <div>
-                  <p style={{ fontSize: '13px', fontWeight: '600', color: '#333', marginBottom: '12px' }}>
-                    Do you have any of the following medical conditions? (Select all that apply)
-                  </p>
-                  <div style={{ display: 'grid', gap: '8px' }}>
-                    {['Diabetes', 'Heart Disease', 'Asthma', 'Arthritis', 'Mental Health', 'Chronic Pain', 'Hearing/Vision', 'Other'].map(condition => (
-                      <label key={condition} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                        <input
-                          type="checkbox"
-                          checked={form.health_declaration?.medical_conditions_list?.includes(condition) || false}
-                          onChange={e => {
-                            const list = form.health_declaration?.medical_conditions_list || [];
-                            setForm({
-                              ...form,
-                              health_declaration: {
-                                ...form.health_declaration!,
-                                medical_conditions_list: e.target.checked
-                                  ? [...list, condition]
-                                  : list.filter(c => c !== condition),
-                                has_medical_condition: list.length > 0
-                              }
-                            });
-                          }}
-                          style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-                        />
-                        <span style={{ fontSize: '12px', color: '#555' }}>{condition}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
-                {form.health_declaration?.medical_conditions_list && form.health_declaration.medical_conditions_list.length > 0 && (
-                  <div>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '4px', color: '#666' }}>
-                      Please provide details about your condition(s) and any workplace accommodations you may need
-                    </label>
-                    <textarea
-                      placeholder="e.g., 'I have Type 2 Diabetes. I need breaks every 2 hours to check blood sugar levels.'"
-                      value={form.health_declaration?.medical_details || ''}
-                      onChange={e => setForm({
-                        ...form,
-                        health_declaration: { ...form.health_declaration!, medical_details: e.target.value }
-                      })}
-                      style={{ ...formFieldStyle, minHeight: '100px' }}
-                    />
-                  </div>
-                )}
-
-                <div>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                    <input
-                      type="checkbox"
-                      checked={form.health_declaration?.has_disabilities || false}
-                      onChange={e => setForm({
-                        ...form,
-                        health_declaration: { ...form.health_declaration!, has_disabilities: e.target.checked }
-                      })}
-                      style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-                    />
-                    <span style={{ fontSize: '13px', fontWeight: '600', color: '#333' }}>
-                      I have a disability and require workplace adjustments
-                    </span>
-                  </label>
-                  {form.health_declaration?.has_disabilities && (
-                    <textarea
-                      placeholder="Please describe your disability and specific adjustments needed (e.g., screen reader software, ergonomic desk, flexible hours)"
-                      value={form.health_declaration?.disability_details || ''}
-                      onChange={e => setForm({
-                        ...form,
-                        health_declaration: { ...form.health_declaration!, disability_details: e.target.value }
-                      })}
-                      style={{ ...formFieldStyle, minHeight: '100px', marginTop: '8px' }}
-                    />
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* DECLARATION & AGREEMENTS */}
           {currentStep === 'declaration' && (
             <div>
               <h3 style={{ marginBottom: '16px', fontSize: '16px', fontWeight: '600', color: '#333' }}>✔️ Declarations & Agreements</h3>

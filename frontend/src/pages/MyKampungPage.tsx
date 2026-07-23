@@ -177,6 +177,21 @@ export default function MyKampungPage() {
         console.log('Blog API not available');
       }
 
+      // The Hall of Stars rendered from a `recognitions` array that nothing
+      // ever populated, so the tab has read "No recognitions yet" since it was
+      // built. Awards are made in admin → Communications → Recognition.
+      try {
+        const recRes = await axios.get(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/recognitions`,
+          { headers, timeout: 3000 }
+        );
+        const rows = recRes.data.data || [];
+        setRecognitions(rows);
+        setUserVotes(rows.filter((r: any) => r.hasVoted).map((r: any) => r.id));
+      } catch (err) {
+        console.log('Recognitions API not available');
+      }
+
       // Empty is a real answer here. This used to fall back to invented posts,
       // discussions, events and award nominations attributed to named people —
       // so the page always looked busy and nothing on it was true.
@@ -322,19 +337,38 @@ export default function MyKampungPage() {
     }
   };
 
-  const handleVoteRecognition = (recognitionId: number) => {
-    if (userVotes.includes(recognitionId)) {
-      // User already voted, remove vote
-      setUserVotes(userVotes.filter(id => id !== recognitionId));
-      setRecognitions(recognitions.map(r =>
-        r.id === recognitionId ? { ...r, votes: r.votes - 1 } : r
-      ));
-    } else {
-      // Add vote
-      setUserVotes([...userVotes, recognitionId]);
-      setRecognitions(recognitions.map(r =>
-        r.id === recognitionId ? { ...r, votes: r.votes + 1 } : r
-      ));
+  /**
+   * Applause is one per person and it persists. This used to move a number in
+   * local state only, so it reset on refresh and nobody else ever saw it — and
+   * one person could clap a hundred times.
+   */
+  const handleVoteRecognition = async (recognitionId: number) => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    const previousVotes = userVotes;
+    const previousRecognitions = recognitions;
+    const wasVoted = userVotes.includes(recognitionId);
+    setUserVotes(wasVoted ? userVotes.filter(id => id !== recognitionId) : [...userVotes, recognitionId]);
+    setRecognitions(recognitions.map(r =>
+      r.id === recognitionId ? { ...r, votes: r.votes + (wasVoted ? -1 : 1) } : r
+    ));
+
+    try {
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/recognitions/${recognitionId}/vote`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const { votes, hasVoted } = res.data.data;
+      setRecognitions(prev => prev.map(r => (r.id === recognitionId ? { ...r, votes } : r)));
+      setUserVotes(prev =>
+        hasVoted ? Array.from(new Set([...prev, recognitionId])) : prev.filter(id => id !== recognitionId)
+      );
+    } catch (err) {
+      console.error('Could not register applause:', err);
+      setUserVotes(previousVotes);
+      setRecognitions(previousRecognitions);
     }
   };
 

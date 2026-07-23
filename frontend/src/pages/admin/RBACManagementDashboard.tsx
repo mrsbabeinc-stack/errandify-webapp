@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast, ToastContainer } from '../../components/Toast';
 import AdminLayout from '../../components/admin/AdminLayout';
+import { rbacAPI } from '../../services/adminAPI';
 
 interface Permission {
   id: string;
@@ -16,20 +17,24 @@ interface Role {
   name: string;
   description: string;
   type: 'admin' | 'manager' | 'staff' | 'viewer' | 'custom';
-  permissions: string[]; // permission IDs
+  permissions: string[]; // permission keys, populated once a role is selected
+  permissionCount: number; // server-side count, shown before selection
   userCount: number;
   createdAt: string;
   lastModified: string;
   isActive: boolean;
 }
 
+/**
+ * Mirrors GET /api/admin/rbac-users, which aggregates role *names* per user.
+ * There is no single roleId (a user can hold several roles) and `users` has no
+ * department column, so neither is modelled here.
+ */
 interface RoleUser {
   id: string;
   name: string;
   email: string;
-  roleId: string;
-  department: string;
-  status: 'active' | 'inactive';
+  roles: string[];
 }
 
 // All available permissions
@@ -105,6 +110,7 @@ const RBACManagementDashboard: React.FC = () => {
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [selectedPermissions, setSelectedPermissions] = useState<Set<string>>(new Set());
   const [apiPermissions, setApiPermissions] = useState<{ [key: string]: Permission[] }>({});
+  const [permissionKeyToId, setPermissionKeyToId] = useState<{ [key: string]: number }>({});
   const [loadingPermissions, setLoadingPermissions] = useState(false);
 
   const [roleForm, setRoleForm] = useState({
@@ -117,63 +123,63 @@ const RBACManagementDashboard: React.FC = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Fetch roles
-        console.log('[RBAC] Fetching roles from /api/admin/roles');
-        const rolesRes = await fetch('/api/admin/roles');
-        console.log('[RBAC] Roles response status:', rolesRes.status, 'Content-Type:', rolesRes.headers.get('content-type'));
-
-        if (rolesRes.ok) {
-          const rolesData = await rolesRes.json();
-          console.log('[RBAC] Roles data:', rolesData);
-          const transformedRoles: Role[] = rolesData.data.map((r: any) => ({
-            id: String(r.id),
-            name: r.name,
-            description: r.description || '',
-            type: 'custom' as const,
-            permissions: [],
-            userCount: 0,
-            createdAt: r.created_at || new Date().toISOString(),
-            lastModified: r.created_at || new Date().toISOString(),
-            isActive: true,
-          }));
-          setRoles(transformedRoles);
-          showToast('✅ Roles loaded from server', 'success');
-        } else {
-          throw new Error(`Failed to fetch roles: ${rolesRes.status}`);
-        }
-
-        // Fetch permissions
         setLoadingPermissions(true);
-        console.log('[RBAC] Fetching permissions from /api/admin/permissions');
-        const permsRes = await fetch('/api/admin/permissions');
-        console.log('[RBAC] Permissions response status:', permsRes.status, 'Content-Type:', permsRes.headers.get('content-type'));
 
-        if (permsRes.ok) {
-          const permsData = await permsRes.json();
-          console.log('[RBAC] Permissions data:', permsData);
-          const grouped: { [key: string]: Permission[] } = {};
+        // Every call here used a bare fetch() with no Authorization header, so
+        // all four 401'd behind the admin guard and the screen rendered zero
+        // roles and zero users against a backend that had five and fifteen.
+        // rbacAPI attaches the token centrally — same fix as the HR module.
+        const [rolesData, permsData, usersData] = await Promise.all([
+          rbacAPI.getRoles(),
+          rbacAPI.getPermissions(),
+          rbacAPI.getUsers(),
+        ]);
 
-          // Transform API permissions to local format
-          if (permsData.data) {
-            Object.entries(permsData.data).forEach(([module, perms]: any) => {
-              grouped[module] = (perms || []).map((p: any) => ({
-                id: p.key,
-                name: p.key.replace(/\./g, ' ').replace(/_/g, ' ').toUpperCase(),
-                description: p.description || '',
-                category: module,
-                action: p.key.split('.')[1] || 'manage'
-              }));
-            });
-          }
-          setApiPermissions(grouped);
-          showToast(`✅ ${Object.values(grouped).reduce((a, b) => a + b.length, 0)} permissions loaded`, 'success');
-        } else {
-          throw new Error(`Failed to fetch permissions: ${permsRes.status}`);
-        }
+        setRoles((rolesData.data || []).map((r: any) => ({
+          id: String(r.id),
+          name: r.name,
+          description: r.description || '',
+          type: 'custom' as const,
+          permissions: [],
+          permissionCount: r.permission_count ?? 0,
+          userCount: r.user_count ?? 0,
+          createdAt: r.created_at || new Date().toISOString(),
+          lastModified: r.created_at || new Date().toISOString(),
+          isActive: true,
+        })));
+
+        setUsers((usersData.data || []).map((u: any) => ({
+          id: String(u.id),
+          name: u.name || '—',
+          email: u.email || '—',
+          roles: Array.isArray(u.roles) ? u.roles : [],
+        })));
+
+        // The API groups by module and gives each permission a numeric id and a
+        // string key. Both matter: the key identifies the checkbox, the id is
+        // what POST /roles/:id/permissions writes. Keeping only the key is why
+        // saving used to send junk — so record the mapping here.
+        const grouped: { [key: string]: Permission[] } = {};
+        const keyToId: { [key: string]: number } = {};
+        Object.entries(permsData.data || {}).forEach(([module, perms]: any) => {
+          grouped[module] = (perms || []).map((p: any) => {
+            keyToId[p.key] = p.id;
+            return {
+              id: p.key,
+              name: p.key.replace(/\./g, ' ').replace(/_/g, ' ').toUpperCase(),
+              description: p.description || '',
+              category: module,
+              action: p.key.split('.')[1] || 'manage',
+            };
+          });
+        });
+        setApiPermissions(grouped);
+        setPermissionKeyToId(keyToId);
         setLoadingPermissions(false);
+        showToast(`✅ ${rolesData.data?.length || 0} roles, ${usersData.data?.length || 0} users loaded`, 'success');
       } catch (error) {
         console.error('[RBAC] Error loading data:', error);
-        showToast('⚠️ Could not load from server, using defaults', 'warning');
+        showToast(`⚠️ Could not load from server: ${(error as Error).message}`, 'warning');
         setLoadingPermissions(false);
       }
     };
@@ -185,19 +191,11 @@ const RBACManagementDashboard: React.FC = () => {
     setSelectedRole(role);
 
     try {
-      // Fetch permissions for this role from the API
-      const response = await fetch(`/api/admin/roles/${role.id}/permissions`);
-      if (response.ok) {
-        const data = await response.json();
-        const permKeys = new Set(data.data.map((p: any) => p.permission_key));
-        setSelectedPermissions(permKeys);
-        console.log(`[RBAC] Loaded ${permKeys.size} permissions for role ${role.name}`);
-      } else {
-        // If API fails, use empty set (no permissions assigned yet)
-        setSelectedPermissions(new Set());
-      }
+      const data = await rbacAPI.getRolePermissions(role.id);
+      setSelectedPermissions(new Set<string>((data.data || []).map((p: any) => p.permission_key)));
     } catch (error) {
       console.error('[RBAC] Error loading role permissions:', error);
+      showToast(`⚠️ Could not load permissions for "${role.name}"`, 'warning');
       setSelectedPermissions(new Set());
     }
   };
@@ -216,72 +214,71 @@ const RBACManagementDashboard: React.FC = () => {
     if (!selectedRole) return;
 
     try {
-      // Get permission IDs from the selected permission keys
-      const permissionKeyToId: { [key: string]: number } = {};
-      Object.values(getPermissionsByCategory()).forEach(perms => {
-        perms.forEach(p => {
-          permissionKeyToId[p.id] = p.id as any; // Assuming permission ID matches the key for now
-        });
-      });
+      // The checkboxes carry permission keys; the endpoint writes permission
+      // ids. Anything the server did not send has no id to map to, so it is
+      // dropped rather than posted as a key the insert would choke on.
+      const permissionIds = Array.from(selectedPermissions)
+        .map(key => permissionKeyToId[key])
+        .filter((id): id is number => typeof id === 'number');
 
-      // Map selected permission keys to IDs from the API response
-      const permissionIds: number[] = [];
-      for (const [module, perms] of Object.entries(apiPermissions)) {
-        perms.forEach(p => {
-          if (selectedPermissions.has(p.id)) {
-            permissionIds.push(p.id as any);
-          }
-        });
+      const unmapped = selectedPermissions.size - permissionIds.length;
+      if (unmapped > 0) {
+        showToast(`⚠️ ${unmapped} permission(s) are not known to the server and were not saved`, 'warning');
       }
 
-      console.log('[RBAC] Saving permissions for role', selectedRole.id, ':', permissionIds);
+      await rbacAPI.setRolePermissions(selectedRole.id, permissionIds);
 
-      const response = await fetch(`/api/admin/roles/${selectedRole.id}/permissions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ permissionIds })
-      });
-
-      if (response.ok) {
-        const updatedRoles = roles.map(r =>
-          r.id === selectedRole.id
-            ? { ...r, permissions: Array.from(selectedPermissions), lastModified: new Date().toISOString() }
-            : r
-        );
-        setRoles(updatedRoles);
-        setSelectedRole({ ...selectedRole, permissions: Array.from(selectedPermissions) });
-        showToast(`✅ Saved ${permissionIds.length} permissions for "${selectedRole.name}"`, 'success');
-      } else {
-        showToast('❌ Failed to save permissions', 'error');
-      }
+      setRoles(roles.map(r =>
+        r.id === selectedRole.id
+          ? { ...r, permissions: Array.from(selectedPermissions), lastModified: new Date().toISOString() }
+          : r
+      ));
+      setSelectedRole({ ...selectedRole, permissions: Array.from(selectedPermissions) });
+      showToast(`✅ Saved ${permissionIds.length} permissions for "${selectedRole.name}"`, 'success');
     } catch (error) {
       console.error('[RBAC] Error saving permissions:', error);
-      showToast('❌ Error saving permissions', 'error');
+      showToast(`❌ ${(error as Error).message}`, 'error');
     }
   };
 
-  const handleCreateRole = () => {
+  /**
+   * This used to push a `role_<timestamp>` object into local state and report
+   * success without ever calling the server: the role vanished on refresh, and
+   * its fake id was then used as the :roleId when saving permissions, so those
+   * writes could not land either. Create it for real and use the server's id.
+   */
+  const handleCreateRole = async () => {
     if (!roleForm.name || !roleForm.description) {
       showToast('❌ Please fill in all fields', 'error');
       return;
     }
 
-    const newRole: Role = {
-      id: `role_${Date.now()}`,
-      name: roleForm.name,
-      description: roleForm.description,
-      type: roleForm.type,
-      permissions: [],
-      userCount: 0,
-      createdAt: new Date().toISOString(),
-      lastModified: new Date().toISOString(),
-      isActive: true,
-    };
+    try {
+      const created = await rbacAPI.createRole({
+        name: roleForm.name,
+        description: roleForm.description,
+      } as any);
+      const r = created.data;
 
-    setRoles([...roles, newRole]);
-    showToast(`✅ Role "${roleForm.name}" created`, 'success');
-    setShowRoleForm(false);
-    setRoleForm({ name: '', description: '', type: 'custom' });
+      setRoles([...roles, {
+        id: String(r.id),
+        name: r.name,
+        description: r.description || '',
+        type: roleForm.type,
+        permissions: [],
+        permissionCount: 0,
+        userCount: 0,
+        createdAt: r.created_at || new Date().toISOString(),
+        lastModified: r.created_at || new Date().toISOString(),
+        isActive: true,
+      }]);
+      showToast(`✅ Role "${r.name}" created`, 'success');
+      setShowRoleForm(false);
+      setRoleForm({ name: '', description: '', type: 'custom' });
+    } catch (error) {
+      console.error('[RBAC] Error creating role:', error);
+      showToast(`❌ ${(error as Error).message}`, 'error');
+    }
   };
 
   const getPermissionsByCategory = (): { [key: string]: Permission[] } => {
@@ -298,11 +295,16 @@ const RBACManagementDashboard: React.FC = () => {
     return grouped;
   };
 
+  // Counted off whatever is actually on screen. These two read ALL_PERMISSIONS
+  // and the literal '10+', so they reported the 40-permission demo constant
+  // while the server was serving 117 across 23 modules.
+  const permissionGroups = getPermissionsByCategory();
   const stats = {
     totalRoles: roles.length,
     activeRoles: roles.filter(r => r.isActive).length,
     totalUsers: users.length,
-    totalPermissions: ALL_PERMISSIONS.length,
+    totalPermissions: Object.values(permissionGroups).reduce((n, perms) => n + perms.length, 0),
+    totalModules: Object.keys(permissionGroups).length,
   };
 
   return (
@@ -355,7 +357,7 @@ const RBACManagementDashboard: React.FC = () => {
           </div>
           <div style={{ padding: '16px', background: '#F3E5F5', borderRadius: '8px', border: '2px solid #9C27B0' }}>
             <div style={{ fontSize: '12px', color: '#4A148C', marginBottom: '4px' }}>Modules</div>
-            <div style={{ fontSize: '22px', fontWeight: '700', color: '#9C27B0' }}>10+</div>
+            <div style={{ fontSize: '22px', fontWeight: '700', color: '#9C27B0' }}>{stats.totalModules}</div>
             <div style={{ fontSize: '11px', color: '#4A148C', marginTop: '4px' }}>controlled</div>
           </div>
         </div>
@@ -483,7 +485,7 @@ const RBACManagementDashboard: React.FC = () => {
                     </div>
                   </div>
                   <div style={{ fontSize: '12px', color: '#999', marginBottom: '8px' }}>
-                    Type: <strong>{role.type}</strong> • Users: <strong>{role.userCount}</strong> • Permissions: <strong>{role.permissions.length}</strong>
+                    Type: <strong>{role.type}</strong> • Users: <strong>{role.userCount}</strong> • Permissions: <strong>{role.permissions.length || role.permissionCount}</strong>
                   </div>
                 </div>
               ))}
@@ -501,35 +503,19 @@ const RBACManagementDashboard: React.FC = () => {
                   <tr style={{ background: '#FFD9B3', borderBottom: '2px solid #FF6B35' }}>
                     <th style={{ padding: '10px', textAlign: 'left', fontWeight: '600', color: '#333' }}>Name</th>
                     <th style={{ padding: '10px', textAlign: 'left', fontWeight: '600', color: '#333' }}>Email</th>
-                    <th style={{ padding: '10px', textAlign: 'left', fontWeight: '600', color: '#333' }}>Role</th>
-                    <th style={{ padding: '10px', textAlign: 'left', fontWeight: '600', color: '#333' }}>Department</th>
-                    <th style={{ padding: '10px', textAlign: 'left', fontWeight: '600', color: '#333' }}>Status</th>
+                    <th style={{ padding: '10px', textAlign: 'left', fontWeight: '600', color: '#333' }}>Roles</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {users.map((user, idx) => {
-                    const userRole = roles.find(r => r.id === user.roleId);
-                    return (
-                      <tr key={user.id} style={{ borderBottom: '1px solid #FFD9B3', background: idx % 2 === 0 ? 'white' : '#FFF8F5' }}>
-                        <td style={{ padding: '10px' }}>{user.name}</td>
-                        <td style={{ padding: '10px' }}>{user.email}</td>
-                        <td style={{ padding: '10px', fontWeight: '600', color: '#FF6B35' }}>{userRole?.name || 'Unassigned'}</td>
-                        <td style={{ padding: '10px' }}>{user.department}</td>
-                        <td style={{ padding: '10px' }}>
-                          <span style={{
-                            padding: '4px 8px',
-                            background: user.status === 'active' ? '#E8F5E9' : '#F5F5F5',
-                            color: user.status === 'active' ? '#2E7D32' : '#999',
-                            borderRadius: '3px',
-                            fontSize: '11px',
-                            fontWeight: '600',
-                          }}>
-                            {user.status === 'active' ? '✓ Active' : 'Inactive'}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {users.map((user, idx) => (
+                    <tr key={user.id} style={{ borderBottom: '1px solid #FFD9B3', background: idx % 2 === 0 ? 'white' : '#FFF8F5' }}>
+                      <td style={{ padding: '10px' }}>{user.name}</td>
+                      <td style={{ padding: '10px' }}>{user.email}</td>
+                      <td style={{ padding: '10px', fontWeight: '600', color: '#FF6B35' }}>
+                        {user.roles.length ? user.roles.join(', ') : 'Unassigned'}
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>

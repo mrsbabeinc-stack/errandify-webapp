@@ -2,6 +2,14 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import AdminThemeWrapper from '../components/AdminThemeWrapper';
+import ShareQRCode from '../components/ShareQRCode';
+import {
+  buildInviteMessage,
+  buildWhatsAppShareUrl,
+  JOIN_BONUS_EP,
+  FIRST_JOB_BONUS_EP,
+  MAX_PER_FRIEND_EP,
+} from '../utils/referralShare';
 
 interface ReferralData {
   code: string;
@@ -25,6 +33,7 @@ export default function ReferralPage() {
   const [referralData, setReferralData] = useState<ReferralData | null>(null);
   const [referredUsers, setReferredUsers] = useState<ReferredUser[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [copied, setCopied] = useState<'code' | 'link' | null>(null);
   const [showShareModal, setShowShareModal] = useState(false);
 
@@ -32,67 +41,47 @@ export default function ReferralPage() {
     fetchReferralData();
   }, []);
 
+  /**
+   * A referral code is not something that can be faked.
+   *
+   * This used to fall back to `'ERRAND' + Math.random()...` whenever the API
+   * was slow or errored, plus five invented referrals. That code belonged to
+   * no account, so anyone who shared it sent friends a link the server could
+   * not match to a referrer — the invite worked, the attribution silently did
+   * not, and the page cheerfully showed 250 EP earned from five people who do
+   * not exist.
+   *
+   * An error is the honest answer here, because the alternative is handing
+   * someone a broken code and letting them post it to their friends.
+   */
   const fetchReferralData = async () => {
+    setLoading(true);
+    setLoadError('');
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/users/referral`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-          timeout: 3000
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-      if (response.data && response.data.data) {
+      if (response.data?.data?.code) {
         setReferralData(response.data.data);
-        setLoading(false);
-        return;
+        setReferredUsers(response.data.data.referredUsers || []);
+      } else {
+        setLoadError('We could not load your referral code just now.');
       }
     } catch (err) {
-      console.log('Using mock referral data');
+      console.error('Referral data failed to load:', err);
+      setLoadError('We could not load your referral code just now.');
+    } finally {
+      setLoading(false);
     }
-
-    // Use mock data immediately if API fails or doesn't respond
-    const mockCode = 'ERRAND' + Math.random().toString(36).substring(2, 8).toUpperCase();
-    setReferralData({
-      code: mockCode,
-      link: `https://errandify.ai/join?ref=${mockCode}`,
-      referredCount: 5,
-      earnedPoints: 250,
-    });
-
-    // Mock referral history
-    setReferredUsers([
-      { id: '1', alias: 'John Doe', signupDate: '2024-07-16', status: 'active', errandsCompleted: 3, epEarned: 180 },
-      { id: '2', alias: 'Jane Smith', signupDate: '2024-07-15', status: 'active', errandsCompleted: 1, epEarned: 60 },
-      { id: '3', alias: 'Mike Johnson', signupDate: '2024-07-14', status: 'inactive', errandsCompleted: 0, epEarned: 0 },
-      { id: '4', alias: 'Sarah Lee', signupDate: '2024-07-13', status: 'active', errandsCompleted: 5, epEarned: 320 },
-      { id: '5', alias: 'Alex Chen', signupDate: '2024-07-12', status: 'active', errandsCompleted: 2, epEarned: 140 },
-    ]);
-    setLoading(false);
   };
 
-  useEffect(() => {
-    if (referralData?.link) {
-      const generateQRCode = async () => {
-        const img = new Image();
-        img.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(referralData.link)}`;
-        img.crossOrigin = 'anonymous';
-
-        img.onload = () => {
-          if (canvasRef.current) {
-            const ctx = canvasRef.current.getContext('2d');
-            if (ctx) {
-              canvasRef.current.width = 200;
-              canvasRef.current.height = 200;
-              ctx.drawImage(img, 0, 0);
-            }
-          }
-        };
-      };
-
-      generateQRCode();
-    }
-  }, [referralData?.link]);
+  // QR drawing now happens inside <ShareQRCode>, on the device. It used to be
+  // fetched from api.qrserver.com, which meant this account's referral code
+  // was sent to a third party on every page view — see the note in that
+  // component. `canvasRef` is still populated by it so the download button
+  // below keeps working unchanged.
 
   const handleCopyCode = async () => {
     if (referralData?.code) {
@@ -129,19 +118,49 @@ export default function ReferralPage() {
       style={{background: 'linear-gradient(135deg, #FFFBF8 0%, #FFF6F0 50%, #FFE8D6 100%)'}}
     >
       <div className="max-w-2xl mx-auto">
+        {loading && (
+          <div className="bg-white rounded-lg p-6 text-center border-2 border-orange-200 text-sm text-gray-600">
+            Loading your referral code…
+          </div>
+        )}
+
+        {/* Better an honest failure than a made-up code posted to a group chat. */}
+        {!loading && loadError && (
+          <div className="bg-white rounded-lg p-6 text-center border-2 border-red-200">
+            <p className="text-sm font-bold text-red-700 mb-2">{loadError}</p>
+            <p className="text-xs text-gray-600 mb-4">
+              Please don't share a code from this screen until it loads — an invite
+              sent with the wrong code won't be credited to you.
+            </p>
+            <button
+              onClick={fetchReferralData}
+              className="px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-bold"
+            >
+              Try again
+            </button>
+          </div>
+        )}
+
         {referralData && (
           <>
             {/* Hero Pitch */}
             <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg p-3 mb-2 shadow-lg text-center">
-              <p className="text-lg font-black text-white mb-1">🎉 Earn 50 EP Per Friend!</p>
-              <p className="text-xs font-bold text-orange-100">Share → Sign Up → Earn 💸</p>
+              {/* Both bonuses, stated. The page only ever mentioned one of the
+                  two, so it undersold the reward by half. */}
+              <p className="text-lg font-black text-white mb-1">🎉 Up to {MAX_PER_FRIEND_EP} EP Per Friend!</p>
+              <p className="text-xs font-bold text-orange-100">{JOIN_BONUS_EP} EP when they join · {FIRST_JOB_BONUS_EP} EP on their first errand 💸</p>
               <p className="text-xs text-orange-50 mt-1">Help your friends join, grow together 🤝</p>
             </div>
 
             {/* QR Code - Compact */}
             <div className="bg-white rounded-lg p-2 mb-2 shadow-md border-2 border-orange-300 text-center">
               <div className="bg-white rounded inline-block mb-2 p-1.5 border border-orange-200">
-                <canvas ref={canvasRef} className="rounded" style={{width: '120px', height: '120px'}} />
+                <ShareQRCode
+                  value={referralData?.link || ''}
+                  size={120}
+                  canvasRefOut={canvasRef}
+                  downloadName={`errandify-referral-${referralData?.code || ''}`}
+                />
               </div>
               <div className="space-y-1">
                 <button
@@ -218,7 +237,7 @@ export default function ReferralPage() {
 
             {/* How It Works - Mini */}
             <div className="bg-orange-50 rounded-lg p-2 shadow-sm border border-orange-300 text-center mb-3">
-              <p className="text-xs font-bold text-orange-800">💡 3 Steps: Share → Sign Up → Earn! +50 EP each</p>
+              <p className="text-xs font-bold text-orange-800">💡 Share → they join (+{JOIN_BONUS_EP} EP) → they finish an errand (+{FIRST_JOB_BONUS_EP} EP)</p>
             </div>
 
             {/* Motivational Message */}
@@ -273,18 +292,20 @@ export default function ReferralPage() {
                   <h2 className="text-2xl font-bold text-errandify-brown mb-2">
                     💌 Invite & Earn Together!
                   </h2>
+                  {/* Said "You both earn 50 EP". Only the referrer is credited —
+                      awardReferralPoints is called with referrerId for both the
+                      join and the first-errand bonus, and never for the person
+                      referred. Promising a reward the system does not pay is
+                      worse than promising nothing. */}
                   <p className="text-sm text-gray-600 mb-4">
-                    Share your referral code. You both earn 50 EP when they complete their first errand! 🎁
+                    Share your referral code. You earn {JOIN_BONUS_EP} EP when they join and another{' '}
+                    {FIRST_JOB_BONUS_EP} EP once they complete their first errand! 🎁
                   </p>
 
                   {/* QR Code */}
                   <div className="bg-gray-100 rounded-lg p-4 mb-4 text-center">
                     <p className="text-xs text-gray-600 mb-2 font-semibold">📱 Scan to Join</p>
-                    <img
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(referralData.link)}`}
-                      alt="Referral QR Code"
-                      className="w-32 h-32 mx-auto"
-                    />
+                    <ShareQRCode value={referralData.link} size={128} className="mx-auto" />
                     <p className="text-xs text-gray-500 mt-2">Opens signup with your referral code</p>
                   </div>
 
@@ -316,22 +337,13 @@ export default function ReferralPage() {
                     <p className="text-xs text-gray-600 mb-2 font-semibold">💬 Share Message (with link):</p>
                     <textarea
                       readOnly
-                      value={`🎯 Join Me on Errandify!
-
-Hi! I found this amazing app called Errandify where we can help each other with everyday errands and earn rewards!
-
-💰 Join with my referral code: ${referralData.code}
-🎁 We both earn 50 Errandify Points when you complete your first errand!
-
-🔗 ${referralData.link}
-
-Let's help each other in our community! 🤝`}
+                      value={buildInviteMessage(referralData.code)}
                       className="w-full px-2 py-1.5 bg-white border border-green-200 rounded text-xs resize-none h-28 font-sm"
                     />
                     <button
                       onClick={() => {
                         navigator.clipboard.writeText(
-                          `🎯 Join Me on Errandify!\n\nHi! I found this amazing app called Errandify where we can help each other with everyday errands and earn rewards!\n\n💰 Join with my referral code: ${referralData.code}\n🎁 We both earn 50 Errandify Points when you complete your first errand!\n\n🔗 ${referralData.link}\n\nLet's help each other in our community! 🤝`
+                          buildInviteMessage(referralData.code)
                         );
                         setCopied('code');
                         setTimeout(() => setCopied(null), 2000);
@@ -345,7 +357,7 @@ Let's help each other in our community! 🤝`}
                   {/* Share Buttons */}
                   <div className="grid grid-cols-2 gap-2 mb-4">
                     <a
-                      href={`https://wa.me/?text=${encodeURIComponent(`🎯 Join Me on Errandify!\n\nHi! I found this amazing app called Errandify where we can help each other with everyday errands and earn rewards!\n\n💰 Join with my referral code: ${referralData.code}\n🎁 We both earn 50 Errandify Points when you complete your first errand!\n\n🔗 ${referralData.link}\n\nLet's help each other in our community! 🤝`)}`}
+                      href={buildWhatsAppShareUrl(buildInviteMessage(referralData.code))}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="px-3 py-2 bg-green-500 text-white text-xs font-semibold rounded hover:bg-green-600 transition text-center"
@@ -355,7 +367,7 @@ Let's help each other in our community! 🤝`}
                     <button
                       onClick={() => {
                         const subject = `Join me on Errandify!`;
-                        const body = `🎯 Join Me on Errandify!\n\nHi! I found this amazing app called Errandify where we can help each other with everyday errands and earn rewards!\n\n💰 Join with my referral code: ${referralData.code}\n🎁 We both earn 50 Errandify Points when you complete your first errand!\n\n🔗 ${referralData.link}\n\nLet's help each other in our community! 🤝`;
+                        const body = buildInviteMessage(referralData.code);
                         window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
                       }}
                       className="px-3 py-2 bg-blue-600 text-white text-xs font-semibold rounded hover:bg-blue-700 transition"

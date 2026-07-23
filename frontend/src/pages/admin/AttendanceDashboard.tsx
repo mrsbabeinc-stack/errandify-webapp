@@ -2,18 +2,27 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast, ToastContainer } from '../../components/Toast';
 import AdminLayout from '../../components/admin/AdminLayout';
+import { attendanceAPI } from '../../services/adminAPI';
 
 interface AttendanceLog {
   log_id: number;
   staff_id: string;
   staff_name: string;
-  clock_in_time: string;
+  clock_in_time: string | null;
   clock_out_time: string | null;
   date: string;
-  location: string;
-  status: 'present' | 'late' | 'absent' | 'half_day';
+  total_hours: number;
+  status: 'present' | 'late' | 'absent' | 'half_day' | 'on_leave' | 'holiday';
   notes: string;
 }
+
+/** Clock times arrive as timestamps; the table wants a wall-clock HH:MM. */
+const toClockTime = (v: string | null | undefined): string | null => {
+  if (!v) return null;
+  const d = new Date(v);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toTimeString().slice(0, 5);
+};
 
 interface DailyStats {
   present: number;
@@ -27,11 +36,13 @@ const AttendanceDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { toasts, showToast, removeToast } = useToast();
   const [attendanceLogs, setAttendanceLogs] = useState<AttendanceLog[]>([]);
+  // Starts empty rather than at invented counts (18 present, 3 late…), which
+  // rendered as real figures before the first load resolved.
   const [dailyStats, setDailyStats] = useState<DailyStats>({
-    present: 18,
-    late: 3,
-    absent: 2,
-    half_day: 1,
+    present: 0,
+    late: 0,
+    absent: 0,
+    half_day: 0,
     on_leave: 0,
   });
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -45,56 +56,42 @@ const AttendanceDashboard: React.FC = () => {
   const loadAttendanceData = async () => {
     try {
       setLoading(true);
-      // Mock data - replace with actual API call
-      const mockData: AttendanceLog[] = [
-        {
-          log_id: 1,
-          staff_id: 'S001',
-          staff_name: 'John Doe',
-          clock_in_time: '09:15:00',
-          clock_out_time: '18:30:00',
-          date: selectedDate,
-          location: 'Office - Desk 5',
-          status: 'present',
-          notes: '',
-        },
-        {
-          log_id: 2,
-          staff_id: 'S002',
-          staff_name: 'Jane Smith',
-          clock_in_time: '09:22:00',
-          clock_out_time: '18:45:00',
-          date: selectedDate,
-          location: 'Office - Desk 3',
-          status: 'late',
-          notes: 'Traffic',
-        },
-        {
-          log_id: 3,
-          staff_id: 'S003',
-          staff_name: 'Bob Wilson',
-          clock_in_time: null,
-          clock_out_time: null,
-          date: selectedDate,
-          location: '',
-          status: 'absent',
-          notes: 'Sick leave',
-        },
-        {
-          log_id: 4,
-          staff_id: 'S004',
-          staff_name: 'Alice Brown',
-          clock_in_time: '09:05:00',
-          clock_out_time: '13:00:00',
-          date: selectedDate,
-          location: 'Office - Desk 1',
-          status: 'half_day',
-          notes: 'Doctor appointment',
-        },
-      ];
-      setAttendanceLogs(mockData);
-    } catch (error) {
-      showToast('Failed to load attendance data', 'error');
+      // Was four hardcoded employees. Both the rows and the tiles above them
+      // now come from the API for the selected day.
+      const [logsRes, summaryRes] = await Promise.all([
+        attendanceAPI.getAll({ startDate: selectedDate, endDate: selectedDate }),
+        attendanceAPI.getSummary(selectedDate),
+      ]);
+
+      setAttendanceLogs(
+        (logsRes.data || []).map((r: any) => ({
+          log_id: r.id,
+          staff_id: r.staff_id,
+          staff_name: r.staff_name,
+          clock_in_time: toClockTime(r.clock_in),
+          clock_out_time: toClockTime(r.clock_out),
+          date: r.work_date,
+          total_hours: Number(r.total_hours) || 0,
+          // The backend spells this 'half-day'; this screen keys off 'half_day'.
+          status: String(r.status).replace('-', '_') as AttendanceLog['status'],
+          notes: r.notes || '',
+        }))
+      );
+
+      const s = summaryRes.data || {};
+      setDailyStats({
+        present: Number(s.present) || 0,
+        late: Number(s.late) || 0,
+        // Absent is computed server-side across all active staff, so it counts
+        // the people with no record at all — which a tally of loaded rows
+        // could never see.
+        absent: Number(s.absent) || 0,
+        half_day: Number(s.half_day) || 0,
+        on_leave: Number(s.on_leave) || 0,
+      });
+    } catch (error: any) {
+      console.error('Failed to load attendance:', error);
+      showToast(error.message || 'Failed to load attendance data', 'error');
     } finally {
       setLoading(false);
     }
@@ -267,8 +264,12 @@ const AttendanceDashboard: React.FC = () => {
                 <th style={{ padding: '12px', textAlign: 'left', fontSize: '12px', fontWeight: '600', color: '#333' }}>
                   Clock Out
                 </th>
-                <th style={{ padding: '12px', textAlign: 'left', fontSize: '12px', fontWeight: '600', color: '#333' }}>
-                  Location
+                {/* Was "Location". Nothing captures a location — there is no
+                    clock-in kiosk or geofence — so the column could only ever
+                    show a hardcoded desk number. Hours worked is real, derived
+                    from the clock times. */}
+                <th style={{ padding: '12px', textAlign: 'right', fontSize: '12px', fontWeight: '600', color: '#333' }}>
+                  Hours
                 </th>
                 <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: '600', color: '#333' }}>
                   Status
@@ -289,7 +290,9 @@ const AttendanceDashboard: React.FC = () => {
                   <td style={{ padding: '12px', fontSize: '12px', color: '#333' }}>
                     {log.clock_out_time ? log.clock_out_time : '-'}
                   </td>
-                  <td style={{ padding: '12px', fontSize: '12px', color: '#666' }}>{log.location || '-'}</td>
+                  <td style={{ padding: '12px', textAlign: 'right', fontSize: '12px', color: '#333', fontWeight: '600' }}>
+                    {log.total_hours > 0 ? log.total_hours.toFixed(2) : '-'}
+                  </td>
                   <td style={{ padding: '12px', textAlign: 'center' }}>
                     <span
                       style={{

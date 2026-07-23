@@ -149,10 +149,17 @@ const CompanyPostErrandPage: React.FC = () => {
             companyId,
             title: extracted.title || hanaInput.substring(0, 50),
             description: extracted.description || hanaInput,
-            category: extracted.category || 'general',
+            // No 'general' fallback — that isn't a category, and an errand
+            // stored under it is invisible to every filter. The server resolves
+            // whatever Hana returns to a real slug and tells us if it can't.
+            category: extracted.category,
             budget: extracted.budget || '',
             deadline: extracted.deadline || '',
             postal_code: extracted.postal_code || extracted.postalCode || '',
+            // These were never sent, so every company errand had location NULL
+            // and matched no area filter in the marketplace.
+            location: extracted.location || extracted.area || '',
+            full_address: extracted.full_address || extracted.fullAddress || extracted.address || '',
           }),
         });
 

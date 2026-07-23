@@ -2,15 +2,25 @@ import { useEffect, useState, useRef } from 'react';
 import { useToastNotifications } from '../hooks/useToastNotifications';
 import axios from 'axios';
 
+// The API serialises these camelCase (createdAt / read / relatedErrandId); the
+// snake_case variants are kept optional because other callers still send them.
 interface Notification {
   id: number;
   type: string;
   title: string;
   message: string;
-  related_errand_id: number;
-  is_read: boolean;
-  created_at: string;
+  related_errand_id?: number;
+  relatedErrandId?: number;
+  is_read?: boolean;
+  read?: boolean;
+  created_at?: string;
+  createdAt?: string;
 }
+
+const notificationTime = (n: Notification): number =>
+  new Date(n.createdAt ?? n.created_at ?? 0).getTime();
+
+const notificationIsRead = (n: Notification): boolean => n.read ?? n.is_read ?? false;
 
 interface Errand {
   id: number;
@@ -160,24 +170,26 @@ export default function NotificationListener() {
           }
         );
 
-        const notifications = Array.isArray(response.data.data) ? response.data.data : [];
+        // The endpoint returns { data: { notifications: [...] } }. This read
+        // `response.data.data` as the array, which is an OBJECT, so it always
+        // fell through to [] — no toast has ever fired.
+        const payload = response.data?.data;
+        const notifications: Notification[] = Array.isArray(payload)
+          ? payload
+          : Array.isArray(payload?.notifications)
+            ? payload.notifications
+            : [];
 
         // Only show toasts for NEW notifications (created after lastNotificationTime)
-        if (Array.isArray(notifications)) {
-          notifications.forEach((notification: Notification) => {
-          const notificationTime = new Date(notification.created_at).getTime();
-
-            if (notificationTime > lastNotificationTime && !notification.is_read) {
-              handleNotification(notification);
-            }
-          });
-        }
+        notifications.forEach((notification) => {
+          if (notificationTime(notification) > lastNotificationTime && !notificationIsRead(notification)) {
+            handleNotification(notification);
+          }
+        });
 
         // Update last notification time
         if (notifications.length > 0) {
-          const newestTime = Math.max(
-            ...notifications.map((n: Notification) => new Date(n.created_at).getTime())
-          );
+          const newestTime = Math.max(...notifications.map(notificationTime));
           setLastNotificationTime(newestTime);
         }
 
@@ -202,7 +214,8 @@ export default function NotificationListener() {
   }, [lastNotificationTime, shownReminders]);
 
   const handleNotification = (notification: Notification) => {
-    const { type, message, related_errand_id } = notification;
+    const { type, message } = notification;
+    const related_errand_id = notification.relatedErrandId ?? notification.related_errand_id;
 
     switch (type) {
       case 'bid_placed':

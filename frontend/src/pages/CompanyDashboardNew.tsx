@@ -32,6 +32,7 @@ import StaffLeaveApplication from '../components/StaffLeaveApplication';
 import ManagerLeaveApproval from '../components/ManagerLeaveApproval';
 import AdCreditTracker from '../components/AdCreditTracker';
 import AdCreditReminder from '../components/AdCreditReminder';
+import LiveSubscriptionBenefits from '../components/company/LiveSubscriptionBenefits';
 
 interface Company {
   id: number;
@@ -635,7 +636,12 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                   <div className="brief-left">
                     <h3>Active Subscription</h3>
                     <p className="plan-name">{company?.subscription_tier?.toUpperCase() || 'GOLD'} Partner</p>
-                    <p className="plan-status">● Active • Renews Aug 10</p>
+                    <p className="plan-status">● Active</p>
+                    {/* Live ad-credit balance and milestone progress from the
+                        real subscription, replacing the hardcoded per-tier text. */}
+                    <div style={{ marginTop: 12 }}>
+                      <LiveSubscriptionBenefits />
+                    </div>
                   </div>
                   <div className="brief-right">
                     <button className="btn-upgrade-brief">View Details →</button>

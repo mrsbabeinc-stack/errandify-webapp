@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast, ToastContainer } from '../../components/Toast';
 import AdminLayout from '../../components/admin/AdminLayout';
+import { probationAPI, staffAPI } from '../../services/adminAPI';
 
 interface ProbationRecord {
   probation_id: number;
@@ -21,7 +22,9 @@ const ProbationManagement: React.FC = () => {
   const navigate = useNavigate();
   const { toasts, showToast, removeToast } = useToast();
   const [records, setRecords] = useState<ProbationRecord[]>([]);
+  const [staffList, setStaffList] = useState<{ staff_id: string; name: string }[]>([]);
   const [viewMode, setViewMode] = useState<'overview' | 'create'>('overview');
+  const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
     staff_id: '',
     staff_name: '',
@@ -33,43 +36,91 @@ const ProbationManagement: React.FC = () => {
     loadRecords();
   }, []);
 
+  /**
+   * Records used to live in localStorage on top of two invented rows, so a
+   * probation started by one admin was invisible to everyone else and was lost
+   * when the browser was cleared. Both records and the staff list are now read
+   * from the API.
+   */
   const loadRecords = async () => {
-    const saved = localStorage.getItem('probations');
-    let mockRecords: ProbationRecord[] = [
-      { probation_id: 1, staff_id: 'EMP-050', staff_name: 'Sarah Johnson', start_date: '2026-04-15', end_date: '2026-07-15', status: 'active', probation_length_days: 90, days_remaining: 15, review_score: null, reviewer_notes: '', created_date: new Date().toISOString() },
-      { probation_id: 2, staff_id: 'EMP-051', staff_name: 'Michael Lee', start_date: '2026-01-15', end_date: '2026-04-15', status: 'passed', probation_length_days: 90, days_remaining: 0, review_score: 85, reviewer_notes: 'Excellent performance', created_date: new Date().toISOString() },
-    ];
-    if (saved) mockRecords = [...mockRecords, ...JSON.parse(saved)];
-    setRecords(mockRecords);
+    try {
+      const [probationRes, staffRes] = await Promise.all([
+        probationAPI.getAll(),
+        staffAPI.getAll(),
+      ]);
+      setRecords(probationRes.data || []);
+      setStaffList(
+        (staffRes.data || []).map((s: any) => ({
+          staff_id: s.staff_id,
+          name: `${s.first_name} ${s.last_name}`.trim(),
+        }))
+      );
+    } catch (error: any) {
+      console.error('Failed to load probation records:', error);
+      showToast(`⚠️ ${error.message || 'Could not load probation records'}`, 'error');
+    }
   };
 
   const handleCreate = async () => {
-    if (!formData.staff_id || !formData.staff_name) {
-      showToast('❌ Please fill required fields', 'error');
+    if (!formData.staff_id) {
+      showToast('❌ Please select a staff member', 'error');
       return;
     }
-    const endDate = new Date(formData.start_date);
-    endDate.setDate(endDate.getDate() + Number(formData.probation_length_days));
-    const newRecord: ProbationRecord = {
-      probation_id: Date.now(),
-      staff_id: formData.staff_id,
-      staff_name: formData.staff_name,
-      start_date: formData.start_date,
-      end_date: endDate.toISOString().split('T')[0],
-      status: 'active',
-      probation_length_days: Number(formData.probation_length_days),
-      days_remaining: Number(formData.probation_length_days),
-      review_score: null,
-      reviewer_notes: '',
-      created_date: new Date().toISOString(),
-    };
-    const saved = localStorage.getItem('probations') || '[]';
-    JSON.parse(saved).push(newRecord);
-    localStorage.setItem('probations', JSON.stringify(JSON.parse(saved)));
-    showToast(`✅ Probation record for ${formData.staff_name} created`, 'success');
-    setViewMode('overview');
-    setFormData({ staff_id: '', staff_name: '', start_date: new Date().toISOString().split('T')[0], probation_length_days: '90' });
-    loadRecords();
+
+    const length = Number(formData.probation_length_days);
+    if (!length || length <= 0) {
+      showToast('❌ Probation length must be greater than zero', 'error');
+      return;
+    }
+
+    try {
+      setSaving(true);
+      // The server derives the end date and reads the name from the staff
+      // record, so the two can't disagree the way free-typed values could.
+      await probationAPI.create({
+        staff_id: formData.staff_id,
+        start_date: formData.start_date,
+        probation_length_days: length,
+      });
+
+      showToast('✅ Probation period started', 'success');
+      setViewMode('overview');
+      setFormData({ staff_id: '', staff_name: '', start_date: new Date().toISOString().split('T')[0], probation_length_days: '90' });
+      await loadRecords();
+    } catch (error: any) {
+      showToast(`❌ ${error.message || 'Could not start probation'}`, 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleReview = async (id: number, outcome: 'passed' | 'failed') => {
+    const scoreInput = window.prompt(
+      `Review score for this probation (0-100), or leave blank:`,
+      ''
+    );
+    if (scoreInput === null) return; // cancelled
+
+    const notes = window.prompt('Reviewer notes (optional):', '') ?? '';
+    const score = scoreInput.trim() === '' ? null : Number(scoreInput);
+
+    if (score !== null && (Number.isNaN(score) || score < 0 || score > 100)) {
+      showToast('❌ Score must be a number between 0 and 100', 'error');
+      return;
+    }
+
+    try {
+      await probationAPI.review(id, {
+        status: outcome,
+        review_score: score,
+        reviewer_notes: notes,
+        reviewed_by: 'Admin',
+      });
+      showToast(`✅ Probation marked ${outcome}`, 'success');
+      await loadRecords();
+    } catch (error: any) {
+      showToast(`❌ ${error.message || 'Could not record review'}`, 'error');
+    }
   };
 
   if (viewMode === 'create') {
@@ -83,13 +134,26 @@ const ProbationManagement: React.FC = () => {
               <button onClick={() => setViewMode('overview')} style={{ fontSize: '20px', background: 'none', border: 'none', cursor: 'pointer', color: '#FF6B35', fontWeight: '700' }}>✕</button>
             </div>
             <div style={{ background: 'white', padding: '20px', borderRadius: '8px', border: '1px solid #ddd' }}>
+              {/* A picker over real staff, not two free-text fields: typing an
+                  id and a name separately let the two disagree, and nothing
+                  checked the id existed. */}
               <div style={{ marginBottom: '16px' }}>
-                <label style={{ fontSize: '12px', fontWeight: '600', color: '#333', display: 'block', marginBottom: '6px' }}>Staff ID *</label>
-                <input type="text" placeholder="EMP-050" value={formData.staff_id} onChange={(e) => setFormData({ ...formData, staff_id: e.target.value.toUpperCase() })} style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '4px', fontSize: '12px', fontFamily: 'inherit', boxSizing: 'border-box' }} />
-              </div>
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ fontSize: '12px', fontWeight: '600', color: '#333', display: 'block', marginBottom: '6px' }}>Staff Name *</label>
-                <input type="text" placeholder="Name" value={formData.staff_name} onChange={(e) => setFormData({ ...formData, staff_name: e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '4px', fontSize: '12px', fontFamily: 'inherit', boxSizing: 'border-box' }} />
+                <label style={{ fontSize: '12px', fontWeight: '600', color: '#333', display: 'block', marginBottom: '6px' }}>Staff Member *</label>
+                <select
+                  value={formData.staff_id}
+                  onChange={(e) => setFormData({ ...formData, staff_id: e.target.value })}
+                  style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '4px', fontSize: '12px', fontFamily: 'inherit', boxSizing: 'border-box' }}
+                >
+                  <option value="">Select a staff member…</option>
+                  {staffList.map(s => (
+                    <option key={s.staff_id} value={s.staff_id}>{s.name} ({s.staff_id})</option>
+                  ))}
+                </select>
+                {staffList.length === 0 && (
+                  <div style={{ fontSize: '11px', color: '#C62828', marginTop: '6px' }}>
+                    No staff records found — add staff under Staff Management first.
+                  </div>
+                )}
               </div>
               <div style={{ marginBottom: '16px' }}>
                 <label style={{ fontSize: '12px', fontWeight: '600', color: '#333', display: 'block', marginBottom: '6px' }}>Start Date</label>
@@ -101,7 +165,7 @@ const ProbationManagement: React.FC = () => {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                 <button onClick={() => setViewMode('overview')} style={{ padding: '12px', background: '#f0f0f0', color: '#333', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600' }}>Cancel</button>
-                <button onClick={handleCreate} style={{ padding: '12px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600' }}>✓ Start</button>
+                <button onClick={handleCreate} disabled={saving} style={{ padding: '12px', background: saving ? '#A5D6A7' : '#4CAF50', color: 'white', border: 'none', borderRadius: '4px', cursor: saving ? 'default' : 'pointer', fontWeight: '600' }}>{saving ? 'Starting…' : '✓ Start'}</button>
               </div>
             </div>
           </div>
@@ -150,6 +214,7 @@ const ProbationManagement: React.FC = () => {
                 <th style={{ padding: '12px', textAlign: 'left', fontSize: '12px', fontWeight: '600' }}>End Date</th>
                 <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: '600' }}>Days Remaining</th>
                 <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: '600' }}>Status</th>
+                <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: '600' }}>Review</th>
               </tr>
             </thead>
             <tbody>
@@ -163,6 +228,18 @@ const ProbationManagement: React.FC = () => {
                     <span style={{ padding: '4px 8px', background: record.status === 'active' ? '#FFF3E0' : record.status === 'passed' ? '#E8F5E9' : '#FFEBEE', color: record.status === 'active' ? '#E65100' : record.status === 'passed' ? '#2E7D32' : '#C62828', borderRadius: '4px', fontSize: '11px', fontWeight: '600' }}>
                       {record.status === 'active' ? '⏳ Active' : record.status === 'passed' ? '✓ Passed' : '✗ Failed'}
                     </span>
+                  </td>
+                  <td style={{ padding: '12px', textAlign: 'center' }}>
+                    {record.status === 'active' ? (
+                      <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
+                        <button onClick={() => handleReview(record.probation_id, 'passed')} style={{ padding: '4px 8px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>Pass</button>
+                        <button onClick={() => handleReview(record.probation_id, 'failed')} style={{ padding: '4px 8px', background: '#F44336', color: 'white', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>Fail</button>
+                      </div>
+                    ) : (
+                      <span style={{ fontSize: '11px', color: '#666' }}>
+                        {record.review_score !== null ? `Score ${record.review_score}` : '—'}
+                      </span>
+                    )}
                   </td>
                 </tr>
               ))}

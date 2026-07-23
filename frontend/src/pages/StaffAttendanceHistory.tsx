@@ -1,17 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast, ToastContainer } from '../components/Toast';
-import Layout from '../components/Layout';
+import { staffAttendanceAPI } from '../services/staffAttendanceAPI';
 
 interface AttendanceRecord {
   date: string;
-  clock_in: string;
+  clock_in: string | null;
   clock_out: string | null;
-  location: string;
-  status: 'present' | 'late' | 'half_day' | 'absent';
+  status: 'present' | 'late' | 'half_day' | 'absent' | 'on_leave' | 'holiday';
   hours_worked: number;
   notes: string;
 }
+
+/** Timestamps -> wall-clock HH:MM. */
+const hhmm = (v: string | null): string | null => {
+  if (!v) return null;
+  const d = new Date(v);
+  return Number.isNaN(d.getTime()) ? null : d.toTimeString().slice(0, 5);
+};
 
 const StaffAttendanceHistory: React.FC = () => {
   const navigate = useNavigate();
@@ -20,6 +26,7 @@ const StaffAttendanceHistory: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().split('T')[0].slice(0, 7));
   const [viewMode, setViewMode] = useState<'month' | 'week'>('month');
+  const [linkError, setLinkError] = useState<string | null>(null);
 
   useEffect(() => {
     loadAttendanceHistory();
@@ -28,57 +35,30 @@ const StaffAttendanceHistory: React.FC = () => {
   const loadAttendanceHistory = async () => {
     try {
       setLoading(true);
-      // Mock data for attendance history
-      const mockData: AttendanceRecord[] = [
-        {
-          date: '2026-07-15',
-          clock_in: '09:15',
-          clock_out: '18:30',
-          location: 'Office - Desk 5',
-          status: 'present',
-          hours_worked: 8.5,
-          notes: '',
-        },
-        {
-          date: '2026-07-14',
-          clock_in: '09:22',
-          clock_out: '18:45',
-          location: 'Office - Desk 5',
-          status: 'late',
-          hours_worked: 9.0,
-          notes: 'Traffic on way to office',
-        },
-        {
-          date: '2026-07-13',
-          clock_in: '09:00',
-          clock_out: '13:00',
-          location: 'Office - Desk 5',
-          status: 'half_day',
-          hours_worked: 4.0,
-          notes: 'Doctor appointment',
-        },
-        {
-          date: '2026-07-12',
-          clock_in: '09:05',
-          clock_out: '18:00',
-          location: 'Remote',
-          status: 'present',
-          hours_worked: 8.75,
-          notes: 'Working from home',
-        },
-        {
-          date: '2026-07-11',
-          clock_in: null,
-          clock_out: null,
-          location: '',
-          status: 'absent',
-          hours_worked: 0,
-          notes: 'Annual leave',
-        },
-      ];
-      setRecords(mockData);
-    } catch (error) {
-      showToast('Failed to load attendance history', 'error');
+      // Was five hardcoded days. These are the caller's own records; the
+      // server scopes them by login, so no staff id is sent.
+      const [y, m] = selectedMonth.split('-').map(Number);
+      const lastDay = new Date(y, m, 0).getDate();
+      const res = await staffAttendanceAPI.history(
+        `${selectedMonth}-01`,
+        `${selectedMonth}-${String(lastDay).padStart(2, '0')}`
+      );
+
+      setRecords(
+        (res.data?.records || []).map((r: any) => ({
+          date: r.work_date,
+          clock_in: hhmm(r.clock_in),
+          clock_out: hhmm(r.clock_out),
+          // 'half-day' server-side, 'half_day' in this screen's union.
+          status: String(r.status).replace('-', '_') as AttendanceRecord['status'],
+          hours_worked: Number(r.total_hours) || 0,
+          notes: r.notes || '',
+        }))
+      );
+      setLinkError(null);
+    } catch (error: any) {
+      setRecords([]);
+      setLinkError(error.message || 'Could not load your attendance history');
     } finally {
       setLoading(false);
     }
@@ -115,7 +95,7 @@ const StaffAttendanceHistory: React.FC = () => {
   const absentDays = records.filter(r => r.status === 'absent').length;
 
   return (
-    <Layout>
+    <>
       <div style={{ padding: '16px', maxWidth: '900px', margin: '0 auto' }}>
         <ToastContainer toasts={toasts} onClose={removeToast} />
 
@@ -235,7 +215,9 @@ const StaffAttendanceHistory: React.FC = () => {
                   Hours
                 </th>
                 <th style={{ padding: '12px', textAlign: 'left', fontSize: '12px', fontWeight: '600' }}>
-                  Location
+                  {/* Was "Location" — nothing captures one. Notes is a real
+                      stored field. */}
+                  Notes
                 </th>
                 <th style={{ padding: '12px', textAlign: 'center', fontSize: '12px', fontWeight: '600' }}>
                   Status
@@ -258,7 +240,7 @@ const StaffAttendanceHistory: React.FC = () => {
                     {record.hours_worked > 0 ? `${record.hours_worked.toFixed(1)}h` : '-'}
                   </td>
                   <td style={{ padding: '12px', fontSize: '12px', color: '#666' }}>
-                    {record.location || '-'}
+                    {record.notes || '-'}
                   </td>
                   <td style={{ padding: '12px', textAlign: 'center' }}>
                     {getStatusBadge(record.status)}
@@ -289,7 +271,7 @@ const StaffAttendanceHistory: React.FC = () => {
           </div>
         )}
       </div>
-    </Layout>
+    </>
   );
 };
 

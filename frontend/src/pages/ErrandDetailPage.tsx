@@ -2,7 +2,9 @@ import { useEffect, useState, useRef } from 'react';
 import { CaseReportModal } from '../components/CaseReportModal';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
+import { buildErrandInviteMessage, buildWhatsAppShareUrl } from '../utils/referralShare';
 import BidSubmissionModal from '../components/BidSubmissionModal';
+import ShareQRCode from '../components/ShareQRCode';
 import BidsViewer from '../components/BidsViewer';
 import RecurringBidsViewer from '../components/RecurringBidsViewer';
 import TaskChatbox from '../components/TaskChatbox';
@@ -42,6 +44,8 @@ interface UserProfile {
   id: number;
   role: 'asker' | 'doer';
   name?: string;
+  /** Used by the share buttons; optional because it may not have loaded yet. */
+  referral_code?: string;
 }
 
 interface AcceptedBid {
@@ -2048,10 +2052,13 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                 {/* QR Code */}
                 <div className="bg-gray-100 rounded-lg p-4 mb-4 text-center">
                   <p className="text-xs text-gray-600 mb-2 font-semibold">📱 Scan to Join</p>
-                  <img
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`${window.location.origin}/signup?ref=${currentUser.referral_code || 'unknown'}&errand=${errand.id}`)}`}
-                    alt="Referral QR Code"
-                    className="w-32 h-32 mx-auto"
+                  {/* Generated on the device — this used to be fetched from
+                      api.qrserver.com, which sent the viewer's referral code
+                      to a third party. See components/ShareQRCode.tsx. */}
+                  <ShareQRCode
+                    value={`${window.location.origin}/join?ref=${currentUser.referral_code || 'unknown'}&errand=${errand.id}`}
+                    size={128}
+                    className="mx-auto"
                   />
                   <p className="text-xs text-gray-500 mt-2">Opens signup with your referral code</p>
                 </div>
@@ -2084,23 +2091,13 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                   <p className="text-xs text-gray-600 mb-2 font-semibold">💬 Share Message (with link):</p>
                   <textarea
                     readOnly
-                    value={`🎯 ${errand.title}
-📌 Errand ID: ${errand.errandId}
-
-Hi! I found this perfect errand on Errandify and thought of you!
-
-💰 Join with my referral code: ${currentUser.referral_code || 'REF-CODE'}
-🎁 We both earn 50 Errandify Points when you complete your first errand!
-
-🔗 ${window.location.origin}/signup?ref=${currentUser.referral_code || 'unknown'}&errand=${errand.id}
-
-Let's help each other! 🤝`}
+                    value={buildErrandInviteMessage(currentUser.referral_code, errand.title, errand.errandId, errand.id)}
                     className="w-full px-2 py-1.5 bg-white border border-green-200 rounded text-xs resize-none h-32 font-sm"
                   />
                   <button
                     onClick={() => {
                       navigator.clipboard.writeText(
-                        `🎯 ${errand.title}\n📌 Errand ID: ${errand.errandId}\n\nHi! I found this perfect errand on Errandify and thought of you! \n\n💰 Join with my referral code: ${currentUser.referral_code || 'REF-CODE'}\n🎁 We both earn 50 Errandify Points when you complete your first errand!\n\n🔗 ${window.location.origin}/signup?ref=${currentUser.referral_code || 'unknown'}&errand=${errand.id}\n\nLet's help each other! 🤝`
+                        buildErrandInviteMessage(currentUser.referral_code, errand.title, errand.errandId, errand.id)
                       );
                     }}
                     className="mt-2 w-full px-2 py-1.5 bg-green-500 text-white text-xs font-semibold rounded hover:bg-green-600 transition"
@@ -2112,7 +2109,7 @@ Let's help each other! 🤝`}
                 {/* Share Buttons */}
                 <div className="grid grid-cols-2 gap-2 mb-4">
                   <a
-                    href={`https://wa.me/?text=${encodeURIComponent(`🎯 ${errand.title}\n📌 Errand ID: ${errand.errandId}\n\nHi! I found this perfect errand on Errandify and thought of you! \n\n💰 Join with my referral code: ${currentUser.referral_code || 'REF-CODE'}\n🎁 We both earn 50 Errandify Points when you complete your first errand!\n\n🔗 ${window.location.origin}/signup?ref=${currentUser.referral_code || 'unknown'}&errand=${errand.id}\n\nLet's help each other! 🤝`)}`}
+                    href={buildWhatsAppShareUrl(buildErrandInviteMessage(currentUser.referral_code, errand.title, errand.errandId, errand.id))}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="px-3 py-2 bg-green-500 text-white text-xs font-semibold rounded hover:bg-green-600 transition text-center"
@@ -2122,7 +2119,7 @@ Let's help each other! 🤝`}
                   <button
                     onClick={() => {
                       const subject = `Join me on Errandify - ${errand.title}`;
-                      const body = `🎯 ${errand.title}\n📌 Errand ID: ${errand.errandId}\n\nHi! I found this perfect errand on Errandify and thought of you! \n\n💰 Join with my referral code: ${currentUser.referral_code || 'REF-CODE'}\n🎁 We both earn 50 Errandify Points when you complete your first errand!\n\n🔗 ${window.location.origin}/signup?ref=${currentUser.referral_code || 'unknown'}&errand=${errand.id}\n\nLet's help each other! 🤝`;
+                      const body = buildErrandInviteMessage(currentUser.referral_code, errand.title, errand.errandId, errand.id);
                       window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
                     }}
                     className="px-3 py-2 bg-blue-600 text-white text-xs font-semibold rounded hover:bg-blue-700 transition"

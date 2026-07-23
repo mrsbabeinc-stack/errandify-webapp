@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
+import { getStoredReferral, clearStoredReferral } from '../utils/referralCapture';
 
 interface SingPassCallbackPageProps {
   onLogin: (role: 'asker' | 'doer') => void;
@@ -62,7 +63,13 @@ export default function SingPassCallbackPage({ onLogin }: SingPassCallbackPagePr
           if (mode === 'signup') {
             setMessage('Creating account...');
             try {
-              // Create new account with SingPass data
+              // Whoever invited them, picked up when they first arrived and
+              // held across the Singpass redirect. POST /api/auth/signup has
+              // always accepted `ref` — it sets referred_by, writes
+              // referral_tracking and pays the referrer's join bonus — but
+              // nothing ever sent it, so no referral has ever been credited.
+              const referralCode = getStoredReferral();
+
               const signupResponse = await axios.post(
                 `${API_URL}/api/auth/signup`,
                 {
@@ -73,13 +80,24 @@ export default function SingPassCallbackPage({ onLogin }: SingPassCallbackPagePr
                   role: 'asker',
                   gender: singpassData.gender,
                   singpassVerified: true,
+                  ref: referralCode || undefined,
                 }
               );
 
               if (signupResponse.data.success) {
-                localStorage.setItem('token', signupResponse.data.data.token);
-                localStorage.setItem('user', JSON.stringify(signupResponse.data.data.user));
-                onLogin(signupResponse.data.data.user.role || 'asker');
+                // accessToken, not token. The server has always returned
+                // `accessToken`; reading `.token` stored the string
+                // "undefined" and every authenticated request straight after
+                // signup failed — the first thing a new arrival hit.
+                const { accessToken, user } = signupResponse.data.data;
+                localStorage.setItem('token', accessToken);
+                localStorage.setItem('user', JSON.stringify(user));
+
+                // Only once the account exists, so a failed signup leaves the
+                // code in place for the retry.
+                clearStoredReferral();
+
+                onLogin(user.role || 'asker');
                 setMessage('Account created successfully!');
                 setLoading(false);
                 // After SingPass + signup: Go to background verification form (new flow)

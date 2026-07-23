@@ -5,28 +5,10 @@ import App from './App';
 import { getApiUrl } from './utils/apiUrl';
 import './index.css';
 
-// Lazy-load ResponsiveVoice.JS only when needed (speeds up app startup)
-export const loadResponsiveVoice = () => {
-  return new Promise<void>((resolve) => {
-    if ((window as any).responsiveVoice) {
-      console.log('[Hana] ResponsiveVoice already loaded');
-      resolve();
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.src = 'https://code.responsivevoice.org/responsivevoice.js';
-    script.onload = () => {
-      console.log('[Hana] ResponsiveVoice.JS loaded');
-      resolve();
-    };
-    script.onerror = () => {
-      console.warn('[Hana] Failed to load ResponsiveVoice');
-      resolve(); // Don't break if it fails
-    };
-    document.head.appendChild(script);
-  });
-};
+// Nothing should import this file. It is the entry point: it runs for its side
+// effects (mounting the app), so being imported as a dependency makes HMR
+// re-execute it and mount a second root. loadResponsiveVoice used to be
+// exported from here for that reason — it now lives in utils/responsiveVoice.
 
 // Set up axios to use the API URL from environment.
 //

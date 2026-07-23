@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 interface ReferralUser {
   userId: string;
@@ -28,85 +30,52 @@ export default function ReferralTracking() {
   const [searchTerm, setSearchTerm] = useState('');
   const [timePeriod, setTimePeriod] = useState<'daily' | 'weekly' | 'monthly' | 'all'>('weekly');
 
-  // Mock data
-  const referralUsers: ReferralUser[] = [
-    {
-      userId: '1',
-      alias: 'Sarah Tan',
-      referralCode: 'ERRAND001',
-      totalReferrals: 12,
-      activeReferrals: 10,
-      thisWeekReferrals: 3,
-      totalEarnings: 600,
-      lastReferralDate: '2024-07-18',
-    },
-    {
-      userId: '2',
-      alias: 'John Doe',
-      referralCode: 'ERRAND002',
-      totalReferrals: 8,
-      activeReferrals: 7,
-      thisWeekReferrals: 1,
-      totalEarnings: 350,
-      lastReferralDate: '2024-07-17',
-    },
-    {
-      userId: '3',
-      alias: 'Jane Smith',
-      referralCode: 'ERRAND003',
-      totalReferrals: 5,
-      activeReferrals: 4,
-      thisWeekReferrals: 2,
-      totalEarnings: 200,
-      lastReferralDate: '2024-07-16',
-    },
-  ];
+  /**
+   * This screen used to render three hardcoded referrers — Sarah Tan on
+   * ERRAND001 with 12 referrals, an "Acme Corp" conversion — and they looked
+   * exactly like real data. It is the only place to check whether an invite
+   * campaign actually landed, so fabricated numbers here are worse than no
+   * screen at all: they answer the question wrongly and confidently.
+   */
+  const [referralUsers, setReferralUsers] = useState<ReferralUser[]>([]);
+  const [conversions, setConversions] = useState<ReferralConversion[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
 
-  const conversions: ReferralConversion[] = [
-    {
-      id: '1',
-      referrerId: '1',
-      referrerAlias: 'Sarah Tan',
-      referrerType: 'individual',
-      referredAlias: 'Mike Johnson',
-      signupDate: '2024-07-18',
-      errandsCompleted: 5,
-      epEarned: 350,
-      status: 'active',
-    },
-    {
-      id: '2',
-      referrerId: '1',
-      referrerAlias: 'Sarah Tan',
-      referrerType: 'individual',
-      referredAlias: 'Alex Chen',
-      signupDate: '2024-07-17',
-      errandsCompleted: 2,
-      epEarned: 150,
-      status: 'active',
-    },
-    {
-      id: '3',
-      referrerId: '2',
-      referrerAlias: 'Acme Corp',
-      referrerType: 'company',
-      referredAlias: 'Lisa Wong',
-      signupDate: '2024-07-16',
-      errandsCompleted: 0,
-      epEarned: 50,
-      status: 'pending',
-    },
-  ];
+  const loadOverview = async () => {
+    setLoading(true);
+    setLoadError('');
+    try {
+      const res = await fetch(`${API_URL}/api/referrals/admin/overview`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      setReferralUsers(json.data?.referrers || []);
+      setConversions(json.data?.conversions || []);
+    } catch (err) {
+      console.error('Referral overview failed to load:', err);
+      setLoadError('Could not load referral tracking.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { loadOverview(); }, []);
 
   const filteredUsers = referralUsers.filter(u =>
-    u.alias.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    u.referralCode.toLowerCase().includes(searchTerm.toLowerCase())
+    (u.alias || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (u.referralCode || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const topReferrers = [...referralUsers].sort((a, b) => b.totalReferrals - a.totalReferrals).slice(0, 5);
   const thisWeekTotal = referralUsers.reduce((sum, u) => sum + u.thisWeekReferrals, 0);
   const totalActive = referralUsers.reduce((sum, u) => sum + u.activeReferrals, 0);
-  const conversionRate = ((totalActive / referralUsers.reduce((sum, u) => sum + u.totalReferrals, 0)) * 100).toFixed(1);
+  const totalReferrals = referralUsers.reduce((sum, u) => sum + u.totalReferrals, 0);
+  // Guarded: with no referrals yet this was 0/0 and rendered "NaN%".
+  const conversionRate = totalReferrals > 0
+    ? ((totalActive / totalReferrals) * 100).toFixed(1)
+    : '0.0';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100 p-4">
@@ -138,8 +107,37 @@ export default function ReferralTracking() {
           ))}
         </div>
 
+        {loading && (
+          <div className="bg-white rounded-lg p-6 text-center border-2 border-orange-200 text-sm text-gray-600">
+            Loading referral data…
+          </div>
+        )}
+
+        {!loading && loadError && (
+          <div className="bg-white rounded-lg p-6 text-center border-2 border-red-200">
+            <p className="text-sm font-bold text-red-700 mb-3">{loadError}</p>
+            <button
+              onClick={loadOverview}
+              className="px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-bold"
+            >
+              Try again
+            </button>
+          </div>
+        )}
+
+        {/* An empty state is a real answer — it means no invite has converted yet. */}
+        {!loading && !loadError && referralUsers.length === 0 && (
+          <div className="bg-white rounded-lg p-6 text-center border-2 border-orange-200">
+            <p className="text-sm font-bold text-orange-800 mb-1">No referrals yet</p>
+            <p className="text-xs text-gray-600">
+              A referral is recorded when someone signs up through a member's
+              invite link. Nothing has converted so far.
+            </p>
+          </div>
+        )}
+
         {/* OVERVIEW TAB */}
-        {activeTab === 'overview' && (
+        {!loading && !loadError && referralUsers.length > 0 && activeTab === 'overview' && (
           <div className="space-y-4">
             {/* KPI Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -194,7 +192,7 @@ export default function ReferralTracking() {
         )}
 
         {/* USERS TAB */}
-        {activeTab === 'users' && (
+        {!loading && !loadError && referralUsers.length > 0 && activeTab === 'users' && (
           <div className="space-y-4">
             <div className="bg-white rounded-lg p-4 shadow border-2 border-orange-300">
               <input
@@ -238,7 +236,7 @@ export default function ReferralTracking() {
         )}
 
         {/* ANALYTICS TAB */}
-        {activeTab === 'analytics' && (
+        {!loading && !loadError && referralUsers.length > 0 && activeTab === 'analytics' && (
           <div className="space-y-4">
             <div className="bg-white rounded-lg p-4 shadow border-2 border-orange-300">
               <h2 className="text-lg font-bold text-orange-800 mb-3">📈 Referral Engagement & Earnings</h2>
@@ -276,7 +274,7 @@ export default function ReferralTracking() {
         )}
 
         {/* PERFORMANCE ANALYSIS TAB */}
-        {activeTab === 'performance' && (
+        {!loading && !loadError && referralUsers.length > 0 && activeTab === 'performance' && (
           <div className="space-y-4">
             {/* Period Selector */}
             <div className="bg-white rounded-lg p-4 shadow border-2 border-orange-300">
