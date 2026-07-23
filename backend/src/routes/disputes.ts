@@ -19,7 +19,11 @@ import {
   releaseHeldPayment,
   closeErrandAfterDispute,
 } from '../services/disputeResolutionService.js';
-import { saveDisputeVerdict } from '../services/disputeVerdictService.js';
+// saveDisputeVerdict was imported here and never called. It is the entry point
+// to a whole second verdict subsystem — disputeVerdictService plus
+// disputeVerdictValidator, ~790 lines writing `dispute_decisions` in a third
+// vocabulary (full_payment / refund / partial_payment). Dropping the import
+// keeps that off the one decision path; the files are untouched.
 import {
   composeOutcomeMessages,
   draftAndStoreOutcomeMessages,
@@ -184,6 +188,58 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   } catch (error) {
     console.error('[Disputes] Create error:', error);
     res.status(500).json({ error: 'Dispute creation failed' });
+  }
+});
+
+// GET /api/disputes/for-errand/:errandId — the dispute on this errand, if any
+//
+// A party knows their errand, not the dispute id. Without this the only screen
+// an individual ever sees for a disputed errand is a static "under review"
+// panel: no outcome, no amounts, and no way to appeal, because nothing could
+// tell the page which dispute to ask about. Two path segments, so it cannot be
+// swallowed by the single-segment /:id route below.
+router.get('/for-errand/:errandId', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const errandId = parseInt(req.params.errandId, 10);
+    const userId = parseInt(req.userId || '0', 10);
+    if (Number.isNaN(errandId)) return res.status(400).json({ error: 'Invalid errand id' });
+
+    const result = await db.query(
+      `SELECT d.id, d.status, e.asker_id, ab.doer_id, d.filed_by_user_id, d.defendant_user_id,
+              d.company_id, ab.company_id AS doer_company_id
+         FROM disputes d
+         JOIN errands e ON e.id = d.errand_id
+         LEFT JOIN bids ab ON ab.id = e.accepted_bid_id
+        WHERE d.errand_id = $1
+        ORDER BY d.created_at DESC
+        LIMIT 1`,
+      [errandId]
+    );
+    if (result.rows.length === 0) return res.json({ success: true, dispute: null });
+
+    const d = result.rows[0];
+    let allowed = [d.asker_id, d.doer_id, d.filed_by_user_id, d.defendant_user_id]
+      .filter(Boolean).map(Number).includes(userId);
+
+    if (!allowed) {
+      for (const cid of [d.company_id, d.doer_company_id]) {
+        if (!cid) continue;
+        const membership = await resolveCompanyRole(userId, cid);
+        if (membership?.canActForCompany) { allowed = true; break; }
+      }
+    }
+    if (!allowed) {
+      const role = await db.query('SELECT role FROM users WHERE id = $1', [userId]);
+      if (['admin', 'super-admin', 'support_l2', 'support_l3'].includes(role.rows[0]?.role)) allowed = true;
+    }
+    // Not a leak to say "no" the same way as "none" — a stranger learns nothing
+    // either way.
+    if (!allowed) return res.json({ success: true, dispute: null });
+
+    res.json({ success: true, dispute: { id: d.id, status: d.status } });
+  } catch (error) {
+    console.error('[Disputes] for-errand lookup error:', error);
+    res.status(500).json({ error: 'Could not look that up' });
   }
 });
 

@@ -92,6 +92,16 @@ async function main() {
   step('the claimant who did not fully win may also appeal', askerView,
     (r) => r.body.dispute?.appeal?.canAppeal === true);
 
+  // A party knows their errand, not the dispute id. Without this lookup the
+  // errand page cannot ask about the dispute at all, which is why an individual
+  // never saw an outcome or an appeal button — only companies did.
+  const byErrand = await call('GET', `/api/disputes/for-errand/${errand}`, tDoer);
+  step('a party can find the dispute from the errand', byErrand,
+    (r) => r.body.dispute?.id === id);
+  step('a stranger is told nothing about it',
+    await call('GET', `/api/disputes/for-errand/${errand}`, tok(kit.makeUser({ name: 'ZZKIT nosy' }))),
+    (r) => r.status === 200 && r.body.dispute === null);
+
   // ---- 6. appeal --------------------------------------------------------
   const appeal = await call('POST', `/api/disputes/${id}/appeal`, tDoer, {
     reason: 'I have the timestamped photos showing the whole job was completed as agreed.',

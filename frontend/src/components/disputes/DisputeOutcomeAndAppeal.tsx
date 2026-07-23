@@ -18,11 +18,15 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 const money = (n: any) => `$${Number(n ?? 0).toFixed(2)}`;
 
 interface Props {
-  disputeId: number;
+  /** Pass this when you already know the dispute */
+  disputeId?: number;
+  /** Or this, when you only have the errand — the usual case for a party */
+  errandId?: number;
   onChanged?: () => void;
 }
 
-export const DisputeOutcomeAndAppeal: React.FC<Props> = ({ disputeId, onChanged }) => {
+export const DisputeOutcomeAndAppeal: React.FC<Props> = ({ disputeId, errandId, onChanged }) => {
+  const [resolvedId, setResolvedId] = useState<number | null>(disputeId ?? null);
   const [dispute, setDispute] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -31,11 +35,21 @@ export const DisputeOutcomeAndAppeal: React.FC<Props> = ({ disputeId, onChanged 
   const [error, setError] = useState('');
   const [done, setDone] = useState('');
 
+  const auth = { Authorization: `Bearer ${localStorage.getItem('token')}` };
+
   const load = async () => {
     try {
-      const res = await fetch(`${API_URL}/api/disputes/${disputeId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-      });
+      // A party knows their errand, not the dispute id, so resolve it first.
+      let id = disputeId ?? resolvedId;
+      if (!id && errandId) {
+        const lookup = await fetch(`${API_URL}/api/disputes/for-errand/${errandId}`, { headers: auth });
+        if (!lookup.ok) return;
+        id = (await lookup.json())?.dispute?.id ?? null;
+        setResolvedId(id);
+      }
+      if (!id) return;
+
+      const res = await fetch(`${API_URL}/api/disputes/${id}`, { headers: auth });
       if (!res.ok) return;
       const data = await res.json();
       setDispute(data?.dispute || null);
@@ -47,7 +61,7 @@ export const DisputeOutcomeAndAppeal: React.FC<Props> = ({ disputeId, onChanged 
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [disputeId]);
+  }, [disputeId, errandId]);
 
   const submit = async () => {
     if (reason.trim().length < 20) {
@@ -57,7 +71,7 @@ export const DisputeOutcomeAndAppeal: React.FC<Props> = ({ disputeId, onChanged 
     setSubmitting(true);
     setError('');
     try {
-      const res = await fetch(`${API_URL}/api/disputes/${disputeId}/appeal`, {
+      const res = await fetch(`${API_URL}/api/disputes/${disputeId ?? resolvedId}/appeal`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

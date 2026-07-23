@@ -14,6 +14,7 @@ import TaskQA from '../components/TaskQA';
 import ErrandActivityLog from '../components/ErrandActivityLog';
 import AdminThemeWrapper from '../components/AdminThemeWrapper';
 import { capitalizeStatus, formatCurrency } from '../utils/format';
+import DisputeOutcomeAndAppeal from '../components/disputes/DisputeOutcomeAndAppeal';
 
 interface ErrandDetail {
   id: number;
@@ -939,6 +940,21 @@ export default function ErrandDetailPage({ userRole = 'doer' }: Props) {
                     <span>✅ Reviewed</span>
                   </div>
                 </div>
+
+                {/* What came of the dispute, and the appeal if they can still
+                    use it. Renders nothing until there is a decision.
+
+                    Deliberately outside the action-button chain above: that
+                    chain branches on role and errand state, and a doer with an
+                    accepted offer never reaches its 'disputed' arm at all — so
+                    the outcome would have been invisible to exactly the person
+                    most likely to want to appeal it. Individuals had no dispute
+                    screen of any kind; only the company path did. */}
+                {errand.status === 'disputed' && (
+                  <div className="mb-3">
+                    <DisputeOutcomeAndAppeal errandId={Number(id)} onChanged={fetchErrandDetail} />
+                  </div>
+                )}
 
                 {/* Activity Timeline - Scrollable */}
                 <h2 className="font-bold text-errandify-brown mb-1.5 text-xs">
