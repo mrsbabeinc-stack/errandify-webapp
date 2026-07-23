@@ -302,6 +302,12 @@ router.post('/gift-points', authMiddleware, async (req: AuthRequest, res: Respon
       return res.status(400).json({ error: 'Invalid recipient or points amount' });
     }
 
+    // Gifting to yourself is a no-op that only writes confusing ledger entries.
+    // EP was conserved either way, but it should not be allowed.
+    if (parseInt(String(recipientId), 10) === senderId) {
+      return res.status(400).json({ error: "You can't gift points to yourself." });
+    }
+
     const pointsAmount = parseInt(points, 10);
 
     // Get sender's current points
