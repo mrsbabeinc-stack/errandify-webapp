@@ -1451,6 +1451,17 @@ router.post('/companies/:companyId/staff/jobs/:errandId/:action', authMiddleware
     }
 
     console.log('[Company] Staff', userId, action === 'start' ? 'started' : 'completed', 'errand', errandId);
+
+    // A completed job may cross a milestone threshold. Fire-and-forget so the
+    // response never waits on it, and a milestone failure never fails the
+    // completion. This is the trigger that was missing — checkMilestones was
+    // written but called by nothing, so no company ever earned a milestone.
+    if (action === 'complete') {
+      import('../services/milestoneService.js')
+        .then((m) => m.checkMilestones(companyId))
+        .catch((err) => console.error('[Company] Milestone check failed:', err));
+    }
+
     res.json({
       success: true,
       message: action === 'start' ? "You're on the job" : 'Marked as done — the asker will confirm',

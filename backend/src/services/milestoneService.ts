@@ -1,6 +1,17 @@
 /**
  * Milestone Service
- * Tracks milestone achievements and awards bonus ad credits
+ * Tracks milestone achievements and awards bonus ad credits.
+ *
+ * Ported from MySQL to Postgres. The previous version used ? placeholders,
+ * "double-quoted" string literals, a `tasks` table that does not exist, array
+ * result access (result[0]) instead of result.rows, and subscription_milestones
+ * columns (milestone_type, bonus_amount, bonus_applied, completed_at) that do
+ * not match the real table (tier, milestone_threshold, reward_amount, achieved,
+ * achieved_at). Every function threw, so no milestone was ever shown or awarded.
+ *
+ * "Tasks" for a milestone means jobs the company COMPLETED as a doer — counted
+ * from company_orders with status 'completed'. The reward amounts match the
+ * owner's tier spec.
  */
 
 import db from '../db.js';
@@ -10,15 +21,14 @@ import { addBonusCredits } from './adCreditService.js';
 export interface Milestone {
   id: number;
   company_id: number;
-  milestone_type: string;
-  completed_at: string;
-  bonus_amount: number;
-  bonus_applied: boolean;
+  tier: string;
+  milestone_threshold: number;
+  reward_amount: number;
+  achieved: boolean;
+  achieved_at: string | null;
 }
 
-/**
- * Define milestones by tier
- */
+/** Milestones by tier — matches the canonical tier spec. Amounts in cents. */
 const TIER_MILESTONES: Record<string, Array<{ tasks: number; bonus: number }>> = {
   silver: [
     { tasks: 50, bonus: 2000 }, // SGD $20
@@ -34,173 +44,101 @@ const TIER_MILESTONES: Record<string, Array<{ tasks: number; bonus: number }>> =
   ],
 };
 
+/** The active tier for a company, or null. Active = no expiry, or not lapsed. */
+async function activeTier(companyId: number): Promise<string | null> {
+  const sub: any = await getCompanySubscription(companyId);
+  if (!sub || !sub.subscription_tier) return null;
+  if (sub.expires_at && new Date(sub.expires_at) <= new Date()) return null;
+  return sub.subscription_tier;
+}
+
+/** Jobs this company has completed as a doer. */
+async function completedTaskCount(companyId: number): Promise<number> {
+  const r = await db.query(
+    `SELECT COUNT(*)::int AS total FROM company_orders WHERE company_id = $1 AND status = 'completed'`,
+    [companyId]
+  );
+  return Number(r.rows[0]?.total || 0);
+}
+
 /**
- * Check milestones when task is posted
+ * Check milestones — call this when a company completes a job. Awards any
+ * milestone whose threshold the company has now reached and not yet been given.
  */
 export async function checkMilestones(companyId: number): Promise<void> {
-  const subscription = await getCompanySubscription(companyId);
+  const tier = await activeTier(companyId);
+  if (!tier) return;
 
-  if (!subscription || subscription.status !== 'active') {
-    return; // No active subscription
-  }
-
-  // Get total tasks posted
-  const result = await db.query(
-    'SELECT COUNT(*) as total FROM tasks WHERE company_id = ? AND status = "posted"',
-    [companyId]
-  );
-
-  const totalTasks = result[0]?.total || 0;
-
-  // Get tier milestones
-  const milestones = TIER_MILESTONES[subscription.current_tier] || [];
-
-  // Check each milestone
-  for (const milestone of milestones) {
-    if (totalTasks >= milestone.tasks) {
-      await awardMilestone(
-        companyId,
-        `tasks_posted_${milestone.tasks}`,
-        milestone.bonus
-      );
+  const total = await completedTaskCount(companyId);
+  for (const m of (TIER_MILESTONES[tier] || [])) {
+    if (total >= m.tasks) {
+      await awardMilestone(companyId, tier, m.tasks, m.bonus);
     }
   }
 }
 
-/**
- * Award a milestone (add to database and bonus credits)
- */
-async function awardMilestone(
-  companyId: number,
-  milestoneType: string,
-  bonusAmount: number
-): Promise<void> {
-  // Check if already awarded
+async function awardMilestone(companyId: number, tier: string, threshold: number, bonus: number): Promise<void> {
+  // Idempotent: one row per (company, threshold).
   const existing = await db.query(
-    'SELECT id FROM subscription_milestones WHERE company_id = ? AND milestone_type = ?',
-    [companyId, milestoneType]
+    `SELECT id FROM subscription_milestones WHERE company_id = $1 AND milestone_threshold = $2`,
+    [companyId, threshold]
   );
+  if (existing.rows.length > 0) return;
 
-  if (existing.length > 0) {
-    return; // Already awarded
-  }
-
-  // Create milestone record
   await db.query(
     `INSERT INTO subscription_milestones
-     (company_id, milestone_type, completed_at, bonus_amount, bonus_applied, created_at)
-     VALUES (?, ?, NOW(), ?, FALSE, NOW())`,
-    [companyId, milestoneType, bonusAmount]
+       (company_id, tier, milestone_threshold, reward_amount, achieved, achieved_at, created_at, updated_at)
+     VALUES ($1, $2, $3, $4, true, NOW(), NOW(), NOW())`,
+    [companyId, tier, threshold, bonus / 100] // reward_amount is stored in dollars
   );
 
-  // Add bonus credits
-  await addBonusCredits(companyId, bonusAmount, `Milestone: ${milestoneType}`);
+  // The bonus is ad credit. A failure here must not lose the milestone record.
+  try {
+    await addBonusCredits(companyId, bonus, `Milestone: ${threshold} tasks`);
+  } catch (err) {
+    console.error(`[Milestone] recorded ${threshold}-task milestone for company ${companyId} but crediting failed:`, err);
+  }
 
-  // Mark as applied
-  await db.query(
-    'UPDATE subscription_milestones SET bonus_applied = TRUE WHERE company_id = ? AND milestone_type = ?',
-    [companyId, milestoneType]
-  );
-
-  const tasks = milestoneType.replace('tasks_posted_', '');
-  console.log(`🎉 Awarded milestone: ${tasks} tasks. Bonus: SGD $${bonusAmount / 100}`);
+  console.log(`🎉 Company ${companyId} hit ${threshold} tasks — SGD $${bonus / 100} bonus`);
 }
 
-/**
- * Get milestones for company
- */
+/** Milestones a company has been awarded. */
 export async function getMilestones(companyId: number): Promise<Milestone[]> {
-  const result = await db.query(
-    'SELECT * FROM subscription_milestones WHERE company_id = ? ORDER BY completed_at DESC',
+  const r = await db.query(
+    `SELECT * FROM subscription_milestones WHERE company_id = $1 ORDER BY achieved_at DESC NULLS LAST`,
     [companyId]
   );
-
-  return result;
+  return r.rows;
 }
 
-/**
- * Get next milestone for company
- */
-export async function getNextMilestone(
-  companyId: number
-): Promise<{ tasks: number; bonus: number } | null> {
-  const subscription = await getCompanySubscription(companyId);
+/** The next milestone the company has not yet reached, or null. */
+export async function getNextMilestone(companyId: number): Promise<{ tasks: number; bonus: number } | null> {
+  const tier = await activeTier(companyId);
+  if (!tier) return null;
 
-  if (!subscription || subscription.status !== 'active') {
-    return null;
-  }
-
-  // Get current task count
-  const result = await db.query(
-    'SELECT COUNT(*) as total FROM tasks WHERE company_id = ? AND status = "posted"',
-    [companyId]
-  );
-
-  const totalTasks = result[0]?.total || 0;
-
-  // Get tier milestones
-  const milestones = TIER_MILESTONES[subscription.current_tier] || [];
-
-  // Find next uncompleted milestone
-  for (const milestone of milestones) {
-    const completed = await db.query(
-      'SELECT id FROM subscription_milestones WHERE company_id = ? AND milestone_type = ?',
-      [companyId, `tasks_posted_${milestone.tasks}`]
+  for (const m of (TIER_MILESTONES[tier] || [])) {
+    const done = await db.query(
+      `SELECT id FROM subscription_milestones WHERE company_id = $1 AND milestone_threshold = $2`,
+      [companyId, m.tasks]
     );
-
-    if (completed.length === 0) {
-      return {
-        tasks: milestone.tasks,
-        bonus: milestone.bonus,
-      };
-    }
+    if (done.rows.length === 0) return { tasks: m.tasks, bonus: m.bonus };
   }
-
-  return null; // All milestones completed
+  return null;
 }
 
-/**
- * Get milestone progress
- */
+/** Progress toward the next milestone, for the subscription screen. */
 export async function getMilestoneProgress(companyId: number): Promise<{
   current_tasks: number;
   next_milestone: number | null;
   progress_percent: number;
 }> {
-  const subscription = await getCompanySubscription(companyId);
+  const tier = await activeTier(companyId);
+  if (!tier) return { current_tasks: 0, next_milestone: null, progress_percent: 0 };
 
-  if (!subscription || subscription.status !== 'active') {
-    return {
-      current_tasks: 0,
-      next_milestone: null,
-      progress_percent: 0,
-    };
-  }
-
-  // Get current task count
-  const result = await db.query(
-    'SELECT COUNT(*) as total FROM tasks WHERE company_id = ? AND status = "posted"',
-    [companyId]
-  );
-
-  const currentTasks = result[0]?.total || 0;
-
-  // Get next milestone
+  const current = await completedTaskCount(companyId);
   const next = await getNextMilestone(companyId);
+  if (!next) return { current_tasks: current, next_milestone: null, progress_percent: 100 };
 
-  if (!next) {
-    return {
-      current_tasks: currentTasks,
-      next_milestone: null,
-      progress_percent: 100,
-    };
-  }
-
-  const progress = Math.floor((currentTasks / next.tasks) * 100);
-
-  return {
-    current_tasks: currentTasks,
-    next_milestone: next.tasks,
-    progress_percent: Math.min(progress, 99), // Cap at 99 until reached
-  };
+  const progress = Math.floor((current / next.tasks) * 100);
+  return { current_tasks: current, next_milestone: next.tasks, progress_percent: Math.min(progress, 99) };
 }

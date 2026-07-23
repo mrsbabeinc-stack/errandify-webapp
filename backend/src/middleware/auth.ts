@@ -5,6 +5,11 @@ import db from '../db.js';
 
 export interface AuthRequest extends Request {
   userId?: string;
+  // The company the authenticated user belongs to. Populated by attachCompanyId
+  // (utils/companyRole) — the subscription routes read req.companyId, and until
+  // that middleware existed nothing ever set it, so every one silently resolved
+  // company 0.
+  companyId?: string;
   user?: {
     id: string;
     email: string;

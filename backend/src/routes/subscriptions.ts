@@ -6,6 +6,7 @@
 import { Router, Response } from 'express';
 import Stripe from 'stripe';
 import { AuthRequest, authMiddleware, requireAdmin } from '../middleware/auth.js';
+import { attachCompanyId } from '../utils/companyRole.js';
 import db from '../db.js';
 import {
   getCompanySubscription,
@@ -45,15 +46,12 @@ const STRIPE_PRICES: Record<string, Record<string, string>> = {
  * GET /api/subscriptions/status
  * Get current subscription status + benefits
  */
-router.get('/status', authMiddleware, async (req: AuthRequest, res: Response) => {
+router.get('/status', authMiddleware, attachCompanyId, async (req: AuthRequest, res: Response) => {
   try {
     // The real subscription, not a hardcoded silver demo. This endpoint used to
     // return silver for everyone regardless of their tier, so a Platinum company
     // saw the wrong plan, wrong commission and wrong benefits on its own screen.
-    // req.companyId is set by nothing, so resolve the company from the user.
-    const { resolveMyCompany } = await import('../utils/companyRole.js');
-    const membership = await resolveMyCompany(req.userId || '0');
-    const companyId = membership?.companyId || 0;
+    const companyId = parseInt(req.companyId || '0', 10);
     const { getCompanySubscription, getTierConfig } = await import('../services/subscriptionService.js');
     const sub: any = companyId ? await getCompanySubscription(companyId) : null;
     const active = !!sub && (!sub.expires_at || new Date(sub.expires_at) > new Date());
@@ -240,7 +238,7 @@ router.get('/tiers', async (req: AuthRequest, res: Response) => {
  * POST /api/subscriptions/checkout
  * Create Stripe checkout session
  */
-router.post('/checkout', authMiddleware, async (req: AuthRequest, res: Response) => {
+router.post('/checkout', authMiddleware, attachCompanyId, async (req: AuthRequest, res: Response) => {
   try {
     const { tier, billingType } = req.body;
     const companyId = parseInt(req.companyId || '0', 10);
@@ -294,7 +292,7 @@ router.post('/checkout', authMiddleware, async (req: AuthRequest, res: Response)
  * GET /api/subscriptions/billing-history
  * Get billing history
  */
-router.get('/billing-history', authMiddleware, async (req: AuthRequest, res: Response) => {
+router.get('/billing-history', authMiddleware, attachCompanyId, async (req: AuthRequest, res: Response) => {
   try {
     const companyId = parseInt(req.companyId || '0', 10);
 
@@ -340,7 +338,7 @@ router.get('/billing-history', authMiddleware, async (req: AuthRequest, res: Res
  * POST /api/subscriptions/upgrade
  * Upgrade to higher tier (immediate, prorated charge)
  */
-router.post('/upgrade', authMiddleware, async (req: AuthRequest, res: Response) => {
+router.post('/upgrade', authMiddleware, attachCompanyId, async (req: AuthRequest, res: Response) => {
   try {
     const { tier } = req.body;
     const companyId = parseInt(req.companyId || '0', 10);
@@ -366,7 +364,7 @@ router.post('/upgrade', authMiddleware, async (req: AuthRequest, res: Response) 
  * POST /api/subscriptions/downgrade
  * Schedule downgrade (takes effect at month-end/renewal, no refund)
  */
-router.post('/downgrade', authMiddleware, async (req: AuthRequest, res: Response) => {
+router.post('/downgrade', authMiddleware, attachCompanyId, async (req: AuthRequest, res: Response) => {
   try {
     const { tier } = req.body;
     const companyId = parseInt(req.companyId || '0', 10);
@@ -400,7 +398,7 @@ router.post('/downgrade', authMiddleware, async (req: AuthRequest, res: Response
  * POST /api/subscriptions/cancel
  * Cancel subscription (with refund eligibility check)
  */
-router.post('/cancel', authMiddleware, async (req: AuthRequest, res: Response) => {
+router.post('/cancel', authMiddleware, attachCompanyId, async (req: AuthRequest, res: Response) => {
   try {
     const companyId = parseInt(req.companyId || '0', 10);
 
@@ -430,7 +428,7 @@ router.post('/cancel', authMiddleware, async (req: AuthRequest, res: Response) =
  * POST /api/subscriptions/churn-prevention
  * Show discount offer to prevent churn
  */
-router.post('/churn-prevention', authMiddleware, async (req: AuthRequest, res: Response) => {
+router.post('/churn-prevention', authMiddleware, attachCompanyId, async (req: AuthRequest, res: Response) => {
   try {
     const companyId = parseInt(req.companyId || '0', 10);
 
@@ -456,7 +454,7 @@ router.post('/churn-prevention', authMiddleware, async (req: AuthRequest, res: R
  * GET /api/subscriptions/ad-credits/balance
  * Get current month's ad credit balance
  */
-router.get('/ad-credits/balance', authMiddleware, async (req: AuthRequest, res: Response) => {
+router.get('/ad-credits/balance', authMiddleware, attachCompanyId, async (req: AuthRequest, res: Response) => {
   try {
     const companyId = parseInt(req.companyId || '0', 10);
 
@@ -481,7 +479,7 @@ router.get('/ad-credits/balance', authMiddleware, async (req: AuthRequest, res: 
  * GET /api/subscriptions/ad-credits/history
  * Get 12-month ad credit history
  */
-router.get('/ad-credits/history', authMiddleware, async (req: AuthRequest, res: Response) => {
+router.get('/ad-credits/history', authMiddleware, attachCompanyId, async (req: AuthRequest, res: Response) => {
   try {
     const companyId = parseInt(req.companyId || '0', 10);
 
@@ -512,7 +510,7 @@ router.get('/ad-credits/history', authMiddleware, async (req: AuthRequest, res: 
  * GET /api/subscriptions/milestones
  * Get milestone progress and history
  */
-router.get('/milestones', authMiddleware, async (req: AuthRequest, res: Response) => {
+router.get('/milestones', authMiddleware, attachCompanyId, async (req: AuthRequest, res: Response) => {
   try {
     const companyId = parseInt(req.companyId || '0', 10);
 
@@ -534,7 +532,7 @@ router.get('/milestones', authMiddleware, async (req: AuthRequest, res: Response
  * POST /api/subscriptions/proration
  * Calculate proration for mid-cycle changes
  */
-router.post('/proration', authMiddleware, async (req: AuthRequest, res: Response) => {
+router.post('/proration', authMiddleware, attachCompanyId, async (req: AuthRequest, res: Response) => {
   try {
     const { fromTier, toTier, billingType } = req.body;
     const companyId = parseInt(req.companyId || '0', 10);

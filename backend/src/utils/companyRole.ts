@@ -135,3 +135,27 @@ export async function requireCompanyRole(
 
   return { ok: true, membership: m };
 }
+
+import type { Response, NextFunction } from 'express';
+import type { AuthRequest } from '../middleware/auth.js';
+
+/**
+ * Sets req.companyId from the authenticated user's company membership.
+ *
+ * The subscription routes were written to read req.companyId, but nothing ever
+ * populated it — the auth middleware sets only userId. So checkout, upgrade,
+ * downgrade, cancel, ad-credits and billing all resolved company 0 and failed.
+ * Runs after authMiddleware; leaves companyId unset (not an error) when the user
+ * belongs to no company, so the handler can respond appropriately.
+ */
+export async function attachCompanyId(req: AuthRequest, _res: Response, next: NextFunction): Promise<void> {
+  try {
+    if (req.userId) {
+      const m = await resolveMyCompany(req.userId);
+      if (m?.companyId) req.companyId = String(m.companyId);
+    }
+  } catch (err) {
+    console.error('[attachCompanyId] lookup failed:', err);
+  }
+  next();
+}
