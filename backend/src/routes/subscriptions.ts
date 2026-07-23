@@ -164,75 +164,6 @@ router.get('/tiers', async (req: AuthRequest, res: Response) => {
   }
 });
 
-/**
- * GET /api/subscriptions/tiers
- * Get all available tiers + pricing
- */
-router.get('/tiers', async (req: AuthRequest, res: Response) => {
-  try {
-    const tiers = [
-      {
-        name: 'silver',
-        price_monthly: 2800,
-        price_annual: 26800,
-        commission_rate: 0.18,
-        ad_credit_monthly: 5000,
-        ep_multiplier: 2,
-        max_team_members: 5,
-        features: [
-          'Team coordination (up to 5 people)',
-          'AI-powered dashboard',
-          'Enhanced AI recommendations',
-          '2x EP multiplier on tasks',
-          'SGD $50/month ad credits',
-          'Monthly newsletter feature',
-        ],
-      },
-      {
-        name: 'gold',
-        price_monthly: 7800,
-        price_annual: 74800,
-        commission_rate: 0.17,
-        ad_credit_monthly: 20000,
-        ep_multiplier: 3,
-        max_team_members: 15,
-        features: [
-          'Team coordination (up to 15 people)',
-          'AI-powered dashboard',
-          'Enhanced AI recommendations',
-          '3x EP multiplier on tasks',
-          'SGD $200/month ad credits',
-          'Events invitations',
-          'Top newsletter placement',
-        ],
-      },
-      {
-        name: 'platinum',
-        price_monthly: 14800,
-        price_annual: 142000,
-        commission_rate: 0.16,
-        ad_credit_monthly: 50000,
-        ep_multiplier: 5,
-        max_team_members: 999999,
-        features: [
-          'Unlimited team members',
-          'AI-powered dashboard',
-          'Enhanced AI recommendations',
-          '5x EP multiplier on tasks',
-          'SGD $500/month ad credits',
-          'Blog publishing feature',
-          'Quarterly newsletter',
-          'Priority events access',
-        ],
-      },
-    ];
-
-    res.json({ success: true, data: tiers });
-  } catch (error) {
-    console.error('Get tiers error:', error);
-    res.status(500).json({ success: false, error: 'Failed to fetch tiers' });
-  }
-});
 
 /**
  * POST /api/subscriptions/checkout
@@ -616,26 +547,43 @@ router.get('/admin/subscriptions', authMiddleware, async (req: AuthRequest, res:
  */
 router.get('/admin/subscriptions/analytics', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
+    // Real counts, not the fabricated demo numbers this used to return. Monthly
+    // prices come from the canonical spec (they are not columns yet). Churn,
+    // ARPU and lifetime need subscription history the schema does not keep, so
+    // they are null rather than invented — an honest gap beats a fake figure.
+    const PRICE_MONTHLY: Record<string, number> = { silver: 28, gold: 78, platinum: 148 };
+
+    const active = await db.query(
+      `SELECT cs.subscription_tier AS tier, COUNT(*)::int AS n
+         FROM company_subscriptions cs
+        WHERE cs.expires_at IS NULL OR cs.expires_at > NOW()
+        GROUP BY cs.subscription_tier`
+    );
+
+    const tierBreakdown: Record<string, number> = {};
+    const revenueByTier: Record<string, number> = {};
+    let mrr = 0;
+    let activeCount = 0;
+    for (const r of active.rows) {
+      const n = Number(r.n);
+      tierBreakdown[r.tier] = n;
+      const rev = n * (PRICE_MONTHLY[r.tier] || 0);
+      revenueByTier[r.tier] = rev;
+      mrr += rev;
+      activeCount += n;
+    }
+
     res.json({
       success: true,
       analytics: {
-        total_revenue: 250400,
-        active_subscriptions: 3,
-        mrr: 20866,
-        churn_rate: 5.2,
-        arpu: 83466,
-        tier_breakdown: {
-          silver: 1,
-          gold: 1,
-          platinum: 1,
-        },
-        revenue_by_tier: {
-          silver: 33600,
-          gold: 74800,
-          platinum: 142000,
-        },
-        churn_attempts_this_month: 2,
-        avg_customer_lifetime: '13 months',
+        active_subscriptions: activeCount,
+        mrr,                                    // monthly recurring revenue, SGD
+        arpu: activeCount ? Math.round((mrr / activeCount) * 100) / 100 : 0,
+        tier_breakdown: tierBreakdown,
+        revenue_by_tier: revenueByTier,
+        // Not derivable without subscription history:
+        churn_rate: null,
+        avg_customer_lifetime: null,
       }
     });
   } catch (error) {
@@ -644,51 +592,12 @@ router.get('/admin/subscriptions/analytics', authMiddleware, async (req: AuthReq
   }
 });
 
-/**
- * POST /api/admin/subscriptions/:companyId/change-tier
- * Manually change a company's subscription tier (admin only)
- */
-router.post('/admin/subscriptions/:companyId/change-tier', authMiddleware, requireAdmin(), async (req: AuthRequest, res: Response) => {
-  try {
-    const { tier } = req.body;
-    const companyId = parseInt(req.params.companyId, 10);
-
-    if (!tier) {
-      return res.status(400).json({ success: false, error: 'tier required' });
-    }
-
-    // TODO: Add admin role check
-    res.json({
-      success: true,
-      message: `Changed tier to ${tier}`,
-      companyId: companyId,
-      newTier: tier,
-    });
-  } catch (error) {
-    console.error('Change tier error:', error);
-    res.status(500).json({ success: false, error: 'Failed to change tier' });
-  }
-});
-
-/**
- * POST /api/admin/subscriptions/:companyId/cancel
- * Cancel a subscription (admin only)
- */
-router.post('/admin/subscriptions/:companyId/cancel', authMiddleware, requireAdmin(), async (req: AuthRequest, res: Response) => {
-  try {
-    const companyId = parseInt(req.params.companyId, 10);
-
-    // TODO: Add admin role check
-    res.json({
-      success: true,
-      message: 'Subscription canceled by admin',
-      companyId: companyId,
-    });
-  } catch (error) {
-    console.error('Admin cancel error:', error);
-    res.status(500).json({ success: false, error: 'Failed to cancel subscription' });
-  }
-});
+// The stub change-tier and cancel routes that used to sit here have been
+// removed. They were defined BEFORE the real implementations below and did
+// nothing but res.json a success message — so Express matched the stub and the
+// working versions (which call upgradeSubscription / cancelSubscription) were
+// unreachable. Admin change-tier and cancel silently did nothing. The real
+// routes below are now the only ones.
 
 /**
  * POST /api/admin/subscriptions/:companyId/change-tier
