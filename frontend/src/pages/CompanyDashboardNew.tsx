@@ -127,7 +127,9 @@ const CompanyDashboardNew: React.FC = () => {
   } | null>(null);
   const [actionItems, setActionItems] = useState<ActionItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(
+    typeof window === 'undefined' ? true : window.innerWidth > 768
+  );
   const [activeSection, setActiveSection] = useState<string>('dashboard');
   const [selectedChart, setSelectedChart] = useState<string | null>(null);
   const [bannerIndex, setBannerIndex] = useState(0);
@@ -470,7 +472,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
           ) : (
             <div className="header-logo-placeholder">🏢</div>
           )}
-          <div>
+          <div className="header-title">
             <h1>{company?.name}</h1>
             <p className="uen-text">{company?.uen}</p>
           </div>
@@ -482,7 +484,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
         </div>
         <div className="header-right">
           <button className="notification-btn">🔔 <span className="badge">3</span></button>
-          <button className="logout-btn" onClick={handleLogout}>🚪 Logout</button>
+          <button className="logout-btn" onClick={handleLogout}>🚪<span className="logout-label"> Logout</span></button>
         </div>
       </div>
 
@@ -625,6 +627,15 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
           </aside>
         )}
 
+        {/* Closes the drawer by tapping the dimmed page. CSS-gated to phones. */}
+        {sidebarOpen && (
+          <div
+            className="sidebar-scrim"
+            role="presentation"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
         {/* Main Content */}
         <main className="main-content">
           {activeSection === 'dashboard' && (
@@ -660,6 +671,49 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                   <button className="carousel-btn carousel-next" onClick={handleBannerNext}>
                     ▶
                   </button>
+                </div>
+              </div>
+
+              {/* KPI Cards */}
+              <div className="kpi-grid">
+                <div className="kpi-card">
+                  <div className="kpi-top">
+                    <h3>✅ Errands Completed</h3>
+                  </div>
+                  <div className="kpi-bottom">
+                    <div className="kpi-value">{stats.tasksDone}</div>
+                    <div className="kpi-description">All-time total</div>
+                  </div>
+                </div>
+
+                <div className="kpi-card">
+                  <div className="kpi-top">
+                    <h3>📅 This Month</h3>
+                  </div>
+                  <div className="kpi-bottom">
+                    <div className="kpi-value">{stats.thisMonth}</div>
+                    <div className="kpi-description">Errands posted</div>
+                  </div>
+                </div>
+
+                <div className="kpi-card">
+                  <div className="kpi-top">
+                    <h3>⭐ Your Rating</h3>
+                  </div>
+                  <div className="kpi-bottom">
+                    <div className="kpi-value">{stats.rating}/5</div>
+                    <div className="kpi-description">{stats.tasksDone > 0 ? 'From completed errands' : 'No ratings yet'}</div>
+                  </div>
+                </div>
+
+                <div className="kpi-card">
+                  <div className="kpi-top">
+                    <h3>🏅 Partner Tier</h3>
+                  </div>
+                  <div className="kpi-bottom">
+                    <div className="kpi-value">{company?.subscription_tier ? company.subscription_tier.charAt(0).toUpperCase() + company.subscription_tier.slice(1) : '—'}</div>
+                    <div className="kpi-description">Premium status</div>
+                  </div>
                 </div>
               </div>
 
@@ -714,49 +768,6 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                         </div>
                       ))
                   )}
-                </div>
-              </div>
-
-              {/* KPI Cards */}
-              <div className="kpi-grid">
-                <div className="kpi-card">
-                  <div className="kpi-top">
-                    <h3>✅ Errands Completed</h3>
-                  </div>
-                  <div className="kpi-bottom">
-                    <div className="kpi-value">{stats.tasksDone}</div>
-                    <div className="kpi-description">All-time total</div>
-                  </div>
-                </div>
-
-                <div className="kpi-card">
-                  <div className="kpi-top">
-                    <h3>📅 This Month</h3>
-                  </div>
-                  <div className="kpi-bottom">
-                    <div className="kpi-value">{stats.thisMonth}</div>
-                    <div className="kpi-description">Errands posted</div>
-                  </div>
-                </div>
-
-                <div className="kpi-card">
-                  <div className="kpi-top">
-                    <h3>⭐ Your Rating</h3>
-                  </div>
-                  <div className="kpi-bottom">
-                    <div className="kpi-value">{stats.rating}/5</div>
-                    <div className="kpi-description">{stats.tasksDone > 0 ? 'From completed errands' : 'No ratings yet'}</div>
-                  </div>
-                </div>
-
-                <div className="kpi-card">
-                  <div className="kpi-top">
-                    <h3>🏅 Partner Tier</h3>
-                  </div>
-                  <div className="kpi-bottom">
-                    <div className="kpi-value">{company?.subscription_tier ? company.subscription_tier.charAt(0).toUpperCase() + company.subscription_tier.slice(1) : '—'}</div>
-                    <div className="kpi-description">Premium status</div>
-                  </div>
                 </div>
               </div>
 
@@ -2321,7 +2332,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
             <div className="section-content">
               {/* Professional Header */}
               <div style={{background: 'linear-gradient(135deg, #FFF5F0 0%, #FFF9F7 100%)', borderRadius: '16px', padding: '32px', marginBottom: '32px', border: '2px solid #FFE4C4'}}>
-                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'start'}}>
+                <div className="rewards-hero-header" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'start'}}>
                   <div>
                     <h2 style={{margin: '0 0 8px 0', fontSize: '32px', fontWeight: '700', color: '#8B4513'}}>💰 MyRewards & EP</h2>
                     <p style={{margin: 0, fontSize: '15px', color: '#666', fontWeight: '500'}}>Manage your points, recognize your team, and track rewards</p>

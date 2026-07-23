@@ -459,6 +459,7 @@ const AdCreditTracker: React.FC<AdCreditTrackerProps> = ({ companyId, compact = 
       {/* Call-to-Action Section */}
       {availableAmount > 0 && (
         <div
+          className="adcredit-cta-row"
           style={{
             background: '#FFF3E0',
             border: '2px solid #FF9800',
@@ -482,6 +483,7 @@ const AdCreditTracker: React.FC<AdCreditTrackerProps> = ({ companyId, compact = 
           </div>
           <a
             href="/advertising/create"
+            className="adcredit-cta-btn"
             style={{
               background: '#FF6B35',
               color: 'white',
@@ -491,7 +493,8 @@ const AdCreditTracker: React.FC<AdCreditTrackerProps> = ({ companyId, compact = 
               fontWeight: '700',
               fontSize: '13px',
               whiteSpace: 'nowrap',
-              display: 'inline-block'
+              display: 'inline-block',
+              textAlign: 'center'
             }}
           >
             Create Campaign

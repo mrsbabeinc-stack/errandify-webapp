@@ -135,6 +135,19 @@ export default function AuthPage({ onLogin }: AuthPageProps) {
         className="pointer-events-none fixed inset-x-0 top-0 h-[55vh]"
         style={{ background: 'radial-gradient(120% 70% at 50% 0%, rgba(255,138,87,0.20) 0%, rgba(255,250,246,0) 70%)' }}
       />
+      {/* Back to the landing page. Someone who tapped "Get Started" and then
+          thought better of signing in had no way back except the browser
+          button; every other screen in the app offers this. Pinned to the
+          corner and matched to the circular back button used elsewhere. */}
+      <button
+        onClick={() => navigate('/')}
+        aria-label="Back to home"
+        title="Back to home"
+        className="fixed left-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/80 text-lg font-bold text-errandify-orange-deep shadow-kampung-sm backdrop-blur-sm transition-colors hover:bg-errandify-orange-wash"
+      >
+        ←
+      </button>
+
       {/* Logo/Header */}
       <div className="relative mb-6 text-center">
         <img

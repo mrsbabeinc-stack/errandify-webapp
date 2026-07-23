@@ -1488,6 +1488,18 @@ Thank you for your business!
             right: 10px;
             max-width: none;
           }
+
+          /* On a phone these panels nest ~4 deep, each with 20-24px of side
+             padding, which starved the innermost hold cards down to ~150px and
+             made their content overlap. Trim the padding so the cards keep a
+             usable width. Desktop (>600px) is untouched. */
+          .payment-history,
+          .wallet-section,
+          .payment-methods-section,
+          .billing-section,
+          .invoices-section {
+            padding: 12px;
+          }
         }
       `}</style>
     </div>

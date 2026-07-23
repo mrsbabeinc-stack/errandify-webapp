@@ -111,100 +111,68 @@ const AdCreditReminder: React.FC<AdCreditReminderProps> = ({ companyId, compact 
     );
   }
 
-  // Full Banner (for main content areas)
+  // Full banner — a slim single row, not the tall block it used to be.
+  //
+  // The old version was a 20px-padded, three-line card ("You have SGD $X in ad
+  // credits ready to use!" + a whole paragraph about your plan's allocation)
+  // that owned a third of the phone screen for one number and one button. This
+  // says the same thing in one line: balance, how much is used, and the action.
+  const tone =
+    available > 50
+      ? { bg: 'linear-gradient(135deg,#FFF3E9 0%,#FFE7D3 100%)', border: '#FF6B35', ink: '#D2521C', icon: '💰' }
+      : available > 25
+        ? { bg: 'linear-gradient(135deg,#FDF0D8 0%,#FBE6BF 100%)', border: '#C98A16', ink: '#8A5E0F', icon: '⚡' }
+        : { bg: 'linear-gradient(135deg,#FCE9E6 0%,#F9D9D4 100%)', border: '#D8452F', ink: '#A8392A', icon: '🚨' };
+  const outOfCredits = available <= 0;
+
   return (
     <div
       style={{
-        background: available > 50
-          ? 'linear-gradient(135deg, #E8F5E9 0%, #F1F8E9 100%)'
-          : available > 25
-            ? 'linear-gradient(135deg, #FFF3E0 0%, #FFF8E1 100%)'
-            : 'linear-gradient(135deg, #FFEBEE 0%, #FCE4EC 100%)',
-        border: `2px solid ${available > 50 ? '#4CAF50' : available > 25 ? '#FF9800' : '#F44336'}`,
+        background: tone.bg,
+        border: `1px solid ${tone.border}`,
         borderRadius: '12px',
-        padding: '20px',
-        marginBottom: '24px',
+        padding: '10px 12px',
+        marginBottom: '16px',
         display: 'flex',
         alignItems: 'center',
-        gap: '16px',
-        cursor: 'pointer'
+        gap: '10px',
+        cursor: 'pointer',
       }}
-      onClick={() => window.location.href = '/advertising'}
+      onClick={() => (window.location.href = '/advertising')}
     >
-      {/* Icon */}
-      <div style={{ fontSize: '32px' }}>
-        {available > 50 ? '✨' : available > 25 ? '⚡' : '🚨'}
+      <span style={{ fontSize: '20px', flexShrink: 0 }}>{tone.icon}</span>
+
+      <div style={{ flex: 1, minWidth: 0, lineHeight: 1.25 }}>
+        <div style={{ fontSize: '14px', fontWeight: 800, color: tone.ink }}>
+          SGD ${available.toFixed(2)}
+          <span style={{ fontSize: '12px', fontWeight: 600, color: tone.ink, opacity: 0.85 }}>
+            {' '}ad credits
+          </span>
+        </div>
+        <div style={{ fontSize: '11px', color: '#806350' }}>
+          {outOfCredits
+            ? 'All monthly credits used'
+            : `${usagePercent.toFixed(0)}% of ${tier} allocation used`}
+        </div>
       </div>
 
-      {/* Content */}
-      <div style={{ flex: 1 }}>
-        <strong
-          style={{
-            fontSize: '14px',
-            color: available > 50 ? '#2E7D32' : available > 25 ? '#E65100' : '#C62828',
-            display: 'block',
-            marginBottom: '4px'
-          }}
-        >
-          {available > 50
-            ? `You have SGD $${available.toFixed(2)} in ad credits ready to use!`
-            : available > 25
-              ? `Running low on ad credits - only SGD $${available.toFixed(2)} left`
-              : `Critical: Only SGD $${available.toFixed(2)} in ad credits remaining!`}
-        </strong>
-        <p
-          style={{
-            margin: '0',
-            fontSize: '12px',
-            color: available > 50 ? '#558B2F' : available > 25 ? '#F57C00' : '#D32F2F'
-          }}
-        >
-          {available > 0
-            ? `${usagePercent.toFixed(0)}% of your ${tier} plan's monthly allocation used. Create a campaign to boost your visibility.`
-            : `You've used all your monthly ad credits. Upgrade your plan or wait for next month.`}
-        </p>
-      </div>
-
-      {/* Action */}
-      {available > 0 && (
-        <a
-          href="/advertising/create"
-          style={{
-            background: '#FF6B35',
-            color: 'white',
-            padding: '8px 16px',
-            borderRadius: '6px',
-            textDecoration: 'none',
-            fontWeight: '700',
-            fontSize: '12px',
-            whiteSpace: 'nowrap',
-            display: 'inline-block'
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          Create Campaign
-        </a>
-      )}
-
-      {available <= 0 && (
-        <a
-          href="/subscription"
-          style={{
-            background: '#FF6B35',
-            color: 'white',
-            padding: '8px 16px',
-            borderRadius: '6px',
-            textDecoration: 'none',
-            fontWeight: '700',
-            fontSize: '12px',
-            whiteSpace: 'nowrap',
-            display: 'inline-block'
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          Upgrade Plan
-        </a>
-      )}
+      <a
+        href={outOfCredits ? '/subscription' : '/advertising/create'}
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          background: '#FF6B35',
+          color: 'white',
+          padding: '7px 14px',
+          borderRadius: '999px',
+          textDecoration: 'none',
+          fontWeight: 700,
+          fontSize: '12px',
+          whiteSpace: 'nowrap',
+          flexShrink: 0,
+        }}
+      >
+        {outOfCredits ? 'Upgrade' : 'Campaign'}
+      </a>
     </div>
   );
 };

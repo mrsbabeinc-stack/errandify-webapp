@@ -333,7 +333,11 @@ export default function ChatPage({ userRole }: ChatPageProps) {
       conversation.otherPartyName.toLowerCase().includes(searchQuery.toLowerCase());
 
     // Status filter
-    const matchesStatus = selectedStatus === 'all' || conversation.status === selectedStatus;
+    const matchesStatus =
+      selectedStatus === 'all' ||
+      (selectedStatus === 'completed_confirmed'
+        ? isChatClosed(conversation.status)
+        : conversation.status === selectedStatus);
 
     return matchesSearch && matchesStatus;
   });

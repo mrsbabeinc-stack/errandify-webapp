@@ -369,17 +369,8 @@ body {
   background: linear-gradient(90deg, var(--primary-orange), #FF8C5A);
 }
 
-.kpi-card:nth-child(2)::before {
-  background: linear-gradient(90deg, #5BA3D0, #7DB8E0);
-}
-
-.kpi-card:nth-child(3)::before {
-  background: linear-gradient(90deg, var(--gold-accent), #FFB84D);
-}
-
-.kpi-card:nth-child(4)::before {
-  background: linear-gradient(90deg, var(--success-green), #3D9A45);
-}
+/* The 2nd/3rd/4th cards used to carry a blue, gold and green accent bar — three
+   arbitrary hues on an orange brand. One warm accent reads as one product. */
 
 .kpi-card:hover {
   transform: translateY(-3px);
@@ -416,17 +407,6 @@ body {
   text-align: center;
 }
 
-.kpi-card:nth-child(2) .kpi-value {
-  color: #5BA3D0;
-}
-
-.kpi-card:nth-child(3) .kpi-value {
-  color: var(--gold-accent);
-}
-
-.kpi-card:nth-child(4) .kpi-value {
-  color: var(--success-green);
-}
 
 .kpi-description {
   font-size: 12px;
@@ -472,62 +452,75 @@ body {
 }
 
 /* SUBSCRIPTION CARD - BRIEF */
+/*
+  Was a solid-orange block with the plan header in white — but the live
+  benefits component inside it (tier, ad-credit bar, milestone bar) is built
+  for a light surface, so its dark text and pale inner boxes sat almost
+  invisibly on the orange. A white card lets that content read, matches every
+  other card, and a thin orange top rule keeps it clearly a subscription panel.
+*/
 .subscription-brief {
-  background: linear-gradient(135deg, #FF6B35 0%, #FF8C5A 100%);
+  background: white;
   border-radius: 12px;
   padding: 14px;
   box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+  border-top: 3px solid var(--primary-orange);
   order: 3;
-  color: white;
+  color: #4A3221;
 }
 
 .brief-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
 }
 
 .brief-left {
   flex: 1;
+  min-width: 0;
 }
 
 .brief-left h3 {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin: 0 0 8px 0;
-  opacity: 0.9;
+  letter-spacing: 0.4px;
+  margin: 0 0 6px 0;
+  color: #806350;
 }
 
 .plan-name {
-  font-size: 14px;
-  font-weight: 700;
-  margin: 0 0 6px 0;
+  font-size: 15px;
+  font-weight: 800;
+  margin: 0 0 4px 0;
+  color: #D2521C;
 }
 
 .plan-status {
   font-size: 12px;
   margin: 0;
-  opacity: 0.85;
+  color: #1E9E6A;
+  font-weight: 600;
 }
 
 .brief-right {
   flex-shrink: 0;
-  margin-left: 20px;
 }
 
 .btn-upgrade-brief {
-  background: white;
-  color: var(--primary-orange);
+  background: var(--primary-orange);
+  color: white;
   border: none;
   padding: 8px 16px;
-  border-radius: 8px;
+  border-radius: 999px;
   font-weight: 700;
   font-size: 12px;
+  white-space: nowrap;
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 6px rgba(255, 107, 53, 0.25);
 }
 
 .btn-upgrade-brief:hover {
@@ -982,49 +975,159 @@ body {
   }
 }
 
+.sidebar-scrim {
+  display: none;
+}
+
 @media (max-width: 768px) {
   .dashboard-container {
     flex-direction: column;
   }
 
+  /*
+    The sidebar becomes an overlay drawer.
+
+    Before this it stayed in the flow as a full-width bar with EVERY nav section
+    set to display:none — so the "left section" rendered as an empty white
+    strip with no navigation in it at all. Zeroing display on .nav-section was
+    the bug the user kept reporting.
+
+    Now the sidebar slides in over the content and shows the full navigation.
+    It is fixed-position, so the main content keeps the whole width.
+  */
   .sidebar {
-    width: 100%;
-    border-right: none;
-    border-bottom: 1px solid var(--border-light);
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 270px;
+    max-width: 84vw;
+    z-index: 200;
+    border-right: 1px solid var(--border-light);
+    border-bottom: none;
     padding: 16px 0;
+    transform: translateX(0);
+    box-shadow: 0 8px 30px rgba(176, 96, 48, 0.2);
+    overflow-y: auto;
   }
 
+  /* The nav is a normal vertical list in the drawer, sections and all. */
   .sidebar-nav {
-    flex-direction: row;
-    gap: 8px;
-    overflow-x: auto;
-    padding: 0 16px;
+    flex-direction: column;
+    gap: 4px;
+    overflow-x: visible;
+    padding: 0 12px;
   }
 
   .nav-section {
-    display: none;
+    display: block;
   }
 
   .nav-item {
-    padding: 8px 12px;
+    padding: 10px 12px;
     white-space: nowrap;
+  }
+
+  .sidebar-scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(74, 50, 33, 0.4);
+    z-index: 150;
   }
 
   .main-content {
     padding: 16px;
+    width: 100%;
   }
 
+  /*
+    The three-section header (left: menu+logo+name, centre: role badge, right:
+    bell+logout) was laid out for a wide screen. On a phone the sections
+    overlapped — the notification and Logout buttons sat on top of the company
+    name, and the name/UEN were clipped behind them ("left section gone").
+
+    Collapsed to one tidy row: small menu button, a truncating name, and
+    icon-only actions. The 'Owner' badge is not load-bearing on mobile — the
+    company name already tells you whose dashboard this is — so it is hidden
+    below 768px rather than wrapped onto its own line.
+  */
   .company-header-v2 {
-    flex-wrap: wrap;
-    gap: 12px;
+    flex-wrap: nowrap;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  .header-left {
+    gap: 8px;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  /* The div wrapping the name + UEN. Without min-width:0 the h1's ellipsis
+     never triggers and the name overruns the buttons. */
+  .header-left > div {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  /* Header name + UEN hidden on mobile — it only ever truncated, and the hero
+     banner right below says "Welcome back, {company name}" in full. The logo
+     stays as the identity mark. With no h1 in the bar, the global
+     h1 !important rule has nothing to fight over here. */
+  .header-title {
+    display: none;
+  }
+
+  .header-logo,
+  .header-logo-placeholder {
+    width: 34px;
+    height: 34px;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .menu-toggle {
+    padding: 6px;
+    font-size: 20px;
+    flex-shrink: 0;
   }
 
   .header-center {
-    width: 100%;
+    display: none;
+  }
+
+  .header-right {
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  /* Icon-only on mobile: the words did not fit. The badge count stays. */
+  .notification-btn {
+    padding: 6px 9px;
+    font-size: 15px;
   }
 
   .kpi-grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .kpi-card {
+    min-height: 0;
+    padding: 12px 10px;
+  }
+
+  .kpi-card .kpi-value {
+    font-size: 22px;
+  }
+
+  .kpi-card .kpi-top h3 {
+    font-size: 11px;
+  }
+
+  .kpi-description {
+    font-size: 10px;
   }
 
   .actions-grid {
@@ -1032,22 +1135,47 @@ body {
   }
 
   .ad-stats {
+    display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
+    gap: 14px 8px;
+    justify-content: stretch;
+  }
+
+  .ad-stat .value {
+    font-size: 18px;
+  }
+
+  .ad-stat .label {
+    font-size: 11px;
+  }
+
+  /* The subscription card was a label|button row; on a phone the button gets
+     squeezed and the benefits below wrap oddly. Stack it. */
+  .brief-content {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .btn-upgrade-brief {
+    width: 100%;
   }
 }
 
 @media (max-width: 480px) {
   .company-header-v2 {
-    padding: 12px 16px;
+    padding: 10px 12px;
   }
 
+  /* Stats stay 2x2 even on the narrowest phones — a single column wasted the
+     screen and forced scrolling to see four small numbers. */
   .kpi-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
   }
 
   .actions-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .view-toggle-group {
@@ -3848,3 +3976,147 @@ body {
 }
 .hero-banner h2, .hero-banner h3 { font-size: 18px !important; line-height: 1.25 !important; }
 .hero-banner p { font-size: 13px !important; margin: 2px 0 0 0 !important; }
+
+/* ============================================================================
+   Company module — blanket mobile fixes for the sub-sections
+   ----------------------------------------------------------------------------
+   The dashboard's sub-pages (Analytics, Payment History, Rewards, Subscription
+   detail, Ad packages, Disputes) are separate components that each build their
+   own INLINE grids — mostly two-column — sized for desktop. On a ~360px phone
+   those columns collapse to ~150px and every label wraps one word per line
+   ("SGD / $280/week", "Commission: / 16% / (save 4%)", the Stripe-holds cards).
+
+   Inline styles cannot be reached by a normal media query, but a CSS rule with
+   !important still wins over a non-important inline value. So this forces every
+   inline multi-column grid inside the company content to a single column on
+   phones, and stops the horizontal-scroll stat rows from cutting content off.
+   It deliberately does NOT touch the class-based grids (.kpi-grid, .ad-stats),
+   which are already tuned to a proper 2x2.
+   ========================================================================== */
+@media (max-width: 560px) {
+  /* Any inline grid → one column. Catches the benefit cards, dispute fee
+     cards, ad-package cards, payment stat pairs, etc. in one stroke. */
+  .main-content [style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Rows built as flex that overflow sideways (analytics KPI row, top
+     categories) — let them wrap instead of scrolling off-screen. */
+  .main-content [style*="display: flex"][style*="overflow-x"],
+  .main-content [style*="overflow-x: auto"],
+  .main-content [style*="overflowX"] {
+    overflow-x: visible !important;
+    flex-wrap: wrap !important;
+  }
+
+  /* Section hero headers (e.g. "MyRewards & EP" + balance box) laid out as a
+     side-by-side flex row: stack them so neither half is crushed. */
+  .section-header-hero,
+  .rewards-hero,
+  .page-hero {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    text-align: left !important;
+  }
+}
+
+@media (max-width: 560px) {
+  /* Analytics: three metric cards in a flex row that would not shrink (big
+     numbers set a min-content width), so "SGD $15,240" and the rating card
+     spilled off the right. Wrap them into a 2-up grid. */
+  .metrics-row-flex {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .metric-item-compact {
+    min-width: 0;
+    padding: 12px 10px;
+  }
+
+  /* Top Categories was a horizontal-scroll strip (min-width 140px cards), so
+     the 3rd/4th category sat off-screen. Grid it, no side-scroll. */
+  .breakdown-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    overflow-x: visible;
+  }
+  .category-card-compact {
+    min-width: 0;
+  }
+}
+
+/* ============================================================================
+   Company module — responsive-sweep fixes (2026-07-24)
+   ----------------------------------------------------------------------------
+   Found sweeping the sub-sections at 320 / 390 / 430px: a few flex rows never
+   wrapped, so at narrow widths their contents (filter buttons, a long ad-URL
+   value, a strip of metrics) ran past the visible area of their card. Data
+   tables are already inside overflow-x:auto wrappers and scroll correctly, so
+   they are intentionally left alone. Fluid — no fixed widths — so it holds
+   from 320px up.
+   ========================================================================== */
+@media (max-width: 768px) {
+  /* Payment-history filter bar + its export button: wrap instead of overrun. */
+  .main-content .filter-controls {
+    flex-wrap: wrap;
+  }
+  .main-content .filter-controls > * {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  /* Advertising "label : value" rows — a long campaign URL blew the row wide.
+     Stack label over value and let the value break. */
+  .main-content .detail-row {
+    flex-wrap: wrap;
+    gap: 2px 8px;
+  }
+  .main-content .detail-row .value,
+  .main-content .detail-row .value.url {
+    text-align: left;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    min-width: 0;
+  }
+
+  /* Advertising campaign card had no responsive rules: a 1fr/2fr content grid
+     and a FIVE-column metrics grid, so on a phone the card ran ~530px wide.
+     Stack the content and drop the metrics to two columns. */
+  .main-content .ad-content {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    padding: 14px !important;
+  }
+  .main-content .ad-metrics {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+
+  /* MyRewards & EP hero: title + balance box sat in a non-wrapping flex row,
+     so the 32px "MyRewards & EP" heading overlapped the balance card. Stack
+     them and let the balance box go full-width below the title. */
+  .rewards-hero-header {
+    flex-direction: column;
+    gap: 16px;
+  }
+  .rewards-hero-header h2 {
+    font-size: 24px !important;
+  }
+  .rewards-hero-header > div:last-child {
+    width: 100%;
+  }
+
+  /* Ad-credit "waiting to be used" banner: a nowrap 152px "Create Campaign"
+     anchor sat in a non-wrapping flex row beside the text and overran the
+     viewport at ~320px. Let the row wrap and drop the button onto its own
+     full-width line. */
+  .adcredit-cta-row {
+    flex-wrap: wrap;
+  }
+  .adcredit-cta-row .adcredit-cta-btn {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+}

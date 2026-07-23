@@ -207,7 +207,7 @@ export default function PaymentHoldsStatus({ companyId }: PaymentHoldsStatusProp
   }
 
   return (
-    <div style={{ padding: '20px', background: '#fff9f5', borderRadius: '12px', border: '2px solid #FFE0B2' }}>
+    <div className="holds-panel" style={{ padding: '20px', background: '#fff9f5', borderRadius: '12px', border: '2px solid #FFE0B2' }}>
       {/* Header */}
       <h2 style={{ margin: '0 0 20px 0', fontSize: '20px', fontWeight: '700', color: '#333' }}>
         💳 Stripe Escrow Holds & Fees
@@ -248,7 +248,7 @@ export default function PaymentHoldsStatus({ companyId }: PaymentHoldsStatusProp
       {/* Filter Tabs */}
       <div style={{ marginBottom: '16px' }}>
         <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', gap: '6px' }}>
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
             {[
               { id: 'all', label: 'All Types', icon: '📋' },
               { id: 'errand', label: 'Errands', icon: '📦' },
@@ -274,7 +274,7 @@ export default function PaymentHoldsStatus({ companyId }: PaymentHoldsStatusProp
               </button>
             ))}
           </div>
-          <div style={{ display: 'flex', gap: '6px' }}>
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
             {[
               { id: 'all', label: 'All Status', icon: '📊' },
               { id: 'HOLD', label: 'On Hold', icon: '⏳' },
@@ -351,10 +351,10 @@ export default function PaymentHoldsStatus({ companyId }: PaymentHoldsStatusProp
               onMouseLeave={(e) => e.currentTarget.style.boxShadow = 'none'}
             >
               {/* Main Row */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
+              <div className="hold-main-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
                   <span style={{ fontSize: '20px' }}>{getTypeIcon(hold.type)}</span>
-                  <div>
+                  <div style={{ minWidth: 0 }}>
                     <p style={{ margin: 0, fontSize: '14px', fontWeight: '600', color: '#333' }}>
                       {hold.type === 'errand' && `Errand ${hold.referenceId.replace('ERR-', '')}`}
                       {hold.type === 'advertising' && `Campaign ${hold.referenceId.replace('AD-', '')}`}
@@ -364,8 +364,8 @@ export default function PaymentHoldsStatus({ companyId }: PaymentHoldsStatusProp
                   </div>
                 </div>
 
-                <div style={{ textAlign: 'right' }}>
-                  <p style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#333' }}>SGD ${hold.amount.toFixed(2)}</p>
+                <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: '12px' }}>
+                  <p style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#333', whiteSpace: 'nowrap' }}>SGD ${hold.amount.toFixed(2)}</p>
                   <span style={{
                     display: 'inline-block',
                     background: getStatusColor(hold.status),
@@ -538,6 +538,29 @@ export default function PaymentHoldsStatus({ companyId }: PaymentHoldsStatusProp
         .payment-holds-scroll {
           scrollbar-color: #FF6B35 #f5f5f5;
           scrollbar-width: thin;
+        }
+
+        /* Phone: trim this panel's own padding and the scroll-list gutter so the
+           hold cards inside don't get squeezed to an unreadable width. */
+        @media (max-width: 600px) {
+          .holds-panel {
+            padding: 12px !important;
+          }
+          .payment-holds-scroll {
+            padding-right: 4px !important;
+          }
+          /* Stack each hold card's header on a phone: title + reason on top,
+             amount + status badge left-aligned below, instead of a cramped
+             side-by-side row where the two columns collided. */
+          .hold-main-row {
+            flex-direction: column;
+            align-items: flex-start !important;
+            gap: 6px;
+          }
+          .hold-main-row > div:last-child {
+            text-align: left !important;
+            margin-left: 0 !important;
+          }
         }
       `}</style>
     </div>
