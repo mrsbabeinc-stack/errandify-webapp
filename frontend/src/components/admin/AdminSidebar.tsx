@@ -124,8 +124,9 @@ const menuItems: MenuItem[] = [
         icon: '⏰',
         children: [
           { id: 'attendance', label: 'Dashboard', icon: '📊', path: '/admin/attendance' },
-          { id: 'timesheets', label: 'Timesheets', icon: '📋', path: '/admin/timesheets' },
-          { id: 'timesheet-approvals', label: 'Approvals', icon: '✓', path: '/admin/timesheet-approvals' },
+          // One timesheet screen, not two: the old 'Timesheets' entry pointed at
+          // a mock-backed duplicate of this one.
+          { id: 'timesheet-approvals', label: 'Timesheets', icon: '📋', path: '/admin/timesheet-approvals' },
           { id: 'attendance-reports', label: 'Reports', icon: '📈', path: '/admin/attendance-reports' },
         ]
       },

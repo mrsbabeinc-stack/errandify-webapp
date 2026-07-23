@@ -3,6 +3,8 @@ import db from '../db.js';
 import { authMiddleware, requireAdmin } from '../middleware/auth.js';
 import { sendCompanyApprovedNotice, sendCompanyRejectedNotice } from '../services/companyOnboarding.js';
 import { creditFirstErrandForErrand } from '../services/referralService.js';
+import { readAllMetrics, METRIC_BY_KEY } from '../services/alertMetrics.js';
+import { evaluateAlertRules } from '../services/alertEvaluator.js';
 
 const router = express.Router();
 
@@ -16,53 +18,545 @@ const isAdmin: any = [authMiddleware, requireAdmin(['admin', 'super-admin'])];
 // TIER 1: OPERATIONS
 // ============================================
 
-// CREATE ADMIN USER
-router.post('/admins', isAdmin, async (req: Request, res: Response) => {
+// ---------------------------------------------------------------------------
+// ADMIN ACCOUNTS
+//
+// These four routes used to read and write an `admin_users` table, in MySQL
+// syntax (`?` placeholders, `result.insertId`), against a Postgres database
+// that has no such table. Every one of them threw. Rewritten against `users`,
+// which is where administrative access actually lives: requireAdmin() resolves
+// a caller's rights from `users.role` and nothing consults any other table, so
+// a separate admin_users would have been a second answer to "who is an admin"
+// that granted nobody anything.
+//
+// Consequently there is no "create admin" here. Accounts are created by signing
+// up through Singpass; an admin is an existing user who has been granted an
+// administrative role. Granting and revoking that role is the whole API.
+// ---------------------------------------------------------------------------
+
+/**
+ * Roles that grant back-office access, and the only values these routes will
+ * write. Kept in step with requireAdmin's default allow-list. 'super-admin'
+ * appears in some allow-lists but users_role_check rejects it, so it is
+ * deliberately absent — offering it would only produce a constraint violation.
+ */
+const ADMIN_ROLES = ['admin', 'support_l2', 'support_l3'] as const;
+/** What a revoked admin becomes. They keep their account, just not the access. */
+const REVOKED_ROLE = 'asker';
+
+/**
+ * Stricter than isAdmin: full admins only. Granting and revoking admin access
+ * must not be available to support_l2/l3, who would otherwise be able to
+ * promote themselves. Same array shape as isAdmin so Express flattens it.
+ */
+const isFullAdmin: any = [authMiddleware, requireAdmin(['admin'])];
+
+router.get('/admin-users', isAdmin, async (_req: Request, res: Response) => {
   try {
-    const { email, name, role, twoFactorEnabled } = req.body;
-    if (!email || !name || !role) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
     const result = await db.query(
-      'INSERT INTO admin_users (email, name, role, two_factor_enabled, status, created_at) VALUES (?, ?, ?, ?, ?, NOW())',
-      [email, name, role, twoFactorEnabled ? 1 : 0, 'active']
+      `SELECT id, COALESCE(alias, display_name) AS name, email, role, status,
+              last_active_at, created_at
+         FROM users
+        WHERE role = ANY($1::text[])
+        ORDER BY role, created_at DESC`,
+      [ADMIN_ROLES]
     );
-    res.status(201).json({ id: result.insertId, email, name, role, twoFactorEnabled, status: 'active' });
+    res.json({ success: true, data: result.rows, roles: ADMIN_ROLES });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to create admin' });
+    console.error('[Admin] List admin users failed:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch admin users' });
   }
 });
 
-// GET ALL ADMINS
-router.get('/admins', isAdmin, async (req: Request, res: Response) => {
+/**
+ * Grant or change an administrative role on an existing user.
+ *
+ * Only a full 'admin' may do this — support_l2/l3 pass requireAdmin's default
+ * allow-list, and without this narrower guard either of them could promote
+ * themselves to admin, which is privilege escalation dressed as a settings
+ * screen. Changing your own role is refused for the same reason.
+ */
+router.post('/admin-users/:userId/role', isFullAdmin, async (req: any, res: Response) => {
   try {
-    const admins = await db.query('SELECT id, email, name, role, status, last_login, two_factor_enabled FROM admin_users ORDER BY created_at DESC');
-    res.json(admins);
+    const targetId = Number(req.params.userId);
+    const { role } = req.body;
+    if (!Number.isInteger(targetId)) {
+      return res.status(400).json({ success: false, error: 'Invalid user id' });
+    }
+    if (!ADMIN_ROLES.includes(role)) {
+      return res.status(400).json({ success: false, error: `role must be one of: ${ADMIN_ROLES.join(', ')}` });
+    }
+    if (String(targetId) === String(req.userId)) {
+      return res.status(400).json({ success: false, error: 'You cannot change your own role' });
+    }
+
+    const target = await db.query('SELECT id, role, status FROM users WHERE id = $1', [targetId]);
+    if (!target.rows[0]) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+    if (target.rows[0].status !== 'active') {
+      return res.status(409).json({
+        success: false,
+        error: `Cannot grant admin access to a ${target.rows[0].status} account`,
+      });
+    }
+
+    const updated = await db.query(
+      `UPDATE users SET role = $1 WHERE id = $2
+       RETURNING id, COALESCE(alias, display_name) AS name, email, role, status`,
+      [role, targetId]
+    );
+    console.warn('[Admin] user', req.userId, 'set role of user', targetId, 'to', role);
+    res.json({ success: true, data: updated.rows[0] });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch admins' });
+    console.error('[Admin] Grant admin role failed:', error);
+    res.status(500).json({ success: false, error: 'Failed to update role' });
   }
 });
 
-// DELETE ADMIN
-router.delete('/admins/:id', isAdmin, async (req: Request, res: Response) => {
+/**
+ * Revoke administrative access. The account survives — only the role changes —
+ * because deleting the user would take their errands, offers and dispute
+ * history with it.
+ */
+router.delete('/admin-users/:userId/role', isFullAdmin, async (req: any, res: Response) => {
   try {
-    const { id } = req.params;
-    await db.query('DELETE FROM admin_users WHERE id = ?', [id]);
-    res.json({ message: 'Admin deleted successfully' });
+    const targetId = Number(req.params.userId);
+    if (!Number.isInteger(targetId)) {
+      return res.status(400).json({ success: false, error: 'Invalid user id' });
+    }
+    if (String(targetId) === String(req.userId)) {
+      return res.status(400).json({ success: false, error: 'You cannot revoke your own admin access' });
+    }
+
+    const target = await db.query('SELECT id, role FROM users WHERE id = $1', [targetId]);
+    if (!target.rows[0]) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+    if (!ADMIN_ROLES.includes(target.rows[0].role)) {
+      return res.status(409).json({ success: false, error: 'That user is not an admin' });
+    }
+
+    // Never leave the platform with no one who can administer it — there would
+    // be no supported way back in.
+    if (target.rows[0].role === 'admin') {
+      const remaining = await db.query(
+        `SELECT COUNT(*)::int AS n FROM users WHERE role = 'admin' AND status = 'active' AND id <> $1`,
+        [targetId]
+      );
+      if (remaining.rows[0].n === 0) {
+        return res.status(409).json({
+          success: false,
+          error: 'This is the last active admin. Grant admin to someone else first.',
+        });
+      }
+    }
+
+    const updated = await db.query(
+      `UPDATE users SET role = $1 WHERE id = $2
+       RETURNING id, COALESCE(alias, display_name) AS name, email, role, status`,
+      [REVOKED_ROLE, targetId]
+    );
+    console.warn('[Admin] user', req.userId, 'revoked admin access from user', targetId);
+    res.json({ success: true, data: updated.rows[0] });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to delete admin' });
+    console.error('[Admin] Revoke admin role failed:', error);
+    res.status(500).json({ success: false, error: 'Failed to revoke access' });
   }
 });
 
-// TOGGLE 2FA
-router.patch('/admins/:id/2fa', isAdmin, async (req: Request, res: Response) => {
+// ---------------------------------------------------------------------------
+// COMPANY MANAGEMENT
+//
+// The admin Company Management screen had no backend at all: it listed
+// `mockCompanies` and its Suspend/Ban buttons only edited React state. There is
+// no ban here — companies_status_check permits active/inactive/suspended only,
+// and a permanent company ban has consequences nobody has decided (its open
+// errands, its staff, money owed), so this offers the reversible control it can
+// actually carry out rather than a button that would fail the constraint.
+//
+// Suspension is enforced in requireVerifiedCompany (routes/companyRoutes.ts).
+// ---------------------------------------------------------------------------
+
+router.get('/companies', isAdmin, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
-    const { enabled } = req.body;
-    await db.query('UPDATE admin_users SET two_factor_enabled = ? WHERE id = ?', [enabled ? 1 : 0, id]);
-    res.json({ message: '2FA toggled successfully' });
+    const { status, search } = req.query as { status?: string; search?: string };
+    const params: any[] = [];
+    const where: string[] = [];
+
+    if (status && ['active', 'inactive', 'suspended'].includes(status)) {
+      params.push(status);
+      where.push(`c.status = $${params.length}`);
+    }
+    if (search?.trim()) {
+      params.push(`%${search.trim()}%`);
+      where.push(`(c.company_name ILIKE $${params.length} OR c.uen ILIKE $${params.length})`);
+    }
+
+    const result = await db.query(
+      `SELECT c.id, c.company_name, c.uen, c.status, c.certified, c.created_at,
+              c.suspended_at, c.suspension_reason,
+              COALESCE(u.alias, u.display_name) AS owner_name, u.email AS owner_email,
+              (SELECT COUNT(*)::int FROM company_staff s
+                WHERE s.company_id = c.id AND s.status = 'active') AS staff_count
+         FROM companies c
+         LEFT JOIN users u ON u.id = c.owner_user_id
+        ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
+        ORDER BY c.created_at DESC`,
+      params
+    );
+    res.json({ success: true, data: result.rows });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to update 2FA' });
+    console.error('[Admin] List companies failed:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch companies' });
+  }
+});
+
+/**
+ * Suspend a company. A reason is required, not optional: the company is told
+ * why when it next tries to act, and a restriction that cannot be explained to
+ * the party it restricts should not be applied at all.
+ */
+router.post('/companies/:companyId/suspend', isAdmin, async (req: any, res: Response) => {
+  try {
+    const companyId = Number(req.params.companyId);
+    const reason = String(req.body?.reason || '').trim();
+    if (!Number.isInteger(companyId)) {
+      return res.status(400).json({ success: false, error: 'Invalid company id' });
+    }
+    if (reason.length < 10) {
+      return res.status(400).json({
+        success: false,
+        error: 'Give a reason of at least 10 characters — the company is shown this.',
+      });
+    }
+
+    const existing = await db.query('SELECT status FROM companies WHERE id = $1', [companyId]);
+    if (!existing.rows[0]) {
+      return res.status(404).json({ success: false, error: 'Company not found' });
+    }
+    if (existing.rows[0].status === 'suspended') {
+      return res.status(409).json({ success: false, error: 'That company is already suspended' });
+    }
+
+    const updated = await db.query(
+      `UPDATE companies
+          SET status = 'suspended', suspended_at = NOW(),
+              suspension_reason = $1, suspended_by = $2
+        WHERE id = $3
+      RETURNING id, company_name, status, suspended_at, suspension_reason`,
+      [reason, req.userId, companyId]
+    );
+    console.warn('[Admin] user', req.userId, 'suspended company', companyId, '-', reason);
+    res.json({ success: true, data: updated.rows[0] });
+  } catch (error) {
+    console.error('[Admin] Suspend company failed:', error);
+    res.status(500).json({ success: false, error: 'Failed to suspend company' });
+  }
+});
+
+/** Lift a suspension, clearing the record of it rather than leaving it stale. */
+router.post('/companies/:companyId/restore', isAdmin, async (req: any, res: Response) => {
+  try {
+    const companyId = Number(req.params.companyId);
+    if (!Number.isInteger(companyId)) {
+      return res.status(400).json({ success: false, error: 'Invalid company id' });
+    }
+
+    const existing = await db.query('SELECT status FROM companies WHERE id = $1', [companyId]);
+    if (!existing.rows[0]) {
+      return res.status(404).json({ success: false, error: 'Company not found' });
+    }
+    if (existing.rows[0].status !== 'suspended') {
+      return res.status(409).json({ success: false, error: 'That company is not suspended' });
+    }
+
+    const updated = await db.query(
+      `UPDATE companies
+          SET status = 'active', suspended_at = NULL,
+              suspension_reason = NULL, suspended_by = NULL
+        WHERE id = $1
+      RETURNING id, company_name, status`,
+      [companyId]
+    );
+    console.warn('[Admin] user', req.userId, 'restored company', companyId);
+    res.json({ success: true, data: updated.rows[0] });
+  } catch (error) {
+    console.error('[Admin] Restore company failed:', error);
+    res.status(500).json({ success: false, error: 'Failed to restore company' });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// PDPA — DATA SUBJECT REQUESTS
+//
+// The Audit & Compliance screen kept an invented list of "GDPR requests" in
+// localStorage. These are the real ones: every s21 export served and every s25
+// erasure carried out is now recorded by the endpoints that do the work
+// (routes/userDataExport.ts and routes/users.ts), so this reads records rather
+// than producing them.
+//
+// Note the ids of erased users are retained deliberately — the record has to
+// outlive the anonymisation it describes, or there is nothing to show that the
+// obligation was met. No name or contact detail is stored here.
+// ---------------------------------------------------------------------------
+
+router.get('/data-requests', isAdmin, async (req: Request, res: Response) => {
+  try {
+    const { type, status } = req.query as { type?: string; status?: string };
+    const params: any[] = [];
+    const where: string[] = [];
+
+    if (type && ['access', 'erasure'].includes(type)) {
+      params.push(type);
+      where.push(`d.request_type = $${params.length}`);
+    }
+    if (status && ['received', 'in_progress', 'completed', 'refused'].includes(status)) {
+      params.push(status);
+      where.push(`d.status = $${params.length}`);
+    }
+
+    const result = await db.query(
+      `SELECT d.id, d.user_id, d.request_type, d.status, d.requested_at,
+              d.completed_at, d.outcome, d.notes,
+              -- NULL once the account has been anonymised, which is the correct
+              -- and expected outcome for a completed erasure.
+              COALESCE(u.alias, u.display_name) AS user_name
+         FROM data_subject_requests d
+         LEFT JOIN users u ON u.id = d.user_id
+        ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
+        ORDER BY d.requested_at DESC
+        LIMIT 500`,
+      params
+    );
+
+    const summary = await db.query(
+      `SELECT request_type, status, COUNT(*)::int AS n
+         FROM data_subject_requests GROUP BY request_type, status`
+    );
+
+    res.json({ success: true, data: result.rows, summary: summary.rows });
+  } catch (error) {
+    console.error('[Admin] List data subject requests failed:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch data requests' });
+  }
+});
+
+/** Add a handling note. The request itself is a record of fact and is not edited. */
+router.patch('/data-requests/:id/note', isAdmin, async (req: any, res: Response) => {
+  try {
+    const id = Number(req.params.id);
+    const note = String(req.body?.note || '').trim();
+    if (!Number.isInteger(id)) {
+      return res.status(400).json({ success: false, error: 'Invalid id' });
+    }
+    if (!note) {
+      return res.status(400).json({ success: false, error: 'A note is required' });
+    }
+    const updated = await db.query(
+      `UPDATE data_subject_requests
+          SET notes = $1, handled_by = $2
+        WHERE id = $3 RETURNING *`,
+      [note, req.userId, id]
+    );
+    if (!updated.rows[0]) {
+      return res.status(404).json({ success: false, error: 'Request not found' });
+    }
+    res.json({ success: true, data: updated.rows[0] });
+  } catch (error) {
+    console.error('[Admin] Note data request failed:', error);
+    res.status(500).json({ success: false, error: 'Failed to save note' });
+  }
+});
+
+/**
+ * GET /api/admin/activity-log — the real audit trail.
+ *
+ * The Audit & Compliance screen showed invented entries ("admin.login",
+ * "192.168.1.1") from localStorage. `errand_activity_log` is the trail the app
+ * actually writes as errands are posted, offered on, accepted and completed,
+ * and it carries who did it. There is no separate `audit_logs` table — the
+ * dead GET /audit-logs handler that queried one has been removed with this.
+ */
+router.get('/activity-log', isAdmin, async (req: Request, res: Response) => {
+  try {
+    const { type } = req.query as { type?: string };
+    const params: any[] = [];
+    let where = '';
+    if (type?.trim()) {
+      params.push(type.trim());
+      where = `WHERE a.activity_type = $${params.length}`;
+    }
+    params.push(200);
+
+    const result = await db.query(
+      `SELECT a.id, a.errand_id, a.activity_type, a.actor_id, a.actor_name,
+              a.actor_role, a.details, a.created_at, e.formatted_id AS errand_ref
+         FROM errand_activity_log a
+         LEFT JOIN errands e ON e.id = a.errand_id
+         ${where}
+        ORDER BY a.created_at DESC
+        LIMIT $${params.length}`,
+      params
+    );
+
+    const types = await db.query(
+      `SELECT activity_type, COUNT(*)::int AS n FROM errand_activity_log
+        GROUP BY activity_type ORDER BY n DESC`
+    );
+
+    res.json({ success: true, data: result.rows, types: types.rows });
+  } catch (error) {
+    console.error('[Admin] Activity log failed:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch activity log' });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// OPERATIONAL ALERTS
+//
+// A rule may only reference a metric from services/alertMetrics.ts, and every
+// metric there is a query over this database. That is deliberate: the previous
+// screen let you define rules about "API response time" and "failed logins",
+// neither of which this application measures, so nothing could ever fire.
+//
+// Rules are evaluated by cron every 15 minutes (evaluateAlertRules), which
+// notifies admins and writes alert_events. The history this screen shows is
+// therefore actual firings, not examples.
+// ---------------------------------------------------------------------------
+
+/** Every metric with its live value — the screen shows these as current state. */
+router.get('/alert-metrics', isAdmin, async (_req: Request, res: Response) => {
+  try {
+    res.json({ success: true, data: await readAllMetrics() });
+  } catch (error) {
+    console.error('[Admin] Alert metrics failed:', error);
+    res.status(500).json({ success: false, error: 'Failed to read metrics' });
+  }
+});
+
+router.get('/alert-rules', isAdmin, async (_req: Request, res: Response) => {
+  try {
+    const result = await db.query(
+      `SELECT r.*, COALESCE(u.alias, u.display_name) AS created_by_name,
+              (SELECT COUNT(*)::int FROM alert_events e WHERE e.rule_id = r.id) AS fire_count
+         FROM alert_rules r
+         LEFT JOIN users u ON u.id = r.created_by
+        ORDER BY r.created_at DESC`
+    );
+    res.json({ success: true, data: result.rows });
+  } catch (error) {
+    console.error('[Admin] List alert rules failed:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch alert rules' });
+  }
+});
+
+router.post('/alert-rules', isAdmin, async (req: any, res: Response) => {
+  try {
+    const { name, metric_key, comparator, threshold, severity, cooldown_minutes, notify_admins } = req.body || {};
+    if (!name?.trim()) return res.status(400).json({ success: false, error: 'A name is required' });
+    // Rejecting an unknown metric here is what stops this becoming a form that
+    // stores rules nothing can evaluate.
+    if (!METRIC_BY_KEY.has(metric_key)) {
+      return res.status(400).json({
+        success: false,
+        error: `Unknown metric "${metric_key}". Pick one the platform actually measures.`,
+        available: [...METRIC_BY_KEY.keys()],
+      });
+    }
+    if (!['>', '>=', '<', '<=', '='].includes(comparator)) {
+      return res.status(400).json({ success: false, error: 'comparator must be one of > >= < <= =' });
+    }
+    if (!Number.isFinite(Number(threshold))) {
+      return res.status(400).json({ success: false, error: 'threshold must be a number' });
+    }
+
+    const result = await db.query(
+      `INSERT INTO alert_rules (name, metric_key, comparator, threshold, severity, cooldown_minutes, notify_admins, created_by)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
+      [
+        name.trim(), metric_key, comparator, Number(threshold),
+        ['info', 'warning', 'critical'].includes(severity) ? severity : 'warning',
+        Number.isFinite(Number(cooldown_minutes)) ? Number(cooldown_minutes) : 60,
+        notify_admins !== false,
+        req.userId,
+      ]
+    );
+    res.status(201).json({ success: true, data: result.rows[0] });
+  } catch (error) {
+    console.error('[Admin] Create alert rule failed:', error);
+    res.status(500).json({ success: false, error: 'Failed to create alert rule' });
+  }
+});
+
+router.patch('/alert-rules/:id', isAdmin, async (req: Request, res: Response) => {
+  try {
+    const id = Number(req.params.id);
+    const { enabled, threshold, cooldown_minutes, severity } = req.body || {};
+    const sets: string[] = [];
+    const params: any[] = [];
+
+    if (typeof enabled === 'boolean') { params.push(enabled); sets.push(`enabled = $${params.length}`); }
+    if (Number.isFinite(Number(threshold))) { params.push(Number(threshold)); sets.push(`threshold = $${params.length}`); }
+    if (Number.isFinite(Number(cooldown_minutes))) { params.push(Number(cooldown_minutes)); sets.push(`cooldown_minutes = $${params.length}`); }
+    if (['info', 'warning', 'critical'].includes(severity)) { params.push(severity); sets.push(`severity = $${params.length}`); }
+    if (!sets.length) return res.status(400).json({ success: false, error: 'Nothing to update' });
+
+    params.push(id);
+    const result = await db.query(
+      `UPDATE alert_rules SET ${sets.join(', ')}, updated_at = NOW() WHERE id = $${params.length} RETURNING *`,
+      params
+    );
+    if (!result.rows[0]) return res.status(404).json({ success: false, error: 'Rule not found' });
+    res.json({ success: true, data: result.rows[0] });
+  } catch (error) {
+    console.error('[Admin] Update alert rule failed:', error);
+    res.status(500).json({ success: false, error: 'Failed to update alert rule' });
+  }
+});
+
+router.delete('/alert-rules/:id', isAdmin, async (req: Request, res: Response) => {
+  try {
+    const result = await db.query('DELETE FROM alert_rules WHERE id = $1 RETURNING id', [Number(req.params.id)]);
+    if (!result.rows[0]) return res.status(404).json({ success: false, error: 'Rule not found' });
+    res.json({ success: true });
+  } catch (error) {
+    console.error('[Admin] Delete alert rule failed:', error);
+    res.status(500).json({ success: false, error: 'Failed to delete alert rule' });
+  }
+});
+
+/** Dry run: evaluate now and report, without notifying anyone or recording it. */
+router.post('/alert-rules/:id/test', isAdmin, async (req: Request, res: Response) => {
+  try {
+    const out = await evaluateAlertRules({ dryRun: true, ruleId: Number(req.params.id) });
+    if (!out.results.length) return res.status(404).json({ success: false, error: 'Rule not found' });
+    res.json({ success: true, data: out.results[0] });
+  } catch (error) {
+    console.error('[Admin] Test alert rule failed:', error);
+    res.status(500).json({ success: false, error: 'Failed to test rule' });
+  }
+});
+
+/** Run the whole evaluation now, for real. Same path cron takes. */
+router.post('/alert-rules/evaluate', isAdmin, async (_req: Request, res: Response) => {
+  try {
+    res.json({ success: true, data: await evaluateAlertRules() });
+  } catch (error) {
+    console.error('[Admin] Evaluate alert rules failed:', error);
+    res.status(500).json({ success: false, error: 'Evaluation failed' });
+  }
+});
+
+router.get('/alert-events', isAdmin, async (_req: Request, res: Response) => {
+  try {
+    const result = await db.query(
+      `SELECT * FROM alert_events ORDER BY fired_at DESC LIMIT 200`
+    );
+    res.json({ success: true, data: result.rows });
+  } catch (error) {
+    console.error('[Admin] Alert events failed:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch alert history' });
   }
 });
 
@@ -635,15 +1129,11 @@ router.patch('/feature-flags/:flagId/rollout', isAdmin, async (req: Request, res
  * the admin returned 500 every time.
  */
 
-// GET AUDIT LOGS
-router.get('/audit-logs', isAdmin, async (req: Request, res: Response) => {
-  try {
-    const logs = await db.query('SELECT * FROM audit_logs ORDER BY created_at DESC LIMIT 100');
-    res.json(logs);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch audit logs' });
-  }
-});
+/*
+ * GET /audit-logs removed: it selected from `audit_logs`, a table that does not
+ * exist, and returned the raw pg QueryResult rather than rows even in theory.
+ * The real trail is GET /api/admin/activity-log above.
+ */
 
 // PROCESS GDPR REQUEST
 router.post('/gdpr-requests/:requestId/process', isAdmin, async (req: Request, res: Response) => {

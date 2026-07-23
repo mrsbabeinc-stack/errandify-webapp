@@ -1,61 +1,116 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AdminLayout from '../../components/admin/AdminLayout';
 
+/**
+ * Category performance, from `GET /api/categories/stats`.
+ *
+ * This screen printed a hardcoded five-row table — GMV, errand counts and star
+ * ratings that had never come from anywhere and did not match the sixteen real
+ * categories. The figures are now computed off the errands themselves.
+ *
+ * The "+ New Category" / "Edit" buttons are gone rather than left inert:
+ * categories come from `category_codes`, which is the single source of truth
+ * for the marketplace tiles, the ER26<code> errand ids and the restriction
+ * rules. Adding or renaming one from here without touching those is not a
+ * feature, and there is no endpoint for it.
+ */
+interface CategoryStat {
+  slug: string;
+  name: string;
+  icon: string;
+  code: string;
+  total_errands: number;
+  open_errands: number;
+  completed_errands: number;
+  gmv: number;
+  avg_rating: number | null;
+  rating_count: number;
+}
+
 export const CategoriesPage: React.FC = () => {
-  const [categories] = useState([
-    { id: 1, name: '🏠 Housekeeping', gmv: '$5,420', tasks: 342, rating: 4.8, status: 'active' },
-    { id: 2, name: '🛒 Shopping & Errands', gmv: '$4,210', tasks: 287, rating: 4.7, status: 'active' },
-    { id: 3, name: '🚗 Delivery & Logistics', gmv: '$3,890', tasks: 198, rating: 4.6, status: 'active' },
-    { id: 4, name: '💼 Administrative', gmv: '$2,540', tasks: 125, rating: 4.9, status: 'active' },
-    { id: 5, name: '🧹 Cleaning', gmv: '$2,180', tasks: 89, rating: 4.8, status: 'active' },
-  ]);
+  const [categories, setCategories] = useState<CategoryStat[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/categories/stats', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        });
+        const body = await res.json();
+        if (!res.ok) throw new Error(body?.error || `Request failed (${res.status})`);
+        setCategories(body.data || []);
+      } catch (err) {
+        setError((err as Error).message);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  const sgd = (n: number) =>
+    `$${n.toLocaleString('en-SG', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 
   return (
     <AdminLayout>
       <div className="admin-page">
         <div className="page-header">
-          <h1>📂 Category Management</h1>
-          <button className="btn-primary">+ New Category</button>
+          <h1>📂 Category Performance</h1>
         </div>
 
         {/* Happy Message Box */}
         <div className="happy-message-box">
           <span className="emoji">✨</span>
           <div>
-            <strong>Manage Your Categories!</strong>
-            <p>Keep your errand categories organized and up-to-date. Track performance and engagement metrics to improve user experience.</p>
+            <strong>{loading ? 'Loading…' : `${categories.length} categories`}</strong>
+            <p>
+              GMV counts completed errands only — budget on an open errand is an intention, not money that
+              moved. Ratings are averaged across all rated errands in the category.
+            </p>
           </div>
         </div>
 
+        {error && (
+          <div style={{ padding: '16px', background: '#ffebee', border: '2px solid #f44336', borderRadius: '8px', color: '#c62828', fontSize: '14px' }}>
+            ⚠️ {error}
+          </div>
+        )}
+
         <div className="categories-grid">
           {categories.map((cat) => (
-            <div key={cat.id} className="category-card">
+            <div key={cat.slug} className="category-card">
               <div className="cat-header">
-                <div className="cat-name">{cat.name}</div>
-                <span className="status-badge">{cat.status}</span>
+                <div className="cat-name">{cat.icon} {cat.name}</div>
+                <span className="status-badge">{cat.code}</span>
               </div>
 
               <div className="cat-stats">
                 <div className="stat">
                   <span className="stat-label">GMV</span>
-                  <span className="stat-value">{cat.gmv}</span>
+                  <span className="stat-value">{sgd(cat.gmv)}</span>
                 </div>
                 <div className="stat">
                   <span className="stat-label">Errands</span>
-                  <span className="stat-value">{cat.tasks}</span>
+                  <span className="stat-value">{cat.total_errands}</span>
                 </div>
                 <div className="stat">
                   <span className="stat-label">Rating</span>
-                  <span className="stat-value">{cat.rating}★</span>
+                  <span className="stat-value">
+                    {cat.avg_rating != null ? `${cat.avg_rating}★` : '—'}
+                  </span>
                 </div>
               </div>
 
-              <div className="cat-actions">
-                <button className="btn-small">Edit</button>
-                <button className="btn-small">Analytics</button>
+              <div style={{ fontSize: '12px', color: '#888', marginTop: '8px' }}>
+                {cat.completed_errands} completed · {cat.open_errands} open
+                {cat.rating_count > 0 && ` · ${cat.rating_count} rating${cat.rating_count === 1 ? '' : 's'}`}
               </div>
             </div>
           ))}
+          {!loading && categories.length === 0 && !error && (
+            <p style={{ color: '#888', fontSize: '14px' }}>No categories configured.</p>
+          )}
         </div>
       </div>
 

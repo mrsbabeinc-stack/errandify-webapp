@@ -1,134 +1,133 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useToast, ToastContainer } from '../../components/Toast';
 import AdminLayout from '../../components/admin/AdminLayout';
 
+/**
+ * Companies, from `GET /api/admin/companies`.
+ *
+ * This screen listed `mockCompanies` and its Suspend/Ban buttons only edited
+ * React state — no backend for any of it existed. Two things changed to make it
+ * real, and one thing was removed:
+ *
+ *  - Suspension is now *enforced*. Nothing in the codebase read
+ *    `companies.status`, so even a suspension that reached the database would
+ *    have gated nothing; requireVerifiedCompany() now refuses a suspended
+ *    company, which is what makes this screen worth having.
+ *  - Suspending requires a reason. The company is shown it when they next try
+ *    to act, so it has to say something specific.
+ *  - Ban is gone. companies_status_check permits active/inactive/suspended
+ *    only, so the old Ban button wrote a value Postgres rejects. A permanent
+ *    company ban also has consequences nobody has decided — its open errands,
+ *    its staff, money owed — so this offers the reversible control it can
+ *    actually carry out instead of one it cannot.
+ *
+ * Tier and rating are not shown: nothing on the company record backs them, and
+ * the previous values came from the mock.
+ */
 interface Company {
-  id: string;
+  id: number;
+  company_name: string;
   uen: string;
-  name: string;
-  website?: string;
-  contactPerson: {
-    name: string;
-    email: string;
-  };
-  tasksCompleted: number;
-  rating: number;
-  tier: 'Silver' | 'Gold' | 'Platinum' | 'Star';
-  subscription: {
-    plan: string;
-    status: 'active' | 'paused' | 'cancelled';
-  };
-  registeredAt: string;
-  status: 'active' | 'suspended' | 'banned';
+  status: 'active' | 'inactive' | 'suspended';
+  certified: boolean;
+  created_at: string;
+  suspended_at: string | null;
+  suspension_reason: string | null;
+  owner_name: string | null;
+  owner_email: string | null;
+  staff_count: number;
 }
 
-const mockCompanies: Company[] = [
-  {
-    id: 'comp-001',
-    uen: '201234567A',
-    name: 'ProClean Services',
-    website: 'proclean.sg',
-    contactPerson: { name: 'Ahmad Hassan', email: 'ahmad@proclean.sg' },
-    tasksCompleted: 1248,
-    rating: 4.8,
-    tier: 'Gold',
-    subscription: { plan: 'Growth', status: 'active' },
-    registeredAt: '2025-03-15',
-    status: 'active',
-  },
-  {
-    id: 'comp-002',
-    uen: '198765432B',
-    name: 'FastGo Delivery',
-    website: 'fastgo.sg',
-    contactPerson: { name: 'Siti Nur', email: 'siti@fastgo.sg' },
-    tasksCompleted: 456,
-    rating: 4.5,
-    tier: 'Silver',
-    subscription: { plan: 'Starter', status: 'active' },
-    registeredAt: '2025-05-20',
-    status: 'active',
-  },
-  {
-    id: 'comp-003',
-    uen: '202345678C',
-    name: 'Elite Care Services',
-    website: 'elitecare.sg',
-    contactPerson: { name: 'Rajesh Kumar', email: 'rajesh@elitecare.sg' },
-    tasksCompleted: 2100,
-    rating: 4.9,
-    tier: 'Platinum',
-    subscription: { plan: 'Enterprise', status: 'active' },
-    registeredAt: '2024-12-10',
-    status: 'active',
-  },
-];
-
 export const CompanyManagement: React.FC = () => {
-  const [companies, setCompanies] = useState<Company[]>(mockCompanies);
+  const navigate = useNavigate();
+  const { toasts, showToast, removeToast } = useToast();
+
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [busyId, setBusyId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedTier, setSelectedTier] = useState<string>('');
   const [selectedStatus, setSelectedStatus] = useState<string>('');
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [showActionModal, setShowActionModal] = useState(false);
-  const [actionType, setActionType] = useState<'suspend' | 'ban' | 'restore'>('suspend');
+  const [actionType, setActionType] = useState<'suspend' | 'restore'>('suspend');
+  const [suspendReason, setSuspendReason] = useState('');
 
-  const filteredCompanies = useMemo(() => {
-    return companies.filter((company) => {
-      const matchSearch =
-        company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        company.uen.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        company.contactPerson.email.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchTier = !selectedTier || company.tier === selectedTier;
-      const matchStatus = !selectedStatus || company.status === selectedStatus;
-      return matchSearch && matchTier && matchStatus;
-    });
-  }, [companies, searchTerm, selectedTier, selectedStatus]);
+  // useToast() returns a new showToast every render, so depending on it here
+  // would re-create `load`, re-fire the effect on every render, and loop.
+  const toast = useRef(showToast);
+  toast.current = showToast;
 
-  const handleAction = (company: Company, action: 'suspend' | 'ban' | 'restore') => {
+  const load = useCallback(async (status: string, search: string) => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (status) params.set('status', status);
+      if (search.trim()) params.set('search', search.trim());
+      const { data } = await axios.get(`/api/admin/companies?${params}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
+      setCompanies(data.data || []);
+    } catch (err: any) {
+      console.error('[CompanyManagement] load failed:', err);
+      toast.current(`⚠️ ${err.response?.data?.error || err.message}`, 'error');
+      setCompanies([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Filtering happens server-side, so the search is debounced rather than
+  // firing a request per keystroke.
+  useEffect(() => {
+    const t = setTimeout(() => load(selectedStatus, searchTerm), 300);
+    return () => clearTimeout(t);
+  }, [selectedStatus, searchTerm, load]);
+
+  const filteredCompanies = companies;
+
+  const handleAction = (company: Company, action: 'suspend' | 'restore') => {
     setSelectedCompany(company);
     setActionType(action);
+    setSuspendReason('');
     setShowActionModal(true);
   };
 
-  const confirmAction = () => {
+  const confirmAction = async () => {
     if (!selectedCompany) return;
-
-    const updatedCompanies = companies.map((c) =>
-      c.id === selectedCompany.id
-        ? {
-            ...c,
-            status: actionType === 'restore' ? 'active' : actionType === 'suspend' ? 'suspended' : 'banned',
-          }
-        : c
-    );
-    setCompanies(updatedCompanies);
-    setShowActionModal(false);
-  };
-
-  const getTierColor = (tier: string) => {
-    const colors: Record<string, string> = {
-      Silver: '#c0c0c0',
-      Gold: '#ffd700',
-      Platinum: '#e5e4e2',
-      Star: '#9370db',
-    };
-    return colors[tier] || '#ff6b35';
+    if (actionType === 'suspend' && suspendReason.trim().length < 10) {
+      showToast('❌ Give a reason of at least 10 characters — the company is shown this', 'error');
+      return;
+    }
+    setBusyId(selectedCompany.id);
+    try {
+      const auth = { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } };
+      if (actionType === 'suspend') {
+        await axios.post(`/api/admin/companies/${selectedCompany.id}/suspend`, { reason: suspendReason.trim() }, auth);
+        showToast(`✅ ${selectedCompany.company_name} suspended`, 'success');
+      } else {
+        await axios.post(`/api/admin/companies/${selectedCompany.id}/restore`, {}, auth);
+        showToast(`✅ ${selectedCompany.company_name} restored`, 'success');
+      }
+      setShowActionModal(false);
+      await load(selectedStatus, searchTerm);
+    } catch (err: any) {
+      console.error('[CompanyManagement] action failed:', err);
+      showToast(`❌ ${err.response?.data?.error || err.message}`, 'error');
+    } finally {
+      setBusyId(null);
+    }
   };
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
       active: '#4caf50',
       suspended: '#ff9800',
-      banned: '#f44336',
+      inactive: '#9e9e9e',
     };
     return colors[status] || '#999';
   };
-
-  const navigate = useNavigate();
-  const { toasts, showToast, removeToast } = useToast();
 
   return (
     <AdminLayout>
@@ -181,19 +180,6 @@ export const CompanyManagement: React.FC = () => {
           }}
         />
 
-        <select value={selectedTier} onChange={(e) => setSelectedTier(e.target.value)} style={{
-          padding: '10px 12px',
-          border: '2px solid #FFD9B3',
-          borderRadius: '6px',
-          fontSize: '14px',
-          cursor: 'pointer',
-        }}>
-          <option value="">All Tiers</option>
-          <option value="Silver">Silver</option>
-          <option value="Gold">Gold</option>
-          <option value="Platinum">Platinum</option>
-          <option value="Star">Star</option>
-        </select>
 
         <select value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)} style={{
           padding: '10px 12px',
@@ -205,7 +191,7 @@ export const CompanyManagement: React.FC = () => {
           <option value="">All Status</option>
           <option value="active">Active</option>
           <option value="suspended">Suspended</option>
-          <option value="banned">Banned</option>
+          <option value="inactive">Inactive</option>
         </select>
       </div>
 
@@ -215,29 +201,40 @@ export const CompanyManagement: React.FC = () => {
             <tr style={{ background: '#FFF8F5', borderBottom: '2px solid #FFD9B3' }}>
               <th style={{ padding: '16px', textAlign: 'left', fontSize: '12px', fontWeight: '700', color: '#666', textTransform: 'uppercase' }}>Company Name</th>
               <th style={{ padding: '16px', textAlign: 'left', fontSize: '12px', fontWeight: '700', color: '#666', textTransform: 'uppercase' }}>UEN</th>
-              <th style={{ padding: '16px', textAlign: 'left', fontSize: '12px', fontWeight: '700', color: '#666', textTransform: 'uppercase' }}>Tier</th>
+              <th style={{ padding: '16px', textAlign: 'left', fontSize: '12px', fontWeight: '700', color: '#666', textTransform: 'uppercase' }}>Owner</th>
+              <th style={{ padding: '16px', textAlign: 'left', fontSize: '12px', fontWeight: '700', color: '#666', textTransform: 'uppercase' }}>Staff</th>
               <th style={{ padding: '16px', textAlign: 'left', fontSize: '12px', fontWeight: '700', color: '#666', textTransform: 'uppercase' }}>Status</th>
               <th style={{ padding: '16px', textAlign: 'left', fontSize: '12px', fontWeight: '700', color: '#666', textTransform: 'uppercase' }}>Registered</th>
               <th style={{ padding: '16px', textAlign: 'left', fontSize: '12px', fontWeight: '700', color: '#666', textTransform: 'uppercase' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {filteredCompanies.length > 0 ? (
+            {loading ? (
+              <tr><td colSpan={7} style={{ padding: '40px 16px', textAlign: 'center', color: '#999', fontSize: '14px' }}>Loading…</td></tr>
+            ) : filteredCompanies.length > 0 ? (
               filteredCompanies.map((company) => (
                 <tr key={company.id} style={{ borderBottom: '1px solid #f5f5f5', transition: 'all 0.2s' }} onMouseEnter={(e) => (e.currentTarget.style.background = '#FFF8F5')} onMouseLeave={(e) => (e.currentTarget.style.background = 'white')}>
-                  <td style={{ padding: '16px', fontSize: '14px', color: '#333', fontWeight: '600' }}>{company.name}</td>
+                  <td style={{ padding: '16px', fontSize: '14px', color: '#333', fontWeight: '600' }}>{company.company_name}</td>
                   <td style={{ padding: '16px', fontSize: '14px', color: '#333' }}>{company.uen}</td>
-                  <td style={{ padding: '16px' }}>
-                    <span style={{ padding: '6px 10px', backgroundColor: getTierColor(company.tier), color: 'white', fontSize: '11px', fontWeight: '600', borderRadius: '3px' }}>
-                      {company.tier}
-                    </span>
+                  <td style={{ padding: '16px', fontSize: '13px', color: '#555' }}>
+                    {company.owner_name || '—'}
+                    <div style={{ fontSize: '11px', color: '#999' }}>{company.owner_email || ''}</div>
                   </td>
+                  <td style={{ padding: '16px', fontSize: '14px', color: '#333' }}>{company.staff_count}</td>
                   <td style={{ padding: '16px' }}>
                     <span style={{ padding: '6px 10px', backgroundColor: getStatusColor(company.status), color: 'white', fontSize: '11px', fontWeight: '600', borderRadius: '3px' }}>
                       {company.status.toUpperCase()}
                     </span>
+                    {!company.certified && (
+                      <div style={{ fontSize: '10px', color: '#e65100', marginTop: '4px' }}>not certified</div>
+                    )}
+                    {company.suspension_reason && (
+                      <div style={{ fontSize: '11px', color: '#666', marginTop: '4px', maxWidth: '220px' }}>
+                        {company.suspension_reason}
+                      </div>
+                    )}
                   </td>
-                  <td style={{ padding: '16px', fontSize: '14px', color: '#333' }}>{new Date(company.registeredAt).toLocaleDateString()}</td>
+                  <td style={{ padding: '16px', fontSize: '14px', color: '#333' }}>{new Date(company.created_at).toLocaleDateString('en-SG')}</td>
                   <td style={{ padding: '16px' }}>
                     <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                       {company.status === 'active' && (
@@ -257,7 +254,7 @@ export const CompanyManagement: React.FC = () => {
                           Suspend
                         </button>
                       )}
-                      {company.status !== 'active' && (
+                      {company.status === 'suspended' && (
                         <button
                           onClick={() => handleAction(company, 'restore')}
                           style={{
@@ -274,30 +271,13 @@ export const CompanyManagement: React.FC = () => {
                           Restore
                         </button>
                       )}
-                      {company.status !== 'banned' && (
-                        <button
-                          onClick={() => handleAction(company, 'ban')}
-                          style={{
-                            padding: '6px 10px',
-                            background: '#F44336',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            fontWeight: '600',
-                            cursor: 'pointer',
-                            fontSize: '11px',
-                          }}
-                        >
-                          Ban
-                        </button>
-                      )}
                     </div>
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={6} style={{ padding: '40px 16px', textAlign: 'center', color: '#999', fontSize: '14px' }}>
+                <td colSpan={7} style={{ padding: '40px 16px', textAlign: 'center', color: '#999', fontSize: '14px' }}>
                   No companies found matching your filters.
                 </td>
               </tr>
@@ -312,11 +292,31 @@ export const CompanyManagement: React.FC = () => {
           <div style={{ background: 'white', borderRadius: '8px', padding: '24px', maxWidth: '400px', width: '90%', boxShadow: '0 8px 24px rgba(0,0,0,0.2)' }} onClick={(e) => e.stopPropagation()}>
             <h2 style={{ fontSize: '18px', fontWeight: '700', color: '#333', margin: '0 0 16px 0' }}>Confirm Action</h2>
 
-            <p style={{ fontSize: '14px', color: '#555', lineHeight: '1.6', marginBottom: '24px' }}>
-              {actionType === 'suspend' && `Suspend company "${selectedCompany.name}"? They can reactivate later.`}
-              {actionType === 'ban' && `Ban company "${selectedCompany.name}"? This is permanent.`}
-              {actionType === 'restore' && `Restore company "${selectedCompany.name}" to active status?`}
+            <p style={{ fontSize: '14px', color: '#555', lineHeight: '1.6', marginBottom: '16px' }}>
+              {actionType === 'suspend'
+                ? `Suspend "${selectedCompany.company_name}"? They will not be able to post errands as the company until this is lifted. Reversible.`
+                : `Restore "${selectedCompany.company_name}" to active? They can post again straight away.`}
             </p>
+
+            {actionType === 'suspend' && (
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#333', marginBottom: '6px' }}>
+                  Reason (the company is shown this)
+                </label>
+                <textarea
+                  value={suspendReason}
+                  onChange={(e) => setSuspendReason(e.target.value)}
+                  rows={3}
+                  placeholder="e.g. Repeated no-shows on accepted errands"
+                  style={{ width: '100%', padding: '8px 10px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '13px', fontFamily: 'inherit', resize: 'vertical' }}
+                />
+                <div style={{ fontSize: '11px', color: suspendReason.trim().length < 10 ? '#f44336' : '#888', marginTop: '4px' }}>
+                  {suspendReason.trim().length < 10
+                    ? `${10 - suspendReason.trim().length} more character(s) needed`
+                    : 'They will see this when they next try to act.'}
+                </div>
+              </div>
+            )}
 
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
               <button onClick={() => setShowActionModal(false)} style={{
@@ -333,9 +333,10 @@ export const CompanyManagement: React.FC = () => {
               </button>
               <button
                 onClick={confirmAction}
+                disabled={busyId === selectedCompany.id || (actionType === 'suspend' && suspendReason.trim().length < 10)}
                 style={{
                   padding: '10px 16px',
-                  background: actionType === 'ban' ? '#F44336' : actionType === 'suspend' ? '#FF9800' : '#4CAF50',
+                  background: actionType === 'suspend' ? '#FF9800' : '#4CAF50',
                   color: 'white',
                   border: 'none',
                   borderRadius: '6px',
@@ -344,7 +345,7 @@ export const CompanyManagement: React.FC = () => {
                   fontSize: '13px',
                 }}
               >
-                Confirm
+                {busyId === selectedCompany.id ? 'Working…' : 'Confirm'}
               </button>
             </div>
           </div>
