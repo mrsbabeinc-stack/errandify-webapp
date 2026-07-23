@@ -43,9 +43,7 @@ export interface PurgeReport {
   skipped: { userId: number; reason: string }[];
 }
 
-export async function runRetentionPurge(): Promise<PurgeReport> {
-  const enabled = process.env.RETENTION_PURGE_ENABLED === 'true';
-
+function guardRetentionYears(): void {
   // A misread env var must not become "retain nothing". Anything outside a
   // sane range is a configuration error, not an instruction.
   if (!Number.isFinite(RETENTION_YEARS) || RETENTION_YEARS < 1 || RETENTION_YEARS > 30) {
@@ -54,22 +52,106 @@ export async function runRetentionPurge(): Promise<PurgeReport> {
       `Expected 1-30. See docs/DATA_RETENTION.md.`
     );
   }
+}
 
+async function computeCutoff(): Promise<string> {
   // to_char, not ::date — a DATE comes back from pg as a JS Date at local
-  // midnight, which prints as a full timestamp in the audit log and shifts a
-  // day either side of UTC. This log is the evidence that the policy runs, so
-  // the date in it should be unambiguous.
-  const cutoffRow = await db.query(
+  // midnight, which prints as a full timestamp and shifts a day either side of
+  // UTC. This date is evidence the policy ran, so it must be unambiguous.
+  const r = await db.query(
     `SELECT to_char(NOW() - ($1 || ' years')::interval, 'YYYY-MM-DD') AS cutoff`,
     [RETENTION_YEARS]
   );
-  const cutoff = cutoffRow.rows[0].cutoff;
+  return r.rows[0].cutoff;
+}
 
-  // Only anonymised accounts, and only those past the retention period.
+/**
+ * Raises the weekly report the owner admin reviews. Generates nothing to delete
+ * — it records WHO would be purged, and sets the earliest the purge may run to
+ * one week out. Called by the cron; also callable by an admin route.
+ *
+ * Returns the existing open batch untouched if one is already awaiting review,
+ * so the cron cannot pile up duplicate reports for the same people.
+ */
+export async function raiseRetentionReport(): Promise<{ batchId: number; eligible: number; alreadyOpen: boolean; purgeNotBefore: string }> {
+  guardRetentionYears();
+
+  const open = await db.query(
+    `SELECT id, eligible_count, to_char(purge_not_before, 'YYYY-MM-DD') AS pnb
+       FROM retention_purge_approvals
+      WHERE status IN ('pending','approved')
+      ORDER BY created_at DESC LIMIT 1`
+  );
+  if (open.rows.length > 0) {
+    return { batchId: open.rows[0].id, eligible: Number(open.rows[0].eligible_count), alreadyOpen: true, purgeNotBefore: open.rows[0].pnb };
+  }
+
+  const cutoff = await computeCutoff();
+  const eligible = await db.query(
+    `SELECT id, to_char(anonymised_at, 'YYYY-MM-DD') AS anonymised_on, deletion_reason
+       FROM users
+      WHERE anonymised_at IS NOT NULL AND anonymised_at < $1
+      ORDER BY anonymised_at`,
+    [cutoff]
+  );
+
+  const inserted = await db.query(
+    `INSERT INTO retention_purge_approvals
+       (status, cutoff_date, eligible_count, report, purge_not_before)
+     VALUES ('pending', $1, $2, $3::jsonb, NOW() + interval '7 days')
+     RETURNING id, to_char(purge_not_before, 'YYYY-MM-DD') AS pnb`,
+    [cutoff, eligible.rows.length, JSON.stringify(eligible.rows)]
+  );
+  const batchId = inserted.rows[0].id;
+
+  // Notify the owner admin(s). The report is theirs to approve or reject.
+  const admins = await db.query(`SELECT id FROM users WHERE role = 'admin'`);
+  for (const a of admins.rows) {
+    await db.query(
+      `INSERT INTO notifications (user_id, type, title, message, is_read, created_at)
+       VALUES ($1, 'system', $2, $3, false, NOW())`,
+      [a.id, 'Data retention: approval needed',
+       `${eligible.rows.length} anonymised account(s) are past the retention period. Review before ${inserted.rows[0].pnb}; nothing is deleted without your approval.`]
+    ).catch(() => undefined);
+  }
+
+  console.log(`[Retention] report ${batchId} raised — ${eligible.rows.length} eligible, purge not before ${inserted.rows[0].pnb}`);
+  return { batchId, eligible: eligible.rows.length, alreadyOpen: false, purgeNotBefore: inserted.rows[0].pnb };
+}
+
+/**
+ * Runs the purge, but ONLY against a batch the admin has approved and only once
+ * the week has elapsed. No approved-and-ready batch means nothing happens.
+ * `force` (an admin acting deliberately) skips the week wait, not the approval.
+ */
+export async function runRetentionPurge({ force = false }: { force?: boolean } = {}): Promise<PurgeReport> {
+  guardRetentionYears();
+
+  const batch = await db.query(
+    `SELECT id, to_char(cutoff_date, 'YYYY-MM-DD') AS cutoff, purge_not_before <= NOW() AS week_elapsed
+       FROM retention_purge_approvals
+      WHERE status = 'approved'
+      ORDER BY reviewed_at LIMIT 1`
+  );
+
+  if (batch.rows.length === 0) {
+    console.log('[Retention] no approved batch — nothing to purge');
+    return { dryRun: true, cutoff: '-', eligibleAccounts: 0, purged: 0, skipped: [] };
+  }
+  if (!batch.rows[0].week_elapsed && !force) {
+    console.log('[Retention] approved batch is still inside its 7-day window — not yet');
+    return { dryRun: true, cutoff: batch.rows[0].cutoff, eligibleAccounts: 0, purged: 0, skipped: [] };
+  }
+
+  const batchId = batch.rows[0].id;
+  const cutoff = batch.rows[0].cutoff;
+  const enabled = true; // an approved, elapsed batch IS the go-ahead
+
+  // Re-scan at execution rather than trusting the week-old snapshot: an account
+  // that gained an open dispute since the report must not be purged.
   const eligible = await db.query(
     `SELECT id FROM users
-      WHERE anonymised_at IS NOT NULL
-        AND anonymised_at < $1
+      WHERE anonymised_at IS NOT NULL AND anonymised_at < $1
       ORDER BY anonymised_at`,
     [cutoff]
   );
@@ -145,5 +227,28 @@ export async function runRetentionPurge(): Promise<PurgeReport> {
     `${report.skipped.length} skipped`
   );
 
+  // Close the batch out so it cannot run again, recording what it did.
+  await db.query(
+    `UPDATE retention_purge_approvals
+        SET status = 'executed', purged_count = $2, executed_at = NOW()
+      WHERE id = $1`,
+    [batchId, report.purged]
+  );
+
   return report;
+}
+
+/** Admin decision on a raised report. Approve lets the purge run once the week
+ *  is up; reject closes it and nothing is deleted. */
+export async function decideRetentionBatch(
+  batchId: number, adminUserId: number, decision: 'approved' | 'rejected', note?: string
+): Promise<boolean> {
+  const r = await db.query(
+    `UPDATE retention_purge_approvals
+        SET status = $1, reviewed_by = $2, reviewed_at = NOW(), review_note = $3
+      WHERE id = $4 AND status = 'pending'
+      RETURNING id`,
+    [decision, adminUserId, note || null, batchId]
+  );
+  return r.rows.length > 0;
 }

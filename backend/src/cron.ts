@@ -299,10 +299,8 @@ export function startCrons() {
   // Dry run unless RETENTION_PURGE_ENABLED=true. It deletes rows permanently and
   // runs unattended, so it must be switched on deliberately.
   setInterval(runRetentionPurgeJob, 24 * 60 * 60 * 1000);
-  setTimeout(runRetentionPurgeJob, 60 * 1000); // once shortly after boot, for visibility
-  console.log(
-    `[CRON] Retention purge scheduled daily (${process.env.RETENTION_PURGE_ENABLED === 'true' ? 'LIVE' : 'DRY RUN'})`
-  );
+  setTimeout(runRetentionPurgeJob, 60 * 1000); // once shortly after boot
+  console.log('[CRON] Retention: daily report + approved-purge check');
 
   // Subscription management - run on 1st of month at 00:00 UTC
   const nextMonthFirst = getNextMonthFirst();
@@ -762,9 +760,13 @@ export async function processPendingSubscriptionDowngrades() {
  */
 export async function runRetentionPurgeJob() {
   try {
-    const { runRetentionPurge } = await import('./services/retentionPurge.js');
+    const { raiseRetentionReport, runRetentionPurge } = await import('./services/retentionPurge.js');
+    // Each day: make sure a report exists for the admin to review, then run any
+    // batch they have already approved and whose week has elapsed. Nothing is
+    // deleted without an approval on file.
+    await raiseRetentionReport();
     await runRetentionPurge();
   } catch (error) {
-    console.error('[CRON] Retention purge failed:', error);
+    console.error('[CRON] Retention job failed:', error);
   }
 }

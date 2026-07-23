@@ -808,4 +808,45 @@ router.get('/subscriptions', isAdmin, async (_req: Request, res: Response) => {
   }
 });
 
+// ── Data retention approvals ────────────────────────────────────────────────
+// The purge never runs on a timer alone: a report is raised a week ahead and
+// only an approved batch is ever deleted. See services/retentionPurge.ts.
+
+router.get('/retention/pending', isAdmin, async (_req: Request, res: Response) => {
+  try {
+    const r = await db.query(
+      `SELECT id, status, to_char(cutoff_date,'YYYY-MM-DD') AS cutoff, eligible_count,
+              to_char(purge_not_before,'YYYY-MM-DD') AS purge_not_before,
+              report, created_at
+         FROM retention_purge_approvals
+        WHERE status IN ('pending','approved')
+        ORDER BY created_at DESC`
+    );
+    res.json({ success: true, data: r.rows });
+  } catch (e) {
+    console.error('[Admin] retention pending failed:', e);
+    res.status(500).json({ error: 'Could not load retention approvals' });
+  }
+});
+
+router.post('/retention/:batchId/decide', isAdmin, async (req: any, res: Response) => {
+  try {
+    const { decision, note } = req.body || {};
+    if (!['approved', 'rejected'].includes(decision)) {
+      return res.status(400).json({ error: 'decision must be "approved" or "rejected"' });
+    }
+    const { decideRetentionBatch } = await import('../services/retentionPurge.js');
+    const ok = await decideRetentionBatch(
+      parseInt(req.params.batchId, 10), parseInt(req.userId, 10), decision, note
+    );
+    if (!ok) return res.status(409).json({ error: 'That batch is not pending — already decided.' });
+    res.json({ success: true, message: decision === 'approved'
+      ? 'Approved. The purge runs after its 7-day window.'
+      : 'Rejected. Nothing will be deleted.' });
+  } catch (e) {
+    console.error('[Admin] retention decide failed:', e);
+    res.status(500).json({ error: 'Could not record that decision' });
+  }
+});
+
 export default router;
