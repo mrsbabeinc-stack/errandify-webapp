@@ -5,9 +5,11 @@ questions open. Both are now answered and closed, along with four other things
 found on the way — one of which was an authorisation hole and one of which was
 paying out the wrong number.
 
-Verified by `backend/scripts/dispute-e2e.mjs` (30 checks, all passing) against
-the live server, with disposable fixtures that clean themselves up. The admin
-half was also driven through the real interface, not just the API.
+Verified by `backend/scripts/dispute-e2e.mjs` — 75 checks against the live
+server covering every route in the module, with disposable fixtures that clean
+themselves up. Settlement is verified separately against real Stripe in test
+mode by `dispute-settlement-stripe.ts` (13 checks). The admin half was also
+driven through the real interface, not just the API.
 
 ---
 
@@ -141,13 +143,58 @@ could offer an appeal.
 
 ---
 
+## Settlement, proved against Stripe
+
+The earlier passes could not verify this and said so. The blocker turned out not
+to be the network: `curl` reaches api.stripe.com fine, and the chain is genuine
+Stripe -> DigiCert with no proxy in the way. Node's bundled CA set simply lacks
+**DigiCert Assured ID Root G2**, which macOS itself trusts — so every Stripe call
+from Node failed with `UNABLE_TO_GET_ISSUER_CERT_LOCALLY` and was written off as
+a sandbox restriction. Pointing `NODE_EXTRA_CA_CERTS` at that root, pulled from
+the system keychain, Stripe authenticates immediately.
+
+With that, `executeSettlement` was run against real test-mode Stripe on a real
+$100 SGD charge, and checked against Stripe's own API rather than our database:
+
+| | |
+|---|---|
+| Refund to the asker | `re_3TwKvVRpPAWSpeM01FEViqmX` — $40.00 |
+| Transfer to the doer | `tr_1TwKvYRpPAWSpeM0oZy2Yu6t` — $48.00 (60 less the $12 fee) |
+| Dispute after | `settled` / `closed` |
+| Errand after | `completed`, hold lifted |
+| Settling a second time | 0 legs touched — the idempotency keys hold |
+
+Everything was put back: the transfer reversed in full, the charge refunded in
+full ($40 + $60), fixtures deleted. Confirmed by re-reading all three objects
+from Stripe afterwards.
+
+---
+
 ## Still open
 
-- **Settlement in this sandbox pays nobody**, because Stripe is unreachable
-  (`unable to get local issuer certificate`) and the fixture doer has no
-  connected payout account. The legs fail honestly and record why; preflight
-  catches it first and disables the release button. The real payout path was
-  tested in Stripe test mode under `61f9cdd2`.
-- **Evidence upload is deliberately 501** — needs a multipart parser and storage.
-- **`pages/AdminDisputePanel.tsx`** and **`components/admin/DisputeManagementDashboard.tsx`**
-  are unmounted dead screens. The second one was the only caller of `/verdict`.
+- **No automated retention purge for disputes.** `docs/DATA_RETENTION.md` promises
+  7 years for resolved dispute outcomes; nothing enforces it. Evidence images now
+  sit under that schedule, and `dispute_evidence.photo_data` is the column to null
+  out when the window closes — keeping who submitted what and when, which is the
+  record, without the image. The approval-gated purge machinery in
+  `services/retentionPurge.ts` is keyed to user accounts and cannot see this.
+  PDPA s25 is not discharged by a documented schedule alone.
+- **The L2/L3 tables** (`dispute_escalations`, `dispute_appeals`, `support_queue`)
+  are still there, empty, now that the tier is archived. Dropping them is a
+  separate decision.
+- **`AdminDisputePanel.tsx`** and **`DisputeManagementDashboard.tsx`** are unmounted
+  dead screens, plus five `.bak` files in the dispute area.
+
+---
+
+## How to run the tests
+
+```
+node backend/scripts/dispute-e2e.mjs          # 75 checks, needs the server on :3000
+NODE_EXTRA_CA_CERTS=<digicert-root-g2.pem> \
+  npx tsx backend/scripts/dispute-settlement-stripe.ts   # 13 checks, real Stripe test mode
+```
+
+The second one needs that CA file because Node cannot verify Stripe's chain
+otherwise — see above. It refuses to run against a non-test key, reverses its
+transfer and refunds its charge in full afterwards.
