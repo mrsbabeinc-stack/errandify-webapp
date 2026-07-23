@@ -923,6 +923,8 @@ router.post('/purchase-ep', authMiddleware, async (req: AuthRequest, res: Respon
   try {
     const { package_id, custom_ep_amount } = req.body;
     const companyId = parseInt(req.companyId || req.userId || '0', 10);
+    // Referenced further down but never declared, so this route did not compile.
+    const isCustomEPPurchase = !!custom_ep_amount;
 
     let epAmount: number;
     let basePriceSgd: number;
