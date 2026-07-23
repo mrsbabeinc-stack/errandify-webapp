@@ -34,11 +34,24 @@ import AdCreditTracker from '../components/AdCreditTracker';
 import AdCreditReminder from '../components/AdCreditReminder';
 import LiveSubscriptionBenefits from '../components/company/LiveSubscriptionBenefits';
 
+/**
+ * Mirrors what GET /api/companies/user/my-company actually returns. Several
+ * fields it has always sent were missing here (certified,
+ * total_projects_completed, billing_type), and the tier was typed as always
+ * present when the fetch deliberately leaves it undefined if the load fails.
+ */
 interface Company {
   id: number;
   name: string;
+  company_name?: string;
   uen?: string;
-  subscription_tier: 'silver' | 'gold' | 'platinum';
+  subscription_tier?: 'silver' | 'gold' | 'platinum' | 'free';
+  billing_type?: string;
+  my_role?: 'owner' | 'manager' | 'staff';
+  can_act_for_company?: boolean;
+  on_leave?: boolean;
+  certified?: boolean;
+  total_projects_completed?: number;
   wallet_balance: number;
   ep_balance: number;
   logo_url?: string;
@@ -46,7 +59,20 @@ interface Company {
   bio?: string;
   email?: string;
   phone?: string;
+  address?: string;
+  postal_code?: string;
+  website?: string;
   rating?: number;
+}
+
+/** One genuinely outstanding thing, derived from live counts. */
+interface ActionItem {
+  id: string;
+  priority: 'high' | 'medium' | 'low';
+  title: string;
+  detail: string;
+  actionLabel: string;
+  section: string;
 }
 
 interface DashboardStats {
@@ -99,6 +125,7 @@ const CompanyDashboardNew: React.FC = () => {
     renewal_date?: string | null;
     status?: string | null;
   } | null>(null);
+  const [actionItems, setActionItems] = useState<ActionItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeSection, setActiveSection] = useState<string>('dashboard');
@@ -181,12 +208,110 @@ const CompanyDashboardNew: React.FC = () => {
     fetchCompanyData();
   }, []);
 
+  // ---- Real dashboard numbers and follow-ups --------------------------------
+  // setStats was never called anywhere, so every KPI card showed its initial
+  // literal: 342 errands completed, 28 this month, 4.8 rating, 12 staff, 3450
+  // EP, 2 active ads. The follow-up list underneath was five fixed items that
+  // appeared whether or not anything was actually outstanding — including one
+  // whose button pointed at 'staff-reassignment', a section that does not
+  // exist, so it did nothing at all.
+  useEffect(() => {
+    const cid = company?.id;
+    if (!cid) return;
+    const token = localStorage.getItem('token');
+    const auth = { headers: { Authorization: `Bearer ${token}` } };
+    const get = async (path: string) => {
+      try {
+        const r = await fetch(`${API_URL}${path}`, auth);
+        return r.ok ? await r.json() : null;
+      } catch { return null; }
+    };
+
+    (async () => {
+      const [staffB, askerB, leaveB, handbackB, dispReqB, dispB, adsB] = await Promise.all([
+        get(`/api/companies/${cid}/staff`),
+        get(`/api/companies/${cid}/asker/errands`),
+        get(`/api/companies/${cid}/leaves?status=pending`),
+        get(`/api/companies/${cid}/handbacks`),
+        get(`/api/companies/${cid}/dispute-requests`),
+        get(`/api/companies/${cid}/disputes`),
+        get(`/api/companies/${cid}/advertising`),
+      ]);
+
+      const team = staffB?.data?.staff || [];
+      const askerSummary = askerB?.data?.summary || {};
+      const pendingLeave = (leaveB?.data || []).length;
+      const pendingHandbacks = handbackB?.data?.summary?.pending || 0;
+      const pendingDisputeReqs = dispReqB?.data?.summary?.pending || 0;
+      const openDisputes = dispB?.data?.total || 0;
+      const activeAds = (adsB?.data || []).filter(
+        (a: any) => ['live', 'approved', 'active'].includes(String(a.status))
+      ).length;
+
+      setStats(prev => ({
+        ...prev,
+        tasksDone: Number(company?.total_projects_completed) || 0,
+        thisMonth: Number(askerSummary.total) || 0,
+        rating: Number(company?.rating) || 0,
+        staffCount: team.length,
+        pointsBalance: Number(company?.ep_balance) || 0,
+        activeAds,
+        revenue: Number(company?.wallet_balance) || 0,
+      }));
+
+      // Only genuinely outstanding work gets an item. An empty list means
+      // there is nothing to do, which is a useful thing for the screen to be
+      // able to say.
+      const items: ActionItem[] = [];
+      if (pendingLeave > 0) items.push({
+        id: 'leave', priority: 'high', title: 'Approve pending leave requests',
+        detail: `${pendingLeave} ${pendingLeave === 1 ? 'request' : 'requests'} waiting on you`,
+        actionLabel: '→ Review', section: 'leave-approvals',
+      });
+      if (askerSummary.offersToReview > 0) items.push({
+        id: 'offers', priority: 'high', title: 'Review offers on your errands',
+        detail: `${askerSummary.offersToReview} ${askerSummary.offersToReview === 1 ? 'offer' : 'offers'} to decide on`,
+        actionLabel: '→ Review', section: 'asker-bids',
+      });
+      if (pendingDisputeReqs > 0) items.push({
+        id: 'disputereq', priority: 'high', title: 'Staff want to raise a dispute',
+        detail: `${pendingDisputeReqs} awaiting your decision`,
+        actionLabel: '→ Review', section: 'disputes',
+      });
+      if (openDisputes > 0) items.push({
+        id: 'disputes', priority: 'high', title: 'Open disputes involving your company',
+        detail: `${openDisputes} open`, actionLabel: '→ Open', section: 'disputes',
+      });
+      if (!company?.certified) items.push({
+        id: 'verify', priority: 'high', title: 'Verify your company',
+        detail: 'Attach your ACRA Business Profile to offer on errands',
+        actionLabel: '→ Verify', section: 'company-profile',
+      });
+      if (pendingHandbacks > 0) items.push({
+        id: 'handback', priority: 'medium', title: 'Staff asking to be taken off an errand',
+        detail: `${pendingHandbacks} ${pendingHandbacks === 1 ? 'request' : 'requests'} pending`,
+        actionLabel: '→ Review', section: 'staff-resignation',
+      });
+      if (team.length <= 1) items.push({
+        id: 'team', priority: 'medium', title: 'Invite your team',
+        detail: 'Nobody to allocate errands to yet',
+        actionLabel: '→ Invite', section: 'staff',
+      });
+
+      setActionItems(items);
+    })();
+  }, [company, API_URL]);
+
   const banners = [
     {
       id: 1,
       title: `Welcome back, ${company?.name}`,
       description: 'Your performance this month is looking great. Keep up the momentum!',
-      badge: `${company?.subscription_tier ? company.subscription_tier.charAt(0).toUpperCase() + company.subscription_tier.slice(1) : stats.partnerTier} Partner`,
+      // Falling back to stats.partnerTier printed "Gold Partner" whenever the
+      // company load failed — the same fake tier the retry logic exists to avoid.
+      badge: company?.subscription_tier
+        ? `${company.subscription_tier.charAt(0).toUpperCase()}${company.subscription_tier.slice(1)} Partner`
+        : 'Partner',
       badgeIcon: '⭐',
       gradient: 'linear-gradient(135deg, #FF6B35, #FF8C5A)',
     },
@@ -543,101 +668,51 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                 <AdCreditReminder companyId={company?.id || 3} compact={false} />
               </div>
 
-              {/* Follow-ups & Action Items - Moved Up */}
+              {/* Follow-ups & Action Items — derived from live counts */}
               <div className="action-items-section">
                 <div className="action-items-header">
                   <h2>⚡ Follow-ups & Action Items</h2>
                   <div className="priority-filters">
-                    <button
-                      className={`filter-btn ${actionItemFilter === 'all' ? 'active' : ''}`}
-                      onClick={() => setActionItemFilter('all')}
-                    >
-                      All <span className="count-badge">5</span>
-                    </button>
-                    <button
-                      className={`filter-btn high ${actionItemFilter === 'high' ? 'active' : ''}`}
-                      onClick={() => setActionItemFilter('high')}
-                    >
-                      High <span className="count-badge">1</span>
-                    </button>
-                    <button
-                      className={`filter-btn medium ${actionItemFilter === 'medium' ? 'active' : ''}`}
-                      onClick={() => setActionItemFilter('medium')}
-                    >
-                      Medium <span className="count-badge">2</span>
-                    </button>
-                    <button
-                      className={`filter-btn low ${actionItemFilter === 'low' ? 'active' : ''}`}
-                      onClick={() => setActionItemFilter('low')}
-                    >
-                      Low <span className="count-badge">1</span>
-                    </button>
-                    <button
-                      className={`filter-btn done ${actionItemFilter === 'done' ? 'active' : ''}`}
-                      onClick={() => setActionItemFilter('done')}
-                    >
-                      Done <span className="count-badge">1</span>
-                    </button>
+                    {(['all', 'high', 'medium'] as const).map(f => {
+                      const n = f === 'all'
+                        ? actionItems.length
+                        : actionItems.filter(i => i.priority === f).length;
+                      return (
+                        <button
+                          key={f}
+                          className={`filter-btn ${f !== 'all' ? f : ''} ${actionItemFilter === f ? 'active' : ''}`}
+                          onClick={() => setActionItemFilter(f)}
+                        >
+                          {f.charAt(0).toUpperCase() + f.slice(1)} <span className="count-badge">{n}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
                 <div className="action-items-list">
-                  {(actionItemFilter === 'all' || actionItemFilter === 'high') && (
-                    <div className="action-item high-priority">
-                      <div className="priority-badge">HIGH</div>
-                      <div className="item-content">
-                        <h4>Approve Pending Leave Requests</h4>
-                        <p style={{color: '#333'}}>2 staff members waiting for approval</p>
-                        <span className="due-date" style={{color: '#333'}}>Due: Today</span>
-                      </div>
-                      <button className="item-action" onClick={() => setActiveSection('leave-calendar')}>→ Review</button>
-                    </div>
-                  )}
-
-                  {(actionItemFilter === 'all' || actionItemFilter === 'medium') && (
-                    <>
-                      <div className="action-item medium-priority">
-                        <div className="priority-badge">MEDIUM</div>
-                        <div className="item-content">
-                          <h4>Review Staff Reassignment Requests</h4>
-                          <p style={{color: '#333'}}>1 errand reassignment pending manager approval</p>
-                          <span className="due-date" style={{color: '#333'}}>Due: Tomorrow</span>
-                        </div>
-                        <button className="item-action" onClick={() => setActiveSection('staff-reassignment')}>→ Review</button>
-                      </div>
-
-                      <div className="action-item medium-priority">
-                        <div className="priority-badge">MEDIUM</div>
-                        <div className="item-content">
-                          <h4>Allocate Points to Staff</h4>
-                          <p>Monthly points distribution pending</p>
-                          <span className="due-date">Due: Jul 15</span>
-                        </div>
-                        <button className="item-action" onClick={() => setActiveSection('points-distribution')}>→ Allocate</button>
-                      </div>
-                    </>
-                  )}
-
-                  {(actionItemFilter === 'all' || actionItemFilter === 'low') && (
-                    <div className="action-item low-priority">
-                      <div className="priority-badge">LOW</div>
-                      <div className="item-content">
-                        <h4>Check Advertising Performance</h4>
-                        <p>2 active campaigns - CTR declined 2%</p>
-                        <span className="due-date">Due: Jul 20</span>
-                      </div>
-                      <button className="item-action" onClick={() => setActiveSection('ads')}>→ Analyze</button>
-                    </div>
-                  )}
-
-                  {(actionItemFilter === 'all' || actionItemFilter === 'done') && (
+                  {actionItems.length === 0 ? (
                     <div className="action-item completed">
                       <div className="priority-badge">DONE</div>
                       <div className="item-content">
-                        <h4>Update Company Bio</h4>
-                        <p>✓ Completed on Jul 10</p>
-                        <span className="due-date">Completed</span>
+                        <h4>Nothing needs you right now</h4>
+                        <p>No pending approvals, offers or disputes.</p>
                       </div>
                     </div>
+                  ) : (
+                    actionItems
+                      .filter(i => actionItemFilter === 'all' || i.priority === actionItemFilter)
+                      .map(item => (
+                        <div key={item.id} className={`action-item ${item.priority}-priority`}>
+                          <div className="priority-badge">{item.priority.toUpperCase()}</div>
+                          <div className="item-content">
+                            <h4>{item.title}</h4>
+                            <p style={{ color: '#333' }}>{item.detail}</p>
+                          </div>
+                          <button className="item-action" onClick={() => setActiveSection(item.section)}>
+                            {item.actionLabel}
+                          </button>
+                        </div>
+                      ))
                   )}
                 </div>
               </div>
@@ -670,7 +745,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                   </div>
                   <div className="kpi-bottom">
                     <div className="kpi-value">{stats.rating}/5</div>
-                    <div className="kpi-description">5.4k ratings</div>
+                    <div className="kpi-description">{stats.tasksDone > 0 ? 'From completed errands' : 'No ratings yet'}</div>
                   </div>
                 </div>
 
@@ -679,7 +754,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                     <h3>🏅 Partner Tier</h3>
                   </div>
                   <div className="kpi-bottom">
-                    <div className="kpi-value">{company?.subscription_tier ? company.subscription_tier.charAt(0).toUpperCase() + company.subscription_tier.slice(1) : stats.partnerTier}</div>
+                    <div className="kpi-value">{company?.subscription_tier ? company.subscription_tier.charAt(0).toUpperCase() + company.subscription_tier.slice(1) : '—'}</div>
                     <div className="kpi-description">Premium status</div>
                   </div>
                 </div>
@@ -873,7 +948,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                       <div className="rating-bar">
                         <div className="bar-fill" style={{width: '95%'}}></div>
                       </div>
-                      <span className="rating-count">Based on 5.4k ratings</span>
+                      <span className="rating-count">{Number(company?.rating) > 0 ? 'Average across your errands' : 'No ratings yet'}</span>
                     </div>
                   </div>
                   <button className="btn-edit">View Reviews</button>
@@ -1864,7 +1939,6 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
               <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '32px', marginBottom: '40px'}}>
                 {/* This creates exactly 3 columns */}
                 {/* Silver Plan */}
-                {console.log('[DEBUG] Rendering pricing cards - company tier:', company?.subscription_tier)}
                 <div style={{border: pricingBillingCycle === 'annual' ? '2px solid #FFD9B3' : '1px solid #e0e0e0', borderRadius: '16px', padding: '32px', textAlign: 'center', background: pricingBillingCycle === 'annual' ? 'linear-gradient(135deg, #FFF9F5 0%, #FFF3E0 100%)' : 'white', transition: 'all 0.3s ease', cursor: 'pointer', transform: pricingBillingCycle === 'annual' ? 'scale(1.02)' : 'scale(1)'}} onMouseEnter={(e) => {e.currentTarget.style.transform = pricingBillingCycle === 'annual' ? 'scale(1.05) translateY(-8px)' : 'translateY(-8px)'; e.currentTarget.style.boxShadow = pricingBillingCycle === 'annual' ? '0 16px 40px rgba(255, 107, 53, 0.2)' : '0 12px 32px rgba(0,0,0,0.12)'}} onMouseLeave={(e) => {e.currentTarget.style.transform = pricingBillingCycle === 'annual' ? 'scale(1.02)' : 'translateY(0)'; e.currentTarget.style.boxShadow = pricingBillingCycle === 'annual' ? '0 8px 20px rgba(255, 107, 53, 0.1)' : 'none'}}>
                   <div style={{marginBottom: '24px'}}>
                     <p style={{margin: '0 0 12px 0', fontSize: '28px'}}>🥈</p>
