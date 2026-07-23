@@ -43,11 +43,15 @@ function getEndOfMonth(): Date {
 export async function allocateMonthlyCredits(companyId?: number): Promise<number> {
   const expiresAt = getEndOfMonth();
 
+  // cs.current_tier and cs.status do not exist — the join and filter both
+  // silently matched nothing, so no company was ever allocated its monthly ad
+  // credits ($50 / $200 / $500 by tier). The real columns are subscription_tier
+  // and expires_at (active = no expiry, or not yet lapsed).
   let query = `
     SELECT cs.company_id, st.ad_credit_monthly
     FROM company_subscriptions cs
-    JOIN subscription_tiers st ON cs.current_tier = st.name
-    WHERE cs.status = 'active'
+    JOIN subscription_tiers st ON cs.subscription_tier = st.name
+    WHERE (cs.expires_at IS NULL OR cs.expires_at > NOW())
   `;
 
   const params: any[] = [];
