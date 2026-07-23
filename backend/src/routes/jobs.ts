@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { stripeSurcharge } from '../utils/stripeFee.js';
+import { resolveCommissionRate, resolvePayee } from '../utils/commissionRate.js';
 import { AuthRequest, authMiddleware } from '../middleware/auth.js';
 import db from '../db.js';
 import { stripeService } from '../services/stripe.js';
@@ -428,9 +429,18 @@ router.get('/:taskId/photos', authMiddleware, async (req: AuthRequest, res: Resp
 async function releasePayment(taskId: string, task: any, reason: 'early_confirm' | 'auto_release') {
   try {
     const bidAmount = parseFloat(task.amount);
-    const platformFee = bidAmount * 0.20; // 20% platform fee — now genuinely kept,
-                                          // because the asker paid the Stripe fee on top.
+
+    // The commission comes out of the doer's payout, and the RATE depends on the
+    // doer. An individual pays the standard 20%; a company pays its subscription
+    // tier rate (Silver 18%, Gold 17%, Platinum 16% — all below 20%). Hardcoding
+    // 20% here overcharged every subscribed company, which is the exact bug the
+    // commissionRate util was written to prevent.
+    const { rate: commissionRate, payeeType } = await resolveCommissionRate(
+      { companyId: (await resolvePayee(parseInt(taskId, 10))).companyId }
+    );
+    const platformFee = Math.round(bidAmount * commissionRate * 100) / 100;
     const doerPayout = bidAmount - platformFee;
+    console.log(`[Payout] errand ${taskId}: ${payeeType} doer, ${(commissionRate*100).toFixed(0)}% commission -> platform $${platformFee}, doer $${doerPayout}`);
     // The surcharge the asker paid over the errand price, for the record.
     const stripeFeeCharged = stripeSurcharge(bidAmount);
 
