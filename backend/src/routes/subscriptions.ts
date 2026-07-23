@@ -586,57 +586,23 @@ router.post('/proration', authMiddleware, attachCompanyId, async (req: AuthReque
  */
 router.get('/admin/subscriptions', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    // Demo data - replace with actual database query
-    const subscriptions = [
-      {
-        company_id: 1,
-        company_name: 'Rumah Emas Demo Company',
-        current_tier: 'gold',
-        billing_type: 'annual',
-        status: 'active',
-        renewal_date: '2027-08-01',
-        stripe_subscription_id: 'sub_demo_001',
-        created_at: '2026-07-01',
-        pending_downgrade_to: null,
-        annual_value: 74800,
-        signup_date: '2026-07-01',
-        churn_risk: 'low'
-      },
-      {
-        company_id: 2,
-        company_name: 'Tech Startup Inc',
-        current_tier: 'silver',
-        billing_type: 'monthly',
-        status: 'active',
-        renewal_date: '2026-08-19',
-        stripe_subscription_id: 'sub_demo_002',
-        created_at: '2026-06-19',
-        pending_downgrade_to: null,
-        annual_value: 33600,
-        signup_date: '2026-06-19',
-        churn_risk: 'medium'
-      },
-      {
-        company_id: 3,
-        company_name: 'Enterprise Corp',
-        current_tier: 'platinum',
-        billing_type: 'annual',
-        status: 'active',
-        renewal_date: '2027-06-15',
-        stripe_subscription_id: 'sub_demo_003',
-        created_at: '2026-06-15',
-        pending_downgrade_to: null,
-        annual_value: 142000,
-        signup_date: '2026-06-15',
-        churn_risk: 'low'
-      },
-    ];
-
+    // Real subscriptions, joined to their tier config. Was a hardcoded three-row
+    // demo (companies that do not exist) with a made-up revenue total.
+    const rows = await db.query(
+      `SELECT cs.company_id, c.company_name, cs.subscription_tier AS tier,
+              cs.billing_cycle, cs.started_at, cs.expires_at, cs.pending_tier,
+              (cs.expires_at IS NULL OR cs.expires_at > NOW()) AS is_active,
+              st.commission_rate, st.ad_credit_monthly
+         FROM company_subscriptions cs
+         JOIN companies c ON c.id = cs.company_id
+         LEFT JOIN subscription_tiers st ON st.name = cs.subscription_tier
+        ORDER BY cs.subscription_tier, c.company_name`
+    );
+    const active = rows.rows.filter((r: any) => r.is_active).length;
     res.json({
       success: true,
-      data: subscriptions,
-      total_revenue: 250400,
-      active_subscriptions: 3,
+      data: rows.rows,
+      active_subscriptions: active,
     });
   } catch (error) {
     console.error('Get admin subscriptions error:', error);
