@@ -3,6 +3,7 @@ import { sendDailyDigests, sendPaymentReminders } from './services/emailNotifica
 import { offlineNotificationService } from './services/offlineNotificationService.js';
 import { ratingReminderService } from './services/ratingReminderService.js';
 import axios from 'axios';
+import { evaluateAlertRules } from './services/alertEvaluator.js';
 
 /**
  * Cron jobs for Errandify job execution flow
@@ -317,6 +318,16 @@ export function startCrons() {
     }, 30 * 24 * 60 * 60 * 1000); // Run monthly
   }, msUntilMonthFirst);
   console.log(`[CRON] Subscription jobs scheduled for ${nextMonthFirst.toISOString()}`);
+
+  // Operational alerts. This is what turns alert_rules from a list of stored
+  // preferences into something that actually watches the platform: every 15
+  // minutes each enabled rule is compared against its live metric, and a breach
+  // notifies the admins and is recorded in alert_events. Each rule's own
+  // cooldown stops a persistent condition from alerting on every pass.
+  setInterval(() => {
+    evaluateAlertRules().catch(err => console.error('[CRON] Alert evaluation failed:', err));
+  }, 15 * 60 * 1000);
+  console.log('[CRON] Alert rules scheduled to evaluate every 15 minutes');
 
   console.log('[CRON] All cron jobs started successfully');
 }
