@@ -50,7 +50,10 @@ router.get('/status', authMiddleware, async (req: AuthRequest, res: Response) =>
     // The real subscription, not a hardcoded silver demo. This endpoint used to
     // return silver for everyone regardless of their tier, so a Platinum company
     // saw the wrong plan, wrong commission and wrong benefits on its own screen.
-    const companyId = parseInt((req as any).companyId || '0', 10);
+    // req.companyId is set by nothing, so resolve the company from the user.
+    const { resolveMyCompany } = await import('../utils/companyRole.js');
+    const membership = await resolveMyCompany(req.userId || '0');
+    const companyId = membership?.companyId || 0;
     const { getCompanySubscription, getTierConfig } = await import('../services/subscriptionService.js');
     const sub: any = companyId ? await getCompanySubscription(companyId) : null;
     const active = !!sub && (!sub.expires_at || new Date(sub.expires_at) > new Date());

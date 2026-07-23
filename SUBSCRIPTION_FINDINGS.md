@@ -81,3 +81,40 @@ resolves to Silver (18%) if its stored tier isn't one the rate config knows.
 Subscription **limits** — `max_staff_members`, `max_errands_per_month` — are read
 for display but enforced nowhere. A Silver company can add unlimited staff or
 post past its monthly cap. Product decision on how hard to enforce.
+
+---
+
+## Update — tier data reconciled to your spec (23 July, later)
+
+You gave the canonical tier summary. Reconciled the data to it:
+
+- **Team sizes were wrong in the DB.** gold was 20 (spec: 15), platinum was 100
+  (spec: unlimited). Fixed — gold 15, platinum 999999 (the "unlimited" sentinel
+  the display already uses). Migration 055.
+- Commission (18/17/16%), ad credit (50/200/500), EP multiplier (2/3/5×) already
+  matched and were left alone.
+- **`GET /subscriptions/status` showed a hardcoded silver demo to everyone** —
+  now reads the real subscription. A Platinum company saw silver on its own
+  screen. Verified it now returns platinum, 16%, 5×, unlimited.
+- **`req.companyId` is populated by nothing.** Every subscription endpoint that
+  used it (status, checkout, upgrade, downgrade) silently failed to identify the
+  company. Fixed in /status by resolving from the user via resolveMyCompany;
+  **checkout / upgrade / downgrade still need the same fix** before they work.
+
+### Milestones — definitions right, everything else unbuilt
+
+The milestone amounts in `milestoneService.ts` match your spec exactly
+(silver $20@50; gold $50@50, $100@100; platinum $100@50, $200@100, $500@200).
+But the service is **MySQL code that was never ported to Postgres**: `?`
+placeholders, `"posted"` double-quotes, a `tasks` table that doesn't exist
+(it's `errands`), and `subscription_milestones` columns (`milestone_type`,
+`bonus_applied`) that don't match the real table (`milestone_threshold`,
+`reward_amount`, `achieved`). So:
+
+- `GET /subscriptions/milestones` returns 500.
+- The awarding function `checkAndAwardMilestones` is **called by nothing** — no
+  milestone is ever awarded on task completion.
+
+This is a feature to build, not a data fix: port the service to Postgres, match
+the real schema, and call the check when a company completes a task. Flagged,
+not attempted — it needs its own focused pass.
