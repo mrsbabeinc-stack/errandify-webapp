@@ -449,7 +449,23 @@ async function main() {
       askerMessage: 'again', doerMessage: 'again',
     }), (r) => r.status === 409);
 
-  // ---- 17. the shadow dispute path on /api/errands ----------------------
+  // ---- 17. a dispute that does not exist must say so ---------------------
+  // Every one of these used to answer as though it had done something, or blame
+  // us for the caller's bad id. A 200 on a missing dispute is the same class of
+  // bug as the rest of this module: reporting success for work never done.
+  const GHOST = 999999;
+  for (const [verb, path, body] of [
+    ['POST', `/api/disputes/${GHOST}/deny-extension`, { reason: 'x' }],
+    ['POST', `/api/disputes/${GHOST}/approve-extension`, {}],
+    ['POST', `/api/disputes/${GHOST}/escalate`, { notes: 'x' }],
+    ['GET', `/api/disputes/${GHOST}`, undefined],
+    ['GET', `/api/disputes/${GHOST}/evidence`, undefined],
+  ]) {
+    step(`${verb} ${path.replace(String(GHOST), '<missing>')} answers 404`,
+      await call(verb, path, tAdmin, body), (r) => r.status === 404);
+  }
+
+  // ---- 18. the shadow dispute path on /api/errands ----------------------
   const shadow = await call('POST', `/api/errands/${errand2}/resolve-dispute`, tDoer, {
     resolution: 'doer wins', payment_to: 'doer', amount_percentage: 100,
   });

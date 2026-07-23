@@ -459,6 +459,13 @@ router.post('/:id/escalate', adminOnly, async (req: AuthRequest, res: Response) 
     const { id } = req.params;
     const { notes, priority } = req.body;
 
+    // A missing dispute came back as a 500 — "escalation failed" reads as our
+    // fault when the id simply is not there.
+    const exists = await db.query('SELECT id FROM disputes WHERE id = $1', [parseInt(id)]);
+    if (exists.rows.length === 0) {
+      return res.status(404).json({ error: 'Dispute not found' });
+    }
+
     const result = await escalateDispute(parseInt(id), notes, priority || 'normal');
 
     if (!result.success) {
@@ -933,12 +940,19 @@ router.post('/:id/deny-extension', adminOnly, async (req: AuthRequest, res: Resp
     const disputeId = parseInt(req.params.id);
     const { reason } = req.body;
 
-    await db.query(
+    // RETURNING, because the UPDATE matched nothing on a dispute id that does
+    // not exist and this still reported "Extension denied" — success for
+    // something that never happened.
+    const denied = await db.query(
       `UPDATE disputes
        SET extension_denied_at = NOW(), extension_requested = false
-       WHERE id = $1`,
+       WHERE id = $1
+       RETURNING id`,
       [disputeId]
     );
+    if (denied.rows.length === 0) {
+      return res.status(404).json({ error: 'Dispute not found' });
+    }
 
     res.json({
       success: true,
