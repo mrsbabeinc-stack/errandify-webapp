@@ -238,6 +238,135 @@ export async function runRetentionPurge({ force = false }: { force?: boolean } =
   return report;
 }
 
+export interface DisputeRetentionReport {
+  dryRun: boolean;
+  cutoff: string;
+  eligible: number;
+  stripped: number;
+  evidenceImagesCleared: number;
+}
+
+/**
+ * The dispute half of the schedule, which nothing enforced until now.
+ *
+ * docs/DATA_RETENTION.md gives resolved dispute outcomes seven years. The
+ * account purge above cannot reach them: it is keyed to `users.anonymised_at`,
+ * and a dispute outlives the accounts on both sides of it — that is the point of
+ * keeping it. So this runs on the dispute's own clock.
+ *
+ * It does NOT delete the dispute. The outcome is retained for the legal purpose
+ * — who was paid what, when, and on what basis — which 18.4(b) expressly
+ * permits and which the counterparty relies on just as much as we do. What
+ * expires is the personal narrative wrapped around that record: both sides'
+ * written statements, the appeal, Hana's reasoning, the messages that went out,
+ * and the evidence images. 18.10(d) accepts anonymisation as ceasing to retain;
+ * 18.11 is explicit that hiding or archiving does not count, which is why these
+ * are nulled rather than flagged.
+ *
+ * Same conservatism as the account purge: dry run unless explicitly enabled, and
+ * it refuses to run at all on a nonsense retention period rather than reading a
+ * misconfiguration as "strip everything".
+ */
+export async function purgeExpiredDisputes(): Promise<DisputeRetentionReport> {
+  guardRetentionYears();
+
+  const cutoff = await computeCutoff();
+  const enabled = process.env.RETENTION_PURGE_ENABLED === 'true';
+
+  // Only disputes that are genuinely over. A dispute still capable of moving
+  // money is not a record yet, however old it is — and `settlement_status` is
+  // the honest test of that, not the status column.
+  const WHERE = `
+    d.retention_stripped_at IS NULL
+    AND d.status IN ('closed', 'resolved')
+    AND COALESCE(d.closed_at, d.resolved_at) IS NOT NULL
+    AND COALESCE(d.closed_at, d.resolved_at) < $1
+    AND COALESCE(d.settlement_status, 'not_started') IN ('not_started', 'settled')
+  `;
+
+  const eligible = await db.query(
+    `SELECT d.id FROM disputes d WHERE ${WHERE} ORDER BY COALESCE(d.closed_at, d.resolved_at)`,
+    [cutoff]
+  );
+
+  const report: DisputeRetentionReport = {
+    dryRun: !enabled,
+    cutoff,
+    eligible: eligible.rows.length,
+    stripped: 0,
+    evidenceImagesCleared: 0,
+  };
+
+  if (!enabled || eligible.rows.length === 0) {
+    console.log(
+      `[Retention] disputes ${report.dryRun ? 'DRY RUN' : 'LIVE'} — cutoff ${cutoff}, ` +
+      `${report.eligible} eligible, nothing changed${report.dryRun ? ' (set RETENTION_PURGE_ENABLED=true to act)' : ''}`
+    );
+    return report;
+  }
+
+  for (const row of eligible.rows) {
+    const client = await db.getClient();
+    try {
+      await client.query('BEGIN');
+
+      // The images first — they are the largest and the most sensitive thing
+      // here. The row survives so the record of what was submitted, by whom and
+      // when is intact; only the file and anything free-text goes.
+      const ev = await client.query(
+        `UPDATE dispute_evidence
+            SET photo_data = NULL, photo_filename = NULL, photo_description = NULL,
+                description_text = NULL, chat_transcript = NULL, updated_at = NOW()
+          WHERE dispute_id = $1 AND (photo_data IS NOT NULL OR description_text IS NOT NULL)
+          RETURNING id`,
+        [row.id]
+      );
+
+      await client.query(
+        `UPDATE disputes
+            SET description = NULL,
+                reason = NULL,
+                evidence = NULL,
+                defendant_response = NULL,
+                defendant_response_evidence = NULL,
+                resolution_notes = NULL,
+                appeal_reason = NULL,
+                appeal_final_reasoning = NULL,
+                verdict_reasoning = NULL,
+                hana_proposal = NULL,
+                hana_reasoning = NULL,
+                hana_failed_reason = NULL,
+                outcome_message_asker = NULL,
+                outcome_message_doer = NULL,
+                escalation_notes = NULL,
+                extension_reason = NULL,
+                rework_decline_reason = NULL,
+                cannot_complete_reason = NULL,
+                settlement_fee_waived_reason = NULL,
+                retention_stripped_at = NOW(),
+                updated_at = NOW()
+          WHERE id = $1`,
+        [row.id]
+      );
+
+      await client.query('COMMIT');
+      report.stripped += 1;
+      report.evidenceImagesCleared += ev.rows.length;
+    } catch (err: any) {
+      await client.query('ROLLBACK');
+      console.error(`[Retention] dispute ${row.id} could not be stripped: ${err.message}`);
+    } finally {
+      client.release();
+    }
+  }
+
+  console.log(
+    `[Retention] disputes LIVE — cutoff ${cutoff}, ${report.stripped}/${report.eligible} stripped, ` +
+    `${report.evidenceImagesCleared} evidence item(s) cleared`
+  );
+  return report;
+}
+
 /** Admin decision on a raised report. Approve lets the purge run once the week
  *  is up; reject closes it and nothing is deleted. */
 export async function decideRetentionBatch(

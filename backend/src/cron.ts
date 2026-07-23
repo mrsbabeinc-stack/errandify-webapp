@@ -760,12 +760,23 @@ export async function processPendingSubscriptionDowngrades() {
  */
 export async function runRetentionPurgeJob() {
   try {
-    const { raiseRetentionReport, runRetentionPurge } = await import('./services/retentionPurge.js');
+    const { raiseRetentionReport, runRetentionPurge, purgeExpiredDisputes } =
+      await import('./services/retentionPurge.js');
     // Each day: make sure a report exists for the admin to review, then run any
     // batch they have already approved and whose week has elapsed. Nothing is
     // deleted without an approval on file.
     await raiseRetentionReport();
     await runRetentionPurge();
+
+    /**
+     * Disputes run on their own clock, not on an account's. A dispute outlives
+     * the accounts on both sides — that is what retaining it is for — so the
+     * account purge above cannot see it. This strips the personal narrative and
+     * the evidence images off disputes seven years closed, and keeps the outcome
+     * record itself. No approval batch: it deletes no rows and removes no
+     * financial record, so the safeguard that fits is the dry run.
+     */
+    await purgeExpiredDisputes();
   } catch (error) {
     console.error('[CRON] Retention job failed:', error);
   }
