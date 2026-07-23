@@ -16,7 +16,7 @@ const DB = 'errandify_local';
 const q = (sql) => execSync(`psql ${DB} -tAc ${JSON.stringify(sql.replace(/\s+/g, ' ').trim())}`, { encoding: 'utf8' })
   .split('\n').map(l => l.trim()).filter(Boolean)
   .filter(l => !/^(INSERT|UPDATE|DELETE|SELECT) \d/.test(l))[0] || '';
-const created = { errands: [], bids: [], orders: [], staff: [], users: [], notifs: [] };
+const created = { errands: [], bids: [], orders: [], staff: [], users: [], notifs: [], disputes: [] };
 const rnd = () => Math.random().toString(36).slice(2, 11);
 
 export function makeUser({ name = 'ZZKIT user', role = 'doer' } = {}) {
@@ -52,7 +52,13 @@ export function makeOrder(companyId, errandId, { status = 'open', assignedStaffI
   created.orders.push(id); return Number(id);
 }
 
+export function trackDispute(id) { if (id) created.disputes.push(Number(id)); }
 export function sql(s) { return q(s); }
+
+const DISPUTE_CHILDREN = ['company_dispute_requests','dispute_admin_actions','dispute_ai_analysis',
+  'dispute_appeals','dispute_audit_trail','dispute_compliance_queue','dispute_decisions',
+  'dispute_defense_requests','dispute_escalations','dispute_evidence','dispute_notifications',
+  'dispute_settlement_legs','dispute_tier_classification','support_queue'];
 
 /** Deletes ONLY ids this kit created, children first. */
 export function teardown() {
@@ -63,6 +69,18 @@ export function teardown() {
     q(`DELETE FROM conversations WHERE errand_id = ANY('${ids(created.errands)}')`);
     q(`DELETE FROM ratings WHERE errand_id = ANY('${ids(created.errands)}')`);
     q(`DELETE FROM notifications WHERE related_errand_id = ANY('${ids(created.errands)}')`);
+  }
+  // Disputes have many child tables; clear them first, then the disputes,
+  // before the errands they hang off.
+  const dIds = [...created.disputes];
+  if (created.errands.length) {
+    const errFilter = `dispute_id IN (SELECT id FROM disputes WHERE errand_id = ANY('${ids(created.errands)}'))`;
+    q(`SELECT id FROM disputes WHERE errand_id = ANY('${ids(created.errands)}')`)
+      .split(/\s+/).filter(Boolean).forEach(id => dIds.push(Number(id)));
+  }
+  if (dIds.length) {
+    for (const t of DISPUTE_CHILDREN) q(`DELETE FROM ${t} WHERE dispute_id = ANY('${ids(dIds)}')`);
+    q(`DELETE FROM disputes WHERE id = ANY('${ids(dIds)}')`);
   }
   del(`DELETE FROM company_orders WHERE id = ANY('$IDS')`, created.orders);
   del(`DELETE FROM bids WHERE id = ANY('$IDS')`, created.bids);
