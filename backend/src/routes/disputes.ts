@@ -4,12 +4,11 @@ import db from '../db.js';
 import { resolveCompanyRole } from '../utils/companyRole.js';
 import { describeWindow, reworkAllowance } from '../utils/authorisationWindow.js';
 import {
-  determineAppealEligibility,
   calculateDisputeFee,
   checkSettlementReadiness,
-  prepareSettlementLegs,
   preflightSettlement,
   executeSettlement,
+  applyMonetaryDecision,
 } from '../services/disputeSettlement.js';
 import {
   analyzeDisputeWithAI,
@@ -18,6 +17,8 @@ import {
   classifyDisputeTier,
   holdPayment,
   releaseHeldPayment,
+  markErrandDisputed,
+  closeErrandAfterDispute,
 } from '../services/disputeResolutionService.js';
 import { saveDisputeVerdict } from '../services/disputeVerdictService.js';
 import {
@@ -94,8 +95,11 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       return res.status(500).json({ error: 'Failed to create dispute' });
     }
 
-    // Hold payment during dispute
+    // Hold payment during dispute, and make the errand itself say it is in
+    // dispute. Holding the money used to be the only signal, which left a
+    // disputed errand looking identical to a clean one on both parties' lists.
     await holdPayment(parseInt(errandId), `Dispute #${result.disputeId} filed`);
+    await markErrandDisputed(parseInt(errandId));
 
     // Determine who filed the dispute and who should be notified
     const isAskerFiling = userId === errand.asker_id;
@@ -206,6 +210,12 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
               d.verdict_decision, d.verdict_reasoning, d.verdict_doer_amount,
               d.verdict_company_amount, d.verdict_issued_at,
               d.has_appeal, d.appeal_submitted_at,
+              d.resolution, d.resolution_notes, d.resolution_kind, d.non_monetary_outcome,
+              d.settlement_doer_amount, d.settlement_asker_amount, d.settlement_fee,
+              d.settlement_status, d.settled_at,
+              d.appeal_window_closes_at, d.claimant_can_appeal, d.defendant_can_appeal,
+              d.appeal_reason, d.appeal_reviewed_at, d.appeal_final_decision,
+              d.appeal_final_reasoning, d.appeal_round,
               d.hana_proposal, d.hana_recommended_action, d.hana_confidence,
               d.hana_reasoning, d.hana_proposed_at, d.hana_failed_reason,
               e.formatted_id, e.title, e.budget, e.asker_id, e.payment_authorised_at,
@@ -256,6 +266,45 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
       ? new Date(new Date(d.response_deadline).getTime() + 24 * 60 * 60 * 1000).toISOString()
       : null;
 
+    // Whether THIS person can appeal, worked out here rather than left to each
+    // caller. Appeal rights follow participation and they are decided at
+    // resolution time, so the interface has no way to derive them on its own —
+    // which is why no screen ever offered an appeal.
+    const isClaimant = Number(d.filed_by_user_id) === userId;
+    const isDefendant = Number(d.defendant_user_id) === userId;
+    const closesAt = d.appeal_window_closes_at ? new Date(d.appeal_window_closes_at) : null;
+    const windowOpen = !!closesAt && closesAt.getTime() > Date.now();
+    const alreadyAppealed = !!(d.has_appeal || d.appeal_submitted_at);
+    const moneyMoving = !!d.settlement_status && d.settlement_status !== 'not_started';
+    const entitled = isClaimant ? !!d.claimant_can_appeal : isDefendant ? !!d.defendant_can_appeal : false;
+
+    const appealView = {
+      exists: alreadyAppealed,
+      reason: d.appeal_reason || null,
+      submittedAt: d.appeal_submitted_at,
+      reviewedAt: d.appeal_reviewed_at,
+      finalDecision: d.appeal_final_decision || null,
+      finalReasoning: d.appeal_final_reasoning || null,
+      round: Number(d.appeal_round ?? 0),
+      windowClosesAt: d.appeal_window_closes_at,
+      canAppeal: !!d.resolution && entitled && windowOpen && !alreadyAppealed && !moneyMoving && Number(d.appeal_round ?? 0) < 1,
+      whyNot: !d.resolution
+        ? 'There is no decision to appeal yet.'
+        : !entitled
+        ? isDefendant
+          ? 'You did not respond when this was raised with you, so the decision stands.'
+          : isClaimant
+          ? 'You received the outcome you asked for, so there is nothing to appeal.'
+          : 'Only the two people involved can appeal this.'
+        : alreadyAppealed
+        ? 'This has already been appealed.'
+        : moneyMoving
+        ? 'The money has already been released.'
+        : !windowOpen
+        ? 'The appeal window has closed.'
+        : null,
+    };
+
     res.json({
       dispute: {
         id: d.id,
@@ -277,6 +326,12 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
         defendantResponse: d.defendant_response,
         responseSubmittedAt: d.response_submitted_at,
         isDefendant: Number(d.defendant_user_id) === userId,
+        // Which side of the errand the person reading this is on, so the
+        // interface can say "that means $60 to you" instead of making them work
+        // out which of the two figures is theirs. Null for a company owner
+        // acting for the business rather than as the named party.
+        viewerSide:
+          Number(d.asker_id) === userId ? 'asker' : Number(d.doer_id) === userId ? 'doer' : null,
         hasAppeal: !!(d.has_appeal || d.appeal_submitted_at),
         // Hana's suggestion for the admin. Advisory only — she never decides.
         hanaProposal: d.hana_proposed_at
@@ -300,6 +355,23 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
               issuedAt: d.verdict_issued_at,
             }
           : null,
+        // What was decided, and what it means for this person's money. Without
+        // this the parties could see that a dispute existed but never what came
+        // of it, and there was no way to offer an appeal in the interface.
+        decision: d.resolution
+          ? {
+              resolution: d.resolution,
+              kind: d.resolution_kind || 'monetary',
+              notes: d.resolution_notes,
+              nonMonetaryOutcome: d.non_monetary_outcome || null,
+              doerAmount: Number(d.settlement_doer_amount ?? 0),
+              askerAmount: Number(d.settlement_asker_amount ?? 0),
+              fee: Number(d.settlement_fee ?? 0),
+              settlementStatus: d.settlement_status || 'not_started',
+              settledAt: d.settled_at,
+            }
+          : null,
+        appeal: appealView,
       },
     });
   } catch (error) {
@@ -515,6 +587,9 @@ router.post('/:id/resolve', adminOnly, async (req: AuthRequest, res: Response) =
       // Nothing is owed either way, so the money resumes its normal path.
       // Leaving it frozen would punish someone over a non-financial complaint.
       await releaseHeldPayment(dispute.errand_id);
+      // Nothing changed hands, so the errand goes back exactly where it was
+      // rather than to a guessed-at status.
+      await closeErrandAfterDispute(dispute.errand_id, 'restore');
 
       return res.json({
         success: true,
@@ -541,52 +616,21 @@ router.post('/:id/resolve', adminOnly, async (req: AuthRequest, res: Response) =
       }
     }
 
-    // Our cut applies only to the doer's share — a full refund carries no fee.
-    const feeBreakdown = await calculateDisputeFee({
-      errandId: dispute.errand_id,
-      doerAmount: toDoer,
-      waived: !!req.body.waiveFee,
-    });
-
-    // Who may appeal, and until when. Settlement is blocked until this closes,
-    // which is what stops money moving and an appeal arriving afterwards.
-    const appeal = determineAppealEligibility({
-      responseStatus: dispute.response_status,
+    // Record the decision, work out the fee and who may appeal, and stage the
+    // money movements — all of it shared with /verdict so the two routes cannot
+    // decide the same dispute differently. The money does NOT move here; that
+    // is a separate, deliberate step after the appeal window closes.
+    const applied = await applyMonetaryDecision({
+      disputeId: parseInt(id),
       decision,
-      claimantIsDoer: Number(dispute.filed_by_user_id) === Number(dispute.doer_id),
+      notes,
+      toDoer,
+      toAsker,
+      adminUserId: userId,
+      waiveFee: !!req.body.waiveFee,
+      waiveFeeReason: req.body.waiveFeeReason || null,
     });
-
-    // Record the decision and what the admin intends to pay. The money does NOT
-    // move here — that is a separate, deliberate step after the appeal window.
-    const result = await db.query(
-      `UPDATE disputes
-       SET status = 'resolved', resolution = $1, resolution_notes = $2, resolved_at = NOW(),
-           settlement_doer_amount = $3, settlement_asker_amount = $4,
-           settlement_fee = $5, settlement_fee_rate = $6,
-           settlement_fee_waived = $7, settlement_fee_waived_reason = $8,
-           appeal_window_closes_at = $9,
-           claimant_can_appeal = $10, defendant_can_appeal = $11,
-           decided_by_user_id = $12
-       WHERE id = $13
-       RETURNING id, errand_id, resolution, settlement_doer_amount, settlement_asker_amount,
-                 settlement_fee, appeal_window_closes_at`,
-      [
-        decision, notes, toDoer, toAsker,
-        feeBreakdown.fee, feeBreakdown.rate,
-        feeBreakdown.waived, req.body.waiveFeeReason || null,
-        appeal.windowClosesAt,
-        appeal.claimantCanAppeal, appeal.defendantCanAppeal,
-        parseInt(req.userId || '0', 10),
-        parseInt(id),
-      ]
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Dispute not found' });
-    }
-
-    // Stage the money movements without performing any of them
-    await prepareSettlementLegs(parseInt(id));
+    const result = { rows: [applied.dispute] };
 
     // Hana drafts what each side will be told, using the admin's own reasoning.
     // Drafted only — an admin reads and sends it. Runs in the background so the
@@ -841,41 +885,98 @@ router.post('/:id/deny-extension', adminOnly, async (req: AuthRequest, res: Resp
 });
 
 // POST /api/disputes/:id/verdict (admin only - before T+48h)
+// POST /api/disputes/:id/verdict — the same decision, in the older vocabulary.
+//
+// This used to be a second, parallel decision path: it wrote status
+// 'VERDICT_ISSUED' and the verdict_* columns and stopped there. It never set
+// `resolution`, which is the column both the appeal route and the settlement
+// check read, so a dispute decided here could be neither appealed nor paid —
+// it announced "parties have 12 hours to appeal" and then refused every appeal,
+// and sat decided-but-frozen forever. It now translates its vocabulary onto the
+// one decision path and records the verdict columns alongside, so anything
+// still reading them keeps working.
 router.post('/:id/verdict', adminOnly, async (req: AuthRequest, res: Response) => {
   try {
     const disputeId = parseInt(req.params.id);
     const { decision, doerAmount, companyAmount, reasoning } = req.body;
+    const userId = parseInt(req.userId || '0', 10);
 
     if (!['APPROVE_DOER', 'APPROVE_COMPANY', 'PARTIAL_SPLIT'].includes(decision)) {
       return res.status(400).json({ error: 'Invalid decision type' });
     }
+    if (!reasoning || !String(reasoning).trim()) {
+      return res.status(400).json({ error: 'Reasoning is required — both parties will read it.' });
+    }
 
-    const result = await db.query(
-      `UPDATE disputes
-       SET status = 'VERDICT_ISSUED',
-           verdict_issued_at = NOW(),
-           verdict_decision = $1,
-           verdict_doer_amount = $2,
-           verdict_company_amount = $3,
-           verdict_reasoning = $4
-       WHERE id = $5
-       RETURNING *`,
-      [decision, doerAmount, companyAmount, reasoning, disputeId]
+    const ctx = await db.query(
+      `SELECT d.id, d.errand_id, d.settlement_status,
+              COALESCE(ab.amount, e.budget) AS total
+         FROM disputes d
+         JOIN errands e ON e.id = d.errand_id
+         LEFT JOIN bids ab ON ab.id = e.accepted_bid_id
+        WHERE d.id = $1`,
+      [disputeId]
     );
-
-    if (result.rows.length === 0) {
+    if (ctx.rows.length === 0) {
       return res.status(404).json({ error: 'Dispute not found' });
     }
+    const total = Number(ctx.rows[0].total ?? 0);
+
+    // 'company' here is the side that paid — the asker on an individual errand,
+    // the company when a company posted it. Either way the money goes back.
+    let toDoer = 0;
+    let toAsker = 0;
+    if (decision === 'APPROVE_DOER') {
+      toDoer = total;
+    } else if (decision === 'APPROVE_COMPANY') {
+      toAsker = total;
+    } else {
+      toDoer = Number(doerAmount);
+      toAsker = Number(companyAmount);
+      if (!isFinite(toDoer) || !isFinite(toAsker) || toDoer < 0 || toAsker < 0) {
+        return res.status(400).json({ error: 'A split needs both amounts as positive numbers.' });
+      }
+      if (Math.abs(toDoer + toAsker - total) > 0.01) {
+        return res.status(400).json({
+          error: `The split must add up to the errand total of $${total.toFixed(2)}. You entered $${(toDoer + toAsker).toFixed(2)}.`,
+        });
+      }
+    }
+
+    const applied = await applyMonetaryDecision({
+      disputeId,
+      decision: decision === 'APPROVE_DOER' ? 'approved' : decision === 'APPROVE_COMPANY' ? 'rejected' : 'partial',
+      notes: String(reasoning).trim(),
+      toDoer,
+      toAsker,
+      adminUserId: userId,
+    });
+
+    // Kept in step for anything still reading the verdict vocabulary.
+    await db.query(
+      `UPDATE disputes
+          SET verdict_issued_at = NOW(), verdict_decision = $1,
+              verdict_doer_amount = $2, verdict_company_amount = $3,
+              verdict_reasoning = $4, verdict_issued_by = 'admin'
+        WHERE id = $5`,
+      [decision, toDoer, toAsker, String(reasoning).trim(), disputeId]
+    );
+
+    draftAndStoreOutcomeMessages(disputeId).catch((err) =>
+      console.error(`[Disputes] Outcome drafting failed for ${disputeId}:`, err)
+    );
 
     res.json({
       success: true,
-      message: `Verdict issued: ${decision}. Parties have 12 hours to appeal.`,
-      dispute: result.rows[0],
-      appealDeadline: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString(),
+      message: applied.appeal.immediate
+        ? `Verdict issued: ${decision}. Nobody can appeal this one, so it is ready to release.`
+        : `Verdict issued: ${decision}. ${applied.appeal.reason}`,
+      dispute: applied.dispute,
+      appealDeadline: applied.appeal.windowClosesAt.toISOString(),
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('[Disputes] Verdict error:', error);
-    res.status(500).json({ error: 'Failed to issue verdict' });
+    res.status(500).json({ error: error?.message || 'Failed to issue verdict' });
   }
 });
 
@@ -916,7 +1017,10 @@ router.post('/:id/appeal', authMiddleware, async (req: AuthRequest, res: Respons
     if (d.appeal_round >= 1) {
       return res.status(400).json({ error: 'This dispute has already been through an appeal. That decision is final.' });
     }
-    if (['pending', 'settled'].includes(d.settlement_status)) {
+    // Anything past 'not_started' means the release has been attempted, and a
+    // half-failed attempt may already have paid one leg. Once real money has
+    // left, an appeal cannot put it back.
+    if (d.settlement_status && d.settlement_status !== 'not_started') {
       return res.status(400).json({ error: 'The money has already been released, so this can no longer be appealed.' });
     }
 
@@ -964,60 +1068,153 @@ router.post('/:id/appeal', authMiddleware, async (req: AuthRequest, res: Respons
   }
 });
 
-// POST /api/disputes/:id/resolve-appeal (admin only - by T+60h)
+// POST /api/disputes/:id/resolve-appeal (admin only)
+//
+// The appeal decision is the one that gets paid, so it has to rewrite the
+// settlement — and it did not. It read and wrote verdict_doer_amount /
+// verdict_company_amount, while everything that actually moves money reads
+// settlement_doer_amount / settlement_asker_amount and the staged settlement
+// legs. An appeal only ever reaches a dispute decided through /resolve, which
+// never fills the verdict columns, so overturning an appeal wrote NULLs into
+// columns nobody pays from, left the original legs untouched, and then cleared
+// appeal_reviewed_at — which unblocks release. The overturned split was what
+// got paid. It now runs the same decision path as any other decision, which
+// restates the amounts, the fee and the legs together.
 router.post('/:id/resolve-appeal', adminOnly, async (req: AuthRequest, res: Response) => {
   try {
     const disputeId = parseInt(req.params.id);
     const { decision, reasoning, newDoerAmount, newCompanyAmount } = req.body;
+    const userId = parseInt(req.userId || '0', 10);
 
     if (!['UPHELD', 'OVERTURNED', 'MODIFIED'].includes(decision)) {
       return res.status(400).json({ error: 'Invalid appeal decision' });
     }
+    if (!reasoning || !String(reasoning).trim()) {
+      return res.status(400).json({ error: 'Reasoning is required — both parties will read it.' });
+    }
 
     const dispute = await db.query(
-      `SELECT id, verdict_doer_amount, verdict_company_amount, verdict_issued_at
-       FROM disputes WHERE id = $1`,
+      `SELECT d.id, d.errand_id, d.settlement_status, d.has_appeal, d.appeal_submitted_at,
+              d.appeal_reviewed_at, d.resolution, d.resolution_notes,
+              d.settlement_doer_amount, d.settlement_asker_amount,
+              COALESCE(ab.amount, e.budget) AS total
+         FROM disputes d
+         JOIN errands e ON e.id = d.errand_id
+         LEFT JOIN bids ab ON ab.id = e.accepted_bid_id
+        WHERE d.id = $1`,
       [disputeId]
     );
 
     if (dispute.rows.length === 0) {
       return res.status(404).json({ error: 'Dispute not found' });
     }
-
     const d = dispute.rows[0];
-    let finalDoerAmount = d.verdict_doer_amount;
-    let finalCompanyAmount = d.verdict_company_amount;
+
+    if (!d.has_appeal && !d.appeal_submitted_at) {
+      return res.status(400).json({ error: 'Nobody has appealed this decision.' });
+    }
+    if (d.appeal_reviewed_at) {
+      return res.status(400).json({ error: 'This appeal has already been decided. That decision is final.' });
+    }
+    if (['pending', 'settled'].includes(d.settlement_status)) {
+      return res.status(409).json({
+        error: `The money on this dispute is already ${d.settlement_status}, so the appeal cannot change it.`,
+      });
+    }
+
+    const total = Number(d.total ?? 0);
+    const currentDoer = Number(d.settlement_doer_amount ?? 0);
+    const currentAsker = Number(d.settlement_asker_amount ?? 0);
+
+    let toDoer = currentDoer;
+    let toAsker = currentAsker;
 
     if (decision === 'OVERTURNED') {
-      finalDoerAmount = d.verdict_company_amount;
-      finalCompanyAmount = d.verdict_doer_amount;
+      // The other side wins on the same numbers.
+      toDoer = currentAsker;
+      toAsker = currentDoer;
     } else if (decision === 'MODIFIED') {
-      finalDoerAmount = newDoerAmount || d.verdict_doer_amount;
-      finalCompanyAmount = newCompanyAmount || d.verdict_company_amount;
+      toDoer = newDoerAmount === undefined || newDoerAmount === null ? currentDoer : Number(newDoerAmount);
+      toAsker = newCompanyAmount === undefined || newCompanyAmount === null ? currentAsker : Number(newCompanyAmount);
+      if (!isFinite(toDoer) || !isFinite(toAsker) || toDoer < 0 || toAsker < 0) {
+        return res.status(400).json({ error: 'A revised split needs both amounts as positive numbers.' });
+      }
+      if (Math.abs(toDoer + toAsker - total) > 0.01) {
+        return res.status(400).json({
+          error: `The split must add up to the errand total of $${total.toFixed(2)}. You entered $${(toDoer + toAsker).toFixed(2)}.`,
+        });
+      }
     }
+
+    // Which of the three outcomes the revised numbers amount to.
+    const finalDecision: 'approved' | 'rejected' | 'partial' =
+      toAsker <= 0.01 ? 'approved' : toDoer <= 0.01 ? 'rejected' : 'partial';
+
+    // One round only, so this closes the window rather than opening another.
+    // The fee and the settlement legs are restated from the revised amounts —
+    // that is the whole point of an appeal decision.
+    const applied = await applyMonetaryDecision({
+      disputeId,
+      decision: finalDecision,
+      notes: String(reasoning).trim(),
+      toDoer,
+      toAsker,
+      adminUserId: userId,
+      waiveFee: !!req.body.waiveFee,
+      waiveFeeReason: req.body.waiveFeeReason || null,
+      isAppealOutcome: true,
+    });
 
     const result = await db.query(
       `UPDATE disputes
-       SET status = 'CLOSED',
-           appeal_reviewed_at = NOW(),
-           appeal_final_decision = $1,
-           appeal_final_reasoning = $2,
-           verdict_doer_amount = $3,
-           verdict_company_amount = $4,
-           closed_at = NOW()
-       WHERE id = $5
-       RETURNING *`,
-      [decision, reasoning, finalDoerAmount, finalCompanyAmount, disputeId]
+          SET appeal_reviewed_at = NOW(),
+              appeal_final_decision = $1,
+              appeal_final_reasoning = $2,
+              appeal_round = 1,
+              verdict_doer_amount = $3,
+              verdict_company_amount = $4,
+              updated_at = NOW()
+        WHERE id = $5
+        RETURNING id, errand_id, resolution, settlement_doer_amount, settlement_asker_amount,
+                  settlement_fee, appeal_final_decision, appeal_reviewed_at`,
+      [decision, String(reasoning).trim(), toDoer, toAsker, disputeId]
     );
+
+    // Both sides are told the revised outcome in the admin's own words.
+    draftAndStoreOutcomeMessages(disputeId).catch((err) =>
+      console.error(`[Disputes] Outcome drafting failed for ${disputeId}:`, err)
+    );
+
+    const parties = await db.query(
+      `SELECT e.asker_id, ab.doer_id, e.title
+         FROM disputes d JOIN errands e ON e.id = d.errand_id
+         LEFT JOIN bids ab ON ab.id = e.accepted_bid_id
+        WHERE d.id = $1`,
+      [disputeId]
+    );
+    const p = parties.rows[0];
+    for (const uid of [p?.asker_id, p?.doer_id].filter(Boolean)) {
+      try {
+        await notifyDisputeResolved(
+          uid,
+          p.title,
+          `Appeal ${decision.toLowerCase()} — $${toDoer.toFixed(2)} to the doer, $${toAsker.toFixed(2)} refunded`,
+          `#${disputeId}`
+        );
+      } catch (e) {
+        console.warn('[Disputes] Could not notify about the appeal outcome:', e);
+      }
+    }
 
     res.json({
       success: true,
-      message: `Appeal ${decision}. Final decision: Doer: $${finalDoerAmount}, Company: $${finalCompanyAmount}. NO FURTHER APPEALS.`,
+      message: `Appeal ${decision.toLowerCase()}. Final: $${toDoer.toFixed(2)} to the doer, $${toAsker.toFixed(2)} back to the asker. There is no further appeal.`,
       dispute: result.rows[0],
+      settlementFee: applied.fee,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('[Disputes] Appeal resolution error:', error);
-    res.status(500).json({ error: 'Failed to resolve appeal' });
+    res.status(500).json({ error: error?.message || 'Failed to resolve appeal' });
   }
 });
 
@@ -1521,8 +1718,13 @@ router.post('/:id/rework-complete', authMiddleware, async (req: AuthRequest, res
       [disputeId]
     );
 
-    // Work was put right, so payment goes through as originally agreed
+    // Work was put right, so payment goes through as originally agreed — no
+    // settlement legs, because nothing is being split. The errand goes back to
+    // where it was before the dispute so the normal payment flow can finish it;
+    // without this it would sit at 'disputed' forever with the hold lifted,
+    // which reads as an unresolved dispute over an errand that is actually done.
     await releaseHeldPayment(d.errand_id);
+    await closeErrandAfterDispute(d.errand_id, 'restore');
 
     res.json({
       success: true,

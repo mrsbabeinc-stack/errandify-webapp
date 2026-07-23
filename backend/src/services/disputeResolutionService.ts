@@ -498,6 +498,68 @@ export async function releaseHeldPayment(errandId: number) {
   }
 }
 
+/**
+ * Put the errand into dispute, remembering where it came from.
+ *
+ * Holding the payment was the only thing filing used to do, so an errand under
+ * dispute looked exactly like one that had gone through cleanly — to the asker,
+ * to the doer, and to every admin query that filters on status. It also meant
+ * nothing could tell you which errands were stuck.
+ *
+ * The previous status is kept because some disputes end with nothing changing
+ * hands, and those have to put the errand back where it was rather than guess
+ * at a plausible-looking status.
+ */
+export async function markErrandDisputed(errandId: number) {
+  try {
+    await db.query(
+      `UPDATE errands
+          SET pre_dispute_status = COALESCE(pre_dispute_status, status),
+              status = 'disputed'
+        WHERE id = $1 AND status <> 'disputed'`,
+      [errandId]
+    );
+  } catch (error) {
+    console.error('[Disputes] Could not mark errand disputed:', error);
+  }
+}
+
+/**
+ * Take the errand back out of dispute, once the dispute is genuinely over.
+ *
+ * "Over" means the money has moved (or there was never any to move). Calling
+ * this at the moment an admin decides would be wrong — the decision can still
+ * be appealed, and the errand would be showing a finished state while the funds
+ * are still frozen.
+ *
+ *   restored   nothing changed hands — back to whatever it was before
+ *   cancelled  the asker got the whole amount back, so no work was paid for
+ *   completed  the doer was paid something, in full or in part
+ */
+export async function closeErrandAfterDispute(
+  errandId: number,
+  outcome: 'restore' | 'cancelled' | 'completed'
+) {
+  try {
+    if (outcome === 'restore') {
+      await db.query(
+        `UPDATE errands
+            SET status = COALESCE(pre_dispute_status, 'completed'),
+                pre_dispute_status = NULL
+          WHERE id = $1 AND status = 'disputed'`,
+        [errandId]
+      );
+    } else {
+      await db.query(
+        `UPDATE errands SET status = $2, pre_dispute_status = NULL WHERE id = $1`,
+        [errandId, outcome]
+      );
+    }
+  } catch (error) {
+    console.error('[Disputes] Could not close errand after dispute:', error);
+  }
+}
+
 // Get dispute status
 export async function getDisputeStatus(disputeId: number) {
   try {

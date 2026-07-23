@@ -175,7 +175,10 @@ export async function prepareSettlementLegs(disputeId: number): Promise<void> {
          SET amount = EXCLUDED.amount,
              status = EXCLUDED.status,
              updated_at = NOW()
-         WHERE dispute_settlement_legs.status IN ('pending', 'skipped')`,
+         -- Only ever restate a leg that has not moved money. 'failed' qualifies:
+         -- it definitionally paid nobody, and an appeal that changes the amounts
+         -- must not leave a stale figure behind for the retry to pay out.
+         WHERE dispute_settlement_legs.status IN ('pending', 'skipped', 'failed')`,
       [
         disputeId,
         l.leg,
@@ -186,6 +189,130 @@ export async function prepareSettlementLegs(disputeId: number): Promise<void> {
       ]
     );
   }
+}
+
+export interface MonetaryDecision {
+  disputeId: number;
+  decision: 'approved' | 'rejected' | 'partial';
+  notes: string;
+  toDoer: number;
+  toAsker: number;
+  adminUserId: number;
+  waiveFee?: boolean;
+  waiveFeeReason?: string | null;
+  /**
+   * True when this decision came out of an appeal review. An appeal decision is
+   * final — one round only — so no second window opens and the dispute becomes
+   * releasable straight away.
+   */
+  isAppealOutcome?: boolean;
+}
+
+export interface MonetaryDecisionResult {
+  dispute: any;
+  fee: CommissionBreakdown;
+  appeal: AppealEligibility;
+  toDoer: number;
+  toAsker: number;
+}
+
+/**
+ * Record a money decision on a dispute, one way, for every route that makes one.
+ *
+ * There used to be two: `/resolve` computed a fee, opened an appeal window and
+ * staged settlement legs, while `/verdict` wrote its own set of columns and did
+ * none of that — so a dispute decided through `/verdict` had no `resolution`,
+ * which is what both the appeal route and the settlement check look for. It
+ * could be neither appealed nor paid, and sat decided-but-frozen forever. Two
+ * routes deciding the same dispute differently is worse than either alone, so
+ * they now share this.
+ *
+ * Nothing here moves money. It records what was decided and stages the legs;
+ * `executeSettlement` pays them, and only after the appeal window has closed.
+ */
+export async function applyMonetaryDecision(input: MonetaryDecision): Promise<MonetaryDecisionResult> {
+  const ctx = await db.query(
+    `SELECT d.id, d.errand_id, d.response_status, d.filed_by_user_id, d.settlement_status,
+            ab.doer_id
+       FROM disputes d
+       JOIN errands e ON e.id = d.errand_id
+       LEFT JOIN bids ab ON ab.id = e.accepted_bid_id
+      WHERE d.id = $1`,
+    [input.disputeId]
+  );
+  if (ctx.rows.length === 0) throw new Error('Dispute not found');
+  const d = ctx.rows[0];
+
+  // Never re-decide a dispute whose money is moving or has moved. A half-failed
+  // settlement still counts: one leg succeeding means real money left the
+  // platform, and re-deciding from there would pay a second, different split on
+  // top of it.
+  if (['pending', 'settled'].includes(d.settlement_status)) {
+    throw new Error(`This dispute is already ${d.settlement_status} — deciding it again would risk paying twice.`);
+  }
+  const paid = await db.query(
+    `SELECT 1 FROM dispute_settlement_legs WHERE dispute_id = $1 AND status = 'succeeded' LIMIT 1`,
+    [input.disputeId]
+  );
+  if (paid.rows.length > 0) {
+    throw new Error('Part of this settlement has already been paid, so the decision can no longer be changed.');
+  }
+
+  // Our cut applies to the doer's share only, so a full refund carries no fee.
+  const fee = await calculateDisputeFee({
+    errandId: d.errand_id,
+    doerAmount: input.toDoer,
+    waived: input.waiveFee,
+  });
+
+  const appeal: AppealEligibility = input.isAppealOutcome
+    ? {
+        claimantCanAppeal: false,
+        defendantCanAppeal: false,
+        windowClosesAt: new Date(),
+        immediate: true,
+        reason: 'This was the appeal decision. There is no further appeal.',
+      }
+    : determineAppealEligibility({
+        responseStatus: d.response_status,
+        decision: input.decision,
+        claimantIsDoer: Number(d.filed_by_user_id) === Number(d.doer_id),
+      });
+
+  const updated = await db.query(
+    `UPDATE disputes
+        SET status = 'resolved',
+            resolution_kind = 'monetary',
+            resolution = $1,
+            resolution_notes = $2,
+            resolved_at = NOW(),
+            settlement_doer_amount = $3,
+            settlement_asker_amount = $4,
+            settlement_fee = $5,
+            settlement_fee_rate = $6,
+            settlement_fee_waived = $7,
+            settlement_fee_waived_reason = $8,
+            appeal_window_closes_at = $9,
+            claimant_can_appeal = $10,
+            defendant_can_appeal = $11,
+            decided_by_user_id = $12,
+            updated_at = NOW()
+      WHERE id = $13
+      RETURNING id, errand_id, resolution, settlement_doer_amount, settlement_asker_amount,
+                settlement_fee, appeal_window_closes_at, claimant_can_appeal, defendant_can_appeal`,
+    [
+      input.decision, input.notes, input.toDoer, input.toAsker,
+      fee.fee, fee.rate, fee.waived, input.waiveFeeReason || null,
+      appeal.windowClosesAt, appeal.claimantCanAppeal, appeal.defendantCanAppeal,
+      input.adminUserId, input.disputeId,
+    ]
+  );
+  if (updated.rows.length === 0) throw new Error('Dispute not found');
+
+  // Stage the money movements without performing any of them.
+  await prepareSettlementLegs(input.disputeId);
+
+  return { dispute: updated.rows[0], fee, appeal, toDoer: input.toDoer, toAsker: input.toAsker };
 }
 
 export interface PreflightResult {
@@ -302,6 +429,16 @@ export async function executeSettlement(disputeId: number): Promise<SettlementEx
 
   const out: SettlementExecutionResult = { disputeId, legs: [], allSettled: true };
 
+  // Mark it in flight before the first Stripe call. Until this existed, a
+  // settlement that paid one leg and failed the other left the dispute reading
+  // 'not_started' — so it was still appealable and still re-decidable after real
+  // money had already moved, which is the exact sequence the appeal window is
+  // there to prevent.
+  await db.query(
+    `UPDATE disputes SET settlement_status = 'pending', updated_at = NOW() WHERE id = $1`,
+    [disputeId]
+  );
+
   for (const leg of legsRes.rows) {
     const amount = Number(leg.amount);
 
@@ -355,10 +492,47 @@ export async function executeSettlement(disputeId: number): Promise<SettlementEx
     }
   }
 
-  // The dispute is fully settled only when every leg is paid.
-  if (out.allSettled && out.legs.length > 0) {
+  // Judge the settlement on every leg the dispute has, not just the ones this
+  // run touched. A retry after a partial failure only picks up what was left
+  // outstanding, so counting this run's legs alone would read a dispute whose
+  // legs had all already succeeded as having nothing settled.
+  const all = await db.query(
+    `SELECT status, count(*)::int AS n FROM dispute_settlement_legs WHERE dispute_id = $1 GROUP BY status`,
+    [disputeId]
+  );
+  const byStatus = Object.fromEntries(all.rows.map((r: any) => [r.status, r.n]));
+  const legCount = all.rows.reduce((n: number, r: any) => n + r.n, 0);
+  const done = (byStatus.succeeded || 0) + (byStatus.skipped || 0);
+
+  if (legCount > 0 && done === legCount) {
+    const amounts = await db.query(
+      `UPDATE disputes SET settlement_status = 'settled', settled_at = NOW(), status = 'closed', closed_at = NOW()
+        WHERE id = $1 RETURNING settlement_doer_amount`,
+      [disputeId]
+    );
+    out.allSettled = true;
+
+    // The dispute is genuinely over now, so the errand stops looking disputed
+    // and the hold comes off. Doing this any earlier — at the moment an admin
+    // decided, say — would show a finished errand while the funds were still
+    // frozen and the decision still appealable.
+    const { closeErrandAfterDispute, releaseHeldPayment } = await import('./disputeResolutionService.js');
+    const paidDoer = Number(amounts.rows[0]?.settlement_doer_amount ?? 0) > 0;
+    await closeErrandAfterDispute(errand_id, paidDoer ? 'completed' : 'cancelled');
+    await releaseHeldPayment(errand_id);
+  } else if (byStatus.failed) {
+    // Some money may have moved. Leave it flagged rather than back at
+    // 'not_started', so the attention queue owns it and nothing treats it as an
+    // untouched dispute that can still be re-decided or appealed.
     await db.query(
-      `UPDATE disputes SET settlement_status = 'settled', settled_at = NOW() WHERE id = $1`,
+      `UPDATE disputes SET settlement_status = 'failed', updated_at = NOW() WHERE id = $1`,
+      [disputeId]
+    );
+  } else {
+    // Nothing was outstanding and nothing failed. Put the status back so the
+    // dispute is not left reading 'pending' with nothing in flight.
+    await db.query(
+      `UPDATE disputes SET settlement_status = 'not_started', updated_at = NOW() WHERE id = $1`,
       [disputeId]
     );
   }

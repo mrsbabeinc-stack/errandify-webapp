@@ -8,9 +8,7 @@ import {
   assignDisputeToAgent,
   getL2DisputesForAgent,
   resolveL2Dispute,
-  createAppeal,
   getL3Appeals,
-  resolveAppeal,
   getSupportQueue,
   getDashboardStats,
 } from '../services/escalationService.js';
@@ -225,43 +223,12 @@ router.post('/:id/resolve-l2', authMiddleware, async (req: AuthRequest, res: Res
 // L3 APPEAL ENDPOINTS
 // ============================================================================
 
-/**
- * POST /api/disputes/:id/appeal
- * Submit appeal to L3
- * Auth: User (asker/doer)
- */
-router.post('/:id/appeal', authMiddleware, async (req: AuthRequest, res: Response) => {
-  try {
-    const userId = parseInt(req.userId || '0', 10);
-    const disputeId = parseInt(req.params.id, 10);
-    const { appealReason, newEvidenceUrl } = req.body;
-
-    // Verify user is party to the dispute
-    const disputeResult = await db.query(
-      `SELECT e.asker_id, ab.doer_id
-         FROM disputes d
-         JOIN errands e ON e.id = d.errand_id
-         LEFT JOIN bids ab ON ab.id = e.accepted_bid_id
-        WHERE d.id = $1`,
-      [disputeId]
-    );
-
-    if (disputeResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Dispute not found' });
-    }
-
-    const dispute = disputeResult.rows[0];
-    if (dispute.asker_id !== userId && dispute.doer_id !== userId) {
-      return res.status(403).json({ error: 'Not authorized to appeal this dispute' });
-    }
-
-    const appealId = await createAppeal(disputeId, appealReason, newEvidenceUrl, userId);
-    res.json({ success: true, data: { appealId }, message: 'Appeal submitted to L3' });
-  } catch (error) {
-    console.error('Appeal error:', error);
-    res.status(500).json({ error: 'Failed to submit appeal' });
-  }
-});
+// POST /:id/appeal was defined here as well as in disputes.ts, and both files
+// mount on /api/disputes. disputes.ts mounts first, so this copy never ran a
+// single request — it was unreachable the day it was written. Removed rather
+// than left to mislead: the live appeal route is the one in disputes.ts, which
+// checks appeal rights and freezes settlement. Same for /:id/resolve-appeal,
+// further down.
 
 /**
  * GET /api/disputes/my-assignments/l3
@@ -293,31 +260,10 @@ router.get('/my-assignments/l3', authMiddleware, async (req: AuthRequest, res: R
   }
 });
 
-/**
- * POST /api/disputes/:id/resolve-appeal
- * Submit final L3 decision (binding)
- * Auth: L3 support staff
- */
-router.post('/:id/resolve-appeal', authMiddleware, async (req: AuthRequest, res: Response) => {
-  try {
-    const userId = parseInt(req.userId || '0', 10);
-    const { appealId, decision, reasoning } = req.body;
-
-    // Verify user is L3 support staff
-    const userResult = await db.query('SELECT role FROM users WHERE id = $1', [userId]);
-    const userRole = userResult.rows[0]?.role;
-
-    if (!['support_l3', 'admin'].includes(userRole)) {
-      return res.status(403).json({ error: 'Insufficient permissions' });
-    }
-
-    await resolveAppeal(appealId, decision, reasoning, userId);
-    res.json({ success: true, message: 'Appeal resolved with final decision' });
-  } catch (error) {
-    console.error('Resolve appeal error:', error);
-    res.status(500).json({ error: 'Failed to resolve appeal' });
-  }
-});
+// POST /:id/resolve-appeal also lived here and was equally unreachable — see
+// the note above. The live one is in disputes.ts, and unlike this copy it
+// restates the settlement amounts, the fee and the legs from the appeal
+// outcome, which is the part that decides what actually gets paid.
 
 // ============================================================================
 // QUEUE MANAGEMENT ENDPOINTS

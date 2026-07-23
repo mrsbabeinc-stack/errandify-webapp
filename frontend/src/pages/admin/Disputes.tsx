@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { useToast, ToastContainer } from '../../components/Toast';
 import { CaseDisputeService } from '../../services/CaseDisputeService';
+import DisputeSettlementPanel from '../../components/admin/DisputeSettlementPanel';
 
 interface Dispute {
   id: number;
@@ -53,6 +54,13 @@ export const DisputesPage: React.FC = () => {
   const [selectedDispute, setSelectedDispute] = useState<Dispute | null>(null);
   const [linkedCaseContext, setLinkedCaseContext] = useState<LinkedCaseContext | null>(null);
   const [showReviewModal, setShowReviewModal] = useState(false);
+  // Everything after the decision — appeal, readiness, release. A resolved
+  // dispute used to end at "Resolved" with no way to release the money.
+  const [settlingDisputeId, setSettlingDisputeId] = useState<number | null>(null);
+  // Disputes whose money is waiting on a click, and settlements that broke
+  // half-way. Both queues existed on the server and nothing ever asked for them.
+  const [releaseQueue, setReleaseQueue] = useState<any[]>([]);
+  const [failedLegs, setFailedLegs] = useState<any[]>([]);
   // Deliberately starts unset. It used to default to 'approve', so an admin who
   // never touched the radio was one click from paying the doer in full.
   const [resolution, setResolution] = useState<'' | 'approve' | 'reject' | 'partial'>('');
@@ -80,7 +88,25 @@ export const DisputesPage: React.FC = () => {
 
   useEffect(() => {
     fetchDisputes();
+    fetchQueues();
   }, [filter]);
+
+  const fetchQueues = async () => {
+    const base = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
+    try {
+      const [ready, attention] = await Promise.all([
+        axios.get(`${base}/api/disputes/queues/ready-to-release`, { headers }),
+        axios.get(`${base}/api/disputes/queues/needs-attention`, { headers }),
+      ]);
+      setReleaseQueue(ready.data?.data?.disputes || []);
+      setFailedLegs(attention.data?.data?.legs || []);
+    } catch (err) {
+      // A queue that cannot load must not blank the page — the dispute list
+      // below is still usable without it.
+      console.error('Failed to load settlement queues:', err);
+    }
+  };
 
   const fetchDisputes = async () => {
     try {
@@ -402,6 +428,60 @@ export const DisputesPage: React.FC = () => {
           </div>
         </div>
 
+        {/* Money waiting on someone to click.
+            The backend has always been able to answer "which disputes are
+            decided, past their appeal window and still unpaid" — nothing asked
+            it. So a decided dispute sat there until an admin happened to open
+            that exact row. These two bars are the prompt. */}
+        {(releaseQueue.length > 0 || failedLegs.length > 0) && (
+          <div className="space-y-2 mb-6">
+            {releaseQueue.length > 0 && (
+              <div className="bg-green-50 border border-green-300 rounded-lg p-4 flex items-center justify-between">
+                <div>
+                  <p className="font-semibold text-green-900">
+                    {releaseQueue.length} dispute{releaseQueue.length === 1 ? '' : 's'} ready to release
+                  </p>
+                  <p className="text-sm text-green-800">
+                    Decided, appeal window closed, nobody paid yet — $
+                    {releaseQueue
+                      .reduce(
+                        (n: number, d: any) =>
+                          n + Number(d.settlement_doer_amount ?? 0) + Number(d.settlement_asker_amount ?? 0),
+                        0
+                      )
+                      .toFixed(2)}{' '}
+                    held between them.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setSettlingDisputeId(releaseQueue[0].id)}
+                  className="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold text-sm hover:bg-green-700 whitespace-nowrap"
+                >
+                  Release #{releaseQueue[0].id} →
+                </button>
+              </div>
+            )}
+            {failedLegs.length > 0 && (
+              <div className="bg-red-50 border border-red-300 rounded-lg p-4 flex items-center justify-between">
+                <div>
+                  <p className="font-semibold text-red-900">
+                    {failedLegs.length} payment{failedLegs.length === 1 ? '' : 's'} failed part-way
+                  </p>
+                  <p className="text-sm text-red-800">
+                    {failedLegs[0].error_message || 'See the dispute for the reason.'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setSettlingDisputeId(failedLegs[0].id)}
+                  className="bg-red-600 text-white px-4 py-2 rounded-lg font-semibold text-sm hover:bg-red-700 whitespace-nowrap"
+                >
+                  Look at #{failedLegs[0].id} →
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Filters */}
         <div className="flex gap-2 mb-6 bg-white rounded-lg p-2 shadow-sm">
           {(['all', 'hana_reviewing', 'admin_review', 'resolved', 'closed'] as const).map((f) => (
@@ -478,7 +558,7 @@ export const DisputesPage: React.FC = () => {
                         {new Date(dispute.created_at).toLocaleDateString('en-SG')}
                       </td>
                       <td className="px-6 py-4">
-                        {dispute.status !== 'resolved' ? (
+                        {dispute.status !== 'resolved' && dispute.status !== 'closed' ? (
                           <button
                             onClick={() => {
                               setSelectedDispute(dispute);
@@ -492,7 +572,27 @@ export const DisputesPage: React.FC = () => {
                             Review →
                           </button>
                         ) : (
-                          <span className="text-green-600 text-sm">Resolved</span>
+                          // A decided dispute is not a finished one. The money
+                          // still has to be released, and an appeal may be
+                          // waiting — neither of which had a way in before.
+                          <button
+                            onClick={() => setSettlingDisputeId(dispute.id)}
+                            className={`font-semibold text-sm ${
+                              dispute.has_appeal
+                                ? 'text-orange-600 hover:text-orange-800'
+                                : dispute.settlement_status === 'settled'
+                                ? 'text-gray-500 hover:text-gray-700'
+                                : 'text-green-600 hover:text-green-800'
+                            }`}
+                          >
+                            {dispute.has_appeal
+                              ? '⚖️ Appeal waiting →'
+                              : dispute.settlement_status === 'settled'
+                              ? 'Settled →'
+                              : dispute.settlement_status === 'failed'
+                              ? '⚠️ Release failed →'
+                              : 'Release money →'}
+                          </button>
                         )}
                       </td>
                     </tr>
@@ -503,6 +603,18 @@ export const DisputesPage: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Everything after the decision: appeal, readiness, release */}
+      {settlingDisputeId !== null && (
+        <DisputeSettlementPanel
+          disputeId={settlingDisputeId}
+          onClose={() => setSettlingDisputeId(null)}
+          onChanged={() => {
+            fetchDisputes();
+            fetchQueues();
+          }}
+        />
+      )}
 
       {/* Review Modal */}
       {showReviewModal && selectedDispute && (

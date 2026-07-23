@@ -56,10 +56,7 @@ import AboutErrandifyPage from './pages/AboutErrandifyPage';
 import NotificationPreferencesPage from './pages/NotificationPreferencesPage';
 import BeforeYouGetStartedPage from './pages/BeforeYouGetStartedPage';
 import SafetyResourcesPage from './pages/SafetyResourcesPage';
-import SupportDashboardPage from './pages/SupportDashboardPage';
 import TopNotificationTestPage from './pages/TopNotificationTestPage';
-import DisputeReviewPage from './pages/DisputeReviewPage';
-import AppealDashboardPage from './pages/AppealDashboardPage';
 import AdminDashboard from './pages/admin/Dashboard';
 import CasesPage from './pages/admin/Cases';
 import CategoriesPage from './pages/admin/Categories';
@@ -519,9 +516,6 @@ export default function App() {
         <Route path="/admin" element={isAuthenticated && isAdmin ? <AdminPanel /> : <Navigate to="/login" replace />} />
 
         {/* Support Dashboard - L2/L3 Dispute Resolution */}
-        <Route path="/support/dashboard" element={isAuthenticated && isSupport ? <SupportDashboardPage /> : <Navigate to="/login" replace />} />
-        <Route path="/disputes/:disputeId/review" element={isAuthenticated && isSupport ? <DisputeReviewPage /> : <Navigate to="/login" replace />} />
-        <Route path="/support/appeals" element={isAuthenticated && isSupport ? <AppealDashboardPage /> : <Navigate to="/login" replace />} />
 
         <Route path="/notification-preferences" element={isAuthenticated ? <NotificationPreferencesPage /> : <Navigate to="/login" replace />} />
         <Route path="/safety-resources" element={<SafetyResourcesPage />} />
@@ -530,6 +524,9 @@ export default function App() {
         <Route path="/admin/dashboard" element={isAuthenticated && isAdmin ? <AdminDashboard /> : <Navigate to="/login" replace />} />
         <Route path="/admin/dashboard/verifications" element={isAuthenticated && isAdmin ? <CompanyVerificationsAdmin /> : <Navigate to="/login" replace />} />
         <Route path="/admin/dashboard/users" element={isAuthenticated && isAdmin ? <UsersSafetyPage /> : <Navigate to="/login" replace />} />
+        {/* /support/dashboard, /disputes/:id/review and /support/appeals were
+            the L2/L3 tier, archived 23 July 2026 — see archive/l2-l3-support-tier/.
+            Disputes are handled at /admin/dashboard/disputes. */}
         <Route path="/admin/dashboard/disputes" element={isAuthenticated && isAdmin ? <DisputesPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin/dashboard/operations" element={isAuthenticated && isAdmin ? <OperationsPage /> : <Navigate to="/login" replace />} />
         <Route path="/admin/dashboard/regional" element={isAuthenticated && isAdmin ? <RegionalPerformanceReport /> : <Navigate to="/login" replace />} />

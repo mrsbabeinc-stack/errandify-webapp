@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { AuthRequest, authMiddleware, requireAdmin } from '../middleware/auth.js';
+import { AuthRequest, authMiddleware } from '../middleware/auth.js';
 import db from '../db.js';
 import { activityLogService } from '../services/activityLogService.js';
 import { sendCriticalEmail } from '../services/emailNotifications.js';
@@ -1460,58 +1460,20 @@ router.post('/:id/reopen', authMiddleware, async (req: AuthRequest, res: Respons
   }
 });
 
-// POST /api/errands/:id/raise-dispute - Raise dispute before 48 hours
-router.post('/:id/raise-dispute', authMiddleware, async (req: AuthRequest, res: Response) => {
-  try {
-    const { id } = req.params;
-    const userId = parseInt(req.userId || '0', 10);
-    const { reason } = req.body;
-
-    const errandResult = await db.query(
-      'SELECT id, status, asker_id, dispute_deadline FROM errands WHERE id = $1',
-      [id]
-    );
-
-    if (errandResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Errand not found' });
-    }
-
-    const errand = errandResult.rows[0];
-
-    // Only asker can raise dispute
-    if (userId !== errand.asker_id) {
-      return res.status(403).json({ error: 'Only asker can raise dispute' });
-    }
-
-    // Can only dispute within 48 hours
-    if (new Date() > new Date(errand.dispute_deadline)) {
-      return res.status(400).json({ error: 'Dispute period has ended' });
-    }
-
-    if (errand.status !== 'job_completed') {
-      return res.status(400).json({ error: 'Can only dispute completed jobs' });
-    }
-
-    // Update status to disputed - payment held indefinitely
-    await db.query(
-      'UPDATE errands SET status = $1, dispute_reason = $2 WHERE id = $3',
-      ['disputed', reason || null, id]
-    );
-
-    // Log activity: Dispute raised
-    const userResult = await db.query('SELECT display_name FROM users WHERE id = $1', [userId]);
-    const userName = userResult.rows[0]?.display_name || 'Unknown User';
-    await activityLogService.logDisputeRaised(id, userName, userId, 'asker');
-
-    res.json({
-      success: true,
-      message: 'Dispute raised. Admin will review. Payment is held.',
-    });
-  } catch (error) {
-    console.error('Error raising dispute:', error);
-    res.status(500).json({ error: 'Failed to raise dispute' });
-  }
-});
+// A second dispute system used to live here: POST /:id/raise-dispute,
+// GET /disputes/list/all and POST /:id/resolve-dispute. All three are gone.
+//
+// They wrote errands.status = 'disputed' and dispute_resolution/payment_
+// released_to straight onto the errand, and created no row in `disputes` at
+// all — so a dispute raised this way had no defence window, no Hana proposal,
+// no settlement legs, never appeared in the admin dispute queue and could never
+// be paid. Worse, /resolve-dispute carried the comment "TODO: Check if user is
+// admin" and nothing else: any logged-in user could resolve a disputed errand
+// in their own favour and set who the payment went to.
+//
+// The real module is /api/disputes — file with POST /api/disputes, which holds
+// the payment, marks the errand disputed and routes it to Hana and then an
+// admin. See services/disputeSettlement.ts for the money path.
 
 // POST /api/errands/:id/work-proof - Upload work proof before completion
 router.post('/:id/work-proof', authMiddleware, async (req: AuthRequest, res: Response) => {
@@ -1823,66 +1785,9 @@ router.post('/:id/confirm-extension-approve', authMiddleware, async (req: AuthRe
   }
 });
 
-// GET /api/errands/disputes - Get all disputes (admin only)
-router.get('/disputes/list/all', authMiddleware, requireAdmin(), async (req: AuthRequest, res: Response) => {
-  try {
-    const userId = parseInt(req.userId || '0', 10);
-
-    const result = await db.query(
-      `SELECT id, title, asker_id, status, dispute_reason, created_at, dispute_deadline
-       FROM errands WHERE status = 'disputed' ORDER BY created_at DESC`
-    );
-
-    res.json({
-      success: true,
-      data: result.rows,
-    });
-  } catch (error) {
-    console.error('Error fetching disputes:', error);
-    res.status(500).json({ error: 'Failed to fetch disputes' });
-  }
-});
-
-// POST /api/errands/:id/resolve-dispute - Admin resolves dispute
-router.post('/:id/resolve-dispute', authMiddleware, async (req: AuthRequest, res: Response) => {
-  try {
-    const { id } = req.params;
-    const { resolution, payment_to, amount_percentage } = req.body;
-
-    // TODO: Check if user is admin
-
-    if (!resolution || !payment_to) {
-      return res.status(400).json({ error: 'Resolution and payment_to required' });
-    }
-
-    const errandResult = await db.query(
-      'SELECT id, status FROM errands WHERE id = $1',
-      [id]
-    );
-
-    if (errandResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Errand not found' });
-    }
-
-    if (errandResult.rows[0].status !== 'disputed') {
-      return res.status(400).json({ error: 'Can only resolve disputed jobs' });
-    }
-
-    // Update dispute resolution
-    await db.query(
-      'UPDATE errands SET status = $1, dispute_resolution = $2, dispute_resolved_at = NOW(), payment_released_to = $3, payment_percentage = $4 WHERE id = $5',
-      ['completed', resolution, payment_to, amount_percentage || 100, id]
-    );
-
-    res.json({
-      success: true,
-      message: 'Dispute resolved. Payment will be released.',
-    });
-  } catch (error) {
-    console.error('Error resolving dispute:', error);
-    res.status(500).json({ error: 'Failed to resolve dispute' });
-  }
-});
+// GET /disputes/list/all and POST /:id/resolve-dispute removed — see the note
+// above /:id/work-proof. Admins list disputes at GET /api/disputes and decide
+// them at POST /api/disputes/:id/resolve.
 
 // GET /api/errands/recommended - Get recommended tasks based on user preferences
 router.get('/recommended', authMiddleware, async (req: AuthRequest, res: Response) => {

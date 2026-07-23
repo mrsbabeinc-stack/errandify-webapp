@@ -48,7 +48,6 @@ import mockPaymentRoutes from './routes/mockPayment.js';
 import uploadRoutes from './routes/uploads.js';
 import categoryPreferencesRoutes from './routes/categoryPreferences.js';
 import safetyRoutes from './routes/safety.js';
-import disputesL2L3Routes from './routes/disputes_l2_l3.js';
 import moderationReviewRoutes from './routes/moderationReview.js';
 import casesRoutes from './routes/cases.js';
 import companyRoutes from './routes/companyRoutes.js';
@@ -573,7 +572,9 @@ app.use('/api/payment', paymentRoutes);
 app.use('/api/jobs', jobsRoutes);
 app.use('/api/messages', messagesRoutes);
 app.use('/api/disputes', disputesRoutes);
-app.use('/api/disputes', disputesL2L3Routes); // L2+L3 resolution routes
+// The L2/L3 tier was archived on 23 July 2026 — see archive/l2-l3-support-tier/.
+// It was a second decision model alongside the real one, and its resolve-l2
+// route produced disputes that could never be appealed or paid.
 app.use('/api/moderation', moderationReviewRoutes);
 app.use('/api/cases', casesRoutes); // Admin case management
 app.use('/api/notifications', notificationsRoutes);

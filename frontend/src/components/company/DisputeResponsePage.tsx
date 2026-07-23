@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { EvidenceViewer } from '../disputes/EvidenceViewer';
+import DisputeOutcomeAndAppeal from '../disputes/DisputeOutcomeAndAppeal';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -290,6 +291,10 @@ export function DisputeResponsePage({ disputeId, onBack, userRole }: DisputeResp
           </div>
         </div>
       )}
+
+      {/* The outcome, and the appeal if they are entitled to one. Renders
+          nothing until a decision exists. */}
+      <DisputeOutcomeAndAppeal disputeId={disputeId} onChanged={fetchDisputeDetails} />
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
