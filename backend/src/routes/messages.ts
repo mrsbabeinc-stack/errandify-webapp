@@ -9,6 +9,37 @@ import { QWEN_GENERATION_URL } from '../config/aiRegion.js';
 
 const router = Router();
 
+/**
+ * Everyone who counts as the "doer side" of a task chat.
+ *
+ * For an individual errand that is just the doer. For a company errand it is the
+ * allocated staff member AND the company's owner and managers — so that if
+ * anything happens on the job, the people accountable for it (money and disputes
+ * sit with the company) can see the conversation and step in. The bidder is
+ * included too, since an owner or manager who placed the offer must not lose
+ * access by allocating it to someone else.
+ *
+ * Reading the current allocation means the set follows a staff swap on its own.
+ */
+async function isDoerSide(
+  userId: number,
+  opts: { doerId?: number | null; bidderId?: number | null; companyId?: number | null }
+): Promise<boolean> {
+  if (opts.doerId && opts.doerId === userId) return true;
+  if (opts.bidderId && opts.bidderId === userId) return true;
+  if (opts.companyId) {
+    const r = await db.query(
+      `SELECT 1 FROM company_staff
+        WHERE company_id = $1 AND user_id = $2
+          AND role IN ('owner','manager') AND status = 'active'
+        LIMIT 1`,
+      [opts.companyId, userId]
+    );
+    if (r.rows.length > 0) return true;
+  }
+  return false;
+}
+
 // POST /api/messages/tasks/:taskId/send - Send message in task chat
 router.post('/tasks/:taskId/send', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
@@ -46,9 +77,11 @@ router.post('/tasks/:taskId/send', authMiddleware, async (req: AuthRequest, res:
 
     const task = taskResult.rows[0];
     const isAsker = task.asker_id === senderId;
-    // The allocated staff, and the owner/manager who placed the bid, are both
-    // the doer side of a company errand.
-    const isDoer = task.doer_id === senderId || task.bidder_id === senderId;
+    const isDoer = await isDoerSide(senderId, {
+      doerId: task.doer_id,
+      bidderId: task.bidder_id,
+      companyId: task.company_id,
+    });
 
     if (!isAsker && !isDoer) {
       return res.status(403).json({ error: 'Only asker and doer can message' });
@@ -258,12 +291,16 @@ router.get('/tasks/:taskId', authMiddleware, async (req: AuthRequest, res: Respo
     // not the owner who bid — so they must be able to read the thread, and the
     // asker must be talking to them. This overrides doerId with the current
     // allocation and follows a swap automatically.
+    // No IS NOT NULL filter on assigned_staff_id: the company_id must resolve
+    // even before anyone is allocated, or a manager who did not personally bid
+    // cannot see the chat until allocation — too late if the point is to catch
+    // something going wrong early.
     const alloc = await db.query(
       `SELECT co.assigned_staff_id, co.company_id,
               COALESCE(u.alias, u.display_name) AS staff_name
          FROM company_orders co
          LEFT JOIN users u ON u.id = co.assigned_staff_id
-        WHERE co.errand_id = $1 AND co.assigned_staff_id IS NOT NULL`,
+        WHERE co.errand_id = $1`,
       [taskId]
     );
     const allocatedStaffId: number | null = alloc.rows[0]?.assigned_staff_id ?? null;
@@ -275,8 +312,11 @@ router.get('/tasks/:taskId', authMiddleware, async (req: AuthRequest, res: Respo
     }
 
     const isAsker = task.asker_id === userId;
-    // Allocated staff, or the owner/manager who placed the bid, are the doer side.
-    const isDoer = doerId === userId || bidderId === userId;
+    const isDoer = await isDoerSide(userId, {
+      doerId,
+      bidderId,
+      companyId: alloc.rows[0]?.company_id ?? null,
+    });
 
     if (!isAsker && !isDoer) {
       return res.status(403).json({ error: 'Only asker and doer can view messages' });
