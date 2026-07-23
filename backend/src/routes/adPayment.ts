@@ -21,6 +21,10 @@ router.post('/calculate', authMiddleware, async (req: AuthRequest, res: Response
       return res.status(400).json({ success: false, error: 'campaign_id and company_id required' });
     }
 
+    // Only the owner/manager may see another company's credit balance / breakdown.
+    const gate = await requireCompanyRole(req.userId!, company_id, ['owner', 'manager']);
+    if (!gate.ok) return res.status(gate.status || 403).json({ success: false, error: gate.error });
+
     // Get campaign
     const campaign = await campaignModel.getById(campaign_id);
     if (!campaign) {
@@ -63,10 +67,29 @@ router.post('/process', authMiddleware, async (req: AuthRequest, res: Response) 
       return res.status(400).json({ success: false, error: 'campaign_id and company_id required' });
     }
 
+    // Authorisation at the point of the write: this endpoint moves money
+    // (deducts ad credits and can charge a card). company_id came from the body
+    // and was never checked against the caller, so any authenticated user could
+    // spend another company's credits. Only the owner/manager may pay.
+    const gate = await requireCompanyRole(req.userId!, company_id, ['owner', 'manager']);
+    if (!gate.ok) return res.status(gate.status || 403).json({ success: false, error: gate.error });
+
     // Get campaign
     const campaign = await campaignModel.getById(campaign_id);
     if (!campaign) {
       return res.status(404).json({ success: false, error: 'Campaign not found' });
+    }
+
+    // The campaign must belong to the paying company.
+    if (Number(campaign.company_id) !== Number(company_id)) {
+      return res.status(403).json({ success: false, error: 'Campaign does not belong to this company' });
+    }
+
+    // Idempotency: processAdPayment deducts credits / charges Stripe and sets the
+    // campaign to 'approved'. Without this guard, a retry (or a double-click after
+    // a slow response) deducts a second time. Once paid, don't charge again.
+    if (['approved', 'active', 'completed'].includes(campaign.status)) {
+      return res.status(409).json({ success: false, error: 'Campaign has already been paid and approved' });
     }
 
     // Calculate what we need to charge
@@ -99,13 +122,13 @@ router.post('/process', authMiddleware, async (req: AuthRequest, res: Response) 
     await scheduleModel.create(campaign_id, campaign.starts_at, 'start');
     await scheduleModel.create(campaign_id, campaign.ends_at, 'end');
 
-    // Send approval notification
-    const companyRes = await db.query('SELECT name FROM companies WHERE id = $1', [company_id]);
-    const companyName = companyRes.rows[0]?.name || 'Unknown';
-
+    // Send approval notification. `companies` has no `name` column (it is
+    // `company_name`) — the old query threw AFTER processAdPayment had already
+    // deducted credits, so a successful payment surfaced as a 500 and the user
+    // retried into a double charge. notifyCampaignApproved looks the company up
+    // itself and doesn't use companyName, so this redundant query is dropped.
     await advertisingNotifications.notifyCampaignApproved({
       companyId: company_id,
-      companyName,
       campaignId: campaign_id,
       campaignTitle: campaign.title,
       chargeAmount: campaign.budget
@@ -151,31 +174,53 @@ router.get('/status/:company_id', authMiddleware, async (req: AuthRequest, res: 
  */
 router.post('/stripe-session', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const { campaign_id, company_id, stripe_amount_cents, return_url } = req.body;
+    const { campaign_id, company_id, return_url } = req.body;
 
-    if (!campaign_id || !company_id || !stripe_amount_cents || !return_url) {
+    if (!campaign_id || !company_id || !return_url) {
       return res.status(400).json({
         success: false,
-        error: 'campaign_id, company_id, stripe_amount_cents, and return_url required'
+        error: 'campaign_id, company_id, and return_url required'
       });
     }
+
+    // Creating a Stripe checkout session charges this company — gate it.
+    const gate = await requireCompanyRole(req.userId!, company_id, ['owner', 'manager']);
+    if (!gate.ok) return res.status(gate.status || 403).json({ success: false, error: gate.error });
 
     const campaign = await campaignModel.getById(campaign_id);
     if (!campaign) {
       return res.status(404).json({ success: false, error: 'Campaign not found' });
+    }
+    if (Number(campaign.company_id) !== Number(company_id)) {
+      return res.status(403).json({ success: false, error: 'Campaign does not belong to this company' });
+    }
+    if (['approved', 'active', 'completed'].includes(campaign.status)) {
+      return res.status(409).json({ success: false, error: 'Campaign has already been paid and approved' });
+    }
+
+    // Compute the credit/Stripe split server-side — never trust a client-supplied
+    // charge amount. Only the balance beyond ad credits goes to the card.
+    const budgetInCents = Math.round(campaign.budget * 100);
+    const calc = await adPaymentService.calculateAdPayment(company_id, campaign_id, campaign.title, budgetInCents);
+    if (!calc.requires_stripe_payment) {
+      return res.status(400).json({
+        success: false,
+        error: 'Ad credits already cover this campaign — use /process instead of Stripe.'
+      });
     }
 
     const sessionData = await adPaymentService.createStripeSession(
       company_id,
       campaign_id,
       campaign.title,
-      stripe_amount_cents,
-      return_url
+      calc.stripe_amount_cents,
+      return_url,
+      calc.credits_to_use_cents
     );
 
     res.json({
       success: true,
-      data: sessionData
+      data: { ...sessionData, stripe_amount_cents: calc.stripe_amount_cents, credits_to_use_cents: calc.credits_to_use_cents }
     });
   } catch (error: any) {
     console.error('Stripe session creation error:', error);
@@ -199,9 +244,17 @@ router.post('/confirm-approval', authMiddleware, async (req: AuthRequest, res: R
       });
     }
 
+    // Marking a campaign approved is a privileged write — gate it.
+    const gate = await requireCompanyRole(req.userId!, company_id, ['owner', 'manager']);
+    if (!gate.ok) return res.status(gate.status || 403).json({ success: false, error: gate.error });
+
     const campaign = await campaignModel.getById(campaign_id);
     if (!campaign) {
       return res.status(404).json({ success: false, error: 'Campaign not found' });
+    }
+
+    if (Number(campaign.company_id) !== Number(company_id)) {
+      return res.status(403).json({ success: false, error: 'Campaign does not belong to this company' });
     }
 
     // Update campaign status
@@ -224,6 +277,32 @@ router.post('/confirm-approval', authMiddleware, async (req: AuthRequest, res: R
   } catch (error) {
     console.error('Confirm approval error:', error);
     res.status(500).json({ success: false, error: 'Failed to confirm approval' });
+  }
+});
+
+/**
+ * POST /api/ad-payment/verify-session
+ * Called when the company returns from Stripe Checkout (success_url carries
+ * session_id). Verifies the session was paid and finalizes the campaign:
+ * deducts the credit portion, records the charge, and approves — idempotently.
+ */
+router.post('/verify-session', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { session_id, company_id } = req.body;
+    if (!session_id || !company_id) {
+      return res.status(400).json({ success: false, error: 'session_id and company_id required' });
+    }
+
+    // Only the owner/manager of the paying company may finalize.
+    const gate = await requireCompanyRole(req.userId!, company_id, ['owner', 'manager']);
+    if (!gate.ok) return res.status(gate.status || 403).json({ success: false, error: gate.error });
+
+    const result = await adPaymentService.finalizeStripeSession(session_id, Number(company_id));
+
+    res.json({ success: true, data: result });
+  } catch (error: any) {
+    console.error('Verify session error:', error);
+    res.status(400).json({ success: false, error: error.message || 'Failed to verify payment session' });
   }
 });
 

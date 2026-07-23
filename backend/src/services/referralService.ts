@@ -292,6 +292,12 @@ export async function creditFirstCompletedErrand(
     // Claim the transition. Returns a row only for the caller that moved it
     // out of 'joined', so a double-submit or two completion paths firing for
     // the same errand cannot pay twice.
+    // `referrer_id IS NOT NULL` restricts this to individual referrals.
+    // Since migration 063 a tracking row may instead name a company, where
+    // referrer_id is NULL by the one-referrer CHECK — without this the claim
+    // would flip such a row to 'first_job_completed', pass NULL to
+    // awardReferralPoints, and leave the company both unpaid and unable to be
+    // paid later, because the status it keys on had already moved.
     const claimed = await client.query(
       `UPDATE referral_tracking
           SET status = 'first_job_completed',
@@ -299,13 +305,22 @@ export async function creditFirstCompletedErrand(
               updated_at = NOW()
         WHERE referred_user_id = $1
           AND status = 'joined'
+          AND referrer_id IS NOT NULL
         RETURNING referrer_id`,
       [doerId]
     );
 
     if (claimed.rows.length === 0) {
       await client.query('COMMIT');
-      return { credited: false };
+      // Nothing individual to pay — it may still be a company referral. One
+      // entry point for both, so the three call sites in errands.ts and
+      // admin.ts do not each have to remember to try the other kind.
+      const { creditCompanyFirstErrand } = await import('./companyReferralService.js');
+      const company = await creditCompanyFirstErrand(doerId).catch((e) => {
+        console.error('[Referral] Company first-errand credit failed:', e);
+        return { awarded: false as const };
+      });
+      return { credited: company.awarded };
     }
 
     const referrerId = claimed.rows[0].referrer_id;

@@ -278,6 +278,19 @@ export default function ChatPage({ userRole }: ChatPageProps) {
     }
   };
 
+  /**
+   * Is this conversation still a live channel, or a closed record?
+   *
+   * completed / rated / cancelled / expired are terminal: the errand is over,
+   * and the backend already returns chatStatus.isDisabled for them so the
+   * composer is read-only. The card button reflects that rather than
+   * contradicting it with a primary CTA.
+   */
+  const TERMINAL_STATUSES = new Set([
+    'completed', 'completed_confirmed', 'rated', 'cancelled', 'expired', 'closed',
+  ]);
+  const isChatClosed = (status: string) => TERMINAL_STATUSES.has(status);
+
   const getStatusLabel = (status: string) => {
     switch (status) {
       case 'confirmed':
@@ -470,14 +483,24 @@ export default function ChatPage({ userRole }: ChatPageProps) {
                   </span>
                   <span style={{fontSize: '12px', color: '#999', fontWeight: '500', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0}}>By {conversation.otherPartyName}</span>
                 </div>
-                <button
-                  onClick={() => handleOpenChat(conversation.id)}
-                  style={{background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)', color: 'white', padding: '6px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: '600', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px', transition: 'all 0.15s', boxShadow: '0 2px 8px rgba(255, 107, 53, 0.2)', flexShrink: 0}}
-                  onMouseEnter={(e) => {e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 107, 53, 0.3)'; e.currentTarget.style.transform = 'translateY(-1px)';}}
-                  onMouseLeave={(e) => {e.currentTarget.style.boxShadow = '0 2px 8px rgba(255, 107, 53, 0.2)'; e.currentTarget.style.transform = 'translateY(0)';}}
-                >
-                  💬 Chat
-                </button>
+                {isChatClosed(conversation.status) ? (
+                  <button
+                    onClick={() => handleOpenChat(conversation.id)}
+                    style={{background: 'white', color: '#644C3C', padding: '6px 14px', borderRadius: '999px', fontSize: '13px', fontWeight: 600, border: '1px solid #E3D2C4', cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '5px', flexShrink: 0}}
+                    title="This errand is closed — the chat is read-only"
+                  >
+                    🗒️ View chat
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => handleOpenChat(conversation.id)}
+                    style={{background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)', color: 'white', padding: '6px 16px', borderRadius: '999px', fontSize: '13px', fontWeight: 600, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px', transition: 'all 0.15s', boxShadow: '0 2px 8px rgba(255, 107, 53, 0.2)', flexShrink: 0}}
+                    onMouseEnter={(e) => {e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 107, 53, 0.3)'; e.currentTarget.style.transform = 'translateY(-1px)';}}
+                    onMouseLeave={(e) => {e.currentTarget.style.boxShadow = '0 2px 8px rgba(255, 107, 53, 0.2)'; e.currentTarget.style.transform = 'translateY(0)';}}
+                  >
+                    💬 Chat
+                  </button>
+                )}
               </div>
             </div>
           ))}

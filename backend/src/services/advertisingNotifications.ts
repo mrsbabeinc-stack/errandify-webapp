@@ -21,7 +21,7 @@ export const advertisingNotifications = {
 
   async notifyCampaignApproved(data: any): Promise<void> {
     try {
-      const company = await db.query('SELECT c.id, u.email, u.id as user_id FROM companies c JOIN users u ON c.owner_id = u.id WHERE c.id = $1', [data.companyId]);
+      const company = await db.query('SELECT c.id, u.email, u.id as user_id FROM companies c JOIN users u ON c.owner_user_id = u.id WHERE c.id = $1', [data.companyId]);
       if (company.rows.length === 0) return;
       const owner = company.rows[0];
       await sendEmail({
@@ -37,7 +37,7 @@ export const advertisingNotifications = {
 
   async notifyCampaignRejected(data: any): Promise<void> {
     try {
-      const company = await db.query('SELECT c.id, u.email, u.id as user_id FROM companies c JOIN users u ON c.owner_id = u.id WHERE c.id = $1', [data.companyId]);
+      const company = await db.query('SELECT c.id, u.email, u.id as user_id FROM companies c JOIN users u ON c.owner_user_id = u.id WHERE c.id = $1', [data.companyId]);
       if (company.rows.length === 0) return;
       const owner = company.rows[0];
       await sendEmail({

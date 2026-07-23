@@ -119,11 +119,11 @@ export default function HomePage({ userRole }: HomePageProps) {
           <AdCarousel />
         </div>
 
-        {/* Hero banners authored in admin → Communications. Renders nothing
-            when none is live, so the layout is unchanged until one is. */}
+        {/* Role-targeted banners only. The 'home' ones are already in the
+            carousel above, which now serves the merged paid+Errandify hero
+            feed — rendering them here as well would show each one twice. */}
         <div style={{marginBottom: isMobile ? '6px' : '10px'}}>
           <HeroBannerStrip location={userRole === 'doer' ? 'doer-dashboard' : 'asker-dashboard'} />
-          <HeroBannerStrip location="home" />
         </div>
 
         {/* Quick Actions */}
@@ -135,7 +135,7 @@ export default function HomePage({ userRole }: HomePageProps) {
                 style={{
                   background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)',
                   color: 'white',
-                  padding: isMobile ? '8px' : '12px',
+                  padding: isMobile ? '6px 8px' : '12px',
                   borderRadius: '10px',
                   border: 'none',
                   cursor: 'pointer',
@@ -152,7 +152,7 @@ export default function HomePage({ userRole }: HomePageProps) {
                   e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 107, 53, 0.3)';
                 }}
               >
-                <div style={{fontSize: isMobile ? '17px' : '20px', marginBottom: isMobile ? '2px' : '4px'}}>📝</div>
+                <div style={{fontSize: isMobile ? '15px' : '20px', marginBottom: isMobile ? '0px' : '4px'}}>📝</div>
                 <div style={{fontWeight: '600', fontSize: '12px'}}>Post Errand</div>
               </button>
 
@@ -161,7 +161,7 @@ export default function HomePage({ userRole }: HomePageProps) {
                 style={{
                   background: 'linear-gradient(135deg, #8B6F47 0%, #A0826D 100%)',
                   color: 'white',
-                  padding: isMobile ? '8px' : '12px',
+                  padding: isMobile ? '6px 8px' : '12px',
                   borderRadius: '10px',
                   border: 'none',
                   cursor: 'pointer',
@@ -178,7 +178,7 @@ export default function HomePage({ userRole }: HomePageProps) {
                   e.currentTarget.style.boxShadow = '0 4px 12px rgba(139, 111, 71, 0.3)';
                 }}
               >
-                <div style={{fontSize: isMobile ? '17px' : '20px', marginBottom: isMobile ? '2px' : '4px'}}>📋</div>
+                <div style={{fontSize: isMobile ? '15px' : '20px', marginBottom: isMobile ? '0px' : '4px'}}>📋</div>
                 <div style={{fontWeight: '600', fontSize: '12px'}}>My Errands</div>
               </button>
             </>
@@ -189,7 +189,7 @@ export default function HomePage({ userRole }: HomePageProps) {
                 style={{
                   background: 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)',
                   color: 'white',
-                  padding: isMobile ? '8px' : '12px',
+                  padding: isMobile ? '6px 8px' : '12px',
                   borderRadius: '10px',
                   border: 'none',
                   cursor: 'pointer',
@@ -206,7 +206,7 @@ export default function HomePage({ userRole }: HomePageProps) {
                   e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 107, 53, 0.3)';
                 }}
               >
-                <div style={{fontSize: isMobile ? '17px' : '20px', marginBottom: isMobile ? '2px' : '4px'}}>🔍</div>
+                <div style={{fontSize: isMobile ? '15px' : '20px', marginBottom: isMobile ? '0px' : '4px'}}>🔍</div>
                 <div style={{fontWeight: '600', fontSize: '12px'}}>Browse</div>
               </button>
 
@@ -215,7 +215,7 @@ export default function HomePage({ userRole }: HomePageProps) {
                 style={{
                   background: 'linear-gradient(135deg, #8B6F47 0%, #A0826D 100%)',
                   color: 'white',
-                  padding: isMobile ? '8px' : '12px',
+                  padding: isMobile ? '6px 8px' : '12px',
                   borderRadius: '10px',
                   border: 'none',
                   cursor: 'pointer',
@@ -232,7 +232,7 @@ export default function HomePage({ userRole }: HomePageProps) {
                   e.currentTarget.style.boxShadow = '0 4px 12px rgba(139, 111, 71, 0.3)';
                 }}
               >
-                <div style={{fontSize: isMobile ? '17px' : '20px', marginBottom: isMobile ? '2px' : '4px'}}>💼</div>
+                <div style={{fontSize: isMobile ? '15px' : '20px', marginBottom: isMobile ? '0px' : '4px'}}>💼</div>
                 <div style={{fontWeight: '600', fontSize: '12px'}}>My Offers</div>
               </button>
             </>
@@ -241,22 +241,29 @@ export default function HomePage({ userRole }: HomePageProps) {
 
         {/* Quick Categories - 2 Row Grid */}
         <div style={{backgroundColor: 'white', borderRadius: '12px', padding: isMobile ? '6px' : '10px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'}}>
-          <h2 style={{fontWeight: '700', color: '#333', marginBottom: isMobile ? '5px' : '8px', fontSize: isMobile ? '13px' : '14px', display: 'flex', alignItems: 'center', gap: '8px'}}>
+          <h2 style={{fontWeight: '700', color: '#333', marginBottom: isMobile ? '3px' : '8px', fontSize: isMobile ? '12px' : '14px', display: 'flex', alignItems: 'center', gap: '8px'}}>
             {userRole === 'asker' ? '🎯 Need help?' : '🤝 Help?'}
           </h2>
 
           {/* Show all categories grouped with headers */}
-          <div style={{display: 'flex', flexDirection: 'column', gap: isMobile ? '3px' : '5px'}}>
+          <div style={{display: 'flex', flexDirection: 'column', gap: isMobile ? '4px' : '5px'}}>
             {Object.entries(groupedCategories).map(([groupName, cats]) => (
               <div key={groupName}>
-                <h3 style={{fontSize: isMobile ? '11px' : '12px', fontWeight: '600', color: '#666', marginBottom: isMobile ? '2px' : '3px', paddingLeft: '2px'}}>{groupName}</h3>
-                <div style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: isMobile ? '5px' : '8px'}}>
+                {/* Group headings are desktop-only. Four of them, with their
+                    margins, cost more vertical space than an entire row of
+                    tiles — which is what pushed the last four categories off
+                    the bottom of a phone screen. The grouping is a nicety;
+                    seeing all sixteen is the point of the screen. */}
+                {!isMobile && (
+                  <h3 style={{fontSize: '12px', fontWeight: '600', color: '#666', margin: '0 0 3px', paddingLeft: '2px', lineHeight: '1.4'}}>{groupName}</h3>
+                )}
+                <div style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: isMobile ? '4px' : '8px'}}>
                   {cats.map((category) => (
                     <button
                       key={category.id}
                       onClick={() => handleCategoryClick(category.id)}
                       style={{
-                        padding: isMobile ? '4px 2px' : '6px 8px',
+                        padding: isMobile ? '3px 2px' : '6px 8px',
                         borderRadius: isMobile ? '10px' : '12px',
                         fontSize: '12px',
                         fontWeight: '600',
@@ -279,8 +286,8 @@ export default function HomePage({ userRole }: HomePageProps) {
                       }}
                       title={category.purpose}
                     >
-                      <div style={{fontSize: isMobile ? '20px' : '24px', marginBottom: isMobile ? '1px' : '3px'}}>{category.icon}</div>
-                      <div style={{fontSize: isMobile ? '10px' : '13px', color: '#333', fontWeight: '600', lineHeight: isMobile ? '1.1' : '1.3'}}>{category.name}</div>
+                      <div style={{fontSize: isMobile ? '17px' : '24px', marginBottom: isMobile ? '0px' : '3px', lineHeight: '1'}}>{category.icon}</div>
+                      <div style={{fontSize: isMobile ? '9px' : '13px', color: '#333', fontWeight: '600', lineHeight: isMobile ? '1.05' : '1.3'}}>{category.name}</div>
                     </button>
                   ))}
                 </div>

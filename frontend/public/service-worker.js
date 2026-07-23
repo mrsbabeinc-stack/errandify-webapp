@@ -195,12 +195,22 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(event.request.url);
 
-  // Always fetch CSS, JS, and HTML from network (no caching)
-  if (url.pathname.endsWith('.css') ||
+  // Never cache the app itself.
+  //
+  // The extension checks below missed every SPA route: '/auth', '/home',
+  // '/my-account' and the rest end in no extension and not in '/', so each one
+  // fell through to the caching branch and had its index.html stored. A device
+  // could then be running a shell from an older deploy — with that build's
+  // routing and logout behaviour — while the code on the server had moved on,
+  // which is close to impossible to diagnose from the outside.
+  //
+  // `request.mode === 'navigate'` is what actually identifies a page load, and
+  // it catches routes the extension list never could.
+  if (event.request.mode === 'navigate' ||
+      url.pathname.endsWith('.css') ||
       url.pathname.endsWith('.js') ||
       url.pathname.endsWith('.html') ||
-      url.pathname.endsWith('/') ||
-      url.pathname === '/create-errand') {
+      url.pathname.endsWith('/')) {
     event.respondWith(fetch(event.request));
     return;
   }

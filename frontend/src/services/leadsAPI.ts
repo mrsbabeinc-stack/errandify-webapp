@@ -194,6 +194,16 @@ export const leadsAPI = {
   addNote: (id: number, note: string) =>
     request(`/${id}/note`, { method: 'POST', body: JSON.stringify({ note }) }),
 
+  /**
+   * Issue a signup link. The token comes back exactly once — it is stored
+   * hashed and cannot be read again, so the caller must show or send it now.
+   */
+  invite: (id: number, channel: 'email' | 'sms' | 'link' = 'link') =>
+    request<{ data: { token: string; link: string; expiresAt: string } }>(`/${id}/invite`, {
+      method: 'POST',
+      body: JSON.stringify({ channel }),
+    }).then((r) => r.data),
+
   remove: (id: number) => request(`/${id}`, { method: 'DELETE' }),
 };
 

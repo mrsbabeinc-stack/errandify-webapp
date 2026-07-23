@@ -8,8 +8,77 @@ import {
   JOIN_BONUS_EP,
   FIRST_JOB_BONUS_EP,
 } from '../services/referralService.js';
+import {
+  ensureCompanyCodes,
+  getStaffCode,
+  getCompanyReferralStats,
+  COMPANY_JOIN_BONUS_EP,
+  COMPANY_FIRST_JOB_BONUS_EP,
+} from '../services/companyReferralService.js';
+import { resolveMyCompany } from '../utils/companyRole.js';
 
 const router = Router();
+
+/** Where an invite link points. Matches referralService.buildReferralLink. */
+function inviteLink(code: string): string {
+  const base = (process.env.FRONTEND_URL || 'https://errandify.ai').replace(/\/+$/, '');
+  return `${base}/join?ref=${encodeURIComponent(code)}`;
+}
+
+/**
+ * GET /api/referrals/company — this company's codes, links and results.
+ *
+ * Codes are created on first read rather than at company registration, so an
+ * account that existed before this feature gets one the moment someone opens
+ * the screen; there is no backfill to remember and no company left without a
+ * code. ensureCompanyCodes is idempotent, so repeat visits mint nothing.
+ *
+ * Whoever asks must actually belong to the company — resolveMyCompany, not a
+ * companyId from the query string, or anyone could read anyone's figures.
+ */
+router.get('/company', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = parseInt(req.userId || '0', 10);
+    const membership = await resolveMyCompany(userId);
+    if (!membership) {
+      return res.status(404).json({
+        success: false,
+        message: 'You are not linked to a company yet',
+      });
+    }
+
+    await ensureCompanyCodes(membership.companyId);
+    const stats = await getCompanyReferralStats(membership.companyId);
+
+    // The caller's own code, so the share screen can lead with it rather than
+    // making someone find their row in a table.
+    const myCode = await getStaffCode(membership.companyId, userId);
+
+    // The per-staff breakdown names colleagues and how each is performing, so
+    // it is withheld from ordinary staff HERE rather than only hidden by the
+    // page that renders it. A UI-only check is not a check — anyone can call
+    // the endpoint directly. Owners and managers already see the team
+    // elsewhere in the workspace.
+    const canSeeTeam = membership.role === 'owner' || membership.role === 'manager';
+
+    res.json({
+      success: true,
+      data: {
+        ...stats,
+        companyLink: inviteLink(stats.companyCode),
+        myCode,
+        myLink: inviteLink(myCode),
+        role: membership.role,
+        joinBonusEP: COMPANY_JOIN_BONUS_EP,
+        firstErrandBonusEP: COMPANY_FIRST_JOB_BONUS_EP,
+        staff: canSeeTeam ? stats.staff.map((s) => ({ ...s, link: inviteLink(s.code) })) : [],
+      },
+    });
+  } catch (error) {
+    console.error('[Referral] company stats failed:', error);
+    res.status(500).json({ success: false, message: 'Could not load your company referral data' });
+  }
+});
 
 /**
  * GET /api/referrals/me - Get current user's referral code and stats

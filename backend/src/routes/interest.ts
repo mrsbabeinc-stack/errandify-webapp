@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import db from '../db.js';
+import { peekInvite } from '../services/leadInviteService.js';
 
 const router = express.Router();
 
@@ -98,6 +99,30 @@ router.get('/options', async (_req: Request, res: Response) => {
   } catch (error) {
     console.error('[Interest] options failed:', error);
     res.status(500).json({ error: 'Could not load the form options' });
+  }
+});
+
+/**
+ * GET /api/interest/invite/:token — what the signup form should prefill.
+ *
+ * Public, because the person holding it has no account — the token in the URL
+ * is the only credential, same as /screening/:token. Read-only: opening the
+ * link does not consume the invite, since people open a link, close the tab,
+ * and come back later.
+ *
+ * A bad token gets the same 404 whether it expired, was already used, or never
+ * existed. Saying which would tell a stranger that a given token once did.
+ */
+router.get('/invite/:token', interestLimiter, async (req: Request, res: Response) => {
+  try {
+    const prefill = await peekInvite(req.params.token);
+    if (!prefill) {
+      return res.status(404).json({ error: 'That invite link is no longer valid' });
+    }
+    res.json({ success: true, data: prefill });
+  } catch (error) {
+    console.error('[Interest] invite lookup failed:', error);
+    res.status(500).json({ error: 'Could not check that invite' });
   }
 });
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import AdminThemeWrapper from '../components/AdminThemeWrapper';
+import HeroBannerStrip from '../components/HeroBannerStrip';
 
 interface Errand {
   id: string;
@@ -254,6 +255,16 @@ export default function DoerBrowsePage({ userRole = 'doer' }: Props) {
   return (
     <AdminThemeWrapper title="🔍 Browse Errands ToHelp" showBackButton onBack={() => navigate('/home')}>
       <div className="max-w-2xl mx-auto">
+        {/*
+          Hero Banners offers "Browse Page" as a placement, but nothing on this
+          page rendered one — so a banner authored for here was saved,
+          published, served by /api/banners, and never seen. Renders nothing
+          when none is live, so the layout is unchanged until one is.
+        */}
+        <div style={{ marginBottom: '10px' }}>
+          <HeroBannerStrip location="browse" />
+        </div>
+
         {userRole === 'asker' && (
           <div style={{background: 'linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%)', border: '1px solid #90CAF9', padding: '10px', borderRadius: '8px', marginBottom: '10px', fontSize: '12px', color: '#1565C0', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '6px'}}>
             <span>💡</span>

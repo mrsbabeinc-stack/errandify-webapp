@@ -3,6 +3,7 @@ import db from '../db.js';
 import { AuthRequest, authMiddleware, requireAdmin } from '../middleware/auth.js';
 import {
   calculateCPF,
+  ageAtPeriod,
   calculateTax,
   round2,
   dailyGrossRate,
@@ -871,7 +872,7 @@ router.get('/payroll/staff', async (_req: Request, res: Response) => {
   try {
     const result = await db.query(
       `SELECT s.id, s.staff_id, s.first_name, s.last_name, s.employment_type, s.status,
-              s.cpf_membership_no, s.department, s.position,
+              s.cpf_membership_no, s.department, s.position, s.date_of_birth, s.cpf_status,
               COALESCE(sal.base_salary, s.base_salary, 0) AS base_salary,
               COALESCE((SELECT SUM(a.amount) FROM staff_allowances a
                          WHERE a.staff_salary_id = sal.id
@@ -974,6 +975,53 @@ router.put('/payroll/staff/:staffId/allowances', async (req: Request, res: Respo
   }
 });
 
+/**
+ * CPF for one employee in one month, so the salary screen can show the split
+ * without a second implementation of the rates living in the browser.
+ */
+router.get('/payroll/cpf-preview', async (req: Request, res: Response) => {
+  try {
+    const staffId = String(req.query.staff_id || '');
+    const period = String(req.query.period || iso(new Date()).slice(0, 7));
+    if (!staffId) return bad(res, 'staff_id is required');
+    if (!/^\d{4}-\d{2}$/.test(period)) return bad(res, 'Period must be YYYY-MM');
+
+    const r = await db.query(
+      `SELECT s.staff_id, s.date_of_birth, s.cpf_status,
+              COALESCE(sal.base_salary, s.base_salary, 0) AS base_salary,
+              COALESCE((SELECT SUM(a.amount) FROM staff_allowances a
+                         WHERE a.staff_salary_id = sal.id), 0) AS allowances
+         FROM staff s
+         LEFT JOIN staff_salary sal ON sal.staff_id = s.staff_id
+        WHERE s.staff_id = $1`,
+      [staffId]
+    );
+    const st = r.rows[0];
+    if (!st) return res.status(404).json({ success: false, error: 'Staff member not found' });
+
+    const ordinaryWage = Number(st.base_salary) + Number(st.allowances);
+    const cpf = calculateCPF({
+      ordinaryWage,
+      dateOfBirth: st.date_of_birth,
+      cpfStatus: st.cpf_status,
+      period,
+    });
+    res.json({
+      success: true,
+      preview: {
+        ...cpf,
+        age: st.date_of_birth ? ageAtPeriod(st.date_of_birth, period) : null,
+      },
+    });
+  } catch (err) {
+    // A missing date of birth or CPF status is a 422 the screen can explain,
+    // not a 500.
+    const message = err instanceof Error ? err.message : 'Failed to compute CPF';
+    console.warn('[finance] cpf preview:', message);
+    res.status(422).json({ success: false, error: message });
+  }
+});
+
 router.get('/payroll/runs', async (_req: Request, res: Response) => {
   try {
     const runs = await db.query(`SELECT * FROM payroll_runs ORDER BY period DESC`);
@@ -1029,7 +1077,7 @@ router.post('/payroll/runs', async (req: Request, res: Response) => {
     }
 
     const staffRes = await db.query(
-      `SELECT s.staff_id, s.first_name, s.last_name,
+      `SELECT s.staff_id, s.first_name, s.last_name, s.date_of_birth, s.cpf_status,
               COALESCE(sal.base_salary, s.base_salary, 0) AS base_salary,
               COALESCE((SELECT SUM(a.amount) FROM staff_allowances a
                          WHERE a.staff_salary_id = sal.id AND lower(a.name) LIKE '%transport%'), 0) AS transport_allowance,
@@ -1048,6 +1096,35 @@ router.post('/payroll/runs', async (req: Request, res: Response) => {
     );
     if (staffRes.rows.length === 0) {
       return bad(res, 'No active staff to pay');
+    }
+
+    /**
+     * Check every employee's CPF profile BEFORE writing anything. Discovering
+     * halfway through that someone has no date of birth would leave a
+     * half-built run, and CPF that cannot be computed must stop the payroll —
+     * not quietly default to a rate that under-contributes.
+     */
+    const cpfBlocked: string[] = [];
+    for (const s of staffRes.rows) {
+      try {
+        calculateCPF({
+          ordinaryWage:
+            Number(s.base_salary) + Number(s.transport_allowance) +
+            Number(s.housing_allowance) + Number(s.other_allowances),
+          dateOfBirth: s.date_of_birth,
+          cpfStatus: s.cpf_status,
+          period,
+        });
+      } catch (e) {
+        cpfBlocked.push(`${s.staff_id} ${s.first_name} ${s.last_name}: ${e instanceof Error ? e.message : 'CPF error'}`);
+      }
+    }
+    if (cpfBlocked.length > 0) {
+      return res.status(422).json({
+        success: false,
+        error: `CPF cannot be computed for ${cpfBlocked.length} employee${cpfBlocked.length === 1 ? '' : 's'}. Payroll has not been generated.`,
+        blocked: cpfBlocked,
+      });
     }
 
     /**
@@ -1093,23 +1170,61 @@ router.post('/payroll/runs', async (req: Request, res: Response) => {
       const housing = Number(s.housing_allowance);
       const other = Number(s.other_allowances);
       const gross = round2(base + transport + housing + other);
-      const cpf = calculateCPF(base);
+
+      /**
+       * Ordinary Wage for CPF is the whole month's wages, allowances included —
+       * a fixed monthly transport or housing allowance is wages and attracts
+       * CPF. (Only a reimbursement of actual expenses is not, and this system
+       * has no way to tell one from the other by name, so anything set up as an
+       * allowance is treated as wages. Configure genuine reimbursements
+       * somewhere other than the allowance fields.)
+       *
+       * Note this is a DIFFERENT definition from the Employment Act "gross rate
+       * of pay" used for unpaid-leave deductions, which excludes travelling,
+       * food and housing allowances. The two statutes genuinely differ; both
+       * are implemented to their own definition.
+       */
+      const cpf = calculateCPF({
+        ordinaryWage: gross,
+        dateOfBirth: s.date_of_birth,
+        cpfStatus: s.cpf_status,
+        period,
+      });
       const tax = calculateTax(gross, cpf.employeeTotal);
       const leaveDeduction = round2(deductionMap.get(s.staff_id) || 0);
       // Income tax is NOT withheld — see the note in financeService.calculateTax.
       const totalDeductions = round2(cpf.employeeTotal + leaveDeduction);
       const net = round2(gross - totalDeductions);
 
+      /**
+       * Employment Act s32: total deductions in one salary period may not
+       * exceed 50% of salary payable. CPF, deductions for absence, and recovery
+       * of advances are excluded from that cap, so with only CPF and unpaid
+       * leave this cannot currently bite — the guard is here so it is already
+       * correct the day another deduction type is added, rather than being
+       * remembered afterwards.
+       */
+      const cappedDeductions = round2(totalDeductions - cpf.employeeTotal - leaveDeduction);
+      if (gross > 0 && cappedDeductions > round2(gross * 0.5)) {
+        throw new Error(
+          `Deductions for ${s.staff_id} exceed 50% of salary, which the Employment Act does not permit.`
+        );
+      }
+
       await client.query(
         `INSERT INTO payroll_items
            (payroll_run_id, staff_id, staff_name, base_salary, transport_allowance,
             housing_allowance, other_allowances, gross_salary, cpf_employee, cpf_employer,
-            income_tax, leave_deduction, total_deductions, net_salary, cpf_breakdown, tax_breakdown)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)`,
+            income_tax, leave_deduction, total_deductions, net_salary, cpf_breakdown, tax_breakdown,
+            cpf_status, age_at_payroll, cpf_rate_employee, cpf_rate_employer, cpf_ow_ceiling)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)`,
         [
           run.id, s.staff_id, `${s.first_name} ${s.last_name}`, base, transport, housing, other,
           gross, cpf.employeeTotal, cpf.employerTotal, tax.monthlyTax, leaveDeduction,
           totalDeductions, net, JSON.stringify(cpf), JSON.stringify(tax),
+          cpf.cpfStatus,
+          s.date_of_birth ? ageAtPeriod(s.date_of_birth, period) : null,
+          cpf.rateEmployee, cpf.rateEmployer, cpf.owCeiling,
         ]
       );
 
@@ -1268,6 +1383,563 @@ router.get('/gl-entries', async (req: Request, res: Response) => {
   } catch (err) {
     console.error('[finance] gl entries failed:', err);
     res.status(500).json({ success: false, error: 'Failed to load GL entries' });
+  }
+});
+
+// ===========================================================================
+// IRAS — employment income (IR8A) and a straight answer on compliance
+// ===========================================================================
+
+/**
+ * IR8A PREPARATION data for a calendar year.
+ *
+ * Section 68(2) of the Income Tax Act requires an employer to prepare Form IR8A
+ * for every employee by 1 March of the following year. Employers with 5 or more
+ * employees must submit electronically under the Auto-Inclusion Scheme; those
+ * not on AIS must instead hand the IR8A to each employee by the same date.
+ * Failure to comply is an offence — a fine of up to $5,000 under s94, and AIS
+ * non-filers have been prosecuted.
+ *
+ * This is NOT an AIS submission file. AIS has its own validated format and
+ * submission channel; producing something that merely looks like one would
+ * invite somebody to try filing it. What this gives you is the figures the
+ * system genuinely holds, itemised the way IR8A asks for them, so they can be
+ * entered or handed to whoever files.
+ *
+ * Reported BEFORE deduction of CPF, which is how IRAS wants employment income.
+ */
+router.get('/iras/ir8a', async (req: Request, res: Response) => {
+  try {
+    const year = String(req.query.year || new Date().getFullYear() - 1);
+    if (!/^\d{4}$/.test(year)) return bad(res, 'Year must be YYYY');
+
+    const employer = (await db.query(`SELECT * FROM employer_profile WHERE id = 1`)).rows[0] || {};
+
+    const rows = await db.query(
+      `SELECT i.staff_id,
+              MAX(i.staff_name) AS staff_name,
+              MAX(s.nric) AS nric,
+              MAX(s.date_of_birth::text) AS date_of_birth,
+              MAX(s.position) AS designation,
+              MAX(s.home_address) AS home_address,
+              MAX(s.postal_code) AS postal_code,
+              MAX(s.cpf_status) AS cpf_status,
+              COUNT(*) AS months_paid,
+              SUM(i.base_salary) AS gross_salary,
+              SUM(i.transport_allowance + i.housing_allowance + i.other_allowances) AS allowances,
+              SUM(i.gross_salary) AS total_before_cpf,
+              SUM(i.cpf_employee) AS cpf_employee,
+              SUM(i.cpf_employer) AS cpf_employer,
+              SUM(i.leave_deduction) AS unpaid_leave
+         FROM payroll_items i
+         JOIN payroll_runs r ON r.id = i.payroll_run_id
+         LEFT JOIN staff s ON s.staff_id = i.staff_id
+        WHERE r.period LIKE $1 AND i.status = 'paid'
+        GROUP BY i.staff_id
+        ORDER BY i.staff_id`,
+      [`${year}-%`]
+    );
+
+    const employees = rows.rows.map((r: any) => {
+      const missing: string[] = [];
+      if (!r.nric) missing.push('NRIC/FIN');
+      if (!r.date_of_birth) missing.push('date of birth');
+      if (!r.home_address) missing.push('address');
+      return {
+        staff_id: r.staff_id,
+        name: r.staff_name,
+        nric: r.nric,
+        date_of_birth: r.date_of_birth,
+        designation: r.designation,
+        address: [r.home_address, r.postal_code && `Singapore ${r.postal_code}`]
+          .filter(Boolean).join(', '),
+        months_paid: Number(r.months_paid),
+        // IR8A item 1(a) — salary before CPF deduction
+        gross_salary: round2(Number(r.gross_salary)),
+        // IR8A item 1(d) — allowances (transport, meal and the like)
+        allowances: round2(Number(r.allowances)),
+        total_employment_income: round2(Number(r.total_before_cpf)),
+        // IR8A item 2 — employee's compulsory CPF for the year
+        cpf_employee: round2(Number(r.cpf_employee)),
+        cpf_employer: round2(Number(r.cpf_employer)),
+        unpaid_leave_deducted: round2(Number(r.unpaid_leave)),
+        missing_details: missing,
+      };
+    });
+
+    /**
+     * What this system cannot fill in, stated plainly so nobody assumes the
+     * export is the whole return.
+     */
+    const notTracked = [
+      "Bonus and director's fees — not recorded anywhere in this system",
+      'Benefits-in-kind (Appendix 8A): accommodation, cars, club memberships, interest-free loans',
+      'Gains from share options or share awards (Appendix 8B)',
+      'Excess or voluntary CPF contributions (Form IR8S)',
+      'Gratuity, notice pay, ex-gratia and retrenchment benefits',
+      'Commission',
+    ];
+
+    res.json({
+      success: true,
+      year,
+      employer: {
+        legal_name: employer.legal_name || null,
+        uen: employer.uen || null,
+        address: employer.registered_address || null,
+      },
+      employee_count: employees.length,
+      /** AIS is compulsory at 5 or more employees, including part-timers and directors. */
+      ais_likely_mandatory: employees.length >= 5,
+      deadline: `${Number(year) + 1}-03-01`,
+      employees,
+      not_tracked: notTracked,
+      caveat:
+        'Preparation data only — this is not an AIS submission file and does not constitute filing. ' +
+        'Add anything under "not tracked" before this goes to IRAS, and have it checked by whoever files your returns.',
+    });
+  } catch (err) {
+    console.error('[finance] IR8A failed:', err);
+    res.status(500).json({ success: false, error: 'Failed to build IR8A data' });
+  }
+});
+
+/** IR8A as CSV, one row per employee, for handing to an accountant. */
+router.get('/iras/ir8a/export', async (req: Request, res: Response) => {
+  try {
+    const year = String(req.query.year || new Date().getFullYear() - 1);
+    if (!/^\d{4}$/.test(year)) return bad(res, 'Year must be YYYY');
+
+    const base = `${req.protocol}://${req.get('host')}`;
+    void base; // reuse of the JSON builder below keeps one source of truth
+    const employer = (await db.query(`SELECT * FROM employer_profile WHERE id = 1`)).rows[0] || {};
+    const rows = await db.query(
+      `SELECT i.staff_id, MAX(i.staff_name) AS staff_name, MAX(s.nric) AS nric,
+              MAX(s.date_of_birth::text) AS dob, MAX(s.position) AS designation,
+              MAX(s.home_address) AS addr, MAX(s.postal_code) AS postal,
+              SUM(i.base_salary) AS salary,
+              SUM(i.transport_allowance + i.housing_allowance + i.other_allowances) AS allowances,
+              SUM(i.gross_salary) AS total, SUM(i.cpf_employee) AS cpf_e,
+              SUM(i.cpf_employer) AS cpf_r
+         FROM payroll_items i
+         JOIN payroll_runs r ON r.id = i.payroll_run_id
+         LEFT JOIN staff s ON s.staff_id = i.staff_id
+        WHERE r.period LIKE $1 AND i.status = 'paid'
+        GROUP BY i.staff_id ORDER BY i.staff_id`,
+      [`${year}-%`]
+    );
+
+    const money = (v: unknown) => round2(Number(v) || 0).toFixed(2);
+    const out: (string | number)[][] = [
+      [`IR8A preparation data — year of income ${year}`],
+      ['Employer', employer.legal_name || '(not set)'],
+      ['UEN', employer.uen || '(not set)'],
+      ['Due to IRAS / to employees by', `1 March ${Number(year) + 1}`],
+      [],
+      ['Staff ID', 'Name', 'NRIC/FIN', 'Date of birth', 'Designation', 'Address',
+       'Salary (before CPF)', 'Allowances', 'Total employment income', "Employee's CPF", "Employer's CPF"],
+    ];
+    for (const r of rows.rows) {
+      out.push([
+        r.staff_id, r.staff_name, r.nric || '(missing)', r.dob || '(missing)',
+        r.designation || '', [r.addr, r.postal && `Singapore ${r.postal}`].filter(Boolean).join(', '),
+        money(r.salary), money(r.allowances), money(r.total), money(r.cpf_e), money(r.cpf_r),
+      ]);
+    }
+    out.push([]);
+    out.push(['NOT INCLUDED — add before filing:']);
+    for (const item of [
+      "Bonus and director's fees", 'Benefits-in-kind (Appendix 8A)',
+      'Share option gains (Appendix 8B)', 'Excess/voluntary CPF (IR8S)',
+      'Gratuity, notice pay, retrenchment benefits', 'Commission',
+    ]) out.push(['', item]);
+    out.push([]);
+    out.push(['This is preparation data, not an AIS submission file, and does not constitute filing.']);
+
+    const esc = (v: string | number) => {
+      const s = String(v ?? '');
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="IR8A-prep-${year}.csv"`);
+    res.send(out.map(r => r.map(esc).join(',')).join('\r\n'));
+  } catch (err) {
+    console.error('[finance] IR8A export failed:', err);
+    res.status(500).json({ success: false, error: 'Failed to export IR8A data' });
+  }
+});
+
+/**
+ * A straight answer on where this system stands against MOM, CPF, IRAS and
+ * ACRA — computed where it can be, and honest about the rest.
+ *
+ * It exists because the screens used to assert compliance they did not have
+ * ("Ready for annual ACRA filing", "ACRA & MOM Compliance"). Being told you are
+ * compliant when you are not is worse than being told nothing, because it stops
+ * you asking.
+ */
+router.get('/compliance-status', async (_req: Request, res: Response) => {
+  try {
+    const r = await db.query(
+      `SELECT
+         (SELECT COUNT(*) FROM staff WHERE status = 'active') AS active_staff,
+         (SELECT COUNT(*) FROM staff WHERE status = 'active' AND nric IS NULL) AS no_nric,
+         (SELECT COUNT(*) FROM staff WHERE status = 'active' AND date_of_birth IS NULL) AS no_dob,
+         (SELECT COUNT(*) FROM staff WHERE status = 'active' AND cpf_status IS NULL) AS no_cpf_status,
+         (SELECT COUNT(*) FROM staff WHERE status = 'active'
+            AND (bank_account_number IS NULL OR bank_code IS NULL)) AS no_bank,
+         (SELECT legal_name FROM employer_profile WHERE id = 1) AS employer_name,
+         (SELECT uen FROM employer_profile WHERE id = 1) AS uen,
+         (SELECT cpf_submission_number FROM employer_profile WHERE id = 1) AS csn`
+    );
+    const m = r.rows[0];
+    const activeStaff = Number(m.active_staff);
+
+    const item = (
+      area: string,
+      requirement: string,
+      status: 'ok' | 'gap' | 'partial',
+      detail: string,
+      authority: string
+    ) => ({ area, requirement, status, detail, authority });
+
+    const items = [
+      // ---- MOM ----
+      item('MOM', 'Itemised payslip, 12 required items',
+        m.employer_name ? 'partial' : 'gap',
+        m.employer_name
+          ? 'Eleven of twelve are produced. Overtime hours, overtime pay and the overtime period are NOT recorded anywhere, so any payslip for someone who worked overtime is incomplete.'
+          : "The employer's legal name is not set, so every payslip carries a placeholder where MOM requires item 1.",
+        'Employment Act; MOM itemised payslip requirements'),
+      item('MOM', 'Salary paid within 7 days of the period ending', 'partial',
+        'The system records a payment date and the bank file carries a value date, but nothing warns if that date is more than 7 days after the period ends.',
+        'Employment Act s21'),
+      item('MOM', 'Key Employment Terms in writing within 14 days', 'gap',
+        'Not produced. KETs are a separate document covering job title, duties, hours, salary period, leave and benefits.',
+        'Employment Act s95A'),
+      item('MOM', 'Employee records kept', 'partial',
+        'Staff, salary, leave and payroll records are kept. Retention is not enforced or purged on a schedule.',
+        'Employment Act; MOM record-keeping'),
+      item('MOM', 'Overtime tracking and payment within 14 days', 'gap',
+        'Overtime is not captured at all — not hours, not rate, not payment.',
+        'Employment Act s38'),
+
+      // ---- CPF ----
+      item('CPF', 'Contribution rates and wage ceilings',
+        Number(m.no_dob) === 0 && Number(m.no_cpf_status) === 0 ? 'ok' : 'partial',
+        Number(m.no_dob) === 0 && Number(m.no_cpf_status) === 0
+          ? 'Statutory rates by age band, Ordinary Wage ceiling by period, correct Additional Wage treatment. Payroll refuses to run where it cannot compute.'
+          : `${m.no_dob} active staff have no date of birth and ${m.no_cpf_status} have no CPF status. Payroll will refuse to run for them rather than guess.`,
+        'CPF Act; CPF Board contribution tables'),
+      item('CPF', 'Graduated rates for 1st/2nd year PRs', 'gap',
+        'Not implemented. Payroll refuses for these employees rather than applying full rates.',
+        'CPF Board SPR contribution tables'),
+      item('CPF', 'Contributions remitted by the 14th', 'partial',
+        'The due date and the amount are shown on the employer cost screen. Submission to CPF EZPay is manual and nothing confirms it happened.',
+        'CPF Act'),
+
+      // ---- IRAS ----
+      item('IRAS', 'No monthly tax withholding', 'ok',
+        'Correct — Singapore has no PAYE. Income tax is shown on the payslip as a projection and is not deducted.',
+        'Income Tax Act'),
+      item('IRAS', 'IR8A by 1 March', activeStaff > 0 ? 'partial' : 'gap',
+        `Preparation data can be exported. It excludes bonus, director's fees, benefits-in-kind (Appendix 8A), share gains (Appendix 8B) and IR8S — none of which this system tracks. It is not an AIS submission file.` +
+        (activeStaff >= 5 ? ' With 5 or more employees, AIS electronic submission is compulsory.' : ''),
+        'Income Tax Act s68(2); s94 penalties'),
+      item('IRAS', 'Business records kept 5 years', 'partial',
+        'Transactions, approvals and receipts filenames are stored. No retention policy is enforced, and receipt files themselves are referenced by name only.',
+        'Income Tax Act; GST Act'),
+      item('IRAS', 'GST tax invoices and F5 returns', 'gap',
+        'GST is captured per transaction, but no tax invoice document is produced and no F5 return is prepared. Invoice numbers are typed, not issued in sequence.',
+        'GST Act (if registered — threshold S$1m turnover)'),
+
+      // ---- ACRA ----
+      item('ACRA', 'Statutory financial statements under SFRS', 'gap',
+        'What this produces are management accounts. Statutory statements need accounting policies, notes, prior-year comparatives, a statement of changes in equity and a directors’ statement. Fixed assets and share capital are not tracked at all.',
+        'Companies Act; SFRS'),
+      item('ACRA', 'Annual Return and XBRL filing', 'gap',
+        'Not produced. This is a filing obligation on the company, separate from bookkeeping.',
+        'Companies Act s197'),
+
+      // ---- PDPA ----
+      item('PDPA', 'Notice at the point of collection', 'ok',
+        'The onboarding form states the purpose, retention and correction rights above the consent box, and acceptance is timestamped.',
+        'PDPA s20'),
+      item('PDPA', 'Protection of personal data',
+        Number(m.no_bank) === 0 ? 'partial' : 'partial',
+        'Bank account numbers are masked on read and the export is audited, but they are stored unencrypted. NRIC is held for CPF and identity verification.',
+        'PDPA s24'),
+      item('PDPA', 'Retention limitation', 'gap',
+        'No retention schedule is enforced and nothing purges or anonymises data once its purpose ends. A soft-delete flag would not satisfy this either.',
+        'PDPA s25; PDPC Key Concepts 18.10–18.11'),
+    ];
+
+    const counts = {
+      ok: items.filter(i => i.status === 'ok').length,
+      partial: items.filter(i => i.status === 'partial').length,
+      gap: items.filter(i => i.status === 'gap').length,
+    };
+
+    res.json({
+      success: true,
+      employer: {
+        legal_name: m.employer_name,
+        uen: m.uen,
+        cpf_submission_number: m.csn,
+      },
+      staff_data_gaps: {
+        active_staff: activeStaff,
+        missing_nric: Number(m.no_nric),
+        missing_date_of_birth: Number(m.no_dob),
+        missing_cpf_status: Number(m.no_cpf_status),
+        missing_bank_details: Number(m.no_bank),
+      },
+      counts,
+      items,
+      disclaimer:
+        'This is a summary of what the software does and does not do. It is not legal or tax advice, ' +
+        'and it is not an assurance of compliance. Have a practitioner confirm anything you rely on.',
+    });
+  } catch (err) {
+    console.error('[finance] compliance status failed:', err);
+    res.status(500).json({ success: false, error: 'Failed to build compliance status' });
+  }
+});
+
+// ===========================================================================
+// Employer view: what CPF actually costs, and what must be remitted
+// ===========================================================================
+
+/**
+ * The employer's side of CPF, which nothing surfaced.
+ *
+ * Two figures are easy to confuse and matter for different reasons:
+ *
+ *  - REMITTANCE — employee share + employer share. The whole of this leaves the
+ *    bank account and goes to CPF Board. The employee share is money already
+ *    withheld from the payslip, so it is not an extra cost, but it is cash out.
+ *  - COST — the employer share only. This is what employing someone costs on
+ *    top of their gross salary, and it is the number to use when working out
+ *    whether a hire is affordable.
+ *
+ * Contributions are due by the 14th of the month following the one they relate
+ * to. Late payment attracts interest of 1.5% per month, minimum $5, charged
+ * from the first day late (CPF Act s7 / Reg 10).
+ */
+router.get('/payroll/cpf-summary', async (req: Request, res: Response) => {
+  try {
+    const period = String(req.query.period || iso(new Date()).slice(0, 7));
+    if (!/^\d{4}-\d{2}$/.test(period)) return bad(res, 'Period must be YYYY-MM');
+
+    const runRes = await db.query(`SELECT * FROM payroll_runs WHERE period = $1`, [period]);
+    const run = runRes.rows[0];
+    if (!run) {
+      return res.json({ success: true, period, run: null, staff: [], totals: null });
+    }
+
+    const items = await db.query(
+      `SELECT i.staff_id, i.staff_name, i.gross_salary, i.base_salary,
+              i.cpf_employee, i.cpf_employer, i.net_salary, i.age_at_payroll,
+              i.cpf_rate_employee, i.cpf_rate_employer, i.cpf_ow_ceiling, i.cpf_status,
+              s.department
+         FROM payroll_items i
+         LEFT JOIN staff s ON s.staff_id = i.staff_id
+        WHERE i.payroll_run_id = $1
+        ORDER BY i.staff_id`,
+      [run.id]
+    );
+
+    const staff = items.rows.map((i: any) => {
+      const gross = Number(i.gross_salary);
+      const cpfEmployee = Number(i.cpf_employee);
+      const cpfEmployer = Number(i.cpf_employer);
+      return {
+        staff_id: i.staff_id,
+        staff_name: i.staff_name,
+        department: i.department || 'Unassigned',
+        age: i.age_at_payroll,
+        cpf_status: i.cpf_status,
+        gross_salary: round2(gross),
+        // What the company pays out in total for this person.
+        total_cost: round2(gross + cpfEmployer),
+        cpf_employee: round2(cpfEmployee),
+        cpf_employer: round2(cpfEmployer),
+        cpf_total: round2(cpfEmployee + cpfEmployer),
+        net_paid_to_staff: round2(Number(i.net_salary)),
+        rate_employee: i.cpf_rate_employee != null ? Number(i.cpf_rate_employee) : null,
+        rate_employer: i.cpf_rate_employer != null ? Number(i.cpf_rate_employer) : null,
+        ow_ceiling: i.cpf_ow_ceiling != null ? Number(i.cpf_ow_ceiling) : null,
+        // Wages above the ceiling attract no CPF; worth seeing, because it is
+        // why a raise above the ceiling costs less than one below it.
+        wages_above_ceiling: i.cpf_ow_ceiling != null
+          ? round2(Math.max(0, gross - Number(i.cpf_ow_ceiling)))
+          : 0,
+      };
+    });
+
+    const sum = (k: keyof (typeof staff)[0]) =>
+      round2(staff.reduce((t: number, s: any) => t + (Number(s[k]) || 0), 0));
+
+    const grossTotal = sum('gross_salary');
+    const cpfEmployee = sum('cpf_employee');
+    const cpfEmployer = sum('cpf_employer');
+    const netTotal = sum('net_paid_to_staff');
+
+    // Due by the 14th of the following month.
+    const [y, m] = period.split('-').map(Number);
+    const dueDate = iso(new Date(y, m, 14));
+    const today = new Date(iso(new Date()));
+    const daysUntilDue = Math.round(
+      (parseDateOnly(dueDate).getTime() - today.getTime()) / 86400000
+    );
+
+    const byDepartment = Object.values(
+      staff.reduce((acc: Record<string, any>, s: any) => {
+        const d = s.department;
+        acc[d] = acc[d] || { department: d, headcount: 0, gross: 0, cpf_employer: 0, total_cost: 0 };
+        acc[d].headcount += 1;
+        acc[d].gross = round2(acc[d].gross + s.gross_salary);
+        acc[d].cpf_employer = round2(acc[d].cpf_employer + s.cpf_employer);
+        acc[d].total_cost = round2(acc[d].total_cost + s.total_cost);
+        return acc;
+      }, {})
+    );
+
+    res.json({
+      success: true,
+      period,
+      run: {
+        id: run.id,
+        status: run.status,
+        payment_date: dateOnly(run.payment_date),
+      },
+      staff,
+      by_department: byDepartment,
+      totals: {
+        headcount: staff.length,
+        grossSalaries: grossTotal,
+        /** Deducted from staff, but the employer remits it. */
+        cpfEmployee,
+        /** The employer's own money, on top of salary. */
+        cpfEmployer,
+        /** Total cheque to CPF Board. */
+        cpfRemittance: round2(cpfEmployee + cpfEmployer),
+        /** Paid into staff bank accounts. */
+        netToStaff: netTotal,
+        /** Everything leaving the business for this month's payroll. */
+        totalEmploymentCost: round2(grossTotal + cpfEmployer),
+        /** Employer CPF as a share of gross — the "on-cost" percentage. */
+        employerOnCostPercent: grossTotal > 0 ? round2((cpfEmployer / grossTotal) * 100) : 0,
+      },
+      remittance: {
+        dueDate,
+        daysUntilDue,
+        overdue: daysUntilDue < 0,
+        note:
+          'CPF contributions are due by the 14th of the month following the one they relate to. ' +
+          'Late payment attracts interest of 1.5% per month, minimum $5.',
+      },
+    });
+  } catch (err) {
+    console.error('[finance] cpf summary failed:', err);
+    res.status(500).json({ success: false, error: 'Failed to build CPF summary' });
+  }
+});
+
+/**
+ * Employer CPF across the year, so the on-cost can be budgeted rather than
+ * discovered each month.
+ */
+router.get('/payroll/cpf-year', async (req: Request, res: Response) => {
+  try {
+    const year = String(req.query.year || new Date().getFullYear());
+    if (!/^\d{4}$/.test(year)) return bad(res, 'Year must be YYYY');
+
+    const result = await db.query(
+      `SELECT period, status, total_gross, total_cpf_employee, total_cpf_employer,
+              total_net, total_leave_deduction
+         FROM payroll_runs
+        WHERE period LIKE $1
+        ORDER BY period`,
+      [`${year}-%`]
+    );
+
+    const months = result.rows.map((r: any) => ({
+      period: r.period,
+      status: r.status,
+      gross: round2(Number(r.total_gross)),
+      cpfEmployee: round2(Number(r.total_cpf_employee)),
+      cpfEmployer: round2(Number(r.total_cpf_employer)),
+      cpfRemittance: round2(Number(r.total_cpf_employee) + Number(r.total_cpf_employer)),
+      netToStaff: round2(Number(r.total_net)),
+      totalCost: round2(Number(r.total_gross) + Number(r.total_cpf_employer)),
+    }));
+
+    const total = (k: keyof (typeof months)[0]) =>
+      round2(months.reduce((t: number, m: any) => t + (Number(m[k]) || 0), 0));
+
+    res.json({
+      success: true,
+      year,
+      months,
+      totals: {
+        gross: total('gross'),
+        cpfEmployee: total('cpfEmployee'),
+        cpfEmployer: total('cpfEmployer'),
+        cpfRemittance: total('cpfRemittance'),
+        netToStaff: total('netToStaff'),
+        totalCost: total('totalCost'),
+      },
+    });
+  } catch (err) {
+    console.error('[finance] cpf year failed:', err);
+    res.status(500).json({ success: false, error: 'Failed to build annual CPF summary' });
+  }
+});
+
+/** The employer's own details — payslips and CPF submissions need them. */
+router.get('/employer-profile', async (_req: Request, res: Response) => {
+  try {
+    const r = await db.query(`SELECT * FROM employer_profile WHERE id = 1`);
+    const profile = r.rows[0] || {};
+    const missing: string[] = [];
+    if (!profile.legal_name) missing.push('legal name (required on every payslip by MOM)');
+    if (!profile.uen) missing.push('UEN');
+    if (!profile.cpf_submission_number) missing.push('CPF Submission Number');
+    res.json({ success: true, profile, missing, complete: missing.length === 0 });
+  } catch (err) {
+    console.error('[finance] employer profile failed:', err);
+    res.status(500).json({ success: false, error: 'Failed to load employer profile' });
+  }
+});
+
+router.put('/employer-profile', async (req: Request, res: Response) => {
+  try {
+    const b = req.body || {};
+    const workingDays = num(b.working_days_per_week, 5);
+    if (workingDays <= 0 || workingDays > 7) {
+      return bad(res, 'Working days per week must be between 1 and 7');
+    }
+    const r = await db.query(
+      `UPDATE employer_profile
+          SET legal_name = $1, uen = $2, cpf_submission_number = $3,
+              registered_address = $4, postal_code = $5,
+              working_days_per_week = $6, updated_by = $7, updated_at = NOW()
+        WHERE id = 1 RETURNING *`,
+      [
+        String(b.legal_name || '').trim() || null,
+        String(b.uen || '').trim().toUpperCase() || null,
+        String(b.cpf_submission_number || '').trim().toUpperCase() || null,
+        String(b.registered_address || '').trim() || null,
+        String(b.postal_code || '').replace(/[^0-9]/g, '') || null,
+        workingDays,
+        uid(req),
+      ]
+    );
+    res.json({ success: true, profile: r.rows[0] });
+  } catch (err) {
+    console.error('[finance] save employer profile failed:', err);
+    res.status(500).json({ success: false, error: 'Failed to save employer profile' });
   }
 });
 
@@ -1961,7 +2633,7 @@ router.get('/staff-costs', async (req: Request, res: Response) => {
     const period = (req.query.period as string) || iso(new Date()).slice(0, 7);
     const staff = await db.query(
       `SELECT s.staff_id, s.first_name || ' ' || s.last_name AS staff_name,
-              s.department, s.position, s.status,
+              s.department, s.position, s.status, s.date_of_birth, s.cpf_status,
               COALESCE(sal.base_salary, s.base_salary, 0) AS base_salary,
               COALESCE((SELECT SUM(a.amount) FROM staff_allowances a
                          WHERE a.staff_salary_id = sal.id), 0) AS allowances
@@ -1974,13 +2646,27 @@ router.get('/staff-costs', async (req: Request, res: Response) => {
     const rows = staff.rows.map((s: any) => {
       const base = Number(s.base_salary);
       const allowances = Number(s.allowances);
-      const cpf = calculateCPF(base);
+      // A cost report should still render for someone whose CPF profile is
+      // incomplete — it says so rather than failing the whole page.
+      let employerCpf = 0;
+      let cpfNote: string | null = null;
+      try {
+        employerCpf = calculateCPF({
+          ordinaryWage: base + allowances,
+          dateOfBirth: s.date_of_birth,
+          cpfStatus: s.cpf_status,
+          period,
+        }).employerTotal;
+      } catch (e) {
+        cpfNote = e instanceof Error ? e.message : 'CPF could not be computed';
+      }
       return {
         ...s,
         base_salary: round2(base),
         allowances: round2(allowances),
-        cpf_employer: cpf.employerTotal,
-        monthly_cost: round2(base + allowances + cpf.employerTotal),
+        cpf_employer: employerCpf,
+        cpf_note: cpfNote,
+        monthly_cost: round2(base + allowances + employerCpf),
       };
     });
 

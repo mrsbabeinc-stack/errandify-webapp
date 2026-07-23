@@ -168,6 +168,14 @@ const CompanyAdvertisingManagement: React.FC = () => {
             budget: campaign.budget,
             starts_at: campaign.startDate,
             ends_at: campaign.endDate,
+            // The wizard asks for both of these — which slot is being bought,
+            // and where the ad should send people — and this call used to
+            // discard them, so a paid hero banner had no action button target
+            // and no placement to be served into.
+            placement_type: campaign.type,
+            target_url: campaign.url,
+            target_url_type: campaign.urlType,
+            cta_text: campaign.ctaText,
           }),
         });
 

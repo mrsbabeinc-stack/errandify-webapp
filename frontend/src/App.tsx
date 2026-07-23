@@ -3,6 +3,7 @@ import { MyCasesPage } from './pages/MyCasesPage';
 import { useState, useEffect } from 'react';
 import { initPushNotifications } from './utils/pushNotifications';
 import { captureReferralFromUrl } from './utils/referralCapture';
+import { captureLeadInviteFromUrl } from './utils/leadInviteCapture';
 import './styles/CompanyModuleTheme.css';
 import Layout from './components/Layout';
 import NotificationListener from './components/NotificationListener';
@@ -36,6 +37,7 @@ import ReferralPage from './pages/ReferralPage';
 import ReferralTracking from './pages/admin/ReferralTracking';
 import LeadGeneration from './pages/admin/LeadGeneration';
 import InterestPage from './pages/InterestPage';
+import CompanyReferralsPage from './pages/CompanyReferralsPage';
 import PayoutSettingsPage from './pages/PayoutSettingsPage';
 import TransactionHistoryPage from './pages/TransactionHistoryPage';
 import ErrandifyPointsPage from './pages/ErrandifyPointsPage';
@@ -128,7 +130,6 @@ import RBACManagementDashboard from './pages/admin/RBACManagementDashboard';
 import StaffSalaryBenefitsEditor from './pages/admin/StaffSalaryBenefitsEditor';
 import StaffInfoEditorEnhanced from './pages/admin/StaffInfoEditorEnhanced';
 import AttendanceDashboard from './pages/admin/AttendanceDashboard';
-import TimesheetManagement from './pages/admin/TimesheetManagement';
 import TimesheetApprovalQueue from './pages/admin/TimesheetApprovalQueue';
 import AttendanceReports from './pages/admin/AttendanceReports';
 import HolidayManager from './pages/admin/HolidayManager';
@@ -142,6 +143,7 @@ import ChooseContextPage from './pages/ChooseContextPage';
 import StaffMyWorkPage from './pages/company/StaffMyWorkPage';
 import CompanyVerificationsAdmin from './pages/admin/CompanyVerifications';
 import StripeCheckoutDummy from './pages/StripeCheckoutDummy';
+import AdPaymentReturn from './pages/AdPaymentReturn';
 import AdvertisingDashboard from './pages/AdvertisingDashboard';
 import CreateCampaignModal from './components/CreateCampaignModal';
 import CampaignWizard from './components/CampaignWizard';
@@ -154,6 +156,7 @@ import RecruitmentApplicationsDashboard from './pages/admin/RecruitmentApplicati
 import JoinUsPage from './pages/JoinUsPage';
 import StaffAttendanceClockIn from './pages/StaffAttendanceClockIn';
 import StaffAttendanceHistory from './pages/StaffAttendanceHistory';
+import MyPayslipsPage from './pages/MyPayslipsPage';
 import CandidateScreening from './pages/CandidateScreening';
 import StaffOnboardingPage from './pages/StaffOnboardingPage';
 import BudgetDashboard from './pages/admin/BudgetDashboard';
@@ -187,6 +190,10 @@ export default function App() {
   // URL, so /join?ref=, /?ref= and /errand/12?ref= all attribute.
   useEffect(() => {
     captureReferralFromUrl();
+    // A pre-launch lead following their invite. Separate store from the
+    // referral code because both can arrive on the same visit and neither
+    // should overwrite the other.
+    captureLeadInviteFromUrl();
   }, []);
 
   useEffect(() => {
@@ -640,7 +647,11 @@ export default function App() {
         <Route path="/admin/recruitment" element={isAuthenticated && isAdmin ? <RecruitmentDashboard /> : <Navigate to="/login" replace />} />
         <Route path="/admin/recruitment/applications" element={isAuthenticated && isAdmin ? <RecruitmentApplicationsDashboard /> : <Navigate to="/login" replace />} />
         <Route path="/admin/attendance" element={isAuthenticated && isAdmin ? <AttendanceDashboard /> : <Navigate to="/login" replace />} />
-        <Route path="/admin/timesheets" element={isAuthenticated && isAdmin ? <TimesheetManagement /> : <Navigate to="/login" replace />} />
+        {/* Both paths serve TimesheetApprovalQueue. TimesheetManagement was a
+            second timesheet screen backed entirely by mock data — its Approve
+            button changed nothing, while the real one next to it worked. Kept as
+            a route so existing links still land somewhere correct. */}
+        <Route path="/admin/timesheets" element={isAuthenticated && isAdmin ? <TimesheetApprovalQueue /> : <Navigate to="/login" replace />} />
         <Route path="/admin/timesheet-approvals" element={isAuthenticated && isAdmin ? <TimesheetApprovalQueue /> : <Navigate to="/login" replace />} />
         <Route path="/admin/attendance-reports" element={isAuthenticated && isAdmin ? <AttendanceReports /> : <Navigate to="/login" replace />} />
         <Route path="/admin/budget" element={isAuthenticated && isAdmin ? <BudgetDashboard /> : <Navigate to="/login" replace />} />
@@ -684,11 +695,16 @@ export default function App() {
         <Route path="/choose-context" element={isAuthenticated ? <ChooseContextPage /> : <Navigate to="/login" replace />} />
         <Route path="/company/workspace" element={isAuthenticated ? <CompanyWorkspacePage /> : <Navigate to="/login" replace />} />
         <Route path="/company/staff" element={isAuthenticated ? <CompanyStaffManagement /> : <Navigate to="/login" replace />} />
+        {/* Company invite codes. Separate from /referral, which is the person's
+            own REF- code — a staff member has both and they pay different
+            parties. The page says so; see CompanyReferralsPage. */}
+        <Route path="/company/referrals" element={isAuthenticated ? <CompanyReferralsPage /> : <Navigate to="/login" replace />} />
         <Route path="/company/post-errand" element={isAuthenticated ? <CompanyPostErrandPage /> : <Navigate to="/login" replace />} />
 
         {/* Advertising Routes */}
         <Route path="/advertising" element={isAuthenticated ? <AdvertisingDashboard /> : <Navigate to="/login" replace />} />
         <Route path="/advertising/create" element={isAuthenticated ? <CreateCampaignPage /> : <Navigate to="/login" replace />} />
+        <Route path="/advertising/payment-return/:companyId" element={isAuthenticated ? <AdPaymentReturn /> : <Navigate to="/login" replace />} />
 
         <Route path="/staff/dashboard" element={isAuthenticated ? <DoerActiveErrands /> : <Navigate to="/login" replace />} />
         {/* Clock-in and attendance history moved into the Layout route group
@@ -710,6 +726,8 @@ export default function App() {
           <Route path="/home" element={<HomePage userRole={userRole as 'asker' | 'doer'} />} />
           <Route path="/staff/clock-in" element={<StaffAttendanceClockIn />} />
           <Route path="/staff/attendance-history" element={<StaffAttendanceHistory />} />
+          {/* An employee's own payslips — scoped to them by staff.user_id */}
+          <Route path="/staff/payslips" element={<MyPayslipsPage />} />
           <Route path="/errands" element={<ErrandsPage userRole={userRole as 'asker' | 'doer'} />} />
           <Route path="/errand/:id" element={<ErrandDetailPage userRole={userRole as 'asker' | 'doer'} />} />
           {/* Where people track issues they've reported — the page existed but was never routed */}

@@ -40,20 +40,21 @@ const TopNotificationBar: React.FC = () => {
   // Expose addNotification globally for use across the app
   useEffect(() => {
     (window as any).topNotification = addNotification;
-    console.log('[TopNotificationBar] Ready - window.topNotification is available');
 
-    // Show welcome notification on first load
-    if (typeof window !== 'undefined' && !(window as any).topNotificationInitialized) {
-      setTimeout(() => {
-        addNotification({
-          type: 'info',
-          message: '💡 Click buttons to see notifications at the top',
-          icon: 'ℹ️',
-          duration: 6000,
-        });
-      }, 500);
-      (window as any).topNotificationInitialized = true;
-    }
+    /**
+     * A "welcome" notification used to fire here on first load, reading
+     * "💡 Click buttons to see notifications at the top". It was an
+     * instruction to whoever was building the notification system — see
+     * pages/TopNotificationTestPage — and it shipped.
+     *
+     * Removed rather than hidden on one route. It carried no information and
+     * no action, so it was never useful on any page, and it appeared over the
+     * top of whatever was there: on the landing page it covered the logo for
+     * the first six seconds of a visitor's very first impression.
+     *
+     * The bar itself is untouched. Real notifications still arrive through
+     * window.topNotification.
+     */
   }, []);
 
   const getBackgroundColor = (type: string) => {

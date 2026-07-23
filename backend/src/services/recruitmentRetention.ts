@@ -169,10 +169,27 @@ export async function runRecruitmentRetention(): Promise<RecruitmentRetentionRep
        * is third-party personal data: referees never applied for anything, and
        * keeping their names and numbers past the vacancy serves no purpose.
        */
+      /**
+       * date_of_birth and the address fields are stripped here because
+       * migration 070 restored them to the application after 069 had removed
+       * them. They were briefly absent from this list, which would have left a
+       * date of birth and home address on every rejected applicant forever —
+       * the exact failure this service exists to prevent.
+       *
+       * adjustments_needed goes too: it is free text, and "I use a wheelchair"
+       * identifies a person as surely as a name does.
+       *
+       * work_authorisation and can_perform_duties are deliberately KEPT. They
+       * are categorical, identify nobody once the name is gone, and are what
+       * makes it possible to audit later whether the process treated
+       * sponsorship-needing or adjustment-needing applicants differently.
+       */
       `UPDATE job_applications SET
          first_name = 'Redacted', last_name = 'Applicant',
          email = 'redacted+' || id || '@invalid',
          phone = NULL,
+         date_of_birth = NULL, home_address = NULL, city = NULL,
+         postal_code = NULL, country = NULL, adjustments_needed = NULL,
          employment_history = NULL, education_records = NULL,
          referee_contacts = NULL,
          cv_filename = NULL, cv_url = NULL, cv_extracted_skills = NULL,

@@ -46,6 +46,18 @@ interface MyAccountPageProps {
   userRole?: 'asker' | 'doer';
 }
 
+/** The eight MyAccount sections, in the order they appear in the nav grid. */
+const ACCOUNT_SECTIONS = [
+  { id: 'dashboard', emoji: '📊', label: 'MyHub' },
+  { id: 'profile', emoji: '👤', label: 'MyProfile' },
+  { id: 'pocket', emoji: '💰', label: 'MyPocket' },
+  { id: 'rewards', emoji: '💎', label: 'MyRewardSpace' },
+  { id: 'safety', emoji: '🛡️', label: 'MySafetyCentre' },
+  { id: 'notify', emoji: '🔔', label: 'Notifications' },
+  { id: 'categories', emoji: '🎯', label: 'Categories' },
+  { id: 'availability', emoji: '📅', label: 'My Availability' },
+] as const;
+
 export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccountPageProps = {}) {
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState<'dashboard' | 'profile' | 'pocket' | 'rewards' | 'safety' | 'notify' | 'categories' | 'availability'>('dashboard');
@@ -829,7 +841,20 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
     if (onLogout) {
       onLogout();
     } else {
-      // Fallback if onLogout not provided
+      /**
+       * Fallback when no onLogout was passed.
+       *
+       * This used `navigate('/auth')`, which is a client-side transition: it
+       * clears localStorage but leaves App's `isAuthenticated` state true. The
+       * /auth route reads that state and renders `<Navigate to="/home" />` for
+       * anyone it believes is signed in — so logging out bounced you straight
+       * back to the home page, still apparently logged in until the next full
+       * reload.
+       *
+       * A full document load is what every other logout in the app does, and
+       * it is the only version that cannot leave React state disagreeing with
+       * localStorage.
+       */
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       localStorage.removeItem('userId');
@@ -838,7 +863,8 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
       localStorage.removeItem('singpass_state');
       localStorage.removeItem('singpass_nonce');
       localStorage.removeItem('singpass_mode');
-      navigate('/auth');
+      localStorage.removeItem('isAuthenticated');
+      window.location.href = '/auth';
     }
   };
 
@@ -1129,7 +1155,7 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
   return (
     <AdminThemeWrapper
       title="👤 MyAccount"
-      subtitle="Your space to shine! Update your profile, preferences & achievements"
+      subtitle="Profile, pocket, rewards and settings"
       showBackButton
       onBack={() => navigate(-1)}
       style={{background: 'linear-gradient(135deg, #FFFBF8 0%, #FFF6F0 50%, #FFE8D6 100%)'}}
@@ -1149,90 +1175,54 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
           </div>
         </div>
 
-        {/* STICKY TABS - Below banner - ULTRA COMPACT */}
-        <div className="sticky top-20 z-40 bg-white border-b border-gray-200 mb-3 -mx-4 px-1 py-0 overflow-x-auto">
-          <div className="flex gap-0.5 whitespace-nowrap">
-            <button
-              onClick={() => setActiveSection('dashboard')}
-              className={`px-1 py-0.5 text-xs font-bold transition rounded ${
-                activeSection === 'dashboard'
-                  ? 'bg-errandify-orange text-white'
-                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
-              }`}
-            >
-              📊 MyHub
-            </button>
-            <button
-              onClick={() => setActiveSection('profile')}
-              className={`px-1 py-0.5 text-xs font-bold transition rounded ${
-                activeSection === 'profile'
-                  ? 'bg-errandify-orange text-white'
-                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
-              }`}
-            >
-              👤 MyProfile
-            </button>
-            <button
-              onClick={() => setActiveSection('pocket')}
-              className={`px-1 py-0.5 text-xs font-bold transition rounded ${
-                activeSection === 'pocket'
-                  ? 'bg-errandify-orange text-white'
-                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
-              }`}
-            >
-              💰 MyPocket
-            </button>
-            <button
-              onClick={() => setActiveSection('rewards')}
-              className={`px-1 py-0.5 text-xs font-bold transition rounded ${
-                activeSection === 'rewards'
-                  ? 'bg-errandify-orange text-white'
-                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
-              }`}
-            >
-              💎 MyRewardSpace
-            </button>
-            <button
-              onClick={() => setActiveSection('safety')}
-              className={`px-1 py-0.5 text-xs font-bold transition rounded ${
-                activeSection === 'safety'
-                  ? 'bg-errandify-orange text-white'
-                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
-              }`}
-            >
-              🛡️ MySafetyCentre
-            </button>
-            <button
-              onClick={() => setActiveSection('notify')}
-              className={`px-1 py-0.5 text-xs font-bold transition rounded ${
-                activeSection === 'notify'
-                  ? 'bg-errandify-orange text-white'
-                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
-              }`}
-            >
-              🔔 Notifications
-            </button>
-            <button
-              onClick={() => setActiveSection('categories')}
-              className={`px-1 py-0.5 text-xs font-bold transition rounded ${
-                activeSection === 'categories'
-                  ? 'bg-errandify-orange text-white'
-                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
-              }`}
-            >
-              🎯 Categories
-            </button>
-            <button
-              onClick={() => setActiveSection('availability')}
-              className={`px-1 py-0.5 text-xs font-bold transition rounded ${
-                activeSection === 'availability'
-                  ? 'bg-errandify-orange text-white'
-                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
-              }`}
-            >
-              📅 My Availability
-            </button>
-          </div>
+        {/*
+          Section navigation.
+
+          This was eight tabs in a horizontally scrolling strip: four of them
+          sat off the right edge with nothing to say they were there, so half
+          the account page was unreachable unless you happened to swipe. Same
+          failure, and the same fix, as the MyKampung section grid — four
+          columns, two rows, everything visible, identical tile shape so the
+          two screens read as one product.
+        */}
+        <div
+          className="sticky top-20 z-40 mb-3"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '6px',
+            background: '#FFFAF6',
+            paddingBottom: '8px',
+          }}
+        >
+          {ACCOUNT_SECTIONS.map(({ id, emoji, label }) => {
+            const active = activeSection === id;
+            return (
+              <button
+                key={id}
+                onClick={() => setActiveSection(id)}
+                title={label}
+                style={{
+                  padding: '6px 2px',
+                  borderRadius: '10px',
+                  border: active ? '2px solid rgba(255,255,255,0.7)' : '1px solid rgba(255,107,53,0.22)',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  transition: 'all 0.2s',
+                  background: active
+                    ? 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)'
+                    : 'rgba(255,255,255,0.85)',
+                  color: active ? 'white' : '#D2521C',
+                  boxShadow: active
+                    ? '0 3px 12px rgba(255,107,53,0.28)'
+                    : '0 1px 5px rgba(255,107,53,0.10)',
+                }}
+              >
+                <div style={{ fontSize: '15px', lineHeight: 1, marginBottom: '2px' }}>{emoji}</div>
+                <div style={{ fontSize: '9px', fontWeight: 700, lineHeight: 1.1 }}>{label}</div>
+              </button>
+            );
+          })}
         </div>
 
         {/* DASHBOARD - Always show first */}
@@ -1257,13 +1247,13 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
               )}
 
               {/* RIGHT - RATING */}
-              <div className="bg-gradient-to-br from-yellow-300 via-orange-200 to-orange-300 rounded-xl p-3 border-2 border-yellow-400 shadow-md">
+              <div className="bg-gradient-to-br from-errandify-orange-wash to-orange-100 rounded-xl p-3 border-2 border-errandify-orange/30 shadow-kampung-sm flex flex-col justify-center">
                 <div className="text-center">
-                  <p className="text-base font-black text-orange-900 mb-1">✨ People Love You!</p>
+                  <p className="text-sm font-black text-errandify-brown mb-1">✨ People Love You!</p>
                   {/* Guarded: the API returned null here whenever the average
                       could not be computed, and .toFixed() on that crashed the
                       whole account page rather than degrading to a dash. */}
-                  <p className="text-4xl font-black text-orange-700">
+                  <p className="text-3xl font-black text-errandify-orange-deep">
                     {typeof ratings.averageRating === 'number' ? ratings.averageRating.toFixed(1) : '—'}
                   </p>
                   <div className="flex gap-1 justify-center mb-1">
@@ -1271,7 +1261,7 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                       <span key={i} className="text-lg">{i < Math.floor(ratings.averageRating) ? '⭐' : '✨'}</span>
                     ))}
                   </div>
-                  <p className="text-xs font-bold text-orange-900">({ratings.reviewCount} reviews) 💝</p>
+                  <p className="text-[11px] font-bold text-gray-600">({ratings.reviewCount} reviews)</p>
                 </div>
               </div>
             </div>

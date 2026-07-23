@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast, ToastContainer } from '../../components/Toast';
 import AdminLayout from '../../components/admin/AdminLayout';
-import financeAPI, { n, PayrollItem, PayrollRun, PaymentBatch, BankReadinessRow, OnboardingStatusRow, OnboardingInvite } from '../../services/financeAPI';
+import financeAPI, { n, PayrollItem, PayrollRun, PaymentBatch, BankReadinessRow, OnboardingStatusRow, OnboardingInvite, CPFSummary, ComplianceStatus } from '../../services/financeAPI';
 
 interface Staff {
   id: string;
@@ -18,18 +18,17 @@ interface Staff {
   status: 'active' | 'inactive' | 'on-leave' | 'terminated';
 }
 
-interface CPFBreakdown {
-  ordinaryWage: number; // Min(BaseSalary, $6,000)
-  additionalWage: number; // (BaseSalary - OW), max $6,600
-  employeeOA: number; // 4.5% of OW
-  employeeSA: number; // 4% of OW
-  employeeMA: number; // 0.5% of OW
-  employeeTotal: number; // OA + SA + MA
-  employerOA: number; // 7% of OW
-  employerSA: number; // 7% of OW
-  employerMA: number; // 0.5% of OW
-  employerAW: number; // 8% of AW
-  employerTotal: number; // OA + SA + MA + AW
+interface CPFPreview {
+  ordinaryWage: number;
+  additionalWage: number;
+  employeeTotal: number;
+  employerTotal: number;
+  rateEmployee: number;
+  rateEmployer: number;
+  owCeiling: number;
+  ageBand: string;
+  cpfStatus: string;
+  age: number;
 }
 
 interface TaxBreakdown {
@@ -58,7 +57,8 @@ interface Payslip {
   leaveDeduction: number;
   totalDeductions: number;
   netSalary: number;
-  cpfBreakdown: CPFBreakdown;
+  cpfEmployer: number;
+  cpfRateEmployee: number | null;
   taxBreakdown: TaxBreakdown;
   generatedDate: string;
   paymentDate: string;
@@ -92,13 +92,23 @@ const toPayslip = (item: PayrollItem & { period?: string; payment_date?: string 
     leaveDeduction: n(item.leave_deduction),
     totalDeductions: n(item.total_deductions),
     netSalary: n(item.net_salary),
-    cpfBreakdown: item.cpf_breakdown as CPFBreakdown,
+    cpfEmployer: n(item.cpf_employer),
+    cpfRateEmployee: item.cpf_rate_employee != null ? n(item.cpf_rate_employee) : null,
     taxBreakdown: item.tax_breakdown as TaxBreakdown,
     generatedDate: period,
     paymentDate: item.payment_date || '',
     status: (item.status as Payslip['status']) || 'generated',
   };
 };
+
+const money = (v: unknown) =>
+  (Number(v) || 0).toLocaleString('en-SG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+const thL: React.CSSProperties = { padding: '10px 12px', textAlign: 'left', fontSize: '12px', fontWeight: 600 };
+const thC: React.CSSProperties = { ...thL, textAlign: 'center' };
+const thR: React.CSSProperties = { ...thL, textAlign: 'right' };
+const tdC: React.CSSProperties = { padding: '10px 12px', textAlign: 'center', fontSize: '12px', color: '#666' };
+const tdR: React.CSSProperties = { padding: '10px 12px', textAlign: 'right', fontSize: '12px', color: '#333' };
 
 const BATCH_STEPS: Record<string, { label: string; bg: string; fg: string }> = {
   awaiting_approval: { label: 'AWAITING APPROVAL', bg: '#FFF3E0', fg: '#E65100' },
@@ -120,7 +130,7 @@ const btnOutline = (colour: string): React.CSSProperties => ({
 const PayrollDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { toasts, showToast, removeToast } = useToast();
-  const [activeTab, setActiveTab] = useState<'salary-setup' | 'payroll-run' | 'payslips' | 'payments'>('salary-setup');
+  const [activeTab, setActiveTab] = useState<'salary-setup' | 'payroll-run' | 'payslips' | 'payments' | 'employer-cost' | 'compliance'>('salary-setup');
 
   // Staff state
   const [staff, setStaff] = useState<Staff[]>([]);
@@ -205,26 +215,33 @@ const PayrollDashboard: React.FC = () => {
    * nothing is withheld and the old browser-side calculation was subtracting a
    * tax that no employer actually deducts.
    */
-  const calculateCPF = (baseSalary: number): CPFBreakdown => {
-    const OW = Math.min(baseSalary, 6000); // Ordinary Wage capped at $6,000
-    const AW = Math.min(baseSalary - OW, 6600); // Additional Wage max $6,600
+  /**
+   * CPF preview for the selected employee, computed by the SERVER.
+   *
+   * There used to be a second implementation of the rates here, in the browser.
+   * It disagreed with nothing at the time only because the server copied the
+   * same wrong numbers. Statutory rates belong in one place: financeService.ts.
+   */
+  const [cpfPreview, setCpfPreview] = useState<CPFPreview | null>(null);
+  const [cpfPreviewError, setCpfPreviewError] = useState<string | null>(null);
 
-    return {
-      ordinaryWage: OW,
-      additionalWage: AW,
-      // Employee contributions (OW only)
-      employeeOA: Math.round(OW * 0.045 * 100) / 100, // 4.5%
-      employeeSA: Math.round(OW * 0.04 * 100) / 100, // 4%
-      employeeMA: Math.round(OW * 0.005 * 100) / 100, // 0.5%
-      employeeTotal: Math.round((OW * 0.045 + OW * 0.04 + OW * 0.005) * 100) / 100,
-      // Employer contributions
-      employerOA: Math.round(OW * 0.07 * 100) / 100, // 7%
-      employerSA: Math.round(OW * 0.07 * 100) / 100, // 7%
-      employerMA: Math.round(OW * 0.005 * 100) / 100, // 0.5%
-      employerAW: Math.round(AW * 0.08 * 100) / 100, // 8% of AW
-      employerTotal: Math.round((OW * 0.07 + OW * 0.07 + OW * 0.005 + AW * 0.08) * 100) / 100,
-    };
-  };
+  useEffect(() => {
+    if (!selectedStaff) { setCpfPreview(null); return; }
+    let cancelled = false;
+    (async () => {
+      try {
+        setCpfPreviewError(null);
+        const preview = await financeAPI.cpfPreview(selectedStaff.staffId, payrollMonth.slice(0, 7));
+        if (!cancelled) setCpfPreview(preview);
+      } catch (err) {
+        if (!cancelled) {
+          setCpfPreview(null);
+          setCpfPreviewError(err instanceof Error ? err.message : 'CPF could not be computed');
+        }
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [selectedStaff, payrollMonth]);
 
   /** Downloads the payslip as CSV. The button previously did nothing at all. */
   const downloadPayslip = (payslip: Payslip) => {
@@ -247,7 +264,7 @@ const PayrollDashboard: React.FC = () => {
       [],
       ['Net salary', payslip.netSalary],
       [],
-      ['Employer CPF (not deducted from pay)', payslip.cpfBreakdown?.employerTotal ?? 0],
+      ['Employer CPF (not deducted from pay)', payslip.cpfEmployer ?? 0],
       ['Projected annual income tax (NOT withheld — no PAYE in Singapore)', payslip.taxBreakdown?.annualTax ?? 0],
     ];
     const escape = (v: string | number) => {
@@ -262,6 +279,37 @@ const PayrollDashboard: React.FC = () => {
     link.click();
     URL.revokeObjectURL(url);
   };
+
+
+  // ---- What the employer pays -------------------------------------------
+  const [costPeriod, setCostPeriod] = useState(new Date().toISOString().slice(0, 7));
+  const [cpfSummary, setCpfSummary] = useState<CPFSummary | null>(null);
+  const [employerProfile, setEmployerProfile] = useState<{ missing: string[] } | null>(null);
+  const [compliance, setCompliance] = useState<ComplianceStatus | null>(null);
+  const [ir8aYear, setIr8aYear] = useState(String(new Date().getFullYear()));
+
+  useEffect(() => {
+    financeAPI.complianceStatus().then(setCompliance).catch(() => setCompliance(null));
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const [summary, profile] = await Promise.all([
+          financeAPI.cpfSummary(costPeriod),
+          financeAPI.employerProfile().catch(() => null),
+        ]);
+        if (cancelled) return;
+        setCpfSummary(summary);
+        if (profile) setEmployerProfile({ missing: profile.missing });
+      } catch (err) {
+        if (!cancelled) showToast(`❌ ${err instanceof Error ? err.message : 'Failed to load costs'}`, 'error');
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [costPeriod]);
 
   // ---- Paying staff -------------------------------------------------------
   const [batches, setBatches] = useState<PaymentBatch[]>([]);
@@ -417,10 +465,15 @@ const PayrollDashboard: React.FC = () => {
       0
     );
 
-  const totalCPFEmployer = staff
-    .filter(s => s.status === 'active')
-    .reduce((sum, s) => sum + calculateCPF(s.baseSalary).employerTotal, 0);
-
+  /**
+   * Employer CPF for the headline figure comes from the latest generated run,
+   * not from a second calculation in the browser. Nothing here re-derives a
+   * statutory rate.
+   */
+  const latestRun = payrollRuns.length > 0
+    ? [...payrollRuns].sort((a, b) => (a.period < b.period ? 1 : -1))[0]
+    : null;
+  const totalCPFEmployer = latestRun ? n(latestRun.total_cpf_employer) : 0;
   const totalMonthlyOutflow = Math.round((totalMonthlyPayroll + totalCPFEmployer) * 100) / 100;
 
   return (
@@ -483,7 +536,7 @@ const PayrollDashboard: React.FC = () => {
 
         {/* Tabs */}
         <div style={{ display: 'flex', gap: '4px', marginBottom: '24px', borderBottom: '2px solid #FFD9B3' }}>
-          {(['salary-setup', 'payroll-run', 'payslips', 'payments'] as const).map(tab => (
+          {(['salary-setup', 'payroll-run', 'payslips', 'payments', 'employer-cost', 'compliance'] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -503,6 +556,8 @@ const PayrollDashboard: React.FC = () => {
               {tab === 'payroll-run' && '▶️ Payroll Run'}
               {tab === 'payslips' && '📄 Payslips'}
               {tab === 'payments' && '💳 Payments'}
+              {tab === 'employer-cost' && '🏢 Employer Cost'}
+              {tab === 'compliance' && '⚖️ Compliance'}
             </button>
           ))}
         </div>
@@ -628,72 +683,58 @@ const PayrollDashboard: React.FC = () => {
             {/* CPF Calculation Preview */}
             {selectedStaff && (
               <div style={{ padding: '16px', background: 'white', border: '2px solid #FFD9B3', borderRadius: '8px' }}>
-                <h3 style={{ margin: '0 0 12px 0', fontSize: '16px', color: '#333' }}>CPF Calculation Preview</h3>
-                {(() => {
-                  const cpf = calculateCPF(selectedStaff.baseSalary);
-                  return (
-                    <div style={{ display: 'grid', gap: '12px', fontSize: '12px' }}>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                        <div style={{ padding: '10px', background: '#F5F5F5', borderRadius: '4px' }}>
-                          <div style={{ fontSize: '11px', color: '#666', marginBottom: '2px' }}>Ordinary Wage (OW)</div>
-                          <div style={{ fontWeight: '600', color: '#333' }}>SGD ${cpf.ordinaryWage.toLocaleString()}</div>
+                <h3 style={{ margin: '0 0 12px 0', fontSize: '16px', color: '#333' }}>
+                  CPF for {payrollMonth.slice(0, 7)}
+                </h3>
+                {cpfPreviewError ? (
+                  <div style={{ padding: '12px', background: '#FFEBEE', border: '1px solid #C62828', borderRadius: '6px', fontSize: '12px', color: '#C62828' }}>
+                    {cpfPreviewError}
+                  </div>
+                ) : !cpfPreview ? (
+                  <div style={{ fontSize: '12px', color: '#888' }}>Loading…</div>
+                ) : (
+                  <div style={{ display: 'grid', gap: '12px', fontSize: '12px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                      <div style={{ padding: '10px', background: '#F5F5F5', borderRadius: '4px' }}>
+                        <div style={{ fontSize: '11px', color: '#666' }}>Wages attracting CPF</div>
+                        <div style={{ fontWeight: 600, color: '#333' }}>
+                          SGD ${cpfPreview.ordinaryWage.toLocaleString()}
                         </div>
-                        <div style={{ padding: '10px', background: '#F5F5F5', borderRadius: '4px' }}>
-                          <div style={{ fontSize: '11px', color: '#666', marginBottom: '2px' }}>Additional Wage (AW)</div>
-                          <div style={{ fontWeight: '600', color: '#333' }}>SGD ${cpf.additionalWage.toLocaleString()}</div>
-                        </div>
-                      </div>
-
-                      <div style={{ borderTop: '2px solid #FFD9B3', paddingTop: '12px', marginTop: '8px' }}>
-                        <div style={{ fontWeight: '600', marginBottom: '8px', color: '#333' }}>Employee Contributions (Monthly)</div>
-                        <div style={{ display: 'grid', gap: '4px', fontSize: '11px' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <span>OA (4.5% of OW):</span>
-                            <span>SGD ${cpf.employeeOA.toLocaleString()}</span>
-                          </div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <span>SA (4% of OW):</span>
-                            <span>SGD ${cpf.employeeSA.toLocaleString()}</span>
-                          </div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <span>MA (0.5% of OW):</span>
-                            <span>SGD ${cpf.employeeMA.toLocaleString()}</span>
-                          </div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '600', borderTop: '1px solid #DDD', paddingTop: '4px', marginTop: '4px' }}>
-                            <span>Total Employee:</span>
-                            <span>SGD ${cpf.employeeTotal.toLocaleString()}</span>
-                          </div>
+                        <div style={{ fontSize: '10px', color: '#999', marginTop: '2px' }}>
+                          Ordinary Wage ceiling ${cpfPreview.owCeiling.toLocaleString()}
                         </div>
                       </div>
-
-                      <div style={{ borderTop: '2px solid #FFD9B3', paddingTop: '12px', marginTop: '8px' }}>
-                        <div style={{ fontWeight: '600', marginBottom: '8px', color: '#333' }}>Employer Contributions (Monthly)</div>
-                        <div style={{ display: 'grid', gap: '4px', fontSize: '11px' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <span>OA (7% of OW):</span>
-                            <span>SGD ${cpf.employerOA.toLocaleString()}</span>
-                          </div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <span>SA (7% of OW):</span>
-                            <span>SGD ${cpf.employerSA.toLocaleString()}</span>
-                          </div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <span>MA (0.5% of OW):</span>
-                            <span>SGD ${cpf.employerMA.toLocaleString()}</span>
-                          </div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <span>AW (8% of AW):</span>
-                            <span>SGD ${cpf.employerAW.toLocaleString()}</span>
-                          </div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '600', borderTop: '1px solid #DDD', paddingTop: '4px', marginTop: '4px' }}>
-                            <span>Total Employer:</span>
-                            <span>SGD ${cpf.employerTotal.toLocaleString()}</span>
-                          </div>
+                      <div style={{ padding: '10px', background: '#F5F5F5', borderRadius: '4px' }}>
+                        <div style={{ fontSize: '11px', color: '#666' }}>Age band</div>
+                        <div style={{ fontWeight: 600, color: '#333' }}>{cpfPreview.ageBand}</div>
+                        <div style={{ fontSize: '10px', color: '#999', marginTop: '2px' }}>
+                          Age {cpfPreview.age} · {cpfPreview.cpfStatus}
                         </div>
                       </div>
                     </div>
-                  );
-                })()}
+
+                    <div style={{ borderTop: '2px solid #FFD9B3', paddingTop: '12px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                        <span>Employee ({(cpfPreview.rateEmployee * 100).toFixed(1)}%)</span>
+                        <strong>SGD ${cpfPreview.employeeTotal.toLocaleString()}</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                        <span>Employer ({(cpfPreview.rateEmployer * 100).toFixed(1)}%)</span>
+                        <strong>SGD ${cpfPreview.employerTotal.toLocaleString()}</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #DDD', paddingTop: '6px' }}>
+                        <span style={{ fontWeight: 600 }}>Total to CPF Board</span>
+                        <strong>SGD ${(cpfPreview.employeeTotal + cpfPreview.employerTotal).toLocaleString()}</strong>
+                      </div>
+                    </div>
+
+                    <div style={{ fontSize: '11px', color: '#888', lineHeight: 1.5 }}>
+                      Rates from the CPF Board table in force for this month. The split across
+                      Ordinary, Special and MediSave accounts is CPF Board's to make and is not
+                      shown here — it is not a required payslip item.
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -723,7 +764,7 @@ const PayrollDashboard: React.FC = () => {
                     <li>Generates payslips for all active staff</li>
                     <li>Calculates CPF (OW/AW split) and applies any unpaid-leave deductions</li>
                     <li>Projects annual income tax (IRAS resident bands) — shown, not deducted</li>
-                    <li>Due date: 14th of following month (MOM requirement)</li>
+                    <li>Salary due within 7 days of the period ending (Employment Act); CPF due by the 14th of the following month (CPF Board)</li>
                   </ul>
                 </div>
 
@@ -859,9 +900,10 @@ const PayrollDashboard: React.FC = () => {
                           <div style={{ color: '#666', marginBottom: '2px' }}>CPF (Employee)</div>
                           <div style={{ fontWeight: '600', color: '#333' }}>SGD ${payslip.cpfEmployee.toLocaleString()}</div>
                           <div style={{ fontSize: '10px', color: '#999', marginTop: '4px' }}>
-                            OA: ${payslip.cpfBreakdown.employeeOA.toLocaleString()}<br />
-                            SA: ${payslip.cpfBreakdown.employeeSA.toLocaleString()}<br />
-                            MA: ${payslip.cpfBreakdown.employeeMA.toLocaleString()}
+                            {payslip.cpfRateEmployee != null
+                              ? `${(payslip.cpfRateEmployee * 100).toFixed(1)}% of wages`
+                              : ''}<br />
+                            Employer: ${payslip.cpfEmployer.toLocaleString()}
                           </div>
                         </div>
                         <div>
@@ -1078,6 +1120,286 @@ const PayrollDashboard: React.FC = () => {
                   );
                 })}
               </div>
+            )}
+          </div>
+        )}
+
+        {/* EMPLOYER COST TAB */}
+        {activeTab === 'employer-cost' && (
+          <div>
+            {employerProfile && employerProfile.missing.length > 0 && (
+              <div style={{ padding: '12px 16px', background: '#FFF3E0', border: '2px solid #E65100', borderRadius: '6px', marginBottom: '16px', fontSize: '12px', color: '#E65100' }}>
+                <strong>⚠️ Employer details incomplete:</strong> {employerProfile.missing.join(', ')}.
+                MOM requires the employer's full name on every payslip, so payslips issued now carry a
+                placeholder. Set these under employer settings.
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '16px' }}>
+              <label style={{ fontSize: '13px', fontWeight: 600, color: '#333' }}>Month</label>
+              <input
+                type="month"
+                value={costPeriod}
+                onChange={(e) => setCostPeriod(e.target.value)}
+                style={{ padding: '8px 10px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '13px' }}
+              />
+            </div>
+
+            {!cpfSummary?.totals ? (
+              <div style={{ padding: '32px', textAlign: 'center', background: '#FFF8F5', borderRadius: '8px', border: '2px dashed #FFD9B3', fontSize: '13px', color: '#666' }}>
+                No payroll run for {costPeriod}. Generate one to see what it costs.
+              </div>
+            ) : (
+              <>
+                {/* What it costs the company */}
+                <div style={{ padding: '16px', background: '#fff', border: '2px solid #FF6B35', borderRadius: '8px', marginBottom: '12px' }}>
+                  <div style={{ fontSize: '12px', color: '#666', marginBottom: '10px', fontWeight: 600 }}>
+                    WHAT THIS MONTH COSTS THE COMPANY
+                  </div>
+                  <div style={{ display: 'grid', gap: '6px', fontSize: '13px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: '#666' }}>Gross salaries</span>
+                      <span>SGD {money(cpfSummary.totals.grossSalaries)}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: '#666' }}>
+                        Employer CPF <span style={{ color: '#999' }}>(on top of salary)</span>
+                      </span>
+                      <span style={{ color: '#E65100' }}>+ SGD {money(cpfSummary.totals.cpfEmployer)}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '2px solid #FFD9B3', paddingTop: '8px', marginTop: '4px', fontWeight: 700, fontSize: '15px' }}>
+                      <span>Total employment cost</span>
+                      <span style={{ color: '#FF6B35' }}>SGD {money(cpfSummary.totals.totalEmploymentCost)}</span>
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#888', textAlign: 'right' }}>
+                      Employer CPF adds {cpfSummary.totals.employerOnCostPercent}% on top of every salary
+                    </div>
+                  </div>
+                </div>
+
+                {/* Where the money goes */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px', marginBottom: '12px' }}>
+                  <div style={{ padding: '14px', background: '#E8F5E9', border: '2px solid #4CAF50', borderRadius: '8px' }}>
+                    <div style={{ fontSize: '11px', color: '#2E7D32', fontWeight: 600 }}>TO STAFF BANK ACCOUNTS</div>
+                    <div style={{ fontSize: '20px', fontWeight: 700, color: '#2E7D32', margin: '4px 0' }}>
+                      SGD {money(cpfSummary.totals.netToStaff)}
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#2E7D32' }}>Net pay after CPF and deductions</div>
+                  </div>
+                  <div style={{ padding: '14px', background: '#E3F2FD', border: '2px solid #1976D2', borderRadius: '8px' }}>
+                    <div style={{ fontSize: '11px', color: '#0D47A1', fontWeight: 600 }}>TO CPF BOARD</div>
+                    <div style={{ fontSize: '20px', fontWeight: 700, color: '#0D47A1', margin: '4px 0' }}>
+                      SGD {money(cpfSummary.totals.cpfRemittance)}
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#0D47A1' }}>
+                      {money(cpfSummary.totals.cpfEmployer)} employer + {money(cpfSummary.totals.cpfEmployee)} withheld from staff
+                    </div>
+                  </div>
+                </div>
+
+                {/* Remittance deadline */}
+                {cpfSummary.remittance && (
+                  <div style={{
+                    padding: '12px 16px', borderRadius: '6px', marginBottom: '16px', fontSize: '12px',
+                    background: cpfSummary.remittance.overdue ? '#FFEBEE' : '#FFF8F5',
+                    border: `2px solid ${cpfSummary.remittance.overdue ? '#C62828' : '#FFD9B3'}`,
+                    color: cpfSummary.remittance.overdue ? '#C62828' : '#666',
+                  }}>
+                    <strong>
+                      {cpfSummary.remittance.overdue
+                        ? `⚠️ CPF for ${costPeriod} was due ${cpfSummary.remittance.dueDate}`
+                        : `CPF for ${costPeriod} is due ${cpfSummary.remittance.dueDate}`}
+                    </strong>
+                    {' '}— {cpfSummary.remittance.note}
+                  </div>
+                )}
+
+                {/* Per employee */}
+                <div style={{ background: 'white', border: '1px solid #ddd', borderRadius: '8px', overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '760px' }}>
+                    <thead>
+                      <tr style={{ background: '#F5F5F5', borderBottom: '2px solid #ddd' }}>
+                        <th style={thL}>Employee</th>
+                        <th style={thC}>Age</th>
+                        <th style={thR}>Gross</th>
+                        <th style={thR}>Employee CPF</th>
+                        <th style={thR}>Employer CPF</th>
+                        <th style={thR}>Cost to company</th>
+                        <th style={thR}>Above ceiling</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {cpfSummary.staff.map(s => (
+                        <tr key={s.staff_id} style={{ borderBottom: '1px solid #eee' }}>
+                          <td style={{ padding: '10px 12px', fontSize: '12px' }}>
+                            <div style={{ fontWeight: 600, color: '#333' }}>{s.staff_name}</div>
+                            <div style={{ fontSize: '11px', color: '#888' }}>
+                              {s.staff_id} · {s.department}
+                              {s.rate_employer != null && ` · ${(s.rate_employer * 100).toFixed(1)}% employer`}
+                            </div>
+                          </td>
+                          <td style={tdC}>{s.age ?? '—'}</td>
+                          <td style={tdR}>{money(s.gross_salary)}</td>
+                          <td style={{ ...tdR, color: '#888' }}>{money(s.cpf_employee)}</td>
+                          <td style={{ ...tdR, color: '#E65100', fontWeight: 600 }}>{money(s.cpf_employer)}</td>
+                          <td style={{ ...tdR, fontWeight: 700, color: '#FF6B35' }}>{money(s.total_cost)}</td>
+                          <td style={{ ...tdR, color: s.wages_above_ceiling > 0 ? '#888' : '#ccc' }}>
+                            {s.wages_above_ceiling > 0 ? money(s.wages_above_ceiling) : '—'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div style={{ fontSize: '11px', color: '#888', marginTop: '8px', lineHeight: 1.6 }}>
+                  "Above ceiling" is salary that attracts no CPF because it exceeds the Ordinary Wage
+                  ceiling of ${cpfSummary.staff[0]?.ow_ceiling?.toLocaleString() || '8,000'} — a raise above
+                  that line costs less in CPF than one below it.
+                </div>
+
+                {/* By department */}
+                {cpfSummary.by_department.length > 1 && (
+                  <div style={{ marginTop: '20px' }}>
+                    <h3 style={{ fontSize: '14px', color: '#333', marginBottom: '10px' }}>By department</h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px' }}>
+                      {cpfSummary.by_department.map(d => (
+                        <div key={d.department} style={{ padding: '12px', background: '#FFF8F5', border: '1px solid #FFD9B3', borderRadius: '6px' }}>
+                          <div style={{ fontSize: '13px', fontWeight: 600, color: '#333' }}>{d.department}</div>
+                          <div style={{ fontSize: '11px', color: '#888', marginBottom: '6px' }}>
+                            {d.headcount} {d.headcount === 1 ? 'person' : 'people'}
+                          </div>
+                          <div style={{ fontSize: '16px', fontWeight: 700, color: '#FF6B35' }}>
+                            SGD {money(d.total_cost)}
+                          </div>
+                          <div style={{ fontSize: '11px', color: '#888' }}>
+                            incl. {money(d.cpf_employer)} employer CPF
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
+        {/* COMPLIANCE TAB */}
+        {activeTab === 'compliance' && (
+          <div>
+            <div style={{ padding: '12px 16px', background: '#FFF3E0', border: '2px solid #E65100', borderRadius: '6px', marginBottom: '16px', fontSize: '12px', color: '#E65100', lineHeight: 1.6 }}>
+              <strong>This is a summary of what the software does, not an assurance that you are compliant.</strong>{' '}
+              The screens used to claim compliance they did not have. What follows is the honest version —
+              have a practitioner confirm anything you rely on.
+            </div>
+
+            {!compliance ? (
+              <div style={{ padding: '24px', textAlign: 'center', color: '#888' }}>Loading…</div>
+            ) : (
+              <>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '16px' }}>
+                  {[
+                    { label: 'Covered', n: compliance.counts.ok, bg: '#E8F5E9', fg: '#2E7D32' },
+                    { label: 'Partial', n: compliance.counts.partial, bg: '#FFF3E0', fg: '#E65100' },
+                    { label: 'Not done', n: compliance.counts.gap, bg: '#FFEBEE', fg: '#C62828' },
+                  ].map(c => (
+                    <div key={c.label} style={{ padding: '14px', background: c.bg, borderRadius: '8px', textAlign: 'center' }}>
+                      <div style={{ fontSize: '24px', fontWeight: 700, color: c.fg }}>{c.n}</div>
+                      <div style={{ fontSize: '12px', color: c.fg, fontWeight: 600 }}>{c.label}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Data that blocks payroll or filings */}
+                {(() => {
+                  const g = compliance.staff_data_gaps;
+                  const gaps = [
+                    g.missing_nric && `${g.missing_nric} without NRIC`,
+                    g.missing_date_of_birth && `${g.missing_date_of_birth} without date of birth`,
+                    g.missing_cpf_status && `${g.missing_cpf_status} without CPF status`,
+                    g.missing_bank_details && `${g.missing_bank_details} without bank details`,
+                  ].filter(Boolean);
+                  if (gaps.length === 0) return null;
+                  return (
+                    <div style={{ padding: '12px 16px', background: '#FFEBEE', border: '2px solid #C62828', borderRadius: '6px', marginBottom: '16px', fontSize: '12px', color: '#C62828' }}>
+                      <strong>Staff records incomplete:</strong> {gaps.join(', ')} (of {g.active_staff} active).
+                      Payroll refuses to run for anyone whose CPF cannot be computed.
+                    </div>
+                  );
+                })()}
+
+                {(['MOM', 'CPF', 'IRAS', 'ACRA', 'PDPA'] as const).map(area => {
+                  const items = compliance.items.filter(i => i.area === area);
+                  if (items.length === 0) return null;
+                  return (
+                    <div key={area} style={{ marginBottom: '18px' }}>
+                      <h3 style={{ fontSize: '14px', color: '#333', margin: '0 0 8px 0' }}>{area}</h3>
+                      <div style={{ display: 'grid', gap: '8px' }}>
+                        {items.map((i, idx) => {
+                          const tone = i.status === 'ok'
+                            ? { bg: '#F1F8E9', bd: '#AED581', fg: '#33691E', mark: '✓' }
+                            : i.status === 'partial'
+                            ? { bg: '#FFF8E1', bd: '#FFCC80', fg: '#E65100', mark: '~' }
+                            : { bg: '#FFEBEE', bd: '#EF9A9A', fg: '#C62828', mark: '✗' };
+                          return (
+                            <div key={idx} style={{ padding: '12px', background: tone.bg, border: `1px solid ${tone.bd}`, borderRadius: '6px' }}>
+                              <div style={{ fontSize: '13px', fontWeight: 600, color: tone.fg }}>
+                                {tone.mark} {i.requirement}
+                              </div>
+                              <div style={{ fontSize: '12px', color: '#555', marginTop: '4px', lineHeight: 1.6 }}>
+                                {i.detail}
+                              </div>
+                              <div style={{ fontSize: '11px', color: '#888', marginTop: '4px', fontStyle: 'italic' }}>
+                                {i.authority}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* IR8A */}
+                <div style={{ padding: '16px', background: '#fff', border: '2px solid #FFD9B3', borderRadius: '8px', marginTop: '20px' }}>
+                  <h3 style={{ fontSize: '14px', color: '#333', margin: '0 0 6px 0' }}>IR8A preparation data</h3>
+                  <p style={{ fontSize: '12px', color: '#666', margin: '0 0 12px 0', lineHeight: 1.6 }}>
+                    Employment income for the year, itemised the way IR8A asks for it. Due to IRAS (or to
+                    your employees, if you are not on AIS) by 1 March. This is <strong>not</strong> an AIS
+                    submission file, and it excludes bonus, director's fees, benefits-in-kind and share
+                    gains — none of which this system tracks.
+                  </p>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <select
+                      value={ir8aYear}
+                      onChange={(e) => setIr8aYear(e.target.value)}
+                      style={{ padding: '8px 10px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '13px' }}
+                    >
+                      {[0, 1, 2].map(back => {
+                        const y = String(new Date().getFullYear() - back);
+                        return <option key={y} value={y}>{y}</option>;
+                      })}
+                    </select>
+                    <button
+                      onClick={async () => {
+                        try {
+                          await financeAPI.exportIR8A(ir8aYear);
+                          showToast(`📥 IR8A preparation data for ${ir8aYear} downloaded`, 'success');
+                        } catch (err) {
+                          showToast(`❌ ${err instanceof Error ? err.message : 'Export failed'}`, 'error');
+                        }
+                      }}
+                      style={btn('#2196F3')}
+                    >
+                      📥 Download IR8A data
+                    </button>
+                  </div>
+                </div>
+
+                <p style={{ fontSize: '11px', color: '#888', marginTop: '16px', lineHeight: 1.6 }}>
+                  {compliance.disclaimer}
+                </p>
+              </>
             )}
           </div>
         )}

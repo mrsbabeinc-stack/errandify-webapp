@@ -1938,8 +1938,12 @@ router.post('/:id/confirm-completion', authMiddleware, async (req: AuthRequest, 
 
     // Update status to completed (from completed_unconfirmed or rated)
     console.log('[ConfirmCompletion] Updating errand', id, 'from status', errand.status, 'to completed');
+    // completed_at, not confirmed_at — there is no confirmed_at column on
+    // errands, so this statement threw every time and the whole route 500'd
+    // before changing anything. The asker's "confirm completion" action has
+    // never worked; admin force-complete already writes completed_at.
     const updateResult = await db.query(
-      'UPDATE errands SET status = $1, confirmed_at = NOW(), updated_at = NOW() WHERE id = $2 RETURNING id, status',
+      'UPDATE errands SET status = $1, completed_at = NOW(), updated_at = NOW() WHERE id = $2 RETURNING id, status',
       ['completed', id]
     );
 

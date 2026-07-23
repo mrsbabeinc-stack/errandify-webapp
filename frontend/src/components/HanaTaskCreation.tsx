@@ -43,6 +43,29 @@ export default function HanaTaskCreation({
   onSkipToManual,
   defaultCategory,
 }: HanaTaskCreationProps) {
+  /**
+   * Is the phone keyboard up?
+   *
+   * The screen is a fixed, full-height panel. When the keyboard opens, the
+   * layout viewport does NOT shrink — only the visual viewport does — so the
+   * panel stayed its full height and everything below the fold went behind the
+   * keys: the example bubble, and the input the user was typing into.
+   *
+   * visualViewport reports the actually-visible area. When it loses more than
+   * 160px to the keyboard, Hana's portrait is stood down so the bubble and the
+   * input keep the room. She is the decoration on this screen; the box you
+   * type in is the screen.
+   */
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const onResize = () => setKeyboardOpen(window.innerHeight - vv.height > 160);
+    onResize();
+    vv.addEventListener('resize', onResize);
+    return () => vv.removeEventListener('resize', onResize);
+  }, []);
+
   const [currentStep, setCurrentStep] = useState<CollectionStep>('input');
   const [taskData, setTaskData] = useState<TaskData>({
     title: '',
@@ -526,7 +549,7 @@ export default function HanaTaskCreation({
   return (
     <div className="fixed inset-0 bg-white z-40 flex items-stretch justify-center p-0">
       {/* Full-screen sheet — covers the app header behind so nothing peeks through */}
-      <div className="bg-white shadow-2xl w-full h-screen max-w-2xl flex flex-col overflow-hidden">
+      <div className="bg-white shadow-2xl w-full h-[100dvh] max-w-2xl flex flex-col overflow-hidden">
         {/* No top header — just floating Manual + Close controls, nudged down from the top edge */}
         <div className="flex items-center justify-end gap-2 px-5 pt-6 pb-1 flex-shrink-0">
           <button
@@ -549,7 +572,11 @@ export default function HanaTaskCreation({
         {/* Main Content - Bubble Renders First (Loads First), Hana Below (Visual Order) */}
         <div className="flex-1 overflow-y-auto flex flex-col px-6 py-4 gap-3" style={{ display: 'flex', flexDirection: 'column-reverse' }}>
           {/* Hana Full Body - Renders Last but Appears First (Slightly Smaller, Fills Space) */}
-          <div className="flex-1 flex items-end justify-center overflow-hidden min-h-0">
+          <div
+            className={`flex items-end justify-center min-h-0 transition-all duration-200 ${
+              keyboardOpen ? 'hidden' : 'flex-1'
+            }`}
+          >
             <div style={{ height: '100%', width: 'auto', maxWidth: '260px' }}>
               <HanaAnimatedAvatar
                 isSpeaking={isSpeaking}

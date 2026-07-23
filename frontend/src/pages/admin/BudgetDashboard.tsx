@@ -238,7 +238,7 @@ const BudgetDashboard: React.FC = () => {
               {/* Required Fields Notice */}
               <div style={{ padding: '12px', background: '#E3F2FD', borderRadius: '4px', marginBottom: '16px', borderLeft: '4px solid #1565C0' }}>
                 <p style={{ fontSize: '11px', color: '#0D47A1', margin: 0 }}>
-                  <strong>* = Required fields (Singapore MOM/ACRA compliance)</strong>
+                  <strong>* = Required to create the budget</strong>
                 </p>
               </div>
 
@@ -268,7 +268,7 @@ const BudgetDashboard: React.FC = () => {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
                 <div>
                   <label style={{ fontSize: '12px', fontWeight: '600', color: '#333', display: 'block', marginBottom: '6px' }}>
-                    Department * (ACRA)
+                    Department *
                   </label>
                   <input
                     type="text"
@@ -332,7 +332,7 @@ const BudgetDashboard: React.FC = () => {
                 </div>
                 <div>
                   <label style={{ fontSize: '12px', fontWeight: '600', color: '#333', display: 'block', marginBottom: '6px' }}>
-                    Employee ID * (MOM)
+                    Manager's staff ID *
                   </label>
                   <input
                     type="text"
@@ -398,7 +398,7 @@ const BudgetDashboard: React.FC = () => {
               {/* Total Budget */}
               <div style={{ marginBottom: '16px' }}>
                 <label style={{ fontSize: '12px', fontWeight: '600', color: '#333', display: 'block', marginBottom: '6px' }}>
-                  Total Budget (SGD) * (ACRA)
+                  Total Budget (SGD) *
                 </label>
                 <input
                   type="number"
@@ -503,7 +503,7 @@ const BudgetDashboard: React.FC = () => {
               {/* Compliance Notice */}
               <div style={{ padding: '12px', background: '#FFF3E0', borderRadius: '4px', marginBottom: '24px', borderLeft: '4px solid #FF6B35' }}>
                 <p style={{ fontSize: '11px', color: '#E65100', margin: 0, lineHeight: '1.5' }}>
-                  <strong>🇸🇬 Singapore Compliance:</strong> Budget captures all required ACRA/MOM fields: unique budget number, department/cost center, manager approval, fiscal year, and categorized allocations for audit trail and variance analysis.
+                  <strong>ℹ️ About budgets:</strong> these are an internal management tool — neither ACRA nor MOM requires them. What they give you is a unique budget number, a named approver, and categorised allocations that actual spend is measured against.
                 </p>
               </div>
 
@@ -701,7 +701,7 @@ const BudgetDashboard: React.FC = () => {
               💰 Budget Management
             </h1>
             <p style={{ fontSize: '14px', color: '#666', margin: 0 }}>
-              Track departmental budgets and spending (MOM/ACRA Compliant)
+              Track departmental budgets against actual spend
             </p>
           </div>
           <button

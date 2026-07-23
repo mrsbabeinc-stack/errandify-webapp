@@ -6,6 +6,8 @@
 import db from '../db.js';
 import * as adCreditService from './adCreditService.js';
 import { getCompanySubscription, getTierConfig } from './subscriptionService.js';
+import { campaignModel, scheduleModel } from '../models/Campaign.js';
+import { advertisingNotifications } from './advertisingNotifications.js';
 import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', { apiVersion: '2023-10-16' });
@@ -235,11 +237,13 @@ export async function createStripeSession(
   campaignId: number,
   campaignTitle: string,
   stripeAmountCents: number,
-  returnUrl: string
-): Promise<{ session_id: string; client_secret: string }> {
+  returnUrl: string,
+  creditsToUseCents: number = 0
+): Promise<{ session_id: string; url: string }> {
   try {
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card', 'ideal'],
+      // SGD hosted Checkout — 'ideal' is a EUR-only method and errored here.
+      payment_method_types: ['card'],
       mode: 'payment',
       line_items: [
         {
@@ -255,21 +259,112 @@ export async function createStripeSession(
         }
       ],
       success_url: `${returnUrl}?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: returnUrl,
+      cancel_url: `${returnUrl}?checkout=cancelled`,
+      // The credit split is stamped on the session so finalize deducts exactly
+      // the credit portion after Stripe confirms the card charge — the amounts
+      // can't be tampered with client-side because only our secret key set them.
       metadata: {
         campaign_id: campaignId.toString(),
-        company_id: companyId.toString()
+        company_id: companyId.toString(),
+        credits_to_use_cents: Math.round(creditsToUseCents).toString(),
+        stripe_amount_cents: Math.round(stripeAmountCents).toString()
       }
     });
 
     return {
       session_id: session.id,
-      client_secret: session.client_secret || ''
+      url: session.url || ''
     };
   } catch (error) {
     console.error('Stripe session creation error:', error);
     throw error;
   }
+}
+
+/**
+ * Finalize an ad campaign after the company completes the Stripe Checkout for the
+ * balance beyond their ad credits. Verifies the session was actually paid, then
+ * deducts the credit portion, records the charge, and approves the campaign —
+ * idempotently, so a page refresh on the return URL can't double-charge.
+ *
+ * Returns { alreadyFinalized } when the campaign was already approved so the
+ * caller can treat a repeat verify as success rather than an error.
+ */
+export async function finalizeStripeSession(
+  sessionId: string,
+  expectedCompanyId: number
+): Promise<{ success: boolean; campaign_id: number; alreadyFinalized: boolean; message: string }> {
+  const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+  if (session.payment_status !== 'paid') {
+    throw new Error(`Payment not completed (status: ${session.payment_status}). Please finish the card payment.`);
+  }
+
+  const campaignId = parseInt(session.metadata?.campaign_id || '0', 10);
+  const companyId = parseInt(session.metadata?.company_id || '0', 10);
+  const creditsToUseCents = parseInt(session.metadata?.credits_to_use_cents || '0', 10);
+  if (!campaignId || !companyId) {
+    throw new Error('Stripe session is missing campaign/company metadata.');
+  }
+
+  // The session must belong to the company the caller is authorised for — stops a
+  // member of company A finalizing a session that charged company B.
+  if (Number(companyId) !== Number(expectedCompanyId)) {
+    throw new Error('Payment session does not belong to this company.');
+  }
+
+  const campaign = await campaignModel.getById(campaignId);
+  if (!campaign) throw new Error('Campaign not found');
+
+  // Idempotency: if this campaign is already paid/approved, don't touch credits
+  // again — the card was charged once by Stripe and the credit side ran once.
+  if (['approved', 'active', 'completed'].includes(campaign.status)) {
+    return { success: true, campaign_id: campaignId, alreadyFinalized: true, message: 'Campaign already approved.' };
+  }
+
+  const paymentIntentId = typeof session.payment_intent === 'string'
+    ? session.payment_intent
+    : session.payment_intent?.id || null;
+
+  // Deduct the credit portion. Clamp to what's actually available now in case a
+  // concurrent campaign consumed credits between calculate and payment; the card
+  // already covered the Stripe portion so we never over-charge, only under-deduct.
+  if (creditsToUseCents > 0) {
+    const credits = await adCreditService.getCredits(companyId);
+    const available = credits ? credits.allocated_amount - credits.used_amount : 0;
+    const deduct = Math.min(creditsToUseCents, available);
+    if (deduct > 0) {
+      await adCreditService.deductCredits(companyId, deduct);
+      await db.query(
+        `INSERT INTO ad_credit_usage_log (company_id, campaign_id, amount, action, created_at)
+         VALUES ($1, $2, $3, 'campaign_approved_credit_deducted', NOW())`,
+        [companyId, campaignId, deduct]
+      );
+    }
+  }
+
+  await db.query(
+    `INSERT INTO ad_credit_usage_log (company_id, campaign_id, amount, action, created_at)
+     VALUES ($1, $2, $3, 'campaign_approved_stripe_charged', NOW())`,
+    [companyId, campaignId, parseInt(session.metadata?.stripe_amount_cents || '0', 10)]
+  );
+
+  await db.query(
+    `UPDATE campaigns SET status = 'approved', approved_at = NOW(), stripe_charge_id = $1 WHERE id = $2`,
+    [paymentIntentId, campaignId]
+  );
+
+  await scheduleModel.create(campaignId, campaign.starts_at, 'start').catch(() => {});
+  await scheduleModel.create(campaignId, campaign.ends_at, 'end').catch(() => {});
+
+  await advertisingNotifications.notifyCampaignApproved({
+    companyId,
+    campaignId,
+    campaignTitle: campaign.title,
+    chargeAmount: campaign.budget
+  }).catch(() => {});
+
+  return { success: true, campaign_id: campaignId, alreadyFinalized: false, message: 'Campaign approved and payment confirmed.' };
 }
 
 /**

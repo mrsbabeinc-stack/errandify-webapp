@@ -60,6 +60,7 @@ import salaryBenefitsRoutes from './routes/salaryBenefits.js';
 import probationRoutes from './routes/probation.js';
 import attendanceRoutes from './routes/attendance.js';
 import staffAttendanceRoutes from './routes/staffAttendance.js';
+import staffPayslipRoutes from './routes/staffPayslips.js';
 import jobOpeningRoutes from './routes/jobOpenings.js';
 import { adminScreeningRouter, publicScreeningRouter } from './routes/candidateScreening.js';
 import financeRoutes from './routes/finance.js';
@@ -627,6 +628,8 @@ app.use('/api/wallet', walletRoutes);
 // to the caller's own record. Mounted ahead of staffRoutes so its /me/* paths
 // cannot be captured by a param route there.
 app.use('/api/staff-attendance', staffAttendanceRoutes);
+// An employee's own payslips. Scoped to the caller via staff.user_id.
+app.use('/api/staff-payslips', staffPayslipRoutes);
 app.use('/api/staff', staffRoutes);
 app.use('/api/user-profile', userProfileRoutes);
 app.use('/api/user-data', userDataExportRoutes);

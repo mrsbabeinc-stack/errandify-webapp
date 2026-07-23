@@ -253,7 +253,39 @@ router.post('/:taskId/complete', authMiddleware, async (req: AuthRequest, res: R
 });
 
 // POST /api/jobs/:taskId/confirm - Asker confirms completion (early payment release)
+/**
+ * POST /api/jobs/:taskId/confirm — DISABLED pending the escrow decision.
+ *
+ * This route calls releasePayment(), which executes a real Stripe transfer to
+ * the doer's Connect account, and only then runs:
+ *
+ *   UPDATE errands SET status = ..., payment_released_at = NOW() ...
+ *
+ * `payment_released_at` does not exist on `errands`. Postgres throws, the
+ * request 500s — but the transfer has already gone out. The errand is left in
+ * 'completed_unconfirmed' with no record that it was paid, so an asker who
+ * retries a request that "failed" transfers the money a second time.
+ *
+ * payment_releases holds 0 rows, so this has apparently never completed here,
+ * and the auto-release cron that shares the same column is commented out in
+ * startCrons(). Rather than add the column and thereby switch on money
+ * movement that has never run — and which the project's own rule says is not
+ * automatic — the route refuses until the escrow model is settled.
+ *
+ * To re-enable: add errands.payment_released_at, then make the transfer and
+ * the status write atomic (record the release first, or wrap both so a failed
+ * write cannot leave an untracked transfer), and delete this guard.
+ * See the dispute/escrow notes before doing so.
+ */
 router.post('/:taskId/confirm', authMiddleware, async (req: AuthRequest, res: Response) => {
+  return res.status(501).json({
+    error: 'Early payment release is temporarily unavailable',
+    detail:
+      'Confirming completion here would transfer funds before the payment record can be written. ' +
+      'Please confirm the errand from the errand page instead; payment release is being reworked.',
+  });
+
+  // eslint-disable-next-line no-unreachable
   try {
     const { taskId } = req.params;
     const askerId = parseInt(req.userId || '0', 10);

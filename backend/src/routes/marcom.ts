@@ -1077,7 +1077,57 @@ const banners = express.Router();
 banners.get('/', async (req: AuthRequest, res: Response) => {
   try {
     const location = String(req.query.location || 'home');
-    const result = await db.query(
+
+    /**
+     * Paid company ads lead, then Errandify's own notices.
+     *
+     * Nothing merged these before — paid hero-banner campaigns were sold,
+     * approved and charged for, and then never rendered anywhere, because no
+     * frontend read `campaigns` at all.
+     *
+     * ── Fairness between advertisers ──────────────────────────────────────
+     * Ordering by budget alone starves small advertisers; ordering by
+     * impressions alone means a big spender pays ten times as much for the
+     * same exposure. Both are unfair to somebody.
+     *
+     * So the order is **share-of-voice deficit**: each campaign is entitled to
+     * impressions in proportion to what it pays per day, and the one furthest
+     * behind its entitlement goes first.
+     *
+     *     deficit rank = impressions ÷ (budget ÷ duration_days)
+     *
+     * A $1,000 campaign earns ten times the impressions of a $100 one — what
+     * each actually bought — while the small one keeps its proportional slice
+     * instead of being crowded out. It self-corrects as delivery accumulates,
+     * and a brand-new campaign starts at 0 impressions so it enters rotation
+     * immediately rather than queueing behind established ones.
+     *
+     * GREATEST(...) guards a zero or missing budget from dividing by zero.
+     */
+    const ads = await db.query(
+      `SELECT c.id,
+              c.title,
+              c.description AS subtitle,
+              c.image_url   AS "imageUrl",
+              c.cta_text    AS "ctaText",
+              c.target_url  AS "ctaLink",
+              co.company_name AS "sponsoredBy"
+         FROM campaigns c
+         JOIN companies co ON co.id = c.company_id
+         LEFT JOIN ad_placements p
+                ON p.campaign_id = c.id AND p.placement_type = c.placement_type
+        WHERE c.placement_type = 'hero-banner'
+          AND c.status IN ('live', 'approved')
+          AND c.starts_at <= NOW()
+          AND c.ends_at   >= NOW()
+          AND c.target_url IS NOT NULL
+        ORDER BY COALESCE(p.impressions, 0)::numeric
+                 / GREATEST(c.budget / GREATEST(c.duration_days, 1), 0.01) ASC,
+                 c.approved_at ASC
+        LIMIT 10`
+    );
+
+    const own = await db.query(
       `SELECT id, title, subtitle, emoji AS image, image_url AS "imageUrl",
               cta_text AS "ctaText", cta_link AS "ctaLink",
               display_location AS "displayLocation"
@@ -1090,10 +1140,69 @@ banners.get('/', async (req: AuthRequest, res: Response) => {
         LIMIT 10`,
       [location]
     );
-    res.json({ success: true, data: result.rows });
+
+    // `kind` lets the carousel label a paid slot. An ad that is not visibly an
+    // ad is a dark pattern, and Singapore advertising guidance expects paid
+    // placements to be identifiable.
+    const data = [
+      ...ads.rows.map((r: any) => ({ ...r, kind: 'ad' as const })),
+      ...own.rows.map((r: any) => ({ ...r, kind: 'errandify' as const })),
+    ];
+
+    res.json({ success: true, data });
   } catch (error) {
     console.error('[Banners] Fetch failed:', error);
     res.status(500).json({ error: 'Could not load banners' });
+  }
+});
+
+/**
+ * POST /api/banners/:id/impression — count one delivery of a paid ad.
+ *
+ * ad_placements has carried impressions and clicks columns since the
+ * advertising module was built and nothing ever incremented either, so every
+ * campaign's performance page reported zeroes. The rotation above is ordered
+ * by impressions, so without this every campaign sits at a permanent deficit
+ * of zero and the tie-break (approved_at) silently decides everything.
+ *
+ * Unauthenticated on purpose: an impression happens for signed-out visitors
+ * too. ON CONFLICT keeps it safe if the placement row was never created.
+ */
+banners.post('/:id/impression', async (req: AuthRequest, res: Response) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (Number.isNaN(id)) return res.status(400).json({ error: 'Invalid campaign id' });
+    await db.query(
+      `INSERT INTO ad_placements (campaign_id, placement_type, impressions, clicks)
+       SELECT c.id, c.placement_type, 1, 0 FROM campaigns c WHERE c.id = $1
+       ON CONFLICT (campaign_id, placement_type)
+       DO UPDATE SET impressions = ad_placements.impressions + 1, updated_at = NOW()`,
+      [id]
+    );
+    res.json({ success: true });
+  } catch (error) {
+    console.error('[Banners] Impression failed:', error);
+    // Never fail the page over a metric.
+    res.json({ success: false });
+  }
+});
+
+/** POST /api/banners/:id/click — count one click through to the advertiser. */
+banners.post('/:id/click', async (req: AuthRequest, res: Response) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (Number.isNaN(id)) return res.status(400).json({ error: 'Invalid campaign id' });
+    await db.query(
+      `INSERT INTO ad_placements (campaign_id, placement_type, impressions, clicks)
+       SELECT c.id, c.placement_type, 0, 1 FROM campaigns c WHERE c.id = $1
+       ON CONFLICT (campaign_id, placement_type)
+       DO UPDATE SET clicks = ad_placements.clicks + 1, updated_at = NOW()`,
+      [id]
+    );
+    res.json({ success: true });
+  } catch (error) {
+    console.error('[Banners] Click failed:', error);
+    res.json({ success: false });
   }
 });
 

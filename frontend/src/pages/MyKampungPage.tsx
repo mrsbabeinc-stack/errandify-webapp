@@ -69,6 +69,18 @@ interface BlogPost {
   isLiked: boolean;
 }
 
+/** The eight MyKampung sections, in the order they appear in the nav grid. */
+const KAMPUNG_SECTIONS = [
+  { id: 'feed', emoji: '💬', label: 'Feed' },
+  { id: 'discussions', emoji: '💭', label: 'Discussions' },
+  { id: 'announcements', emoji: '📢', label: 'Notices' },
+  { id: 'news', emoji: '📰', label: 'News' },
+  { id: 'events', emoji: '🎯', label: 'Events' },
+  { id: 'blog', emoji: '📖', label: 'Blog' },
+  { id: 'recognition', emoji: '⭐', label: 'Recognition' },
+  { id: 'join-us', emoji: '👋', label: 'Join Us' },
+] as const;
+
 export default function MyKampungPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -482,176 +494,88 @@ export default function MyKampungPage() {
       <div style={{position: 'fixed', top: '60px', right: '20px', fontSize: '100px', opacity: 0.08, pointerEvents: 'none', zIndex: -1}}>🏘️</div>
       <div style={{position: 'fixed', bottom: '150px', left: '10px', fontSize: '80px', opacity: 0.08, pointerEvents: 'none', zIndex: -1}}>🌸</div>
 
-      <button onClick={() => navigate(-1)} style={{fontSize: '18px', fontWeight: '800', color: '#FF6B35', background: 'none', border: 'none', cursor: 'pointer', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '6px', padding: 0, transition: 'all 0.2s'}}>← Back</button>
+      {/*
+        Page head, matched to components/AdminThemeWrapper.
 
-      <div style={{marginBottom: '32px', paddingBottom: '24px', borderBottom: '5px solid #FF6B35', position: 'relative', zIndex: 1}}>
-        <h1 style={{fontSize: '56px', fontWeight: '900', color: '#FF6B35', margin: '0 0 12px 0', letterSpacing: '-2px'}}>🏘️ MyKampung</h1>
-        <p style={{fontSize: '21px', color: '#FF6B35', margin: 0, fontWeight: '800', letterSpacing: '0.5px'}}>✨ Your Neighbourhood Community ✨</p>
+        This page did not use the shared wrapper, so it had grown its own
+        header: a standalone "← Back" link, a 56px/900 title and a 21px/800
+        subtitle over a 5px rule, together spending roughly 200px before any
+        content. Every other screen in the app looked different from this one.
+
+        Same markup and the same `.app-page-head` class as the wrapper now, so
+        the four screens read as one product.
+      */}
+      <div
+        className="app-page-head"
+        style={{display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '12px', position: 'relative', zIndex: 1}}
+      >
+        <button
+          onClick={() => navigate(-1)}
+          aria-label="Go back"
+          title="Go back"
+          style={{flexShrink: 0, width: 30, height: 30, marginTop: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FFEDE2', border: 'none', borderRadius: '50%', color: '#D2521C', fontSize: '16px', fontWeight: 700, lineHeight: 1, cursor: 'pointer'}}
+        >
+          ←
+        </button>
+        <div style={{minWidth: 0}}>
+          <h1>🏘️ MyKampung</h1>
+          <p>Your Neighbourhood Community</p>
+        </div>
       </div>
 
       <div className="w-full" style={{maxWidth: '1200px', margin: '0 auto'}}>
-        {/* Tab Navigation */}
-        <div className="flex gap-1.5 mb-4 flex-wrap pb-2" style={{marginBottom: '24px', paddingBottom: '12px', position: 'relative', zIndex: 1}}>
-          <button
-            onClick={() => setActiveTab('feed')}
-            style={{
-              padding: '8px 10px',
-              borderRadius: '10px',
-              fontSize: '14px',
-              fontWeight: '800',
-              whiteSpace: 'nowrap',
-              border: activeTab === 'feed' ? '2.5px solid rgba(255, 255, 255, 0.6)' : '2px solid rgba(255, 107, 53, 0.2)',
-              cursor: 'pointer',
-              transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
-              background: activeTab === 'feed' ? 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)' : 'rgba(255, 255, 255, 0.75)',
-              color: activeTab === 'feed' ? 'white' : '#FF6B35',
-              boxShadow: activeTab === 'feed' ? '0 4px 16px rgba(255, 107, 53, 0.3)' : '0 2px 8px rgba(255, 107, 53, 0.1)',
-            }}
-            onMouseEnter={(e) => {if (activeTab !== 'feed') {e.currentTarget.style.background = 'rgba(255, 255, 255, 0.95)'; e.currentTarget.style.transform = 'translateY(-4px) scale(1.08)'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(255, 107, 53, 0.25)';}} }
-            onMouseLeave={(e) => {if (activeTab !== 'feed') {e.currentTarget.style.background = 'rgba(255, 255, 255, 0.75)'; e.currentTarget.style.transform = 'translateY(0) scale(1)'; e.currentTarget.style.boxShadow = '0 3px 10px rgba(255, 107, 53, 0.12)';}} }
-          >
-            💬 Feed
-          </button>
-          <button
-            onClick={() => setActiveTab('discussions')}
-            style={{
-              padding: '12px 20px',
-              borderRadius: '16px',
-              fontSize: '14px',
-              fontWeight: '800',
-              whiteSpace: 'nowrap',
-              border: activeTab === 'discussions' ? '3px solid rgba(255, 255, 255, 0.6)' : '2.5px solid rgba(255, 107, 53, 0.2)',
-              cursor: 'pointer',
-              transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
-              background: activeTab === 'discussions' ? 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)' : 'rgba(255, 255, 255, 0.75)',
-              color: activeTab === 'discussions' ? 'white' : '#FF6B35',
-              boxShadow: activeTab === 'discussions' ? '0 6px 20px rgba(255, 107, 53, 0.35)' : '0 3px 10px rgba(255, 107, 53, 0.12)',
-            }}
-            onMouseEnter={(e) => {if (activeTab !== 'discussions') {e.currentTarget.style.background = 'rgba(255, 255, 255, 0.95)'; e.currentTarget.style.transform = 'translateY(-4px) scale(1.08)'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(255, 107, 53, 0.25)';}} }
-            onMouseLeave={(e) => {if (activeTab !== 'discussions') {e.currentTarget.style.background = 'rgba(255, 255, 255, 0.75)'; e.currentTarget.style.transform = 'translateY(0) scale(1)'; e.currentTarget.style.boxShadow = '0 3px 10px rgba(255, 107, 53, 0.12)';}} }
-          >
-            💭 Discussions
-          </button>
-          <button
-            onClick={() => setActiveTab('announcements')}
-            style={{
-              padding: '12px 20px',
-              borderRadius: '16px',
-              fontSize: '14px',
-              fontWeight: '800',
-              whiteSpace: 'nowrap',
-              border: activeTab === 'announcements' ? '3px solid rgba(255, 255, 255, 0.6)' : '2.5px solid rgba(255, 107, 53, 0.2)',
-              cursor: 'pointer',
-              transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
-              background: activeTab === 'announcements' ? 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)' : 'rgba(255, 255, 255, 0.75)',
-              color: activeTab === 'announcements' ? 'white' : '#FF6B35',
-              boxShadow: activeTab === 'announcements' ? '0 6px 20px rgba(255, 107, 53, 0.35)' : '0 3px 10px rgba(255, 107, 53, 0.12)',
-            }}
-            onMouseEnter={(e) => {if (activeTab !== 'announcements') {e.currentTarget.style.background = 'rgba(255, 255, 255, 0.95)'; e.currentTarget.style.transform = 'translateY(-4px) scale(1.08)'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(255, 107, 53, 0.25)';}} }
-            onMouseLeave={(e) => {if (activeTab !== 'announcements') {e.currentTarget.style.background = 'rgba(255, 255, 255, 0.75)'; e.currentTarget.style.transform = 'translateY(0) scale(1)'; e.currentTarget.style.boxShadow = '0 3px 10px rgba(255, 107, 53, 0.12)';}} }
-          >
-            📢 Announcements
-          </button>
-          <button
-            onClick={() => setActiveTab('news')}
-            style={{
-              padding: '12px 20px',
-              borderRadius: '16px',
-              fontSize: '14px',
-              fontWeight: '800',
-              whiteSpace: 'nowrap',
-              border: activeTab === 'news' ? '3px solid rgba(255, 255, 255, 0.6)' : '2.5px solid rgba(255, 107, 53, 0.2)',
-              cursor: 'pointer',
-              transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
-              background: activeTab === 'news' ? 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)' : 'rgba(255, 255, 255, 0.75)',
-              color: activeTab === 'news' ? 'white' : '#FF6B35',
-              boxShadow: activeTab === 'news' ? '0 6px 20px rgba(255, 107, 53, 0.35)' : '0 3px 10px rgba(255, 107, 53, 0.12)',
-            }}
-            onMouseEnter={(e) => {if (activeTab !== 'news') {e.currentTarget.style.background = 'rgba(255, 255, 255, 0.95)'; e.currentTarget.style.transform = 'translateY(-4px) scale(1.08)'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(255, 107, 53, 0.25)';}} }
-            onMouseLeave={(e) => {if (activeTab !== 'news') {e.currentTarget.style.background = 'rgba(255, 255, 255, 0.75)'; e.currentTarget.style.transform = 'translateY(0) scale(1)'; e.currentTarget.style.boxShadow = '0 3px 10px rgba(255, 107, 53, 0.12)';}} }
-          >
-            📰 News
-          </button>
-          <button
-            onClick={() => setActiveTab('events')}
-            style={{
-              padding: '12px 20px',
-              borderRadius: '16px',
-              fontSize: '14px',
-              fontWeight: '800',
-              whiteSpace: 'nowrap',
-              border: activeTab === 'events' ? '3px solid rgba(255, 255, 255, 0.6)' : '2.5px solid rgba(255, 107, 53, 0.2)',
-              cursor: 'pointer',
-              transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
-              background: activeTab === 'events' ? 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)' : 'rgba(255, 255, 255, 0.75)',
-              color: activeTab === 'events' ? 'white' : '#FF6B35',
-              boxShadow: activeTab === 'events' ? '0 6px 20px rgba(255, 107, 53, 0.35)' : '0 3px 10px rgba(255, 107, 53, 0.12)',
-            }}
-            onMouseEnter={(e) => {if (activeTab !== 'events') {e.currentTarget.style.background = 'rgba(255, 255, 255, 0.95)'; e.currentTarget.style.transform = 'translateY(-4px) scale(1.08)'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(255, 107, 53, 0.25)';}} }
-            onMouseLeave={(e) => {if (activeTab !== 'events') {e.currentTarget.style.background = 'rgba(255, 255, 255, 0.75)'; e.currentTarget.style.transform = 'translateY(0) scale(1)'; e.currentTarget.style.boxShadow = '0 3px 10px rgba(255, 107, 53, 0.12)';}} }
-          >
-            🎯 Events
-          </button>
-          <button
-            onClick={() => setActiveTab('blog')}
-            style={{
-              padding: '12px 20px',
-              borderRadius: '16px',
-              fontSize: '14px',
-              fontWeight: '800',
-              whiteSpace: 'nowrap',
-              border: activeTab === 'blog' ? '3px solid rgba(255, 255, 255, 0.6)' : '2.5px solid rgba(255, 107, 53, 0.2)',
-              cursor: 'pointer',
-              transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
-              background: activeTab === 'blog' ? 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)' : 'rgba(255, 255, 255, 0.75)',
-              color: activeTab === 'blog' ? 'white' : '#FF6B35',
-              boxShadow: activeTab === 'blog' ? '0 6px 20px rgba(255, 107, 53, 0.35)' : '0 3px 10px rgba(255, 107, 53, 0.12)',
-            }}
-            onMouseEnter={(e) => {if (activeTab !== 'blog') {e.currentTarget.style.background = 'rgba(255, 255, 255, 0.95)'; e.currentTarget.style.transform = 'translateY(-4px) scale(1.08)'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(255, 107, 53, 0.25)';}} }
-            onMouseLeave={(e) => {if (activeTab !== 'blog') {e.currentTarget.style.background = 'rgba(255, 255, 255, 0.75)'; e.currentTarget.style.transform = 'translateY(0) scale(1)'; e.currentTarget.style.boxShadow = '0 3px 10px rgba(255, 107, 53, 0.12)';}} }
-          >
-            📖 Blog
-          </button>
-          <button
-            onClick={() => setActiveTab('recognition')}
-            style={{
-              padding: '12px 20px',
-              borderRadius: '16px',
-              fontSize: '14px',
-              fontWeight: '800',
-              whiteSpace: 'nowrap',
-              border: activeTab === 'recognition' ? '3px solid rgba(255, 255, 255, 0.6)' : '2.5px solid rgba(255, 107, 53, 0.2)',
-              cursor: 'pointer',
-              transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
-              background: activeTab === 'recognition' ? 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)' : 'rgba(255, 255, 255, 0.75)',
-              color: activeTab === 'recognition' ? 'white' : '#FF6B35',
-              boxShadow: activeTab === 'recognition' ? '0 6px 20px rgba(255, 107, 53, 0.35)' : '0 3px 10px rgba(255, 107, 53, 0.12)',
-            }}
-            onMouseEnter={(e) => {if (activeTab !== 'recognition') {e.currentTarget.style.background = 'rgba(255, 255, 255, 0.95)'; e.currentTarget.style.transform = 'translateY(-4px) scale(1.08)'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(255, 107, 53, 0.25)';}} }
-            onMouseLeave={(e) => {if (activeTab !== 'recognition') {e.currentTarget.style.background = 'rgba(255, 255, 255, 0.75)'; e.currentTarget.style.transform = 'translateY(0) scale(1)'; e.currentTarget.style.boxShadow = '0 3px 10px rgba(255, 107, 53, 0.12)';}} }
-          >
-            ⭐ Recognition
-          </button>
-          <button
-            onClick={() => setActiveTab('join-us')}
-            style={{
-              padding: '12px 20px',
-              borderRadius: '16px',
-              fontSize: '14px',
-              fontWeight: '800',
-              whiteSpace: 'nowrap',
-              border: activeTab === 'join-us' ? '3px solid rgba(255, 255, 255, 0.6)' : '2.5px solid rgba(255, 107, 53, 0.2)',
-              cursor: 'pointer',
-              transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
-              background: activeTab === 'join-us' ? 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)' : 'rgba(255, 255, 255, 0.75)',
-              color: activeTab === 'join-us' ? 'white' : '#FF6B35',
-              boxShadow: activeTab === 'join-us' ? '0 6px 20px rgba(255, 107, 53, 0.35)' : '0 3px 10px rgba(255, 107, 53, 0.12)',
-            }}
-            onMouseEnter={(e) => {if (activeTab !== 'join-us') {e.currentTarget.style.background = 'rgba(255, 255, 255, 0.95)'; e.currentTarget.style.transform = 'translateY(-4px) scale(1.08)'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(255, 107, 53, 0.25)';}} }
-            onMouseLeave={(e) => {if (activeTab !== 'join-us') {e.currentTarget.style.background = 'rgba(255, 255, 255, 0.75)'; e.currentTarget.style.transform = 'translateY(0) scale(1)'; e.currentTarget.style.boxShadow = '0 3px 10px rgba(255, 107, 53, 0.12)';}} }
-          >
-            👋 Join Us
-          </button>
+        {/*
+          Section navigation.
+
+          This was eight pills wrapping to four stacked rows, which owned half
+          the screen. Collapsing them to one horizontally scrolling row fixed
+          the height and broke something worse: five of the eight sat off-screen
+          with no affordance that anything scrolled, so a filter you could not
+          see was a filter you did not have.
+
+          A four-column grid shows all eight, in two rows, at any phone width —
+          and it is the same tile shape as the category grid on the home screen,
+          so the two read as the same product. Eight near-identical buttons with
+          copy-pasted inline styles became one map.
+        */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '6px',
+            marginBottom: '12px',
+            position: 'relative',
+            zIndex: 1,
+          }}
+        >
+          {KAMPUNG_SECTIONS.map(({ id, emoji, label }) => {
+            const active = activeTab === id;
+            return (
+              <button
+                key={id}
+                onClick={() => setActiveTab(id)}
+                title={label}
+                style={{
+                  padding: '6px 2px',
+                  borderRadius: '10px',
+                  border: active ? '2px solid rgba(255,255,255,0.7)' : '1px solid rgba(255,107,53,0.22)',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  transition: 'all 0.2s',
+                  background: active
+                    ? 'linear-gradient(135deg, #FF6B35 0%, #FF8A5B 100%)'
+                    : 'rgba(255,255,255,0.8)',
+                  color: active ? 'white' : '#D2521C',
+                  boxShadow: active
+                    ? '0 3px 12px rgba(255,107,53,0.28)'
+                    : '0 1px 5px rgba(255,107,53,0.10)',
+                }}
+              >
+                <div style={{ fontSize: '15px', lineHeight: 1, marginBottom: '2px' }}>{emoji}</div>
+                <div style={{ fontSize: '9.5px', fontWeight: 700, lineHeight: 1.1 }}>{label}</div>
+              </button>
+            );
+          })}
         </div>
 
         {/* FEED TAB */}

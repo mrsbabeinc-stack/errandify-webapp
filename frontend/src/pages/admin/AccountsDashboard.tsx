@@ -498,7 +498,7 @@ const AccountsDashboard: React.FC = () => {
             </button>
           </div>
           <p style={{ fontSize: '14px', color: '#666', margin: '8px 0 0 0' }}>
-            Income tracking, expense management, ledger entries, reconciliation, ACRA-compliant
+            Income, expenses, recurring commitments, ledger and reconciliation
             {loading && <span style={{ marginLeft: '8px', color: '#FF6B35' }}>· loading…</span>}
           </p>
         </div>
@@ -664,7 +664,7 @@ const AccountsDashboard: React.FC = () => {
 
             {/* Compliance Banner */}
             <div style={{ marginTop: '24px', padding: '12px 16px', background: '#E3F2FD', border: '2px solid #1976D2', borderRadius: '6px', fontSize: '12px', color: '#0D47A1' }}>
-              <strong>✅ ACRA & MOM Compliance:</strong> All income/expense entries tracked with audit trail. Sequential invoicing ready. Double-entry accounting verified. GST infrastructure ready for enablement.
+              <strong>📒 What this is:</strong> a transaction record with an audit trail — who entered what, who approved it, and when. GST is captured per entry but this does <strong>not</strong> produce a tax invoice or a GST F5 return, and invoice numbers are typed rather than issued in sequence. IRAS requires business records to be kept for 5 years.
             </div>
           </div>
         )}

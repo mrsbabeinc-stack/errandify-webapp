@@ -627,6 +627,12 @@ const MyCompanyDashboard: React.FC = () => {
             <span className="btn-text">Wallet & Payouts</span>
             <span className="btn-desc">Manage company finances</span>
           </button>
+
+          <button className="action-btn" onClick={() => navigate('/company/referrals')}>
+            <span className="btn-icon">🎁</span>
+            <span className="btn-text">Company Invites</span>
+            <span className="btn-desc">Codes & QR that earn EP for the company</span>
+          </button>
         </div>
       </div>
 

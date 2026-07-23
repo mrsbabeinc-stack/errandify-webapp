@@ -69,6 +69,11 @@ export default {
       },
       fontFamily: {
         sans: ['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', '"Helvetica Neue"', 'Arial', 'sans-serif'],
+        // Display only — headlines and the wordmark. Georgia is the fallback
+        // rather than a generic serif because it is on every device and shares
+        // Fraunces' warmth, so a slow font load degrades gracefully instead of
+        // flashing something cold.
+        display: ['Fraunces', 'Georgia', 'Cambria', 'serif'],
       },
       fontSize: {
         base: '16px',
@@ -78,9 +83,17 @@ export default {
           '0%': { transform: 'translateY(100%)', opacity: '0' },
           '100%': { transform: 'translateY(0)', opacity: '1' },
         },
+        // Landing-page entrance. Short travel and a soft ease so it reads as
+        // settling into place rather than sliding in — staggered per element
+        // with animation-delay.
+        rise: {
+          '0%': { transform: 'translateY(14px)', opacity: '0' },
+          '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
       },
       animation: {
         slideup: 'slideup 0.3s ease-out',
+        rise: 'rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both',
       },
     },
   },

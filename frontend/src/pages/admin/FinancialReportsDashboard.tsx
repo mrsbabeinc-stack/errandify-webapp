@@ -245,7 +245,7 @@ const FinancialReportsDashboard: React.FC = () => {
 
         {/* Compliance Banner */}
         <div style={{ padding: '12px 16px', background: '#E3F2FD', border: '2px solid #1976D2', borderRadius: '6px', marginBottom: '16px', fontSize: '12px', color: '#0D47A1' }}>
-          <strong>🇸🇬 ACRA Financial Reporting:</strong> All statements follow Singapore Accounting Standards (ASC). Double-entry accounting verified. Ready for annual ACRA filing.
+          <strong>⚠️ Management accounts, not statutory financial statements.</strong> These are derived from the transactions recorded here and are for running the business. They are <strong>not</strong> ready for ACRA filing: statutory accounts must be prepared under SFRS with accounting policies, notes, prior-year comparatives, a statement of changes in equity and a directors' statement — none of which this produces. Fixed assets and share capital are not tracked at all. Give these to your accountant as a starting point, not as the filing.
         </div>
 
         {/* Period Selection & Export */}

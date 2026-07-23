@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import db from '../db.js';
 import { AuthRequest, authMiddleware, requireAdmin } from '../middleware/auth.js';
+import { issueInvite } from '../services/leadInviteService.js';
 
 const router = express.Router();
 
@@ -481,6 +482,34 @@ router.patch('/:id', async (req: Request, res: Response) => {
   } catch (error) {
     console.error('[Leads] update failed:', error);
     res.status(500).json({ error: 'Could not update that lead' });
+  }
+});
+
+/**
+ * POST /api/admin/leads/:id/invite — issue a signup link for this lead.
+ *
+ * Returns the plaintext token once. It is stored hashed and cannot be read
+ * back, so a lost link means issuing a new one — which also retires the old.
+ */
+router.post('/:id/invite', async (req: Request, res: Response) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (!Number.isFinite(id)) return res.status(400).json({ error: 'Invalid lead id' });
+
+    const channel = ['email', 'sms', 'link'].includes(req.body?.channel)
+      ? req.body.channel
+      : 'link';
+
+    const invite = await issueInvite(id, uid(req), channel);
+    res.status(201).json({ success: true, data: invite });
+  } catch (error) {
+    // The service throws for the cases an admin needs to see by name — already
+    // converted, or never consented — so its message is surfaced rather than
+    // flattened into a generic 500.
+    const message = error instanceof Error ? error.message : 'Could not issue the invite';
+    const known = /already signed up|not consented|not found/i.test(message);
+    if (!known) console.error('[Leads] invite failed:', error);
+    res.status(known ? 400 : 500).json({ error: message });
   }
 });
 

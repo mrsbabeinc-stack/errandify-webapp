@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { getStoredReferral, clearStoredReferral } from '../utils/referralCapture';
+import { getStoredLeadInvite, clearStoredLeadInvite } from '../utils/leadInviteCapture';
 
 interface SingPassCallbackPageProps {
   onLogin: (role: 'asker' | 'doer') => void;
@@ -90,6 +91,12 @@ export default function SingPassCallbackPage({ onLogin }: SingPassCallbackPagePr
               // nothing ever sent it, so no referral has ever been credited.
               const referralCode = getStoredReferral();
 
+              // A pre-launch lead redeeming their launch invite. Sent in the
+              // same call so the lead is marked converted inside the signup
+              // transaction — an invite cannot be burned by a signup that
+              // then fails.
+              const inviteToken = getStoredLeadInvite();
+
               const signupResponse = await axios.post(
                 `${API_URL}/api/auth/signup`,
                 {
@@ -101,6 +108,7 @@ export default function SingPassCallbackPage({ onLogin }: SingPassCallbackPagePr
                   gender: singpassData.gender,
                   singpassVerified: true,
                   ref: referralCode || undefined,
+                  inviteToken: inviteToken || undefined,
                 }
               );
 
@@ -116,6 +124,7 @@ export default function SingPassCallbackPage({ onLogin }: SingPassCallbackPagePr
                 // Only once the account exists, so a failed signup leaves the
                 // code in place for the retry.
                 clearStoredReferral();
+                clearStoredLeadInvite();
 
                 onLogin(user.role || 'asker');
                 setMessage('Account created successfully!');

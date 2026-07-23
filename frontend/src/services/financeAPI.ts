@@ -247,6 +247,86 @@ export interface PayrollRun {
   posted_at?: string | null;
 }
 
+export interface ComplianceItem {
+  area: 'MOM' | 'CPF' | 'IRAS' | 'ACRA' | 'PDPA';
+  requirement: string;
+  status: 'ok' | 'partial' | 'gap';
+  detail: string;
+  authority: string;
+}
+
+export interface ComplianceStatus {
+  employer: { legal_name: string | null; uen: string | null; cpf_submission_number: string | null };
+  staff_data_gaps: {
+    active_staff: number;
+    missing_nric: number;
+    missing_date_of_birth: number;
+    missing_cpf_status: number;
+    missing_bank_details: number;
+  };
+  counts: { ok: number; partial: number; gap: number };
+  items: ComplianceItem[];
+  disclaimer: string;
+}
+
+export interface CPFStaffCost {
+  staff_id: string;
+  staff_name: string;
+  department: string;
+  age: number | null;
+  cpf_status: string | null;
+  gross_salary: number;
+  total_cost: number;
+  cpf_employee: number;
+  cpf_employer: number;
+  cpf_total: number;
+  net_paid_to_staff: number;
+  rate_employee: number | null;
+  rate_employer: number | null;
+  ow_ceiling: number | null;
+  wages_above_ceiling: number;
+}
+
+export interface CPFSummary {
+  period: string;
+  run: { id: number; status: string; payment_date: string | null } | null;
+  staff: CPFStaffCost[];
+  by_department: { department: string; headcount: number; gross: number; cpf_employer: number; total_cost: number }[];
+  totals: {
+    headcount: number;
+    grossSalaries: number;
+    cpfEmployee: number;
+    cpfEmployer: number;
+    cpfRemittance: number;
+    netToStaff: number;
+    totalEmploymentCost: number;
+    employerOnCostPercent: number;
+  } | null;
+  remittance?: { dueDate: string; daysUntilDue: number; overdue: boolean; note: string };
+}
+
+export interface EmployerProfile {
+  legal_name?: string | null;
+  uen?: string | null;
+  cpf_submission_number?: string | null;
+  registered_address?: string | null;
+  postal_code?: string | null;
+  working_days_per_week?: number | null;
+}
+
+export interface CPFPreview {
+  ordinaryWage: number;
+  additionalWage: number;
+  employeeTotal: number;
+  employerTotal: number;
+  rateEmployee: number;
+  rateEmployer: number;
+  owCeiling: number;
+  ageBand: string;
+  cpfStatus: string;
+  age: number;
+}
+
 export interface PayrollItem {
   id: number;
   payroll_run_id: number;
@@ -265,6 +345,11 @@ export interface PayrollItem {
   net_salary: string | number;
   cpf_breakdown: any;
   tax_breakdown: any;
+  cpf_status?: string | null;
+  age_at_payroll?: number | null;
+  cpf_rate_employee?: string | number | null;
+  cpf_rate_employer?: string | number | null;
+  cpf_ow_ceiling?: string | number | null;
   status: string;
   period?: string;
   payment_date?: string | null;
@@ -601,6 +686,33 @@ export const financeAPI = {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
+  complianceStatus: () => get<ComplianceStatus>('/compliance-status'),
+  ir8a: (year: string) => get<any>(`/iras/ir8a${qs({ year })}`),
+  async exportIR8A(year: string): Promise<void> {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE}/iras/ir8a/export${qs({ year })}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!response.ok) throw new Error('Could not export IR8A data');
+    const url = URL.createObjectURL(await response.blob());
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `IR8A-prep-${year}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  },
+  cpfSummary: (period: string) => get<CPFSummary>(`/payroll/cpf-summary${qs({ period })}`),
+  cpfYear: (year: string) =>
+    get<{ year: string; months: any[]; totals: any }>(`/payroll/cpf-year${qs({ year })}`),
+  employerProfile: () =>
+    get<{ profile: EmployerProfile; missing: string[]; complete: boolean }>('/employer-profile'),
+  saveEmployerProfile: (data: EmployerProfile) =>
+    request<{ profile: EmployerProfile }>('/employer-profile', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }).then(r => r.profile),
+  cpfPreview: (staffId: string, period: string) =>
+    get<{ preview: CPFPreview }>(`/payroll/cpf-preview${qs({ staff_id: staffId, period })}`).then(r => r.preview),
   payrollRuns: () => get<{ runs: PayrollRun[] }>('/payroll/runs').then(r => r.runs),
   payrollItems: (runId: number) =>
     get<{ items: PayrollItem[] }>(`/payroll/runs/${runId}/items`).then(r => r.items),

@@ -559,68 +559,38 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
               >
                 {/* Balanced 2-Row Card Layout */}
                 <div style={{width: '100%', padding: '14px', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '10px'}}>
-                  {/* ROW 1: Status | Title + ID | Actions on Right */}
-                  <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: isMobile ? 'wrap' : 'nowrap'}}>
-                    {/* Left Section: Status + Title + ID */}
-                    <div style={{display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flex: isMobile ? '1 1 100%' : 1}}>
-                      {/* Status Badge */}
-                      <span style={{fontSize: '11px', background: 'linear-gradient(135deg, #FFE8D6 0%, #FFD4B3 100%)', color: '#FF6B35', padding: '6px 10px', borderRadius: '8px', fontWeight: '700', flexShrink: 0}}>
-                        {capitalizeStatus(errand.status)}
+                  {/*
+                    Card head, restacked for phones.
+
+                    Row 1 used to hold status + title + actions with the left
+                    half set to `flex: 1 1 100%` on mobile, so the pill and the
+                    title fought over one line — the title truncated after three
+                    words — and the buttons wrapped onto a row of their own,
+                    left-aligned under it. Reading order was pill, half a title,
+                    then a stray emoji.
+
+                    Now: a quiet meta line (status + reference), then the title
+                    with room to breathe, then actions. View is the primary and
+                    Copy is a secondary outline — they were both solid orange,
+                    which gave the card two primary buttons and no hierarchy.
+                  */}
+                  <div style={{display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap'}}>
+                    <span style={{fontSize: '11px', background: 'linear-gradient(135deg, #FFE8D6 0%, #FFD4B3 100%)', color: '#D2521C', padding: '4px 9px', borderRadius: '999px', fontWeight: 700, flexShrink: 0}}>
+                      {capitalizeStatus(errand.status)}
+                    </span>
+                    {errand.errandId && (
+                      <span style={{fontFamily: 'monospace', fontSize: '11px', color: '#A8907C'}}>
+                        {errand.errandId}
                       </span>
-
-                      {/* Title + ID */}
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-baseline gap-2">
-                          <h3 className="font-bold text-errandify-brown truncate text-sm">
-                            {errand.title}
-                          </h3>
-                          {!isMobile && (
-                            <span className="font-mono text-xs text-gray-400 flex-shrink-0">
-                              {errand.errandId}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Right Section: Actions */}
-                    <div className="flex items-center gap-1.5 flex-shrink-0">
-                      {userRole === 'asker' && (errand.status === 'confirmed' || errand.status === 'in_progress') && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/chat?errandId=${errand.id}`);
-                          }}
-                          className="text-lg hover:scale-110 transition-transform"
-                          title="Chat"
-                        >
-                          💬
-                        </button>
-                      )}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/errand/${errand.id}`);
-                        }}
-                        className="px-2 py-1 bg-errandify-orange text-white text-xs rounded font-semibold hover:bg-opacity-90 transition"
-                        title="View"
-                      >
-                        View
-                      </button>
-                      {userRole === 'asker' && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleCopyErrand(errand);
-                          }}
-                          className="px-2 py-1 bg-orange-500 text-white text-xs rounded font-semibold hover:bg-orange-600 transition"
-                          title="Copy"
-                        >
-                          Copy
-                        </button>
-                      )}
-                    </div>
+                    )}
                   </div>
+
+                  <h3
+                    className="font-bold text-errandify-brown"
+                    style={{fontSize: isMobile ? '15px' : '16px', lineHeight: 1.3, margin: 0}}
+                  >
+                    {errand.title}
+                  </h3>
 
                   {/* ROW 2: Category, Postal, Budget, Date, Offers, Rating */}
                   <div className="flex items-center gap-2 flex-wrap">
@@ -635,47 +605,85 @@ export default function ErrandsPage({ userRole }: ErrandsPageProps) {
 
                     {/* Postal Code */}
                     {(errand.postal_code || errand.postalCode) && (
-                      <span className="text-xs bg-gray-200 text-gray-700 px-2 py-0.5 rounded font-semibold">
+                      <span className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full font-semibold">
                         📍 {errand.postal_code || errand.postalCode}
                       </span>
                     )}
 
                     {/* Budget */}
                     {errand.budget && (
-                      <span className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded font-bold">
+                      <span className="text-xs bg-ok-wash text-ok px-2 py-0.5 rounded-full font-bold">
                         💰 SGD ${errand.budget}
                       </span>
                     )}
 
                     {/* Date */}
                     {errand.deadline && (
-                      <span className="text-xs text-gray-600 bg-gray-50 px-2 py-0.5 rounded">
+                      <span className="text-xs text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full">
                         🗓️ {new Date(errand.deadline).toLocaleDateString('en-SG', { month: 'short', day: 'numeric' })}
                       </span>
                     )}
 
                     {/* Offers */}
                     {(errand.bidCount ?? 0) > 0 ? (
-                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-semibold flex items-center gap-1">
+                      <span className="text-xs bg-errandify-orange-wash text-errandify-orange-deep px-2 py-0.5 rounded-full font-semibold flex items-center gap-1">
                         📬 {errand.bidCount} {errand.bidCount === 1 ? 'Offer' : 'Offers'}
                         {(errand.unviewedBidCount ?? 0) > 0 && (
-                          <span className="bg-red-500 text-white rounded-full px-1.5 py-0 text-xs font-bold">
+                          <span className="bg-danger text-white rounded-full px-1.5 py-0 text-xs font-bold">
                             {errand.unviewedBidCount}
                           </span>
                         )}
                       </span>
                     ) : (
-                      <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded font-semibold">
+                      <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-semibold">
                         📬 No Offers
                       </span>
                     )}
 
                     {/* Rating Reminder */}
                     {pendingAction && (
-                      <span className={`text-xs ${pendingAction.color} text-white px-2 py-0.5 rounded font-bold`}>
+                      <span className={`text-xs ${pendingAction.color} text-white px-2 py-0.5 rounded-full font-bold`}>
                         {pendingAction.label}
                       </span>
                     )}
+                  </div>
+
+                  {/* Actions. Chat is a labelled button rather than a bare
+                      emoji floating beside two solid ones, and it still only
+                      appears while the errand is live. */}
+                  <div className="flex items-center gap-2 flex-wrap pt-0.5">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/errand/${errand.id}`);
+                      }}
+                      className="px-3.5 py-1.5 bg-errandify-orange text-white text-xs rounded-full font-bold hover:bg-opacity-90 transition"
+                    >
+                      View
+                    </button>
+                    {userRole === 'asker' && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleCopyErrand(errand);
+                        }}
+                        className="px-3.5 py-1.5 bg-white border border-errandify-orange/50 text-errandify-orange-deep text-xs rounded-full font-bold hover:bg-errandify-orange-wash transition"
+                      >
+                        Copy
+                      </button>
+                    )}
+                    {userRole === 'asker' &&
+                      (errand.status === 'confirmed' || errand.status === 'in_progress') && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/chat?errandId=${errand.id}`);
+                          }}
+                          className="px-3.5 py-1.5 bg-white border border-gray-300 text-gray-700 text-xs rounded-full font-bold hover:bg-gray-100 transition"
+                        >
+                          💬 Chat
+                        </button>
+                      )}
                   </div>
                 </div>
               </div>

@@ -14,7 +14,13 @@ const isAuthenticated = (req: any, res: Response, next: Function) => {
 
 router.post('/campaigns', isAuthenticated, async (req: any, res: Response) => {
   try {
-    const { company_id, title, description, image_url, budget, starts_at, ends_at } = req.body;
+    // target_url and placement_type were collected by the wizard and dropped
+    // in the browser; without them a paid banner has no action button and no
+    // slot to appear in. cta_text lets the buyer word their own button.
+    const {
+      company_id, title, description, image_url, budget, starts_at, ends_at,
+      target_url, target_url_type, placement_type, cta_text,
+    } = req.body;
     if (!company_id || !title || !budget || !starts_at || !ends_at) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
@@ -49,6 +55,10 @@ router.post('/campaigns', isAuthenticated, async (req: any, res: Response) => {
       starts_at,
       ends_at,
       created_by: req.user.id,
+      target_url,
+      target_url_type,
+      placement_type,
+      cta_text,
     });
 
     res.status(201).json({ success: true, campaign, message: 'Campaign created as draft' });

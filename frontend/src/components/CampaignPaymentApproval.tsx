@@ -88,7 +88,26 @@ const CampaignPaymentApproval: React.FC<CampaignPaymentApprovalProps> = ({
       setProcessing(true);
       const token = localStorage.getItem('token');
 
-      // Process payment (deduct credits and/or charge Stripe)
+      // When the budget exceeds available ad credits, the balance is charged to a
+      // card via real Stripe Checkout. Get a hosted session and hand the browser
+      // over to Stripe; the credit half is deducted on return (verify-session).
+      if (calculation.requires_stripe_payment) {
+        const returnUrl = `${window.location.origin}/advertising/payment-return/${companyId}`;
+        const sessionRes = await fetch(`${API_URL}/api/ad-payment/stripe-session`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ campaign_id: campaignId, company_id: companyId, return_url: returnUrl })
+        });
+        const sessionData = await sessionRes.json();
+        if (!sessionRes.ok || !sessionData?.data?.url) {
+          throw new Error(sessionData.error || 'Could not start card payment');
+        }
+        // Full-page hand-off to Stripe's hosted checkout.
+        window.location.href = sessionData.data.url;
+        return;
+      }
+
+      // Credits-only: deduct and approve in one call.
       const response = await fetch(`${API_URL}/api/ad-payment/process`, {
         method: 'POST',
         headers: {
@@ -98,7 +117,7 @@ const CampaignPaymentApproval: React.FC<CampaignPaymentApprovalProps> = ({
         body: JSON.stringify({
           campaign_id: campaignId,
           company_id: companyId,
-          stripe_payment_intent_id: null // Will be obtained from Stripe if needed
+          stripe_payment_intent_id: null
         })
       });
 
@@ -313,9 +332,9 @@ const CampaignPaymentApproval: React.FC<CampaignPaymentApprovalProps> = ({
       }}>
         <div style={{ fontWeight: '600', marginBottom: '8px' }}>✅ What Happens Next</div>
         <ul style={{ margin: 0, paddingLeft: '16px' }}>
-          <li>Credits will be deducted from your balance</li>
-          {calculation.requires_stripe_payment && <li>Stripe will charge the remaining amount</li>}
-          <li>Campaign will be marked as approved</li>
+          {calculation.credits_to_use_cents > 0 && <li>Credits will be deducted from your balance</li>}
+          {calculation.requires_stripe_payment && <li>You'll be taken to Stripe to pay the remaining amount by card</li>}
+          <li>Campaign will be marked as approved once payment is confirmed</li>
           <li>Ad will go live according to schedule</li>
         </ul>
       </div>
@@ -355,7 +374,11 @@ const CampaignPaymentApproval: React.FC<CampaignPaymentApprovalProps> = ({
             opacity: processing ? 0.7 : 1
           }}
         >
-          {processing ? '⏳ Processing...' : '✅ Approve & Pay'}
+          {processing
+            ? '⏳ Processing...'
+            : calculation.requires_stripe_payment
+              ? '💳 Continue to card payment'
+              : '✅ Approve & Pay'}
         </button>
       </div>
 

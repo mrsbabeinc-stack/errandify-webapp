@@ -886,6 +886,25 @@ function LeadDetail({
   const [reason, setReason] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  // Held in state because the server returns the plaintext token once and
+  // cannot produce it again — navigating away loses it, so it stays on screen
+  // until the admin has copied or sent it.
+  const [invite, setInvite] = useState<{ link: string; expiresAt: string } | null>(null);
+  const [inviteCopied, setInviteCopied] = useState(false);
+
+  const issueInvite = async () => {
+    setBusy(true);
+    setErr(null);
+    try {
+      const result = await leadsAPI.invite(lead.id, 'link');
+      setInvite({ link: result.link, expiresAt: result.expiresAt });
+      onChanged();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : 'Could not issue the invite');
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const move = async (stage: LeadStage) => {
     if (stage === 'disqualified' && !reason.trim()) {
@@ -986,6 +1005,52 @@ function LeadDetail({
           <div>{lead.notes}</div>
         </div>
       )}
+
+      {/* ------------------------------------------------------- invite */}
+      <div style={{ marginBottom: '16px' }}>
+        <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '6px' }}>Launch invite</div>
+        {lead.converted_at ? (
+          <div style={{ fontSize: 13, color: '#059669' }}>
+            ✓ Signed up{' '}
+            {new Date(lead.converted_at).toLocaleDateString('en-SG')} — nothing more to send.
+          </div>
+        ) : !lead.consent_contact ? (
+          <div style={{ fontSize: 13, color: '#B45309' }}>
+            No consent to contact on file, so an invite cannot be sent. Re-permission them first.
+          </div>
+        ) : invite ? (
+          <div
+            style={{
+              background: ORANGE_TINT,
+              borderLeft: `4px solid ${ORANGE}`,
+              borderRadius: 6,
+              padding: '10px 12px',
+            }}
+          >
+            <div style={{ fontSize: 12, color: '#5B4636', marginBottom: 6 }}>
+              Copy this now — it is shown once and cannot be retrieved. Valid until{' '}
+              {new Date(invite.expiresAt).toLocaleDateString('en-SG')}.
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input readOnly value={invite.link} style={{ ...input, fontSize: 12 }} />
+              <button
+                style={primaryButton}
+                onClick={async () => {
+                  await navigator.clipboard.writeText(invite.link);
+                  setInviteCopied(true);
+                  setTimeout(() => setInviteCopied(false), 2000);
+                }}
+              >
+                {inviteCopied ? '✓' : 'Copy'}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button style={primaryButton} onClick={issueInvite} disabled={busy}>
+            {busy ? 'Issuing…' : 'Issue signup link'}
+          </button>
+        )}
+      </div>
 
       <div style={{ marginBottom: '16px' }}>
         <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '6px' }}>Move to</div>

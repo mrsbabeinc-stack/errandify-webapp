@@ -43,32 +43,32 @@ export default function EventBanner() {
     switch (currentEvent.type) {
       case 'success':
         return {
-          bg: 'bg-green-50',
-          border: 'border-l-4 border-green-500',
-          text: 'text-green-900',
-          action: 'text-green-600 hover:text-green-700'
+          bg: 'bg-ok-wash',
+          border: 'border-l-4 border-ok',
+          text: 'text-gray-800',
+          action: 'text-ok hover:opacity-80'
         };
       case 'alert':
         return {
-          bg: 'bg-red-50',
-          border: 'border-l-4 border-red-500',
-          text: 'text-red-900',
-          action: 'text-red-600 hover:text-red-700'
+          bg: 'bg-danger-wash',
+          border: 'border-l-4 border-danger',
+          text: 'text-gray-800',
+          action: 'text-danger hover:opacity-80'
         };
       case 'warning':
         return {
-          bg: 'bg-yellow-50',
-          border: 'border-l-4 border-yellow-500',
-          text: 'text-yellow-900',
-          action: 'text-yellow-600 hover:text-yellow-700'
+          bg: 'bg-warn-wash',
+          border: 'border-l-4 border-warn',
+          text: 'text-gray-800',
+          action: 'text-warn hover:opacity-80'
         };
       case 'info':
       default:
         return {
-          bg: 'bg-blue-50',
-          border: 'border-l-4 border-blue-500',
-          text: 'text-blue-900',
-          action: 'text-blue-600 hover:text-blue-700'
+          bg: 'bg-errandify-orange-wash',
+          border: 'border-l-4 border-errandify-orange',
+          text: 'text-gray-800',
+          action: 'text-errandify-orange-deep hover:opacity-80'
         };
     }
   };
@@ -85,7 +85,7 @@ export default function EventBanner() {
         {/* LEFT: Icon + Message */}
         <div className="flex items-center gap-1.5 flex-1 min-w-0">
           <span className="text-base flex-shrink-0">{currentEvent.icon}</span>
-          <p className={`${styles.text} text-xs font-semibold truncate`}>
+          <p className={`${styles.text} text-xs font-semibold leading-snug line-clamp-2`}>
             {currentEvent.message}
           </p>
         </div>

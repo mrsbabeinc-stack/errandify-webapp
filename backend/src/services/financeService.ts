@@ -18,19 +18,13 @@ export const GST_RATE = 0.09; // Singapore GST from 1 Jan 2024
 
 const round2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
 
-export interface CPFBreakdown {
-  ordinaryWage: number;
-  additionalWage: number;
-  employeeOA: number;
-  employeeSA: number;
-  employeeMA: number;
-  employeeTotal: number;
-  employerOA: number;
-  employerSA: number;
-  employerMA: number;
-  employerAW: number;
-  employerTotal: number;
-}
+/**
+ * The OA/SA/MA split that used to sit here has been removed rather than
+ * corrected. Those percentages were invented, MOM's itemised payslip rules do
+ * not require the account split (only the employee's CPF deduction and the
+ * employer's contribution), and how CPF Board allocates a contribution across
+ * accounts is not the employer's calculation to publish.
+ */
 
 export interface TaxBreakdown {
   annualGross: number;
@@ -42,43 +36,256 @@ export interface TaxBreakdown {
   taxRate: number;
 }
 
-/** Ordinary Wage ceiling. Additional Wage is anything above it, capped. */
-const OW_CEILING = 6000;
-const AW_CEILING = 6600;
+// ---------------------------------------------------------------------------
+// CPF
+// ---------------------------------------------------------------------------
 
 /**
- * ⚠️ OPEN QUESTION — CPF is computed on base salary only.
+ * CPF contribution rates, from the CPF Board tables.
  *
- * This is the behaviour the product already had, kept deliberately rather than
- * changed under the covers, because it is a decision about what to pay, not a
- * bug with an obvious fix. Under the CPF Act, Ordinary Wages are the wages
- * payable for the month, and a *fixed* monthly allowance (a standing transport
- * or housing allowance) is generally CPF-payable; a *reimbursement* of actual
- * expenses is not. This function currently treats every allowance as outside
- * OW, so if any of the configured allowances are in fact fixed wage components,
- * CPF is being under-contributed for them.
+ * Verified against cpf.gov.sg (July 2026):
+ *   https://www.cpf.gov.sg/employer/employer-obligations/how-much-cpf-contributions-to-pay
+ *   https://www.cpf.gov.sg/employer/infohub/news/cpf-related-announcements/new-contribution-rates
+ *   https://www.cpf.gov.sg/service/article/what-is-the-ordinary-wage-ow-ceiling
  *
- * Under-contributing CPF is an offence under the CPF Act, so decide this before
- * running a payroll for real: either reclassify the allowances that are
- * reimbursements, or pass gross rather than base into this function. Not legal
- * advice — confirm the classification of each allowance with an accountant.
+ * What was here before was not a statutory rate table at all: a flat 9%
+ * employee / 14.5% employer against a $6,000 ceiling, with monthly salary above
+ * the ceiling wrongly treated as Additional Wage and charged 8%. The real
+ * employee rate for someone aged 55 or under is 20%, the employer 17%, and the
+ * ceiling has been $8,000 since 1 January 2026 — so contributions were being
+ * understated by more than half.
+ *
+ * Rates are keyed by the period they take effect so a payroll run for an
+ * earlier month uses that month's table, not today's. Add the next January's
+ * rates as a new entry; never edit a past one.
  */
-export function calculateCPF(baseSalary: number): CPFBreakdown {
-  const OW = Math.min(baseSalary, OW_CEILING);
-  const AW = Math.min(Math.max(baseSalary - OW, 0), AW_CEILING);
+export interface CPFRateBand {
+  /** Upper bound of the age band, inclusive. Infinity for the oldest band. */
+  maxAge: number;
+  employee: number;
+  employer: number;
+}
+
+interface CPFRateTable {
+  /** Effective from, inclusive, as YYYY-MM. */
+  from: string;
+  owCeiling: number;
+  bands: CPFRateBand[];
+}
+
+/** Newest first — the first entry whose `from` is <= the period wins. */
+const CPF_RATE_TABLES: CPFRateTable[] = [
+  {
+    from: '2027-01',
+    owCeiling: 8000,
+    bands: [
+      { maxAge: 55, employee: 0.20, employer: 0.17 },
+      { maxAge: 60, employee: 0.19, employer: 0.165 },
+      { maxAge: 65, employee: 0.13, employer: 0.13 },
+      { maxAge: 70, employee: 0.075, employer: 0.09 },
+      { maxAge: Infinity, employee: 0.05, employer: 0.075 },
+    ],
+  },
+  {
+    from: '2026-01',
+    owCeiling: 8000,
+    bands: [
+      { maxAge: 55, employee: 0.20, employer: 0.17 },
+      { maxAge: 60, employee: 0.18, employer: 0.16 },
+      { maxAge: 65, employee: 0.125, employer: 0.125 },
+      { maxAge: 70, employee: 0.075, employer: 0.09 },
+      { maxAge: Infinity, employee: 0.05, employer: 0.075 },
+    ],
+  },
+  // Earlier ceilings, so a back-dated run is not computed on today's.
+  { from: '2025-01', owCeiling: 7400, bands: [
+      { maxAge: 55, employee: 0.20, employer: 0.17 },
+      { maxAge: 60, employee: 0.17, employer: 0.155 },
+      { maxAge: 65, employee: 0.115, employer: 0.12 },
+      { maxAge: 70, employee: 0.075, employer: 0.09 },
+      { maxAge: Infinity, employee: 0.05, employer: 0.075 },
+    ] },
+  { from: '2024-01', owCeiling: 6800, bands: [
+      { maxAge: 55, employee: 0.20, employer: 0.17 },
+      { maxAge: 60, employee: 0.15, employer: 0.15 },
+      { maxAge: 65, employee: 0.095, employer: 0.115 },
+      { maxAge: 70, employee: 0.07, employer: 0.09 },
+      { maxAge: Infinity, employee: 0.05, employer: 0.075 },
+    ] },
+];
+
+/**
+ * Additional Wage ceiling: $102,000 less the Ordinary Wages that attracted CPF
+ * over the calendar year. Applied per employer per year.
+ *
+ * Note what Additional Wage IS: bonuses, annual leave encashment, incentive
+ * payments — anything not granted wholly and exclusively for that month. Salary
+ * above the OW ceiling is NOT Additional Wage; it simply attracts no CPF. The
+ * previous code got this backwards and charged the employer 8% on it.
+ */
+export const AW_ANNUAL_CEILING = 102000;
+
+/** Below this, no CPF at all. */
+const TW_NO_CPF = 50;
+/** Up to this, employer share only. */
+const TW_EMPLOYER_ONLY = 500;
+/** Between EMPLOYER_ONLY and this, the employee share phases in. */
+const TW_PHASE_IN_TOP = 750;
+
+export interface CPFBreakdown {
+  ordinaryWage: number;
+  additionalWage: number;
+  employeeTotal: number;
+  employerTotal: number;
+  /** What was applied, so a payslip can be reproduced years later. */
+  rateEmployee: number;
+  rateEmployer: number;
+  owCeiling: number;
+  ageBand: string;
+  cpfStatus: string;
+  /** Set when no CPF is due, explaining why. */
+  note?: string;
+}
+
+export function getCPFRateTable(period: string): CPFRateTable {
+  const table = CPF_RATE_TABLES.find(t => t.from <= period);
+  if (!table) {
+    // Older than anything we hold: refuse rather than apply modern rates.
+    throw new Error(
+      `No CPF rate table for ${period}. Add the rates for that period before running payroll for it.`
+    );
+  }
+  return table;
+}
+
+/** Age on the last day of the payroll month, which is how CPF bands are read. */
+export function ageAtPeriod(dateOfBirth: string | Date, period: string): number {
+  const dob = dateOfBirth instanceof Date ? dateOfBirth : parseDateOnly(String(dateOfBirth));
+  const [y, m] = period.split('-').map(Number);
+  const asOf = new Date(y, m, 0); // last day of that month
+  let age = asOf.getFullYear() - dob.getFullYear();
+  const beforeBirthday =
+    asOf.getMonth() < dob.getMonth() ||
+    (asOf.getMonth() === dob.getMonth() && asOf.getDate() < dob.getDate());
+  if (beforeBirthday) age -= 1;
+  return age;
+}
+
+function bandLabel(band: CPFRateBand, bands: CPFRateBand[]): string {
+  const i = bands.indexOf(band);
+  if (i === 0) return `${band.maxAge} and below`;
+  const lower = bands[i - 1].maxAge;
+  return band.maxAge === Infinity ? `above ${lower}` : `above ${lower} to ${band.maxAge}`;
+}
+
+export interface CPFInput {
+  /** Wages granted wholly and exclusively for this month. */
+  ordinaryWage: number;
+  /** Bonuses and other non-monthly payments made this month. */
+  additionalWage?: number;
+  /** Ordinary Wages that already attracted CPF earlier this calendar year. */
+  ordinaryWageYearToDate?: number;
+  dateOfBirth: string | Date | null;
+  cpfStatus: string | null;
+  /** YYYY-MM — selects the rate table in force. */
+  period: string;
+}
+
+/**
+ * NOT TAX OR LEGAL ADVICE. This implements the standard private-sector rates
+ * for Singapore Citizens and third-year-onwards SPRs, plus the wage bands. It
+ * does NOT implement: the graduated first/second-year SPR tables, the allocation
+ * across Ordinary/Special/MediSave accounts (that is CPF Board's split, and not
+ * a required payslip item under MOM's rules), or the phased employee rate for
+ * senior workers earning $500–$750. Where it cannot be certain, it refuses.
+ * Have a payroll practitioner check this against the CPF Board tables before
+ * you file.
+ */
+export function calculateCPF(input: CPFInput): CPFBreakdown {
+  const table = getCPFRateTable(input.period);
+  const ow = Math.max(0, Number(input.ordinaryWage) || 0);
+  const aw = Math.max(0, Number(input.additionalWage) || 0);
+  const status = input.cpfStatus || 'unknown';
+
+  const empty = (note: string, rateE = 0, rateR = 0, age = -1, label = 'n/a'): CPFBreakdown => ({
+    ordinaryWage: 0,
+    additionalWage: 0,
+    employeeTotal: 0,
+    employerTotal: 0,
+    rateEmployee: rateE,
+    rateEmployer: rateR,
+    owCeiling: table.owCeiling,
+    ageBand: label,
+    cpfStatus: status,
+    note,
+  });
+
+  if (status === 'foreigner') {
+    return empty('Work pass holders do not attract CPF. Levy applies instead, which this system does not compute.');
+  }
+  if (status === 'pr_year_1' || status === 'pr_year_2') {
+    throw new Error(
+      `CPF for ${status.replace('_', ' ')} uses the graduated SPR tables, which are not implemented. ` +
+      'Compute this employee manually or set them to full rates once they reach their third year.'
+    );
+  }
+  if (status !== 'citizen') {
+    throw new Error(
+      'CPF status is not set for this employee (citizen / PR year 1 / PR year 2 / foreigner). ' +
+      'Set it before running payroll — guessing would either underpay CPF or charge a foreigner CPF they do not owe.'
+    );
+  }
+  if (!input.dateOfBirth) {
+    throw new Error(
+      'Date of birth is not set for this employee. CPF rates are banded by age, so it cannot be computed without one.'
+    );
+  }
+
+  const age = ageAtPeriod(input.dateOfBirth, input.period);
+  const band = table.bands.find(bnd => age <= bnd.maxAge) || table.bands[table.bands.length - 1];
+  const label = bandLabel(band, table.bands);
+
+  const totalWages = ow + aw;
+  if (totalWages <= TW_NO_CPF) {
+    return empty('Total wages of $50 or less attract no CPF.', 0, 0, age, label);
+  }
+
+  // OW above the ceiling attracts nothing. It is not Additional Wage.
+  const owForCpf = Math.min(ow, table.owCeiling);
+  // AW ceiling is annual: $102,000 less the OW that has already attracted CPF.
+  const owYtd = Math.max(0, Number(input.ordinaryWageYearToDate) || 0);
+  const awHeadroom = Math.max(0, AW_ANNUAL_CEILING - (owYtd + owForCpf));
+  const awForCpf = Math.min(aw, awHeadroom);
+  const wagesForCpf = owForCpf + awForCpf;
+
+  let employeeRate = band.employee;
+  if (totalWages <= TW_EMPLOYER_ONLY) {
+    // Employer share only.
+    employeeRate = 0;
+  } else if (totalWages <= TW_PHASE_IN_TOP) {
+    // The employee share phases in across this band on a table that varies by
+    // age. Refusing beats applying the full rate and over-deducting from the
+    // lowest-paid people on the payroll.
+    throw new Error(
+      `Total wages of $${totalWages.toFixed(2)} fall in the $500–$750 band, where the employee ` +
+      'CPF share is phased in on a separate CPF Board table that is not implemented. ' +
+      'Compute this employee manually.'
+    );
+  }
+
+  const employeeTotal = round2(wagesForCpf * employeeRate);
+  const employerTotal = round2(wagesForCpf * band.employer);
 
   return {
-    ordinaryWage: round2(OW),
-    additionalWage: round2(AW),
-    employeeOA: round2(OW * 0.045),
-    employeeSA: round2(OW * 0.04),
-    employeeMA: round2(OW * 0.005),
-    employeeTotal: round2(OW * 0.09),
-    employerOA: round2(OW * 0.07),
-    employerSA: round2(OW * 0.07),
-    employerMA: round2(OW * 0.005),
-    employerAW: round2(AW * 0.08),
-    employerTotal: round2(OW * 0.145 + AW * 0.08),
+    ordinaryWage: round2(owForCpf),
+    additionalWage: round2(awForCpf),
+    employeeTotal,
+    employerTotal,
+    rateEmployee: employeeRate,
+    rateEmployer: band.employer,
+    owCeiling: table.owCeiling,
+    ageBand: label,
+    cpfStatus: status,
   };
 }
 

@@ -8,6 +8,11 @@ import { generateFormattedUserId } from '../utils/idFormatter.js';
 import * as singpass from '../services/singpass.js';
 import { sendCriticalEmail } from '../services/emailNotifications.js';
 import { awardReferralPoints, JOIN_BONUS_EP } from '../services/referralService.js';
+import {
+  resolveReferralCode,
+  trackCompanyReferralJoin,
+} from '../services/companyReferralService.js';
+import { redeemInvite } from '../services/leadInviteService.js';
 
 const router = Router();
 
@@ -70,22 +75,33 @@ router.post('/singpass-callback', async (req: Request, res: Response) => {
 
     let singpassData;
 
-    // Check if this is a mock code from the simulator (for testing)
+    /*
+     * Development simulator. Gated on the `singpass_auth_code` prefix, which
+     * only /singpass-simulator produces — a real Singpass code never matches.
+     *
+     * This used to answer with a hardcoded S1234567A regardless of which of
+     * the simulator's three identities was chosen, so every simulated login
+     * was the same person. Since that NRIC already has an account, signup
+     * could never be exercised end to end: the flow always fell through to
+     * "user already exists". The chosen NRIC now travels in the mock code.
+     */
     if (code.includes('singpass_auth_code')) {
-      // For simulator: return mock data based on code
-      // In real app, this would validate the code and exchange it for user data
-      console.log('[Auth] Mock SingPass code detected - using simulator data');
+      const SIMULATOR_IDENTITIES: Record<string, any> = {
+        S1234567A: { name: 'John Lee', email: 'john.lee@example.com', phone_number: '+6581234567', birthdate: '1990-01-15', address: '123 Clementi Ave 3, Singapore 129957', gender: 'M' },
+        S9876543B: { name: 'Sarah Tan', email: 'sarah.tan@example.com', phone_number: '+6587654321', birthdate: '1992-05-20', address: '456 Ang Mo Kio Ave 1, Singapore 569969', gender: 'F' },
+        S5555555C: { name: 'David Wong', email: 'david.wong@example.com', phone_number: '+6589999999', birthdate: '1988-12-10', address: '789 Bukit Merah Lane, Singapore 150789', gender: 'M' },
+      };
+
+      const match = code.match(/singpass_auth_code_(S\d{7}[A-Z])_/);
+      const nric = match?.[1] && SIMULATOR_IDENTITIES[match[1]] ? match[1] : 'S1234567A';
+      const identity = SIMULATOR_IDENTITIES[nric];
+      console.log('[Auth] Mock SingPass code detected - simulator identity:', nric);
 
       singpassData = {
-        sub: 'S1234567A', // NRIC
-        nric: 'S1234567A',
-        name: 'John Lee',
-        email: 'john.lee@example.com',
-        phone_number: '+6581234567',
-        birthdate: '1990-01-15',
-        address: '123 Clementi Ave 3, Singapore 129957',
+        sub: nric,
+        nric,
         nationality: 'Singapore',
-        gender: 'M', // M for Male, F for Female
+        ...identity,
       };
     } else {
       // Real Singpass. state proves the callback belongs to a flow we started;
@@ -118,10 +134,54 @@ router.post('/singpass-callback', async (req: Request, res: Response) => {
       email: singpassData.email,
     });
 
+    /**
+     * If this identity already has an account, issue a real session here.
+     *
+     * This endpoint used to return the Singpass identity and nothing else, so
+     * the sign-in path in SingPassCallbackPage fell through to
+     * `response.data.data.token || 'mock_token_' + Date.now()` — and since
+     * there was never a `token` in the response, **every Singpass sign-in
+     * stored a fabricated token**. The backend rejects it on the next request,
+     * so signing in appeared to work and then nothing authenticated did.
+     *
+     * Identity is already proven at this point — either by Singpass itself, or
+     * by the simulator branch in development — so minting the session here is
+     * the natural place for it.
+     */
+    let session: { token: string; user: any } | null = null;
+    if (singpassData?.nric) {
+      const existing = await db.query(
+        `SELECT id, user_id, formatted_user_id, display_name, email, mobile, role
+           FROM users WHERE nric_hash = $1`,
+        [hashNric(singpassData.nric)]
+      );
+      if (existing.rows.length > 0) {
+        const u = existing.rows[0];
+        session = {
+          token: jwt.sign(
+            { userId: u.id, email: u.email, role: u.role },
+            config.jwtSecret,
+            { expiresIn: '7d' }
+          ),
+          user: {
+            id: u.id,
+            userId: u.user_id,
+            formattedUserId: u.formatted_user_id,
+            displayName: u.display_name,
+            email: u.email,
+            phone: u.mobile,
+            role: u.role,
+          },
+        };
+      }
+    }
+
     // Return data to frontend for signup/login
     res.json({
       success: true,
       data: singpassData,
+      // Present only when the account already exists; absent means "sign up".
+      session,
     });
   } catch (error) {
     console.error('[Auth] SingPass callback error:', error);
@@ -136,7 +196,7 @@ router.post('/singpass-callback', async (req: Request, res: Response) => {
 router.post('/signup', async (req: Request, res: Response) => {
   const client = await db.getClient();
   try {
-    const { nric, displayName, email, phone, role, singpassVerified, singpassId, gender, ref } = req.body;
+    const { nric, displayName, email, phone, role, singpassVerified, singpassId, gender, ref, inviteToken } = req.body;
 
     // Validate required fields
     if (!nric || !displayName || !email || !phone) {
@@ -200,17 +260,67 @@ router.post('/signup', async (req: Request, res: Response) => {
 
     const user = result.rows[0];
 
+    /**
+     * A pre-launch lead following their invite link.
+     *
+     * Redeemed inside this transaction, so the invite cannot be burned by a
+     * signup that then fails — if the account is not created, the link still
+     * works for the retry. Independent of `ref`: someone can arrive on an
+     * invite and also carry a friend's referral code, and both should count.
+     */
+    if (inviteToken) {
+      try {
+        const { redeemed, leadId } = await redeemInvite(client, inviteToken, newUserId);
+        if (redeemed) {
+          console.log(`[Leads] User ${newUserId} converted lead ${leadId} via invite`);
+        } else {
+          // Expired, already used, or not ours. Not an error for the person
+          // signing up — they still get an account.
+          console.log(`[Leads] Invite token presented by user ${newUserId} was not redeemable`);
+        }
+      } catch (inviteError) {
+        console.error('[Leads] Invite redemption failed during signup:', inviteError);
+      }
+    }
+
     // AUTO-TRACK REFERRAL: If user signed up via referral code
     if (ref) {
       try {
-        // Find referrer by referral code
-        const referrerResult = await client.query(
-          'SELECT id FROM users WHERE referral_code = $1',
-          [ref]
-        );
+        // A code is now either a person's (REF-…) or a company's (BIZ-…), and
+        // resolveReferralCode is the single place that decides which. Company
+        // codes pay the company's EP balance, so they take the branch below
+        // rather than this one — see services/companyReferralService.ts.
+        const resolved = await resolveReferralCode(ref, client);
 
-        if (referrerResult.rows.length > 0) {
-          const referrerId = referrerResult.rows[0].id;
+        if (resolved?.kind === 'company' && resolved.companyId) {
+          const { tracked, pointsAwarded } = await trackCompanyReferralJoin(
+            client,
+            resolved.companyId,
+            resolved.sharedByUserId ?? null,
+            newUserId,
+            ref,
+            displayName
+          );
+          console.log(
+            `[Referral] User ${newUserId} signed up via company code ${ref}. ` +
+              `Company ${resolved.companyId} tracked=${tracked} awarded ${pointsAwarded} EP`
+          );
+
+          // Tell the staff member whose code it was, when there is one. The
+          // company earns the points; the person who shared is who actually
+          // did the work of sharing and should hear about it.
+          if (tracked && resolved.sharedByUserId) {
+            import('../utils/notificationHelper.js')
+              .then(({ sendNotification }) => sendNotification({
+                userId: resolved.sharedByUserId!,
+                type: 'referral_bonus',
+                title: `Someone joined on your invite`,
+                message: `${displayName} signed up using your company invite. That's ${pointsAwarded} EP for your company.`,
+              }))
+              .catch(err => console.error('[Referral] Company join notification failed:', err));
+          }
+        } else if (resolved?.kind === 'user' && resolved.userId) {
+          const referrerId = resolved.userId;
 
           // Insert referral tracking
           await client.query(

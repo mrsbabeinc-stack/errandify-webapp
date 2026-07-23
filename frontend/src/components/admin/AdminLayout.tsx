@@ -9,7 +9,9 @@ interface AdminLayoutProps {
 }
 
 export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, onLogout }) => {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(
+    typeof window === 'undefined' ? true : window.innerWidth > 1024
+  );
 
   const handleMenuToggle = () => {
     setSidebarOpen(!sidebarOpen);
@@ -21,6 +23,16 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, onLogout }) 
 
       <div className="admin-container">
         <AdminSidebar isOpen={sidebarOpen} />
+
+        {/* Only rendered on small screens (CSS-gated). Without it the drawer
+            can only be dismissed by finding the hamburger again. */}
+        {sidebarOpen && (
+          <div
+            className="admin-scrim"
+            role="presentation"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
 
         <main className={`admin-main ${sidebarOpen ? 'with-sidebar' : 'full-width'}`}>
           <div className="admin-content">
@@ -84,18 +96,57 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, onLogout }) 
           background: #ff8c42;
         }
 
-        /* Mobile responsiveness */
-        @media (max-width: 1024px) {
-          .admin-main {
-            margin-left: 0;
-          }
+        .admin-scrim {
+          display: none;
+        }
 
+        /*
+          Mobile: the sidebar becomes an overlay drawer.
+
+          It used to stay in the flex flow at 220px wide no matter the screen,
+          so on a 360px phone the content column was left with about 140px and
+          every heading wrapped one word per line — "Dashboar/d", "Critical/
+          Blockers/- Act/Now". Zeroing the margin, which is all the old media
+          query did, does nothing while the sidebar is still a flex sibling
+          taking up its share of the row.
+
+          Fixed positioning takes it out of the flow entirely, so the content
+          gets the full width and the sidebar slides over it when asked for.
+        */
+        @media (max-width: 1024px) {
+          .admin-main,
           .admin-main.with-sidebar {
             margin-left: 0;
+            width: 100%;
+            min-width: 0;
           }
 
           .admin-sidebar {
-            width: 220px;
+            position: fixed;
+            top: 60px;
+            bottom: 0;
+            left: 0;
+            width: 264px;
+            max-width: 82vw;
+            z-index: 60;
+            transform: translateX(-100%);
+            transition: transform 0.25s ease;
+            box-shadow: 0 8px 30px rgba(176, 96, 48, 0.18);
+          }
+
+          .admin-sidebar.open {
+            transform: translateX(0);
+          }
+
+          .admin-scrim {
+            display: block;
+            position: fixed;
+            top: 60px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(74, 50, 33, 0.35);
+            z-index: 55;
           }
         }
 

@@ -112,7 +112,7 @@ export default function AdminThemeWrapper({
       {/* Header - Top Bar with Logo, Role Toggle & Profile */}
       <div style={{
         background: 'white',
-        borderBottom: '1px solid #e5e7eb',
+        borderBottom: '1px solid #F0E4DA',
         padding: '8px 16px',
         display: 'flex',
         justifyContent: 'center',
@@ -160,14 +160,14 @@ export default function AdminThemeWrapper({
                     <img
                       src={profileImage}
                       alt="Profile"
-                      style={{width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: '1px solid #d1d5db'}}
+                      style={{width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: '1px solid #E3D2C4'}}
                     />
                   ) : (
                     <div style={{width: 32, height: 32, borderRadius: '50%', background: '#FF6B35', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 12, fontWeight: 'bold'}}>
                       {(userProfile.alias || userProfile.name || 'U').charAt(0).toUpperCase()}
                     </div>
                   )}
-                  <span style={{fontSize: 14, fontWeight: 600, color: '#374151', maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>
+                  <span style={{fontSize: 14, fontWeight: 600, color: '#644C3C', maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>
                     {userProfile.alias || userProfile.display_name || userProfile.name || 'User'}
                   </span>
                 </button>
@@ -222,44 +222,71 @@ export default function AdminThemeWrapper({
         maxWidth: 1200,
         margin: '0 auto',
         width: '100%',
-        padding: '20px',
+        // 20px on every side cost 40px of a 360px-wide screen before any
+        // content. Desktop keeps the roomier value.
+        padding: isMobile ? '12px 12px 8px' : '20px',
         ...style
       }}>
-        {/* Back Button - Always visible at top */}
-        {showBackButton && (
-          <button
-            onClick={onBack}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: '#FF6B35',
-              fontSize: '16px',
-              fontWeight: '700',
-              cursor: 'pointer',
-              marginBottom: '12px',
-              padding: '0',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              transition: 'opacity 0.2s',
-              zIndex: 100
-            }}
-            title="Go back"
-            onMouseEnter={(e) => e.currentTarget.style.opacity = '0.7'}
-            onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
-          >
-            ← Back
-          </button>
-        )}
+        {/*
+          Page head — back arrow and title on ONE row.
 
-        {/* Title Section */}
-        {title && (
-          <div style={{marginBottom: '12px', flexShrink: 0, position: 'relative'}}>
-            <h1 style={{fontSize: '28px', fontWeight: '700', color: '#333', margin: '0 0 4px 0'}}>
-              {title}
-            </h1>
-            {subtitle && (
-              <p style={{fontSize: '13px', color: '#666', margin: 0}}>{subtitle}</p>
+          These were stacked: a full-width "← Back" link, then a 28px title,
+          then a subtitle, each with its own margin. Together with the 20px
+          content padding that spent roughly 125px before any page content, on
+          every one of the thirteen screens using this wrapper. On a phone that
+          is a fifth of the viewport given to a label.
+
+          Colours come from the theme scale rather than the cool greys that were
+          hardcoded here (#333 / #666 / #e5e7eb), so the header matches the rest
+          of the app. Type sizes live in the `.app-page-head` block in index.css
+          — they have to out-rank the global `h1 { ... !important }`.
+        */}
+        {(showBackButton || title) && (
+          <div
+            className="app-page-head"
+            style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: isMobile ? '8px' : '12px',
+              marginBottom: isMobile ? '10px' : '16px',
+              flexShrink: 0,
+            }}
+          >
+            {showBackButton && (
+              <button
+                onClick={onBack}
+                aria-label="Go back"
+                title="Go back"
+                style={{
+                  flexShrink: 0,
+                  width: isMobile ? 30 : 34,
+                  height: isMobile ? 30 : 34,
+                  marginTop: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: '#FFEDE2',
+                  border: 'none',
+                  borderRadius: '50%',
+                  color: '#D2521C',
+                  fontSize: isMobile ? '16px' : '18px',
+                  fontWeight: 700,
+                  lineHeight: 1,
+                  cursor: 'pointer',
+                  transition: 'background 0.2s',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = '#FFD9C4')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = '#FFEDE2')}
+              >
+                ←
+              </button>
+            )}
+
+            {title && (
+              <div style={{ minWidth: 0 }}>
+                <h1>{title}</h1>
+                {subtitle && <p>{subtitle}</p>}
+              </div>
             )}
           </div>
         )}

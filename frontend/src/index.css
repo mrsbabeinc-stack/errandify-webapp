@@ -68,3 +68,104 @@ html {
     background: linear-gradient(135deg, #FFF9F5 0%, #FFF0E5 100%) !important;
   }
 }
+
+/* ============================================================================
+   Landing page — escape hatch from the global typography override
+   ----------------------------------------------------------------------------
+   styles/CompanyModuleTheme.css, imported globally from App.tsx, declares:
+
+     h1, ... { font-size: 24px !important; font-family: ... !important; ... }
+     h2, ... { font-size: 18px !important; ... }
+     h3, ... { font-size: 14px !important; ... }
+     p,  ... { font-size: 14px !important; color: #555 !important; ... }
+
+   with BARE element selectors. It therefore restyles every heading and every
+   paragraph in the whole app — individual and admin modules included — and no
+   Tailwind utility can win against `!important`.
+
+   Scoping that file to the company module is the real fix. It would change type
+   on hundreds of pages at once, so it needs its own pass with eyes on the
+   result. Until then, this re-establishes a type scale for this one page:
+   same weapon, tighter scope.
+   ========================================================================== */
+.kampung-landing h1,
+.kampung-landing h2,
+.kampung-landing p {
+  font-family: inherit !important;
+  margin: 0 !important;
+}
+
+.kampung-landing h1 {
+  font-family: 'Fraunces', Georgia, Cambria, serif !important;
+  font-size: 31px !important;
+  font-weight: 900 !important;
+  line-height: 1.12 !important;
+  letter-spacing: -0.01em !important;
+  color: #4A3221 !important;
+}
+
+.kampung-landing h2 {
+  font-family: 'Fraunces', Georgia, Cambria, serif !important;
+  font-size: 17px !important;
+  font-weight: 700 !important;
+  line-height: 1.3 !important;
+  color: #4A3221 !important;
+}
+
+/* Paragraph roles. Named rather than sized inline because every one of these
+   has to out-shout an `!important`, and a handful of named roles is easier to
+   keep honest than a size on each element. */
+.kampung-landing .k-tagline {
+  font-family: 'Fraunces', Georgia, Cambria, serif !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  font-style: italic !important;
+  color: #D2521C !important;
+}
+.kampung-landing .k-lede {
+  font-size: 15px !important;
+  line-height: 1.6 !important;
+  color: #806350 !important;
+}
+.kampung-landing .k-body {
+  font-size: 14px !important;
+  line-height: 1.6 !important;
+  color: #806350 !important;
+}
+.kampung-landing .k-eyebrow {
+  font-family: 'Fraunces', Georgia, Cambria, serif !important;
+  font-size: 17px !important;
+  font-weight: 700 !important;
+  color: #4A3221 !important;
+}
+.kampung-landing .k-fine {
+  font-size: 12px !important;
+}
+
+/* ============================================================================
+   Shared page header — escape hatch from the global typography override
+   ----------------------------------------------------------------------------
+   Same problem as .kampung-landing above: CompanyModuleTheme.css sets
+   `h1 { font-size: 24px !important; ... }` on a bare element selector, app
+   wide, so components/AdminThemeWrapper.tsx cannot size its own title. Thirteen
+   pages render through that wrapper, so this one block standardises the header
+   on all of them until the global rule is properly scoped.
+   ========================================================================== */
+.app-page-head h1 {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+  font-size: 19px !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+  color: #4A3221 !important;   /* errandify-brown */
+  margin: 0 !important;
+}
+.app-page-head p {
+  font-size: 12px !important;
+  line-height: 1.4 !important;
+  color: #806350 !important;   /* gray-600, warm scale */
+  margin: 2px 0 0 !important;
+}
+@media (min-width: 640px) {
+  .app-page-head h1 { font-size: 26px !important; }
+  .app-page-head p { font-size: 13px !important; }
+}

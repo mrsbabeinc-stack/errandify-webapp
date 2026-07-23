@@ -74,7 +74,19 @@ export async function allocateMonthlyCredits(companyId?: number): Promise<number
     await db.query(
       `INSERT INTO subscription_ad_credits (company_id, amount, spent, expires_at, created_at)
        VALUES ($1, $2, 0, $3, NOW())
-       ON CONFLICT (company_id) DO UPDATE SET amount = EXCLUDED.amount, expires_at = EXCLUDED.expires_at`,
+       ON CONFLICT (company_id) DO UPDATE SET
+         amount = EXCLUDED.amount,
+         expires_at = EXCLUDED.expires_at,
+         -- Reset spend only when rolling into a NEW billing period (expiry moves).
+         -- Re-running allocation within the same month keeps the month's spend,
+         -- so a fresh allocation never silently refunds mid-month campaigns — and
+         -- a company that spent its full allowance last month starts clean this month
+         -- instead of being stuck at $0 available forever.
+         spent = CASE
+           WHEN subscription_ad_credits.expires_at IS DISTINCT FROM EXCLUDED.expires_at THEN 0
+           ELSE subscription_ad_credits.spent
+         END,
+         updated_at = NOW()`,
       [sub.company_id, amountCents, expiresAt]
     );
 
