@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import AdminLayout from '../../components/admin/AdminLayout';
 
 interface CompanySubscription {
   company_id: number;
@@ -105,6 +106,7 @@ export default function AdminSubscriptionManagement() {
   };
 
   return (
+    <AdminLayout>
     <div className="p-8 bg-white rounded-lg">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Subscription Management</h1>
@@ -265,5 +267,6 @@ export default function AdminSubscriptionManagement() {
         )}
       </div>
     </div>
+    </AdminLayout>
   );
 }

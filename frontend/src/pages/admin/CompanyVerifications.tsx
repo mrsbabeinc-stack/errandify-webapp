@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import AdminLayout from '../../components/admin/AdminLayout';
 import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
@@ -91,6 +92,7 @@ export default function CompanyVerifications() {
   };
 
   return (
+    <AdminLayout>
     <div className="grid gap-3">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <h2 className="font-extrabold text-[17px] text-gray-800 tracking-tight">Company verifications</h2>
@@ -223,5 +225,6 @@ export default function CompanyVerifications() {
         </div>
       )}
     </div>
+    </AdminLayout>
   );
 }

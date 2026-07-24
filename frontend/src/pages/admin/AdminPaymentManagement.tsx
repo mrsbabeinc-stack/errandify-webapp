@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import AdminLayout from '../../components/admin/AdminLayout';
 import { useToastNotification } from '../../utils/toastNotification';
 
 interface PaymentHold {
@@ -210,6 +211,7 @@ export default function AdminPaymentManagement() {
   }
 
   return (
+    <AdminLayout>
     <div style={{ padding: '20px', background: '#fff9f5', minHeight: '100vh' }}>
       {/* Header */}
       <div style={{ marginBottom: '24px' }}>
@@ -596,5 +598,6 @@ export default function AdminPaymentManagement() {
         </div>
       )}
     </div>
+    </AdminLayout>
   );
 }

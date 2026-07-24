@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import AdminLayout from '../../components/admin/AdminLayout';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -78,6 +79,7 @@ export default function ReferralTracking() {
     : '0.0';
 
   return (
+    <AdminLayout>
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100 p-4">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
@@ -390,5 +392,6 @@ export default function ReferralTracking() {
         )}
       </div>
     </div>
+    </AdminLayout>
   );
 }

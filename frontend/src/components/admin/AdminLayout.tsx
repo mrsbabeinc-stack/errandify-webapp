@@ -169,13 +169,34 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, onLogout }) 
             grid-template-columns: repeat(auto-fit, minmax(min(160px, 100%), 1fr)) !important;
           }
 
+          /* Same problem via Tailwind utility grids: many stat rows use
+             grid-cols-4 (no responsive prefix), so on a phone four cards crush
+             together and labels like Total Subscriptions clip. Collapse
+             3/4/5/6-column utility grids to 2-up. */
+          .admin-content .grid-cols-3,
+          .admin-content .grid-cols-4,
+          .admin-content .grid-cols-5,
+          .admin-content .grid-cols-6 {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+          }
+
           /* Section headings were often white-space:nowrap and overran the
-             screen; let them wrap on a phone. */
+             screen; let them wrap on a phone. (No overflow-wrap:anywhere — when
+             a heading got squeezed into a narrow flex column it broke one
+             character per line, e.g. "E / P / Tr / an…".) */
           .admin-content h1,
           .admin-content h2,
           .admin-content h3 {
             white-space: normal !important;
-            overflow-wrap: anywhere;
+          }
+
+          /* The real cause of squeezed headings + cut-off controls: header rows
+             are flex with a title and a controls group that never wrapped, so
+             on a phone the title got crushed to a sliver. Let those rows wrap so
+             the controls drop below the title. */
+          .admin-content [style*="justify-content: space-between"],
+          .admin-content [style*="justify-content:space-between"] {
+            flex-wrap: wrap;
           }
 
           /* Compact: admin cards hard-code desktop-sized inline padding, so on a
