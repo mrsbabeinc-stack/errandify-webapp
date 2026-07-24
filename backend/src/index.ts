@@ -576,9 +576,16 @@ console.log('Serving frontend from:', frontendPath);
 app.use(express.static(frontendPath));
 
 // Routes
-// MOCK TESTING ROUTES (for development/testing only)
-app.use('/api/mock-auth', mockAuthRoutes);
-app.use('/api/mock-payment', mockPaymentRoutes);
+// MOCK TESTING ROUTES — development/testing only. mock-auth mints a real JWT
+// (signed with the same jwtSecret authMiddleware verifies) for a hardcoded user
+// on any email/password, so if mounted in production it is a full authentication
+// bypass — anyone could impersonate any account. Gate it like the demo routes.
+if (process.env.NODE_ENV !== 'production') {
+  app.use('/api/mock-auth', mockAuthRoutes);
+  app.use('/api/mock-payment', mockPaymentRoutes);
+} else {
+  console.log('[Startup] Mock auth/payment routes disabled in production');
+}
 
 // REAL ROUTES
 // The JWKS endpoint registered with Singpass. Public keys only — this is how
