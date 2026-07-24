@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import AdminLayout from '../../components/admin/AdminLayout';
 import leadsAPI, {
   type CategoryGap,
   type Lead,
@@ -187,6 +188,7 @@ export default function LeadGeneration() {
   );
 
   return (
+    <AdminLayout>
     <div style={{ padding: '24px', maxWidth: '1400px', margin: '0 auto' }}>
       <div style={{ marginBottom: '20px' }}>
         <h1 style={{ fontSize: '24px', fontWeight: 700, margin: 0 }}>Lead Generation</h1>
@@ -309,6 +311,7 @@ export default function LeadGeneration() {
         />
       )}
     </div>
+    </AdminLayout>
   );
 }
 
