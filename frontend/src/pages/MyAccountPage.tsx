@@ -1696,8 +1696,8 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
         {activeSection === 'pocket' && (
           <div className="space-y-3">
             {/* Happy Balance Card - Compact */}
-            <div className="bg-gradient-to-br from-green-400 via-emerald-500 to-amber-600 text-white rounded-xl p-3 shadow-lg relative overflow-hidden">
-              <div className="absolute top-0 right-0 text-4xl opacity-20">💚</div>
+            <div className="bg-gradient-to-br from-errandify-orange via-orange-500 to-amber-500 text-white rounded-xl p-3 shadow-lg relative overflow-hidden">
+              <div className="absolute top-0 right-0 text-4xl opacity-20">🧡</div>
               <div className="absolute bottom-0 left-0 text-4xl opacity-20">🎉</div>
               <div className="relative z-10">
                 <div className="flex items-baseline justify-between mb-2">
@@ -1821,7 +1821,7 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
 
             {/* Payout Details - Collapsible */}
             <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-              <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white p-2">
+              <div className="bg-gradient-to-r from-errandify-orange to-orange-600 text-white p-2">
                 <div className="flex items-center justify-between">
                   <button
                     onClick={() => setExpandPayout(!expandPayout)}
@@ -2038,7 +2038,7 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                     onClick={() => {
                       setRewardsTab('shop');
                     }}
-                    className="flex-1 bg-gradient-to-r from-green-400 to-emerald-500 text-white py-3 rounded-lg font-bold text-sm hover:shadow-lg hover:scale-105 transition transform shadow-md"
+                    className="flex-1 bg-gradient-to-r from-errandify-orange to-amber-500 text-white py-3 rounded-lg font-bold text-sm hover:shadow-lg hover:scale-105 transition transform shadow-md"
                   >
                     🎁 Redeem Now
                   </button>
@@ -2158,7 +2158,7 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                             setShowErrorModal(true);
                           }
                         }}
-                        className="bg-gradient-to-r from-green-400 to-emerald-500 text-white px-3 py-2 rounded-lg text-xs font-bold hover:shadow-lg transition"
+                        className="bg-gradient-to-r from-errandify-orange to-amber-500 text-white px-3 py-2 rounded-lg text-xs font-bold hover:shadow-lg transition"
                       >
                         ✨ Redeem
                       </button>
