@@ -2399,6 +2399,20 @@ window.topNotification?.({
             white-space: normal !important;
             overflow-wrap: anywhere;
           }
+
+          /* Compact: admin cards hard-code desktop-sized inline padding, so on a
+             phone every card eats a screenful. Trim the largest paddings — a
+             modest reduction that keeps the cards readable but far denser. */
+          .admin-content [style*="padding: 32px"],
+          .admin-content [style*="padding:32px"] { padding: 14px !important; }
+          .admin-content [style*="padding: 30px"],
+          .admin-content [style*="padding:30px"] { padding: 14px !important; }
+          .admin-content [style*="padding: 28px"],
+          .admin-content [style*="padding:28px"] { padding: 14px !important; }
+          .admin-content [style*="padding: 24px"],
+          .admin-content [style*="padding:24px"] { padding: 13px !important; }
+          .admin-content [style*="padding: 20px"],
+          .admin-content [style*="padding:20px"] { padding: 12px !important; }
         }
 
         /* Light theme for the entire app */
