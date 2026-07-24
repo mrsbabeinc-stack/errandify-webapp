@@ -39,12 +39,23 @@ router.get('/:errandId/sessions', authMiddleware, async (req: AuthRequest, res: 
     }
 
     // Get sessions
+    // errand_sessions has no `scheduled_date` (the column is `start_date`), and
+    // errand_assignments has no `session_id` — assignments are keyed by errand,
+    // not by session. Both wrong references made this endpoint throw every call.
+    // Attribute each session to the errand's most recent assignment (one row) so
+    // the query runs and the doer name still resolves.
     const sessionsResult = await db.query(
       `SELECT
-         es.id, es.errand_id, es.session_number, es.scheduled_date, es.status,
+         es.id, es.errand_id, es.session_number, es.start_date AS scheduled_date, es.status,
          ea.doer_id, u.display_name as assigned_doer_name, ea.completed_at
        FROM errand_sessions es
-       LEFT JOIN errand_assignments ea ON es.id = ea.session_id
+       LEFT JOIN LATERAL (
+         SELECT doer_id, completed_at
+         FROM errand_assignments
+         WHERE errand_id = es.errand_id
+         ORDER BY created_at DESC
+         LIMIT 1
+       ) ea ON true
        LEFT JOIN users u ON ea.doer_id = u.id
        WHERE es.errand_id = $1
        ORDER BY es.session_number ASC`,

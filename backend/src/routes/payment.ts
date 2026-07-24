@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { AuthRequest, authMiddleware } from '../middleware/auth.js';
+import { AuthRequest, authMiddleware, requireAdmin } from '../middleware/auth.js';
 import db from '../db.js';
 import { stripeService } from '../services/stripe.js';
 import { resolvePayoutRecipient, canReleasePayment } from '../utils/payoutRecipient.js';
@@ -186,7 +186,12 @@ router.post('/confirm', authMiddleware, async (req: AuthRequest, res: Response) 
 });
 
 // POST /api/payment/refund - Refund a payment
-router.post('/refund', authMiddleware, async (req: AuthRequest, res: Response) => {
+// Admin-only. This took a Stripe intentId straight from the body and refunded
+// it with no ownership check, so any signed-in user could refund any payment.
+// Real refunds run server-side in disputeSettlement under admin/dispute control
+// and there is no user-facing caller for this route, so a refund here is an
+// administrative action — gate it accordingly.
+router.post('/refund', authMiddleware, requireAdmin(), async (req: AuthRequest, res: Response) => {
   try {
     const { intentId, reason } = req.body;
 
@@ -194,7 +199,7 @@ router.post('/refund', authMiddleware, async (req: AuthRequest, res: Response) =
       return res.status(400).json({ error: 'intentId required' });
     }
 
-    console.log(`[Payment] Refunding payment: ${intentId}`);
+    console.log(`[Payment] Admin ${req.userId} refunding payment: ${intentId}`);
 
     const result = await stripeService.refundPayment(intentId, reason || 'requested_by_customer');
 

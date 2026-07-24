@@ -837,33 +837,66 @@ router.post('/award-ep', authMiddleware, async (req: AuthRequest, res: Response)
 });
 
 // POST /api/wallet/award-ep-bonus - Award bonus EP to doer for rating back
+// Server owns the bonus amount. The client used to send `bonus` and it was
+// applied verbatim, so a user could self-grant unlimited EP — and farm it by
+// replaying the call. The amount is now fixed by `reason`, the user must have
+// actually rated the errand to earn it, and it pays at most once per errand.
+const EP_BONUS_RULES: Record<string, number> = {
+  doer_rating_bonus: 5, // small thank-you for leaving a rating
+};
+
 router.post('/award-ep-bonus', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const { errandId, userId, bonus, reason } = req.body;
+    const { errandId, userId, reason } = req.body;
     const requestUserId = parseInt(req.userId || '0', 10);
+    const errand = parseInt(errandId, 10);
 
-    // User can only award themselves
-    if (userId !== requestUserId) {
+    // A user can only award themselves.
+    if (parseInt(userId, 10) !== requestUserId) {
       return res.status(403).json({ error: 'Cannot award EP to another user' });
     }
 
-    // Award bonus EP
+    // The amount comes from the server, never the request body.
+    const amount = EP_BONUS_RULES[reason as string];
+    if (!amount) {
+      return res.status(400).json({ error: 'Unknown bonus reason' });
+    }
+    if (!errand) {
+      return res.status(400).json({ error: 'errandId required' });
+    }
+
+    // The bonus is earned by rating this errand — require the rating to exist.
+    const rated = await db.query(
+      'SELECT 1 FROM ratings WHERE errand_id = $1 AND rater_id = $2 LIMIT 1',
+      [errand, requestUserId]
+    );
+    if (rated.rows.length === 0) {
+      return res.status(400).json({ error: 'This bonus requires a submitted rating for the errand' });
+    }
+
+    // Pay at most once per errand per reason — stops the call being replayed to farm EP.
+    const already = await db.query(
+      'SELECT 1 FROM wallet_transactions WHERE user_id = $1 AND errand_id = $2 AND description = $3 LIMIT 1',
+      [requestUserId, errand, `${reason} bonus`]
+    );
+    if (already.rows.length > 0) {
+      return res.json({ success: true, message: 'Bonus already awarded', data: { bonusEP: 0 } });
+    }
+
     await db.query(
       `UPDATE users SET errandify_points = errandify_points + $1, updated_at = NOW() WHERE id = $2`,
-      [bonus, userId]
+      [amount, requestUserId]
     );
-
-    // Log transaction
     await db.query(
       `INSERT INTO wallet_transactions (user_id, type, amount, description, errand_id, created_at)
        VALUES ($1, $2, $3, $4, $5, NOW())`,
-      [userId, 'ep_earned', bonus, `${reason} bonus`, errandId]
+      [requestUserId, 'ep_earned', amount, `${reason} bonus`, errand]
     );
 
     res.json({
       success: true,
       message: 'Bonus EP awarded',
-      data: { bonusEP: bonus },
+      data: { bonusEP: amount },
     });
   } catch (error) {
     console.error('Award bonus EP error:', error);
