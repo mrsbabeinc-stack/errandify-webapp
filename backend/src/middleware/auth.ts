@@ -3,6 +3,30 @@ import jwt from 'jsonwebtoken';
 import { config } from '../config.js';
 import db from '../db.js';
 
+// One global definition of req.user for the whole app. It used to live in
+// adminAuth.ts (now dead) as { id: number; roles: string[]; current_role },
+// which described a runtime shape nothing ever produced — authMiddleware below
+// is the ONLY thing that sets req.user, and it sets { id: string, email }. That
+// mismatch — a redeclared `user` here as { id: string } against the global
+// { id: number } — is what made every AuthRequest handler fail router.get/post
+// overload resolution (~434 errors). One truthful definition fixes them all.
+//
+// The admin-only fields are optional because nothing live populates them; they
+// are kept so the (unused) admin guards still type-check.
+declare global {
+  namespace Express {
+    interface Request {
+      user?: {
+        id: string;
+        email: string;
+        roles?: string[];
+        current_role?: string;
+        admin_access_level?: string;
+      };
+    }
+  }
+}
+
 export interface AuthRequest extends Request {
   userId?: string;
   // The company the authenticated user belongs to. Populated by attachCompanyId
@@ -10,10 +34,8 @@ export interface AuthRequest extends Request {
   // that middleware existed nothing ever set it, so every one silently resolved
   // company 0.
   companyId?: string;
-  user?: {
-    id: string;
-    email: string;
-  };
+  // `user` is inherited from the global Express.Request augmentation above —
+  // deliberately not redeclared here, so the two cannot drift apart again.
 }
 
 // Update user's last active timestamp (fire and forget, don't block)
