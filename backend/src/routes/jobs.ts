@@ -242,7 +242,7 @@ router.post('/:taskId/complete', authMiddleware, async (req: AuthRequest, res: R
     });
 
     // Schedule rating reminder for doer (non-blocking)
-    scheduleRatingReminder(taskId, doerId).catch((error) => {
+    scheduleRatingReminder(parseInt(String(taskId), 10), doerId).catch((error) => {
       console.error('Failed to schedule rating reminder:', error);
       // Non-blocking - don't fail the response
     });

@@ -14,7 +14,7 @@ import bcrypt from 'bcrypt';
 const router = Router();
 
 // Get user profile
-router.get('/profile', authMiddleware, async (req, res) => {
+router.get('/profile', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const result = await db.query(
       'SELECT id, user_id, display_name, email, mobile, role, formatted_user_id, profile_image_url, alias, bio, certificates, average_rating, total_ratings, criminal_conviction, singpass_id, gender, errandify_points FROM users WHERE id = $1',
@@ -98,13 +98,13 @@ router.get('/profile', authMiddleware, async (req, res) => {
 });
 
 // Update user profile
-router.put('/profile', authMiddleware, async (req, res) => {
+router.put('/profile', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { display_name, mobile, email, alias, bio, profile_image, certificates } = req.body;
     const userId = req.userId;
 
     let updateFields = [];
-    let updateValues = [userId];
+    let updateValues: any[] = [userId];
     let paramCount = 1;
 
     if (display_name) {
@@ -179,7 +179,7 @@ router.put('/profile', authMiddleware, async (req, res) => {
 });
 
 // Upload profile photo
-router.post('/profile-photo', authMiddleware, async (req, res) => {
+router.post('/profile-photo', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     // For now, just accept the upload without storing (frontend stores as data URL)
     // In production, you would save to cloud storage (S3, etc.)
@@ -197,7 +197,7 @@ router.post('/profile-photo', authMiddleware, async (req, res) => {
 });
 
 // Update category preferences
-router.patch('/categories', authMiddleware, async (req, res) => {
+router.patch('/categories', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { categories } = req.body;
 
@@ -270,7 +270,7 @@ router.patch('/preferences', authMiddleware, async (req: AuthRequest, res) => {
     const { notification_preferences, email_frequency, email_preferences } = req.body;
 
     const updateFields = [];
-    const updateValues = [userId];
+    const updateValues: any[] = [userId];
     let paramCount = 1;
 
     if (notification_preferences !== undefined) {
@@ -359,7 +359,7 @@ router.get('/:id/public-profile', authMiddleware, async (req: AuthRequest, res) 
   }
 });
 
-router.get('/:id/ratings', async (req, res) => {
+router.get('/:id/ratings', async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const userId = parseInt(id, 10);
@@ -636,7 +636,7 @@ router.get('/referrals/stats', authMiddleware, async (req: AuthRequest, res: any
 });
 
 // POST /api/users/favorite/:userId - Add/remove user from favorites
-router.post('/favorite/:userId', authMiddleware, async (req, res) => {
+router.post('/favorite/:userId', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const currentUserId = parseInt(req.userId || '0', 10);
     const favoriteUserId = parseInt(req.params.userId, 10);

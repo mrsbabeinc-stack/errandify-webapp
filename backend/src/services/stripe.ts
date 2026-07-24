@@ -238,7 +238,7 @@ export const stripeService = {
       console.log(`[Stripe] Transfer created: ${transfer.id}`);
       return {
         id: transfer.id,
-        status: transfer.status,
+        status: (transfer as any).status,
         amount: transfer.amount / 100,
       };
     } catch (error) {
@@ -358,7 +358,7 @@ export const stripeService = {
 
       await stripe.accounts.update(stripeAccountId, {
         default_external_account: externalAccountId,
-      });
+      } as any);
 
       console.log(`[Stripe] Default payout account updated`);
       return {
@@ -386,7 +386,7 @@ export const stripeService = {
         last4: bankAccount.last4,
         fingerprint: bankAccount.fingerprint,
         status: bankAccount.status,
-        verified: bankAccount.verified,
+        verified: (bankAccount as any).verified,
       };
     } catch (error) {
       console.error('[Stripe] Failed to get bank account details:', error);

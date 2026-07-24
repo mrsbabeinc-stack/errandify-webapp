@@ -1,4 +1,4 @@
-import { query } from '../db.js';
+import db from '../db.js';
 
 export interface Landmark {
   id: number;
@@ -21,7 +21,7 @@ export async function searchLandmark(searchTerm: string): Promise<Landmark | nul
 
   try {
     // First: Exact match
-    let result = await query(
+    let result = await db.query(
       `SELECT * FROM landmarks WHERE LOWER(name) = $1 LIMIT 1`,
       [searchLower]
     );
@@ -32,7 +32,7 @@ export async function searchLandmark(searchTerm: string): Promise<Landmark | nul
     }
 
     // Second: Check alternate names (simple array match)
-    result = await query(
+    result = await db.query(
       `SELECT * FROM landmarks 
        WHERE alternate_names IS NOT NULL 
        AND $1 = ANY(alternate_names) 
@@ -46,7 +46,7 @@ export async function searchLandmark(searchTerm: string): Promise<Landmark | nul
     }
 
     // Third: Partial match (LIKE)
-    result = await query(
+    result = await db.query(
       `SELECT * FROM landmarks 
        WHERE LOWER(name) LIKE $1 
        LIMIT 1`,
@@ -73,7 +73,7 @@ export async function getLandmarkByPostal(postalCode: string): Promise<Landmark 
   if (!postalCode || postalCode.length !== 6) return null;
 
   try {
-    const result = await query(
+    const result = await db.query(
       `SELECT * FROM landmarks WHERE postal_code = $1 LIMIT 1`,
       [postalCode]
     );
@@ -94,7 +94,7 @@ export async function recordLandmarkUsage(userInput: string, foundPostal: string
   const userInputLower = userInput.toLowerCase().trim();
 
   try {
-    await query(
+    await db.query(
       `UPDATE landmarks 
        SET alternate_names = array_append(alternate_names, $1),
            updated_at = NOW()

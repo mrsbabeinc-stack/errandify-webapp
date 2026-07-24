@@ -38,10 +38,7 @@ export async function assessUserVulnerability(userId: number): Promise<Vulnerabi
     const prompt = `Assess vulnerability (0.0-1.0): ${user.total_jobs_completed || 0} jobs, rating ${user.average_rating || 'N/A'}, needs: ${capabilities.vulnerable_support_needs || 'none'}.
 Return JSON: {"score": number, "riskFactors": [], "supportNeeded": []}`;
 
-    const response = await QwenAI.call({
-      model: 'qwen-turbo',
-      messages: [{ role: 'user', content: prompt }],
-    });
+    const response = await QwenAI.call([{ role: 'user', content: prompt }]);
 
     let assessment: any = { score: 0.3, riskFactors: [], supportNeeded: [] };
     try {

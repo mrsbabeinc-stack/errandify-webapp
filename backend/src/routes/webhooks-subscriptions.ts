@@ -34,7 +34,7 @@ router.post('/stripe/subscriptions', async (req: Request, res: Response) => {
     let event;
     try {
       event = stripe.webhooks.constructEvent(
-        req.rawBody || JSON.stringify(req.body),
+        (req as any).rawBody || JSON.stringify(req.body),
         signature,
         STRIPE_WEBHOOK_SECRET
       );
@@ -169,7 +169,7 @@ async function handlePaymentSucceeded(invoice: any): Promise<void> {
       [invoice.subscription]
     );
 
-    if (subscription.length > 0) {
+    if (subscription.rows.length > 0) {
       // Create billing history record
       await db.query(
         `INSERT INTO subscription_billing_history
@@ -200,7 +200,7 @@ async function handlePaymentFailed(invoice: any): Promise<void> {
       [invoice.subscription]
     );
 
-    if (subscription.length > 0) {
+    if (subscription.rows.length > 0) {
       // Create billing history record
       await db.query(
         `INSERT INTO subscription_billing_history

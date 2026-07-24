@@ -21,12 +21,7 @@ router.get('/', async (req: Request, res: Response) => {
       ORDER BY category, id
     `;
 
-    const faqs = await new Promise<FAQ[]>((resolve, reject) => {
-      db.query(query, (err: any, results: any) => {
-        if (err) reject(err);
-        else resolve(results);
-      });
-    });
+    const faqs: FAQ[] = (await db.query(query)).rows;
 
     res.json({
       success: true,
@@ -53,12 +48,7 @@ router.get('/category/:category', async (req: Request, res: Response) => {
       ORDER BY id
     `;
 
-    const faqs = await new Promise<FAQ[]>((resolve, reject) => {
-      db.query(query, [category], (err: any, results: any) => {
-        if (err) reject(err);
-        else resolve(results);
-      });
-    });
+    const faqs: FAQ[] = (await db.query(query, [category])).rows;
 
     res.json({
       success: true,
@@ -84,12 +74,7 @@ router.get('/:id', async (req: Request, res: Response) => {
       WHERE id = ? AND is_active = true
     `;
 
-    const faq = await new Promise<FAQ | null>((resolve, reject) => {
-      db.query(query, [id], (err: any, results: any) => {
-        if (err) reject(err);
-        else resolve(results[0] || null);
-      });
-    });
+    const faq: FAQ | null = (await db.query(query, [id])).rows[0] || null;
 
     if (!faq) {
       return res.status(404).json({
@@ -131,12 +116,7 @@ router.get('/search/:query', async (req: Request, res: Response) => {
 
     const searchTerm = `%${query}%`;
 
-    const faqs = await new Promise<FAQ[]>((resolve, reject) => {
-      db.query(searchQuery, [searchTerm, searchTerm, searchTerm], (err: any, results: any) => {
-        if (err) reject(err);
-        else resolve(results);
-      });
-    });
+    const faqs: FAQ[] = (await db.query(searchQuery, [searchTerm, searchTerm, searchTerm])).rows;
 
     res.json({
       success: true,

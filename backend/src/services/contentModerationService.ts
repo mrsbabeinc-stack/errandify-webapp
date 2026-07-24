@@ -62,17 +62,14 @@ export async function moderateContent(
 
     // Layer 3: Qwen AI sentiment analysis (async, but quick)
     try {
-      const aiResponse = await QwenAI.call({
-        model: 'qwen-turbo',
-        messages: [
+      const aiResponse = await QwenAI.call([
           {
             role: 'user',
             content: `Analyze content safety (${context}): "${content.substring(0, 500)}"
 
 Return JSON: {"toxicity": 0.0-1.0, "isScam": true/false, "isCoercion": true/false, "isSexual": true/false, "reason": ""}`,
           },
-        ],
-      });
+        ]);
 
       let aiResult: any = { toxicity: 0, isScam: false, isCoercion: false, isSexual: false };
       try {
@@ -219,9 +216,7 @@ export async function moderatePhotoContent(
 
     // Call Qwen AI for image analysis
     try {
-      const aiResponse = await QwenAI.call({
-        model: 'qwen-vision',
-        messages: [
+      const aiResponse = await QwenAI.call([
           {
             role: 'user',
             content: `Analyze image for safety (${context}). Return JSON only:
@@ -237,8 +232,7 @@ export async function moderatePhotoContent(
 
 Image URL: ${photoUrl}`,
           },
-        ],
-      });
+        ]);
 
       let aiResult: any = {
         hasInappropriate: false,

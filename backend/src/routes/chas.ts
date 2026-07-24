@@ -191,7 +191,7 @@ router.get('/eligibility/:userId', async (req: Request, res: Response) => {
 
     const user = result.rows[0];
     const chasColor = user.chas_card_color || 'none';
-    const isEligible = user.chas_verified && chasInfo[chasColor]?.eligible;
+    const isEligible = user.chas_verified && chasCardInfo[chasColor]?.eligible;
 
     res.json({
       success: true,

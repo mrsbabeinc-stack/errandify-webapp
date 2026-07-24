@@ -75,15 +75,12 @@ async function getOpenErrands(limit: number = 50) {
 
 async function calculateMatchScore(doerProfile: DoerProfile, errand: any): Promise<number> {
   try {
-    const response = await QwenAI.call({
-      model: 'qwen-turbo',
-      messages: [
+    const response = await QwenAI.call([
         {
           role: 'user',
           content: `Score match 0.0-1.0: Doer rating ${doerProfile.rating}, ${doerProfile.completedJobs} jobs in ${Object.keys(doerProfile.completedCategories).join(',')}. Errand: ${errand.category} \$${errand.budget}. Return only number.`,
         },
-      ],
-    });
+      ]);
 
     const score = parseFloat(response.trim());
     if (isNaN(score) || score < 0 || score > 1) return 0.5;

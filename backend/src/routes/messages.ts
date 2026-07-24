@@ -193,7 +193,7 @@ router.post('/tasks/:taskId/send', authMiddleware, async (req: AuthRequest, res:
           recipientEmail,
           senderId,
           senderAlias,
-          taskId,
+          parseInt(String(taskId), 10),
           task.title,
           content
         );

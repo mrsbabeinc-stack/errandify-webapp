@@ -86,7 +86,7 @@ export async function getCommissionHistory(
     [companyId, limit, offset]
   );
 
-  return result;
+  return result.rows;
 }
 
 /**

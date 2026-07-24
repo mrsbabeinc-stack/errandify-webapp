@@ -1014,8 +1014,8 @@ router.post('/companies/:companyId/staff', isAdmin, async (req: Request, res: Re
     const { companyId } = req.params;
     const { name, email, role } = req.body;
     if (!name || !email || !role) return res.status(400).json({ error: 'Missing required fields' });
-    const result = await db.query('INSERT INTO company_staff (company_id, name, email, role, status, created_at) VALUES (?, ?, ?, ?, ?, NOW())', [companyId, name, email, role, 'active']);
-    res.status(201).json({ id: result.insertId, name, email, role });
+    const result = await db.query('INSERT INTO company_staff (company_id, name, email, role, status, created_at) VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING id', [companyId, name, email, role, 'active']);
+    res.status(201).json({ id: result.rows[0].id, name, email, role });
   } catch (error) {
     res.status(500).json({ error: 'Failed to add staff' });
   }
@@ -1038,8 +1038,8 @@ router.post('/companies/:companyId/api-keys', isAdmin, async (req: Request, res:
     const { companyId } = req.params;
     const { name } = req.body;
     const apiKey = `sk_live_${Math.random().toString(36).substr(2, 20)}`;
-    const result = await db.query('INSERT INTO api_keys (company_id, name, key, status, created_at) VALUES (?, ?, ?, ?, NOW())', [companyId, name, apiKey, 'active']);
-    res.status(201).json({ id: result.insertId, name, key: apiKey });
+    const result = await db.query('INSERT INTO api_keys (company_id, name, key, status, created_at) VALUES ($1, $2, $3, $4, NOW()) RETURNING id', [companyId, name, apiKey, 'active']);
+    res.status(201).json({ id: result.rows[0].id, name, key: apiKey });
   } catch (error) {
     res.status(500).json({ error: 'Failed to generate API key' });
   }
@@ -1062,8 +1062,8 @@ router.post('/companies/:companyId/webhooks', isAdmin, async (req: Request, res:
     const { companyId } = req.params;
     const { url, events } = req.body;
     if (!url || !events || events.length === 0) return res.status(400).json({ error: 'URL and events required' });
-    const result = await db.query('INSERT INTO webhooks (company_id, url, events, status, created_at) VALUES (?, ?, ?, ?, NOW())', [companyId, url, JSON.stringify(events), 'active']);
-    res.status(201).json({ id: result.insertId, url, events });
+    const result = await db.query('INSERT INTO webhooks (company_id, url, events, status, created_at) VALUES ($1, $2, $3, $4, NOW()) RETURNING id', [companyId, url, JSON.stringify(events), 'active']);
+    res.status(201).json({ id: result.rows[0].id, url, events });
   } catch (error) {
     res.status(500).json({ error: 'Failed to create webhook' });
   }
@@ -1157,8 +1157,8 @@ router.post('/alert-rules', isAdmin, async (req: Request, res: Response) => {
     if (!name || !condition || !channels || channels.length === 0) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
-    const result = await db.query('INSERT INTO alert_rules (name, condition, threshold, channels, enabled, created_at) VALUES (?, ?, ?, ?, ?, NOW())', [name, condition, threshold, JSON.stringify(channels), 1]);
-    res.status(201).json({ id: result.insertId, name, condition, threshold, channels });
+    const result = await db.query('INSERT INTO alert_rules (name, condition, threshold, channels, enabled, created_at) VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING id', [name, condition, threshold, JSON.stringify(channels), 1]);
+    res.status(201).json({ id: result.rows[0].id, name, condition, threshold, channels });
   } catch (error) {
     res.status(500).json({ error: 'Failed to create alert rule' });
   }

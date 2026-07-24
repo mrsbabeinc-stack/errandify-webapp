@@ -50,7 +50,9 @@ async function sendViaMailgun(to: string, subject: string, html: string, text?: 
       `https://api.mailgun.net/v3/${config.email.mailgunDomain}/messages`,
       {
         method: 'POST',
-        auth: `api:${config.email.mailgunApiKey}`,
+        headers: {
+          Authorization: `Basic ${Buffer.from(`api:${config.email.mailgunApiKey}`).toString('base64')}`,
+        },
         body: form as any,
       }
     );

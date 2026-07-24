@@ -70,10 +70,10 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
     const params: any[] = [];
     let paramIndex = 1;
 
-    const isMyOnly = myOnly === 'true' || myOnly === true;
-    const isAccepted = accepted === 'true' || accepted === true;
-    const isRecommended = recommended === 'true' || recommended === true;
-    const isMyAllocated = myAllocated === 'true' || myAllocated === true;
+    const isMyOnly = myOnly === 'true';
+    const isAccepted = accepted === 'true';
+    const isRecommended = recommended === 'true';
+    const isMyAllocated = myAllocated === 'true';
 
     if (isMyAllocated) {
       // Company staff: the errands allocated to me through company_orders.
