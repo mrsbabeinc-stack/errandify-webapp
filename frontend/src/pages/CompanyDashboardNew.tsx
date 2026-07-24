@@ -2058,17 +2058,17 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                 </div>
 
                 {/* Platinum Plan */}
-                <div style={{border: pricingBillingCycle === 'annual' ? '2px solid #6366f1' : '2px solid #6366f1', borderRadius: '16px', padding: '32px', textAlign: 'center', background: pricingBillingCycle === 'annual' ? 'linear-gradient(135deg, #f0f4ff 0%, #e8ecff 100%)' : 'linear-gradient(135deg, #f0f4ff 0%, #e8ecff 100%)', transition: 'all 0.3s ease', cursor: 'pointer', transform: pricingBillingCycle === 'annual' ? 'scale(1.02)' : 'scale(1)'}} onMouseEnter={(e) => {e.currentTarget.style.transform = pricingBillingCycle === 'annual' ? 'scale(1.05) translateY(-8px)' : 'translateY(-8px)'; e.currentTarget.style.boxShadow = pricingBillingCycle === 'annual' ? '0 16px 40px rgba(99, 102, 241, 0.25)' : '0 12px 32px rgba(99, 102, 241, 0.2)'}} onMouseLeave={(e) => {e.currentTarget.style.transform = pricingBillingCycle === 'annual' ? 'scale(1.02)' : 'translateY(0)'; e.currentTarget.style.boxShadow = pricingBillingCycle === 'annual' ? '0 8px 20px rgba(99, 102, 241, 0.15)' : 'none'}}>
+                <div style={{border: pricingBillingCycle === 'annual' ? '2px solid #F0A81E' : '2px solid #F0A81E', borderRadius: '16px', padding: '32px', textAlign: 'center', background: pricingBillingCycle === 'annual' ? 'linear-gradient(135deg, #FFF6E8 0%, #FFEFD6 100%)' : 'linear-gradient(135deg, #FFF6E8 0%, #FFEFD6 100%)', transition: 'all 0.3s ease', cursor: 'pointer', transform: pricingBillingCycle === 'annual' ? 'scale(1.02)' : 'scale(1)'}} onMouseEnter={(e) => {e.currentTarget.style.transform = pricingBillingCycle === 'annual' ? 'scale(1.05) translateY(-8px)' : 'translateY(-8px)'; e.currentTarget.style.boxShadow = pricingBillingCycle === 'annual' ? '0 16px 40px rgba(240, 168, 30, 0.25)' : '0 12px 32px rgba(240, 168, 30, 0.2)'}} onMouseLeave={(e) => {e.currentTarget.style.transform = pricingBillingCycle === 'annual' ? 'scale(1.02)' : 'translateY(0)'; e.currentTarget.style.boxShadow = pricingBillingCycle === 'annual' ? '0 8px 20px rgba(240, 168, 30, 0.15)' : 'none'}}>
                   <div style={{marginBottom: '24px'}}>
                     <p style={{margin: '0 0 12px 0', fontSize: '28px'}}>💎</p>
-                    <h3 style={{margin: '0 0 8px 0', fontSize: '24px', fontWeight: '700', color: '#6366f1'}}>Platinum</h3>
+                    <h3 style={{margin: '0 0 8px 0', fontSize: '24px', fontWeight: '700', color: '#F0A81E'}}>Platinum</h3>
                     <p style={{margin: '0 0 6px 0', fontSize: '14px', color: '#666', fontWeight: '500'}}>For enterprise scale</p>
                     <p style={{margin: 0, fontSize: '13px', color: '#999', fontWeight: '600'}}>👥 Unlimited staff</p>
                   </div>
 
                   <div style={{background: pricingBillingCycle === 'annual' ? '#f8f9ff' : 'white', borderRadius: '12px', padding: '20px', marginBottom: '20px', border: pricingBillingCycle === 'annual' ? '1px solid #ddd9ff' : 'none'}}>
                     <p style={{margin: '0 0 6px 0', fontSize: '12px', color: '#999', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px'}}>PRICE</p>
-                    <p style={{margin: '0 0 2px 0', fontSize: '36px', fontWeight: '700', color: '#6366f1'}}>
+                    <p style={{margin: '0 0 2px 0', fontSize: '36px', fontWeight: '700', color: '#F0A81E'}}>
                       SGD {pricingBillingCycle === 'annual' ? '1,456' : '148'}
                     </p>
                     <p style={{margin: 0, fontSize: '13px', color: '#666', fontWeight: '500'}}>per {pricingBillingCycle === 'annual' ? 'year' : 'month'}</p>
@@ -2101,7 +2101,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                   ) : (
                     <button
                       onClick={() => setShowUpgradeModal({tier: 'platinum', billingType: pricingBillingCycle})}
-                      style={{width: '100%', padding: '12px 16px', background: pricingBillingCycle === 'annual' ? '#6366f1' : 'white', border: pricingBillingCycle === 'annual' ? 'none' : '2px solid #6366f1', borderRadius: '8px', fontWeight: '700', fontSize: '14px', color: pricingBillingCycle === 'annual' ? 'white' : '#6366f1', cursor: 'pointer', transition: 'all 0.2s'}} onMouseEnter={(e) => e.currentTarget.style.background = pricingBillingCycle === 'annual' ? '#818cf8' : '#f0f4ff'} onMouseLeave={(e) => e.currentTarget.style.background = pricingBillingCycle === 'annual' ? '#6366f1' : 'white'}>
+                      style={{width: '100%', padding: '12px 16px', background: pricingBillingCycle === 'annual' ? '#F0A81E' : 'white', border: pricingBillingCycle === 'annual' ? 'none' : '2px solid #F0A81E', borderRadius: '8px', fontWeight: '700', fontSize: '14px', color: pricingBillingCycle === 'annual' ? 'white' : '#F0A81E', cursor: 'pointer', transition: 'all 0.2s'}} onMouseEnter={(e) => e.currentTarget.style.background = pricingBillingCycle === 'annual' ? '#F5C542' : '#FFF6E8'} onMouseLeave={(e) => e.currentTarget.style.background = pricingBillingCycle === 'annual' ? '#F0A81E' : 'white'}>
                         Upgrade to Platinum
                       </button>
                   )}
@@ -3831,19 +3831,19 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                 <>
                   <div style={{marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid #FFD9B3'}}>
                     <p style={{margin: '0 0 4px 0', fontSize: '14px', fontWeight: '700', color: '#333'}}>💰 Commission Rate</p>
-                    <p style={{margin: 0, fontSize: '16px', fontWeight: '800', color: '#666'}}>{company?.subscription_tier === 'silver' ? '18%' : '17%'} → <span style={{color: '#6366f1', fontSize: '18px'}}>16%</span> <span style={{fontSize: '12px', color: '#22c55e', fontWeight: '700'}}>+{company?.subscription_tier === 'silver' ? '2' : '1'}% SAVE</span></p>
+                    <p style={{margin: 0, fontSize: '16px', fontWeight: '800', color: '#666'}}>{company?.subscription_tier === 'silver' ? '18%' : '17%'} → <span style={{color: '#F0A81E', fontSize: '18px'}}>16%</span> <span style={{fontSize: '12px', color: '#22c55e', fontWeight: '700'}}>+{company?.subscription_tier === 'silver' ? '2' : '1'}% SAVE</span></p>
                   </div>
                   <div style={{marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid #FFD9B3'}}>
                     <p style={{margin: '0 0 4px 0', fontSize: '14px', fontWeight: '700', color: '#333'}}>📊 Ad Credits</p>
-                    <p style={{margin: 0, fontSize: '16px', fontWeight: '800', color: '#666'}}>SGD {company?.subscription_tier === 'silver' ? '50' : '200'}/month → <span style={{color: '#6366f1', fontSize: '18px'}}>SGD 500/month</span> <span style={{fontSize: '12px', color: '#22c55e', fontWeight: '700'}}>+SGD {company?.subscription_tier === 'silver' ? '450' : '300'}</span></p>
+                    <p style={{margin: 0, fontSize: '16px', fontWeight: '800', color: '#666'}}>SGD {company?.subscription_tier === 'silver' ? '50' : '200'}/month → <span style={{color: '#F0A81E', fontSize: '18px'}}>SGD 500/month</span> <span style={{fontSize: '12px', color: '#22c55e', fontWeight: '700'}}>+SGD {company?.subscription_tier === 'silver' ? '450' : '300'}</span></p>
                   </div>
                   <div style={{marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid #FFD9B3'}}>
                     <p style={{margin: '0 0 4px 0', fontSize: '14px', fontWeight: '700', color: '#333'}}>⚡ EP Multiplier</p>
-                    <p style={{margin: 0, fontSize: '16px', fontWeight: '800', color: '#666'}}>{company?.subscription_tier === 'silver' ? '2x' : '3x'} → <span style={{color: '#6366f1', fontSize: '18px'}}>5x</span> <span style={{fontSize: '12px', color: '#22c55e', fontWeight: '700'}}>+{company?.subscription_tier === 'silver' ? '150' : '67'}%</span></p>
+                    <p style={{margin: 0, fontSize: '16px', fontWeight: '800', color: '#666'}}>{company?.subscription_tier === 'silver' ? '2x' : '3x'} → <span style={{color: '#F0A81E', fontSize: '18px'}}>5x</span> <span style={{fontSize: '12px', color: '#22c55e', fontWeight: '700'}}>+{company?.subscription_tier === 'silver' ? '150' : '67'}%</span></p>
                   </div>
                   <div>
                     <p style={{margin: '0 0 4px 0', fontSize: '14px', fontWeight: '700', color: '#333'}}>👥 Team Members</p>
-                    <p style={{margin: 0, fontSize: '16px', fontWeight: '800', color: '#666'}}>{company?.subscription_tier === 'silver' ? '5' : '15'} people → <span style={{color: '#6366f1', fontSize: '18px'}}>Unlimited</span> <span style={{fontSize: '12px', color: '#22c55e', fontWeight: '700'}}>+∞</span></p>
+                    <p style={{margin: 0, fontSize: '16px', fontWeight: '800', color: '#666'}}>{company?.subscription_tier === 'silver' ? '5' : '15'} people → <span style={{color: '#F0A81E', fontSize: '18px'}}>Unlimited</span> <span style={{fontSize: '12px', color: '#22c55e', fontWeight: '700'}}>+∞</span></p>
                   </div>
                 </>
               )}

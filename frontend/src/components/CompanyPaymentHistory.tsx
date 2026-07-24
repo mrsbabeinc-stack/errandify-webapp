@@ -569,7 +569,7 @@ Thank you for your business!
         }
 
         .card.balance {
-          background: linear-gradient(135deg, #E3F2FD, #BBDEFB);
+          background: linear-gradient(135deg, #FFF3E4, #FFE0C2);
           border-left: 4px solid #2196F3;
         }
 
@@ -1173,7 +1173,7 @@ Thank you for your business!
         }
 
         .btn-small.btn-default {
-          background: #5BA3D0;
+          background: #E08A3C;
           color: white;
           padding: 5px 12px;
         }

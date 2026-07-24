@@ -390,7 +390,7 @@ const CompanyAdvertisingManagement: React.FC = () => {
             </div>
             <div style={{background: 'white', padding: '12px', borderRadius: '8px', border: '1px solid #FFE5D9'}}>
               <div style={{fontSize: '12px', color: '#666', marginBottom: '4px'}}>Avg CTR</div>
-              <div style={{fontSize: '13px', fontWeight: '600', color: '#5BA3D0'}}>
+              <div style={{fontSize: '13px', fontWeight: '600', color: '#E08A3C'}}>
                 {(filteredAds.reduce((sum, ad) => sum + ad.ctr, 0) / (filteredAds.length || 1)).toFixed(1)}%
               </div>
               <div style={{fontSize: '11px', color: '#999', marginTop: '4px'}}>
