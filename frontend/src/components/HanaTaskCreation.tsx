@@ -89,6 +89,7 @@ export default function HanaTaskCreation({
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const recognitionRef = useRef<any>(null);
   const speakAudioRef = useRef<HTMLAudioElement | null>(null);
   const speakSeqRef = useRef(0);
 
@@ -485,63 +486,64 @@ export default function HanaTaskCreation({
     }
   };
 
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
-      audioChunksRef.current = [];
-
-      mediaRecorder.ondataavailable = (event) => {
-        audioChunksRef.current.push(event.data);
-      };
-
-      mediaRecorder.start();
-      setIsRecording(true);
-    } catch (err) {
-      console.error('Microphone access denied:', err);
-      alert('Please allow microphone access to use voice input');
+  // Voice input via the browser's on-device speech recognition. The old flow
+  // recorded audio and POSTed it to /api/ai/transcribe, but that endpoint was
+  // never implemented (404), so voice-to-form never worked. Web Speech API
+  // transcribes locally — nothing to build server-side, and the user's voice
+  // never leaves the device (the PDPA-preferable choice for voice data).
+  const startRecording = () => {
+    const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) {
+      alert("Voice input isn't supported in this browser. Please type your errand instead.");
+      return;
     }
-  };
+    try {
+      const recognition = new SR();
+      recognition.lang = 'en-SG';
+      recognition.interimResults = true;
+      recognition.continuous = false;
+      recognition.maxAlternatives = 1;
+      recognitionRef.current = recognition;
 
-  const stopRecording = async () => {
-    if (!mediaRecorderRef.current) return;
-
-    mediaRecorderRef.current.stop();
-    setIsRecording(false);
-
-    mediaRecorderRef.current.onstop = async () => {
-      const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
-
-      // Convert to base64 and send to Qwen API for transcription
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64Audio = (reader.result as string).split(',')[1];
-
-        try {
-          const response = await axios.post(
-            `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/ai/transcribe`,
-            { audio: base64Audio }
-          );
-
-          const transcribedText = response.data.data.text;
-          setInput(transcribedText);
-
-          // Auto-submit the transcribed text
-          setTimeout(() => {
-            handleSendMessage({ preventDefault: () => {} } as any);
-          }, 500);
-        } catch (err) {
-          console.error('Transcription failed:', err);
-          alert('Could not transcribe audio. Please try again.');
+      let finalText = '';
+      recognition.onresult = (event: any) => {
+        let interim = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const t = event.results[i][0].transcript;
+          if (event.results[i].isFinal) finalText += t;
+          else interim += t;
+        }
+        // Live-update the box as they speak.
+        setInput((finalText + interim).trim());
+      };
+      recognition.onerror = (e: any) => {
+        console.error('Speech recognition error:', e?.error);
+        setIsRecording(false);
+        if (e?.error === 'not-allowed' || e?.error === 'service-not-allowed') {
+          alert('Please allow microphone access to use voice input.');
+        }
+      };
+      recognition.onend = () => {
+        setIsRecording(false);
+        const text = finalText.trim();
+        if (text) {
+          setInput(text);
+          // Give React a beat to commit the value, then submit — same as before.
+          setTimeout(() => handleSendMessage({ preventDefault: () => {} } as any), 300);
         }
       };
 
-      reader.readAsDataURL(audioBlob);
-    };
+      recognition.start();
+      setIsRecording(true);
+    } catch (err) {
+      console.error('Could not start voice input:', err);
+      setIsRecording(false);
+    }
+  };
 
-    // Stop all tracks
-    mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+  const stopRecording = () => {
+    try { recognitionRef.current?.stop(); } catch { /* already stopped */ }
+    setIsRecording(false);
   };
 
   if (!isOpen) return null;
