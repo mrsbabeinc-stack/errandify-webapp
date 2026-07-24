@@ -19,10 +19,12 @@ export default function RoleToggle({ currentRole, onRoleChange }: RoleToggleProp
   };
 
   return (
-    <div className="flex gap-2 bg-gradient-to-r from-orange-50 to-red-50 rounded-xl shadow-md border border-orange-200 p-1.5">
+    // Compact paddings/gaps below md so the admin 3-button case fits a phone
+    // row without colliding with Logout; full size from md up.
+    <div className="flex gap-1 md:gap-2 bg-gradient-to-r from-orange-50 to-red-50 rounded-xl shadow-md border border-orange-200 p-1 md:p-1.5">
       <button
         onClick={() => onRoleChange('asker')}
-        className={`px-4 py-2 rounded-lg font-bold text-sm transition-all duration-200 ${
+        className={`px-2.5 md:px-4 py-1.5 md:py-2 rounded-lg font-bold text-xs md:text-sm whitespace-nowrap transition-all duration-200 ${
           currentRole === 'asker'
             ? 'bg-gradient-to-r from-errandify-orange to-orange-400 text-white shadow-lg scale-105'
             : 'bg-white text-gray-700 hover:bg-orange-100 hover:text-errandify-orange'
@@ -32,7 +34,7 @@ export default function RoleToggle({ currentRole, onRoleChange }: RoleToggleProp
       </button>
       <button
         onClick={() => onRoleChange('doer')}
-        className={`px-4 py-2 rounded-lg font-bold text-sm transition-all duration-200 ${
+        className={`px-2.5 md:px-4 py-1.5 md:py-2 rounded-lg font-bold text-xs md:text-sm whitespace-nowrap transition-all duration-200 ${
           currentRole === 'doer'
             ? 'bg-gradient-to-r from-errandify-orange to-orange-400 text-white shadow-lg scale-105'
             : 'bg-white text-gray-700 hover:bg-orange-100 hover:text-errandify-orange'
@@ -45,7 +47,7 @@ export default function RoleToggle({ currentRole, onRoleChange }: RoleToggleProp
       {isAdmin && (
         <button
           onClick={handleAdminClick}
-          className="px-4 py-2 rounded-lg font-bold text-sm transition-all duration-200 bg-gray-800 text-white hover:bg-gray-900 hover:shadow-lg"
+          className="px-2.5 md:px-4 py-1.5 md:py-2 rounded-lg font-bold text-xs md:text-sm whitespace-nowrap transition-all duration-200 bg-gray-800 text-white hover:bg-gray-900 hover:shadow-lg"
           title="Enter professional admin dashboard"
         >
           ⚙️ Admin

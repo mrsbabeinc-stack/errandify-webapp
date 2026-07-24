@@ -319,13 +319,15 @@ const StaffLeaveApplication: React.FC = () => {
                 📅 Date Range *
               </label>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div>
+                <div style={{ minWidth: 0 }}>
                   <input
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
                     style={{
                       width: '100%',
+                      minWidth: 0,
+                      boxSizing: 'border-box',
                       padding: '12px',
                       border: '2px solid #FFD9B3',
                       borderRadius: '8px',
@@ -335,13 +337,15 @@ const StaffLeaveApplication: React.FC = () => {
                     placeholder="From"
                   />
                 </div>
-                <div>
+                <div style={{ minWidth: 0 }}>
                   <input
                     type="date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
                     style={{
                       width: '100%',
+                      minWidth: 0,
+                      boxSizing: 'border-box',
                       padding: '12px',
                       border: '2px solid #FFD9B3',
                       borderRadius: '8px',

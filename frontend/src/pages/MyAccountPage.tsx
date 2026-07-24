@@ -1162,7 +1162,7 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
     >
       {/* Main Content */}
       <div className="flex flex-col min-h-screen bg-errandify-bg">
-      <main className="flex-1 pb-20">
+      <main className="flex-1 pb-28">
 
       {/* MAIN CONTENT */}
       <div className="max-w-6xl mx-auto px-4 py-6 w-full">
@@ -1185,8 +1185,12 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
           columns, two rows, everything visible, identical tile shape so the
           two screens read as one product.
         */}
+        {/* Static on phones: a sticky 4x2 grid pinned itself 80px down and the
+            tab's own content scrolled underneath it, so the tiles read as if
+            they were overlapping the cards. Sticky only kicks in from md up,
+            where there's room for it. Desktop layout unchanged. */}
         <div
-          className="sticky top-20 z-40 mb-3"
+          className="static md:sticky md:top-20 md:z-40 mb-3"
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(4, 1fr)',
@@ -3198,8 +3202,11 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
               </div>
             </div>
 
-            {/* Two-column layout: Help & Need - BIG BUTTONS FOR ELDERLY */}
-            <div className="grid grid-cols-2 gap-3">
+            {/* Help & Need. Stacked on phones — side-by-side, each holding a
+                4-wide grid of 48px emoji, overflowed its column and the labels
+                (hover-only tooltips) never showed on touch. From md up it stays
+                the original two columns. */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {/* I CAN HELP COLUMN */}
               <div className="bg-green-50 rounded-lg p-3 border-4 border-green-400">
                 <p className="text-lg font-bold text-green-700 mb-3">💪 I Can Help</p>
@@ -3224,14 +3231,19 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                 <div className="grid grid-cols-4 gap-2">
                   {ALL_16_CATEGORIES.map(category => (
                     !selectedCategoriesHelp.includes(category.id) && (
-                      <div key={category.id} className="relative group">
+                      <div key={category.id} className="relative group flex flex-col items-center">
                         <button
                           onClick={() => toggleCategoryHelp(category.id)}
-                          className="text-5xl p-2 hover:scale-110 transition active:scale-95 rounded-lg hover:bg-green-200 w-full"
+                          className="text-3xl md:text-5xl p-1 md:p-2 hover:scale-110 transition active:scale-95 rounded-lg hover:bg-green-200 w-full leading-none"
                         >
                           {category.icon}
                         </button>
-                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm font-bold rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                        {/* Visible label on phones — the hover tooltip never
+                            appears on touch, so the emoji was unlabelled. */}
+                        <span className="md:hidden text-[10px] leading-tight font-semibold text-green-800 text-center mt-0.5 line-clamp-2">
+                          {category.name}
+                        </span>
+                        <div className="hidden md:block absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm font-bold rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
                           {category.name}
                           <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
                         </div>
@@ -3265,14 +3277,19 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                 <div className="grid grid-cols-4 gap-2">
                   {ALL_16_CATEGORIES.map(category => (
                     !selectedCategoriesNeed.includes(category.id) && (
-                      <div key={category.id} className="relative group">
+                      <div key={category.id} className="relative group flex flex-col items-center">
                         <button
                           onClick={() => toggleCategoryNeed(category.id)}
-                          className="text-5xl p-2 hover:scale-110 transition active:scale-95 rounded-lg hover:bg-blue-200 w-full"
+                          className="text-3xl md:text-5xl p-1 md:p-2 hover:scale-110 transition active:scale-95 rounded-lg hover:bg-blue-200 w-full leading-none"
                         >
                           {category.icon}
                         </button>
-                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm font-bold rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                        {/* Visible label on phones — the hover tooltip never
+                            appears on touch, so the emoji was unlabelled. */}
+                        <span className="md:hidden text-[10px] leading-tight font-semibold text-blue-800 text-center mt-0.5 line-clamp-2">
+                          {category.name}
+                        </span>
+                        <div className="hidden md:block absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm font-bold rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
                           {category.name}
                           <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
                         </div>
