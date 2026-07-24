@@ -1167,7 +1167,7 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
       <main className="flex-1 pb-28">
 
       {/* MAIN CONTENT */}
-      <div className="max-w-6xl mx-auto px-4 py-6 w-full">
+      <div className="max-w-6xl mx-auto px-4 pt-1 pb-6 w-full">
         {/* AD CAROUSEL + EVENT BANNER */}
         <div className="mb-4">
           <MyCompanyInvites />
@@ -1238,72 +1238,62 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
         {/* DASHBOARD - Always show first */}
         {activeSection === 'dashboard' && (
           <div className="space-y-2 px-2">
-            {/* COMPACT HERO - ID/Name on left, Rating on right */}
-            <div className="grid grid-cols-2 gap-2">
-              {/* LEFT - ID & NAME */}
-              {profileData && (
-                <div className="bg-gradient-to-br from-orange-100 to-amber-100 rounded-xl p-3 border-2 border-orange-300 shadow-md">
-                  <div className="space-y-2">
-                    <div className="bg-white rounded-lg p-2 border border-orange-200">
-                      <p className="text-xs font-bold text-orange-700">🎫 YOUR ID</p>
-                      <p className="text-sm font-mono font-bold text-orange-900">{profileData.formattedUserId || 'N/A'}</p>
-                    </div>
-                    <div className="bg-white rounded-lg p-2 border border-orange-200">
-                      <p className="text-xs font-bold text-orange-700">👤 NAME</p>
-                      <p className="text-sm font-bold text-orange-900">@{profileData.alias || profileData.name || 'N/A'}</p>
+            {/* UNIFIED PROFILE CARD — avatar + name + ID + rating in one header,
+                a light stats strip below. Replaces the old two-box ID/rating
+                split and the five heavy orange stat blocks. Uses div/span (not
+                <p>) so the global `p { font-size:14px !important }` rule can't
+                override the type scale. */}
+            {profileData && (
+              <div className="bg-white rounded-2xl border-2 border-orange-200 shadow-kampung overflow-hidden">
+                {/* Identity + rating header */}
+                <div className="bg-gradient-to-br from-orange-100 to-amber-50 p-3 flex items-center gap-3">
+                  {/* Avatar */}
+                  <div className="shrink-0">
+                    {profileImage ? (
+                      <img src={profileImage} alt="" className="w-14 h-14 rounded-full object-cover border-2 border-white shadow-md ring-2 ring-errandify-orange/40" />
+                    ) : (
+                      <div className="w-14 h-14 rounded-full bg-gradient-to-br from-errandify-orange to-orange-400 flex items-center justify-center text-white text-xl font-black shadow-md ring-2 ring-white">
+                        {(profileData.alias || profileData.name || 'U').charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+                  {/* Name + ID */}
+                  <div className="min-w-0 flex-1">
+                    <div className="text-base font-black text-errandify-brown truncate leading-tight">@{profileData.alias || profileData.name || 'N/A'}</div>
+                    <div className="text-[11px] font-mono font-bold text-errandify-orange-deep truncate mt-0.5">🎫 {profileData.formattedUserId || 'N/A'}</div>
+                    <div className="flex items-center gap-0.5 mt-1">
+                      {[...Array(5)].map((_, i) => (
+                        <span key={i} className="text-xs leading-none">{i < Math.floor(ratings.averageRating) ? '⭐' : '✨'}</span>
+                      ))}
                     </div>
                   </div>
-                </div>
-              )}
-
-              {/* RIGHT - RATING */}
-              <div className="bg-gradient-to-br from-errandify-orange-wash to-orange-100 rounded-xl p-3 border-2 border-errandify-orange/30 shadow-kampung-sm flex flex-col justify-center">
-                <div className="text-center">
-                  <p className="text-sm font-black text-errandify-brown mb-1">✨ People Love You!</p>
-                  {/* Guarded: the API returned null here whenever the average
-                      could not be computed, and .toFixed() on that crashed the
-                      whole account page rather than degrading to a dash. */}
-                  <p className="text-3xl font-black text-errandify-orange-deep">
-                    {typeof ratings.averageRating === 'number' ? ratings.averageRating.toFixed(1) : '—'}
-                  </p>
-                  <div className="flex gap-1 justify-center mb-1">
-                    {[...Array(5)].map((_, i) => (
-                      <span key={i} className="text-lg">{i < Math.floor(ratings.averageRating) ? '⭐' : '✨'}</span>
-                    ))}
+                  {/* Rating number — guarded: the API returns null when it can't
+                      compute an average, and .toFixed() on null crashed the page. */}
+                  <div className="text-center shrink-0 pl-3 border-l border-orange-200/70 self-stretch flex flex-col justify-center">
+                    <div className="text-2xl font-black text-errandify-orange-deep leading-none">
+                      {typeof ratings.averageRating === 'number' && ratings.averageRating > 0 ? ratings.averageRating.toFixed(1) : '—'}
+                    </div>
+                    <div className="text-[10px] font-bold text-gray-500 mt-1 whitespace-nowrap">{ratings.reviewCount} reviews</div>
                   </div>
-                  <p className="text-[11px] font-bold text-gray-600">({ratings.reviewCount} reviews)</p>
+                </div>
+                {/* Stats strip */}
+                <div className="grid grid-cols-5 divide-x divide-orange-100 border-t border-orange-100">
+                  {[
+                    { icon: '👥', val: ratings.reviewCount, label: 'Reviews' },
+                    { icon: '✅', val: profileData.completedTasks || 0, label: 'Errands' },
+                    { icon: '💰', val: '$' + (profileData.totalEarnings || 0), label: 'Earnings' },
+                    { icon: '⭐', val: profileData.errandifyPoints || 0, label: 'EP' },
+                    { icon: '❤️', val: (profileData as any).timesFavorited || 0, label: 'Trusted' },
+                  ].map((s, i) => (
+                    <div key={i} className="py-2.5 px-0 text-center">
+                      <div className="text-base leading-none mb-1">{s.icon}</div>
+                      <div className="text-sm font-black text-errandify-brown leading-none">{s.val}</div>
+                      <div className="text-[9px] sm:text-[11px] font-bold text-gray-500 leading-tight mt-1">{s.label}</div>
+                    </div>
+                  ))}
                 </div>
               </div>
-            </div>
-
-            {/* STATS GRID - 5 CARDS IN ONE ROW, ORANGE THEME */}
-            <div className="grid grid-cols-5 gap-1.5">
-              <div className="bg-gradient-to-b from-orange-400 to-orange-500 rounded-lg py-2 px-0 text-center border border-orange-600 shadow-md">
-                <p className="text-2xl mb-1">👥</p>
-                <p className="text-lg font-black text-white">{ratings.reviewCount}</p>
-                <p className="!text-[9px] sm:!text-sm font-bold text-orange-100 leading-tight">Reviews</p>
-              </div>
-              <div className="bg-gradient-to-b from-orange-400 to-orange-500 rounded-lg py-2 px-0 text-center border border-orange-600 shadow-md">
-                <p className="text-2xl mb-1">✅</p>
-                <p className="text-lg font-black text-white">{profileData.completedTasks || 0}</p>
-                <p className="!text-[9px] sm:!text-sm font-bold text-orange-100 leading-tight">Errands</p>
-              </div>
-              <div className="bg-gradient-to-b from-orange-400 to-orange-500 rounded-lg py-2 px-0 text-center border border-orange-600 shadow-md">
-                <p className="text-2xl mb-1">💰</p>
-                <p className="text-lg font-black text-white">${profileData.totalEarnings || 0}</p>
-                <p className="!text-[9px] sm:!text-sm font-bold text-orange-100 leading-tight">Earnings</p>
-              </div>
-              <div className="bg-gradient-to-b from-orange-400 to-orange-500 rounded-lg py-2 px-0 text-center border border-orange-600 shadow-md">
-                <p className="text-2xl mb-1">⭐</p>
-                <p className="text-lg font-black text-white">{profileData.errandifyPoints || 0}</p>
-                <p className="!text-[9px] sm:!text-sm font-bold text-orange-100 leading-tight">EP</p>
-              </div>
-              <div className="bg-gradient-to-b from-orange-400 to-orange-500 rounded-lg py-2 px-0 text-center border border-orange-600 shadow-md">
-                <p className="text-2xl mb-1">❤️</p>
-                <p className="text-lg font-black text-white">{(profileData as any).timesFavorited || 0}</p>
-                <p className="!text-[9px] sm:!text-sm font-bold text-orange-100 leading-tight">Trusted</p>
-              </div>
-            </div>
+            )}
 
             {/* REFERRAL BUTTON - ENGAGING & VIBRANT */}
             <div className="space-y-1.5">
