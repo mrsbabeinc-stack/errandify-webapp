@@ -7,6 +7,26 @@ import { feeBreakdown } from '../utils/stripeFee.js';
 
 const router = Router();
 
+// In-memory store for the dummy card feature. Both routes below referenced this
+// Map and the DummyPaymentMethod type, but neither was ever declared — so
+// GET /api/payment/methods and POST /api/payment/add-method threw a
+// ReferenceError and 500'd on every call, and the frontend's AddPaymentMethodModal
+// could never save a card. This is a placeholder for real Stripe payment methods:
+// it is intentionally in-memory (cleared on restart) and stores no real card data
+// beyond the last four digits the user typed.
+interface DummyPaymentMethod {
+  id: string;
+  userId: number;
+  type: string;
+  last4: string;
+  brand: string;
+  expiryMonth: number | string;
+  expiryYear: number | string;
+  default: boolean;
+}
+
+const paymentMethods = new Map<number, DummyPaymentMethod[]>();
+
 // GET /api/payment/methods - Get user's payment methods
 router.get('/methods', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {

@@ -20,5 +20,13 @@
     "sourceMap": false
   },
   "include": ["src"],
-  "exclude": ["node_modules", "dist", "src/scripts/**/*.ts", "src/services/stripe.ts"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/scripts/**/*.ts",
+    "src/services/stripe.ts",
+    "src/services/ossService.ts",
+    "src/services/S3StorageService.ts",
+    "src/db/migrations/**/*.ts"
+  ]
 }
