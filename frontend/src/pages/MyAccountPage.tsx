@@ -1195,7 +1195,11 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
           className="static md:sticky md:top-20 md:z-40 mb-3"
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
+            // minmax(0, 1fr) lets the four columns shrink to share the row
+            // evenly; without it a long single-word label (MyRewardSpace,
+            // My Availability) forced the track wider than a ~320px screen and
+            // the 4th column clipped off the right edge.
+            gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
             gap: '6px',
             background: '#FFFAF6',
             paddingBottom: '8px',
@@ -1225,7 +1229,7 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                 }}
               >
                 <div style={{ fontSize: '15px', lineHeight: 1, marginBottom: '2px' }}>{emoji}</div>
-                <div style={{ fontSize: '9px', fontWeight: 700, lineHeight: 1.1 }}>{label}</div>
+                <div style={{ fontSize: '8px', fontWeight: 700, lineHeight: 1.15, minWidth: 0, overflowWrap: 'anywhere' }}>{label}</div>
               </button>
             );
           })}
@@ -1274,30 +1278,30 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
 
             {/* STATS GRID - 5 CARDS IN ONE ROW, ORANGE THEME */}
             <div className="grid grid-cols-5 gap-1.5">
-              <div className="bg-gradient-to-b from-orange-400 to-orange-500 rounded-lg p-2 text-center border border-orange-600 shadow-md">
+              <div className="bg-gradient-to-b from-orange-400 to-orange-500 rounded-lg py-2 px-0 text-center border border-orange-600 shadow-md">
                 <p className="text-2xl mb-1">👥</p>
                 <p className="text-lg font-black text-white">{ratings.reviewCount}</p>
-                <p className="text-xs font-bold text-orange-100">Reviews</p>
+                <p className="!text-[9px] sm:!text-sm font-bold text-orange-100 leading-tight">Reviews</p>
               </div>
-              <div className="bg-gradient-to-b from-orange-400 to-orange-500 rounded-lg p-2 text-center border border-orange-600 shadow-md">
+              <div className="bg-gradient-to-b from-orange-400 to-orange-500 rounded-lg py-2 px-0 text-center border border-orange-600 shadow-md">
                 <p className="text-2xl mb-1">✅</p>
                 <p className="text-lg font-black text-white">{profileData.completedTasks || 0}</p>
-                <p className="text-xs font-bold text-orange-100">Errands</p>
+                <p className="!text-[9px] sm:!text-sm font-bold text-orange-100 leading-tight">Errands</p>
               </div>
-              <div className="bg-gradient-to-b from-orange-400 to-orange-500 rounded-lg p-2 text-center border border-orange-600 shadow-md">
+              <div className="bg-gradient-to-b from-orange-400 to-orange-500 rounded-lg py-2 px-0 text-center border border-orange-600 shadow-md">
                 <p className="text-2xl mb-1">💰</p>
                 <p className="text-lg font-black text-white">${profileData.totalEarnings || 0}</p>
-                <p className="text-xs font-bold text-orange-100">Earnings</p>
+                <p className="!text-[9px] sm:!text-sm font-bold text-orange-100 leading-tight">Earnings</p>
               </div>
-              <div className="bg-gradient-to-b from-orange-400 to-orange-500 rounded-lg p-2 text-center border border-orange-600 shadow-md">
+              <div className="bg-gradient-to-b from-orange-400 to-orange-500 rounded-lg py-2 px-0 text-center border border-orange-600 shadow-md">
                 <p className="text-2xl mb-1">⭐</p>
                 <p className="text-lg font-black text-white">{profileData.errandifyPoints || 0}</p>
-                <p className="text-xs font-bold text-orange-100">EP</p>
+                <p className="!text-[9px] sm:!text-sm font-bold text-orange-100 leading-tight">EP</p>
               </div>
-              <div className="bg-gradient-to-b from-orange-400 to-orange-500 rounded-lg p-2 text-center border border-orange-600 shadow-md">
+              <div className="bg-gradient-to-b from-orange-400 to-orange-500 rounded-lg py-2 px-0 text-center border border-orange-600 shadow-md">
                 <p className="text-2xl mb-1">❤️</p>
                 <p className="text-lg font-black text-white">{(profileData as any).timesFavorited || 0}</p>
-                <p className="text-xs font-bold text-orange-100">Trusted</p>
+                <p className="!text-[9px] sm:!text-sm font-bold text-orange-100 leading-tight">Trusted</p>
               </div>
             </div>
 
