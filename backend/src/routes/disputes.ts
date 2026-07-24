@@ -85,6 +85,27 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ error: 'Only the asker or the doer on this errand can raise a dispute.' });
     }
 
+    // Hard 48-hour dispute window. Once an errand has been completed for more
+    // than 48 hours the escrowed payment has released to the doer, so there is
+    // nothing left to hold and no new dispute can be raised. Uses the same
+    // completion anchor (errands.updated_at while status='completed') as the
+    // chat-window close in messages.ts, so the deadline the user is warned
+    // about and the deadline actually enforced are identical. Errands that are
+    // not yet completed are unaffected — they can still be disputed.
+    const completionCheck = await db.query(
+      `SELECT updated_at FROM errands WHERE id = $1 AND status = 'completed'`,
+      [parseInt(errandId)]
+    );
+    if (completionCheck.rows.length > 0 && completionCheck.rows[0].updated_at) {
+      const completedAt = new Date(completionCheck.rows[0].updated_at).getTime();
+      const hoursElapsed = (Date.now() - completedAt) / (1000 * 60 * 60);
+      if (hoursElapsed > 48) {
+        return res.status(400).json({
+          error: 'The 48-hour window to raise a dispute has closed and the payment has been released. Please contact support if you still need help.',
+        });
+      }
+    }
+
     // Create dispute
     const result = await createDispute({
       errandId: parseInt(errandId),

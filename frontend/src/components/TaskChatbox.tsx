@@ -436,19 +436,24 @@ Your message doesn't meet our community standards. Please keep messages:
                 <p className="font-bold text-sm mb-1">
                   {chatDisabledReason.includes('dispute')
                     ? '⚖️ Dispute Active - Chat Disabled'
-                    : '⏰ Chat Window Closed'}
+                    : '⏰ Dispute Window Closed'}
                 </p>
                 <p className="text-xs leading-relaxed mb-2">
                   {chatDisabledReason.includes('dispute')
                     ? 'A dispute has been opened for this errand. Both parties should not communicate here. Submit evidence or responses through the dispute resolution system instead. This helps ensure fair review.'
-                    : 'The 48-hour chat window has closed. Any disputes must be raised immediately through the dispute system.'}
+                    : 'The 48-hour window to raise a dispute has closed and the payment has been released. If you still need help, tap the help assistant at the bottom-right of your screen.'}
                 </p>
-                <button
-                  onClick={() => navigate(`/disputes?errand=${taskId}`)}
-                  className="text-xs bg-white/20 hover:bg-white/30 px-3 py-1 rounded-md transition font-semibold"
-                >
-                  Go to Dispute →
-                </button>
+                {/* Only offer the dispute link while a dispute is actually
+                    active — after the 48h window there is nothing to open, and
+                    a dispute can no longer be raised. */}
+                {chatDisabledReason.includes('dispute') && (
+                  <button
+                    onClick={() => navigate(`/disputes?errand=${taskId}`)}
+                    className="text-xs bg-white/20 hover:bg-white/30 px-3 py-1 rounded-md transition font-semibold"
+                  >
+                    Go to Dispute →
+                  </button>
+                )}
               </div>
             </div>
           </div>
