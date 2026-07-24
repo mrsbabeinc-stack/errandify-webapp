@@ -1113,21 +1113,43 @@ body {
     gap: 8px;
   }
 
+  /* Tighten the landing's vertical rhythm — the section gap (16px) plus the
+     hero's own 20px margin left a big empty band between the ad-credit strip
+     and the KPI cards on a phone. */
+  .section-dashboard {
+    gap: 10px;
+  }
+  .hero-carousel {
+    margin-bottom: 8px !important;
+  }
+
   .kpi-card {
     min-height: 0;
-    padding: 12px 10px;
+    padding: 10px 8px;
+    gap: 3px;
+    /* was space-between, which flung the title/number/description apart and
+       (with grid-stretch matching the tallest card) left big empty gaps. Centre
+       the content so each card is only as tall as it needs to be. */
+    justify-content: center;
+  }
+
+  .kpi-card .kpi-top {
+    padding-top: 2px;
   }
 
   .kpi-card .kpi-value {
-    font-size: 22px;
+    font-size: 20px;
+    margin-top: 2px;
   }
 
   .kpi-card .kpi-top h3 {
-    font-size: 11px;
+    font-size: 10px;
+    line-height: 1.15;
   }
 
   .kpi-description {
-    font-size: 10px;
+    font-size: 9px;
+    margin-top: 2px;
   }
 
   .actions-grid {
@@ -4044,6 +4066,40 @@ body {
   }
   .category-card-compact {
     min-width: 0;
+    padding: 10px 8px;
+  }
+
+  /* Compact pass: the metric numbers (28px) were wider than the narrow 2-up
+     cards so "SGD $15,240" wrapped to two lines and each card ballooned to
+     ~150px. Shrink the value to fit one line and trim the padding/spacing so
+     the analytics block reads dense instead of one metric per screenful. */
+  .metric-value-large {
+    font-size: 19px;
+    margin-bottom: 3px;
+  }
+  .metric-item-compact {
+    padding: 10px 8px;
+  }
+  .metric-label {
+    font-size: 10px;
+    margin-bottom: 3px;
+  }
+  .metric-trend {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+  .metrics-row-flex {
+    margin-bottom: 12px;
+  }
+  .analytics-section {
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+  .analytics-container {
+    gap: 12px;
+  }
+  .category-stat {
+    font-size: 18px;
   }
 }
 
