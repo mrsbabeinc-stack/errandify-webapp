@@ -236,7 +236,7 @@ Expected outcome: Breakeven by Q4 2026, positive cash flow by Q1 2027`,
       case 'high':
         return { bg: '#FFF3E0', color: '#E65100', label: '🟠 HIGH' };
       case 'medium':
-        return { bg: '#E3F2FD', color: '#0D47A1', label: '🟡 MEDIUM' };
+        return { bg: '#FFF3E4', color: '#B5651D', label: '🟡 MEDIUM' };
       case 'low':
         return { bg: '#E8F5E9', color: '#2E7D32', label: '🟢 LOW' };
       default:
@@ -276,7 +276,7 @@ Expected outcome: Breakeven by Q4 2026, positive cash flow by Q1 2027`,
         </div>
 
         {/* Compliance Banner */}
-        <div style={{ padding: '12px 16px', background: '#E3F2FD', border: '2px solid #1976D2', borderRadius: '6px', marginBottom: '16px', fontSize: '12px', color: '#0D47A1' }}>
+        <div style={{ padding: '12px 16px', background: '#FFF3E4', border: '2px solid #B5651D', borderRadius: '6px', marginBottom: '16px', fontSize: '12px', color: '#B5651D' }}>
           <strong>🤖 Qwen AI Integration:</strong> All reports generated using Alibaba Qwen Turbo API. Compliance alerts auto-generated. Forecasting based on actual financial data. All insights are recommendations only.
         </div>
 
@@ -289,7 +289,7 @@ Expected outcome: Breakeven by Q4 2026, positive cash flow by Q1 2027`,
           </div>
           <div style={{ padding: '16px', background: '#FFF8F5', borderRadius: '8px', border: '2px solid #FFD9B3' }}>
             <div style={{ fontSize: '12px', color: '#999', marginBottom: '4px' }}>Scheduled Reports</div>
-            <div style={{ fontSize: '24px', fontWeight: '700', color: '#2196F3' }}>
+            <div style={{ fontSize: '24px', fontWeight: '700', color: '#F0A81E' }}>
               {schedules.filter(s => s.enabled).length}
             </div>
             <div style={{ fontSize: '11px', color: '#999', marginTop: '4px' }}>Active</div>
@@ -466,7 +466,7 @@ Expected outcome: Breakeven by Q4 2026, positive cash flow by Q1 2027`,
                         style={{
                           flex: 1,
                           padding: '8px 12px',
-                          background: '#2196F3',
+                          background: '#F0A81E',
                           color: 'white',
                           border: 'none',
                           borderRadius: '4px',

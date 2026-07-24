@@ -343,14 +343,14 @@ const LeaveManagementDashboard: React.FC = () => {
           </div>
           <div style={{ padding: '16px', background: '#FFF8F5', borderRadius: '8px', border: '2px solid #FFD9B3' }}>
             <div style={{ fontSize: '12px', color: '#999', marginBottom: '4px' }}>Total Available</div>
-            <div style={{ fontSize: '24px', fontWeight: '700', color: '#2196F3' }}>
+            <div style={{ fontSize: '24px', fontWeight: '700', color: '#F0A81E' }}>
               {leaveBalances.reduce((sum, b) => sum + b.annualLeaveEntitlement + b.sickLeaveEntitlement, 0)} days
             </div>
             <div style={{ fontSize: '11px', color: '#999', marginTop: '4px' }}>For all staff</div>
           </div>
           <div style={{ padding: '16px', background: '#FFF8F5', borderRadius: '8px', border: '2px solid #FFD9B3' }}>
             <div style={{ fontSize: '12px', color: '#999', marginBottom: '4px' }}>Public Holidays (SG)</div>
-            <div style={{ fontSize: '24px', fontWeight: '700', color: '#9C27B0' }}>{publicHolidays.length}</div>
+            <div style={{ fontSize: '24px', fontWeight: '700', color: '#E2736B' }}>{publicHolidays.length}</div>
             <div style={{ fontSize: '11px', color: '#999', marginTop: '4px' }}>In 2026</div>
           </div>
         </div>
@@ -423,7 +423,7 @@ const LeaveManagementDashboard: React.FC = () => {
                           <div
                             style={{
                               height: '100%',
-                              background: '#2196F3',
+                              background: '#F0A81E',
                               width: `${(balance.sickLeaveRemaining / balance.sickLeaveEntitlement) * 100}%`,
                             }}
                           />
@@ -648,9 +648,9 @@ const LeaveManagementDashboard: React.FC = () => {
                         fontSize: '11px',
                         fontWeight: '600',
                         background:
-                          request.status === 'approved' ? '#E8F5E9' : request.status === 'pending' ? '#E3F2FD' : '#FFEBEE',
+                          request.status === 'approved' ? '#E8F5E9' : request.status === 'pending' ? '#FFF3E4' : '#FFEBEE',
                         color:
-                          request.status === 'approved' ? '#2E7D32' : request.status === 'pending' ? '#0D47A1' : '#C62828',
+                          request.status === 'approved' ? '#2E7D32' : request.status === 'pending' ? '#B5651D' : '#C62828',
                         marginBottom: '8px',
                       }}>
                         {request.status === 'approved' && '✓ APPROVED'}
@@ -762,7 +762,7 @@ const LeaveManagementDashboard: React.FC = () => {
                   <span>Approved Leave</span>
                 </div>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                  <div style={{ width: '12px', height: '12px', background: '#9C27B0', borderRadius: '2px' }} />
+                  <div style={{ width: '12px', height: '12px', background: '#E2736B', borderRadius: '2px' }} />
                   <span>Public Holiday</span>
                 </div>
               </div>
@@ -798,7 +798,7 @@ const LeaveManagementDashboard: React.FC = () => {
                       </td>
                       <td style={{ padding: '12px', textAlign: 'center' }}>{balance.sickLeaveEntitlement}</td>
                       <td style={{ padding: '12px', textAlign: 'center', color: '#666' }}>{balance.sickLeaveUsed}</td>
-                      <td style={{ padding: '12px', textAlign: 'center', fontWeight: '600', color: '#2196F3' }}>
+                      <td style={{ padding: '12px', textAlign: 'center', fontWeight: '600', color: '#F0A81E' }}>
                         {balance.sickLeaveRemaining}
                       </td>
                     </tr>

@@ -244,7 +244,7 @@ const FinancialReportsDashboard: React.FC = () => {
         </div>
 
         {/* Compliance Banner */}
-        <div style={{ padding: '12px 16px', background: '#E3F2FD', border: '2px solid #1976D2', borderRadius: '6px', marginBottom: '16px', fontSize: '12px', color: '#0D47A1' }}>
+        <div style={{ padding: '12px 16px', background: '#FFF3E4', border: '2px solid #B5651D', borderRadius: '6px', marginBottom: '16px', fontSize: '12px', color: '#B5651D' }}>
           <strong>⚠️ Management accounts, not statutory financial statements.</strong> These are derived from the transactions recorded here and are for running the business. They are <strong>not</strong> ready for ACRA filing: statutory accounts must be prepared under SFRS with accounting policies, notes, prior-year comparatives, a statement of changes in equity and a directors' statement — none of which this produces. Fixed assets and share capital are not tracked at all. Give these to your accountant as a starting point, not as the filing.
         </div>
 
@@ -288,7 +288,7 @@ const FinancialReportsDashboard: React.FC = () => {
               onClick={() => window.print()}
               style={{
                 padding: '10px 16px',
-                background: '#2196F3',
+                background: '#F0A81E',
                 color: 'white',
                 border: 'none',
                 borderRadius: '6px',

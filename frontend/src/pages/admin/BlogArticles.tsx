@@ -312,7 +312,7 @@ CRITICAL: Ensure all text is legally safe, non-biased, and compliant with conten
 
   const statusColors = {
     'published': '#4CAF50',
-    'draft': '#2196F3',
+    'draft': '#F0A81E',
     'archived': '#999',
   };
 
@@ -580,7 +580,7 @@ CRITICAL: Ensure all text is legally safe, non-biased, and compliant with conten
                             setEditSeoKeywords(article.seoKeywords);
                             setEditCategory(article.category);
                           }}
-                          style={{ padding: '8px', background: '#2196F3', color: 'white', border: 'none', borderRadius: '4px', fontWeight: '600', cursor: 'pointer', fontSize: '12px' }}
+                          style={{ padding: '8px', background: '#F0A81E', color: 'white', border: 'none', borderRadius: '4px', fontWeight: '600', cursor: 'pointer', fontSize: '12px' }}
                         >
                           ✏️ Edit
                         </button>
@@ -844,7 +844,7 @@ CRITICAL: Ensure all text is legally safe, non-biased, and compliant with conten
                         <span
                           style={{
                             padding: '4px 8px',
-                            background: article.status === 'published' ? '#4CAF50' : article.status === 'draft' ? '#2196F3' : '#999',
+                            background: article.status === 'published' ? '#4CAF50' : article.status === 'draft' ? '#F0A81E' : '#999',
                             color: 'white',
                             borderRadius: '4px',
                             fontSize: '10px',

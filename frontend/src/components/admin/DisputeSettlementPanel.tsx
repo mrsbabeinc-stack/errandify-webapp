@@ -224,7 +224,7 @@ export const DisputeSettlementPanel: React.FC<Props> = ({ disputeId, onClose, on
               them the settlement machinery — $0.00 legs, a release button that
               can never fire — reads as something being stuck when it is not. */}
           {decision && decision.kind !== 'monetary' && (
-            <div className="bg-blue-50 border border-blue-200 rounded p-4 text-sm text-blue-900">
+            <div className="bg-orange-50 border border-orange-200 rounded p-4 text-sm text-orange-900">
               {decision.kind === 'rework'
                 ? 'This one ended in a rework, so nothing is split. The payment stays held until the work is confirmed put right, then it goes through as originally agreed.'
                 : 'This one ended without money changing hands, so there is nothing to release.'}
@@ -412,12 +412,12 @@ export const DisputeSettlementPanel: React.FC<Props> = ({ disputeId, onClose, on
               </h3>
               {drafts.outcome_messages_sent_at ? (
                 <div className="space-y-2 text-sm">
-                  <div className="bg-blue-50 rounded p-3">
-                    <p className="text-xs font-semibold text-blue-900 mb-1">To the asker</p>
+                  <div className="bg-orange-50 rounded p-3">
+                    <p className="text-xs font-semibold text-orange-900 mb-1">To the asker</p>
                     <p className="text-gray-700 whitespace-pre-wrap">{drafts.outcome_message_asker}</p>
                   </div>
-                  <div className="bg-purple-50 rounded p-3">
-                    <p className="text-xs font-semibold text-purple-900 mb-1">To the doer</p>
+                  <div className="bg-rose-50 rounded p-3">
+                    <p className="text-xs font-semibold text-rose-900 mb-1">To the doer</p>
                     <p className="text-gray-700 whitespace-pre-wrap">{drafts.outcome_message_doer}</p>
                   </div>
                 </div>
@@ -427,7 +427,7 @@ export const DisputeSettlementPanel: React.FC<Props> = ({ disputeId, onClose, on
                     Hana drafted these from your reasoning. Edit them — what is here is what goes out.
                   </p>
                   <label className="block text-sm mb-2">
-                    <span className="text-xs font-semibold text-blue-900">To the asker</span>
+                    <span className="text-xs font-semibold text-orange-900">To the asker</span>
                     <textarea
                       value={askerDraft}
                       onChange={(e) => setAskerDraft(e.target.value)}
@@ -436,7 +436,7 @@ export const DisputeSettlementPanel: React.FC<Props> = ({ disputeId, onClose, on
                     />
                   </label>
                   <label className="block text-sm">
-                    <span className="text-xs font-semibold text-purple-900">To the doer</span>
+                    <span className="text-xs font-semibold text-rose-900">To the doer</span>
                     <textarea
                       value={doerDraft}
                       onChange={(e) => setDoerDraft(e.target.value)}

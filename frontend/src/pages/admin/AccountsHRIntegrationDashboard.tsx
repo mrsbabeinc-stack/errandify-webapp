@@ -74,7 +74,7 @@ const AccountsHRIntegrationDashboard: React.FC = () => {
           value: String(metricsData.activeStaff),
           trend: 'stable',
           trendValue: `${metricsData.totalStaff} on record`,
-          color: '#2196F3',
+          color: '#F0A81E',
         },
         {
           title: 'Monthly Payroll',
@@ -97,7 +97,7 @@ const AccountsHRIntegrationDashboard: React.FC = () => {
           value: String(metricsData.leaveThisMonth),
           trend: 'stable',
           trendValue: `${metricsData.pendingLeave} awaiting approval`,
-          color: '#9C27B0',
+          color: '#E2736B',
         },
         {
           title: 'Receivables',
@@ -219,7 +219,7 @@ const AccountsHRIntegrationDashboard: React.FC = () => {
         </div>
 
         {/* Info Banner */}
-        <div style={{ padding: '12px 16px', background: '#E3F2FD', border: '2px solid #1976D2', borderRadius: '6px', marginBottom: '16px', fontSize: '12px', color: '#0D47A1' }}>
+        <div style={{ padding: '12px 16px', background: '#FFF3E4', border: '2px solid #B5651D', borderRadius: '6px', marginBottom: '16px', fontSize: '12px', color: '#B5651D' }}>
           <strong>ℹ️ One database, no sync:</strong> HR, Payroll and Accounts read the same tables — nothing is copied between them, so these figures are the live records, not a snapshot.
         </div>
 
@@ -367,7 +367,7 @@ const AccountsHRIntegrationDashboard: React.FC = () => {
               })}
             </div>
 
-            <div style={{ marginTop: '24px', padding: '16px', background: '#E3F2FD', borderRadius: '6px', border: '2px solid #1976D2', fontSize: '12px', color: '#0D47A1' }}>
+            <div style={{ marginTop: '24px', padding: '16px', background: '#FFF3E4', borderRadius: '6px', border: '2px solid #B5651D', fontSize: '12px', color: '#B5651D' }}>
               <strong>ℹ️ How to read this:</strong> the bar shows the share of each module's records that need no further action. A module with no records has simply not been used yet.
             </div>
           </div>

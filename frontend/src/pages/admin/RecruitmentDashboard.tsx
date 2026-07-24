@@ -445,19 +445,19 @@ const RecruitmentDashboard: React.FC = () => {
             <div style={{ fontSize: '22px', fontWeight: '700', color: '#4CAF50' }}>{stats.publishedJobs}</div>
             <div style={{ fontSize: '11px', color: '#2E7D32', marginTop: '4px' }}>of {stats.totalJobs} total</div>
           </div>
-          <div style={{ padding: '16px', background: '#E3F2FD', borderRadius: '8px', border: '2px solid #2196F3' }}>
-            <div style={{ fontSize: '12px', color: '#0D47A1', marginBottom: '4px' }}>Total Candidates</div>
-            <div style={{ fontSize: '22px', fontWeight: '700', color: '#2196F3' }}>{stats.totalCandidates}</div>
-            <div style={{ fontSize: '11px', color: '#0D47A1', marginTop: '4px' }}>{stats.completed} completed</div>
+          <div style={{ padding: '16px', background: '#FFF3E4', borderRadius: '8px', border: '2px solid #F0A81E' }}>
+            <div style={{ fontSize: '12px', color: '#B5651D', marginBottom: '4px' }}>Total Candidates</div>
+            <div style={{ fontSize: '22px', fontWeight: '700', color: '#F0A81E' }}>{stats.totalCandidates}</div>
+            <div style={{ fontSize: '11px', color: '#B5651D', marginTop: '4px' }}>{stats.completed} completed</div>
           </div>
           <div style={{ padding: '16px', background: '#FFF3E0', borderRadius: '8px', border: '2px solid #FF9800' }}>
             <div style={{ fontSize: '12px', color: '#E65100', marginBottom: '4px' }}>Avg Screening Score</div>
             <div style={{ fontSize: '22px', fontWeight: '700', color: '#FF9800' }}>{stats.avgScore}/100</div>
             <div style={{ fontSize: '11px', color: '#E65100', marginTop: '4px' }}>quality indicator</div>
           </div>
-          <div style={{ padding: '16px', background: '#F3E5F5', borderRadius: '8px', border: '2px solid #9C27B0' }}>
+          <div style={{ padding: '16px', background: '#FCEDE9', borderRadius: '8px', border: '2px solid #E2736B' }}>
             <div style={{ fontSize: '12px', color: '#4A148C', marginBottom: '4px' }}>Pending Response</div>
-            <div style={{ fontSize: '22px', fontWeight: '700', color: '#9C27B0' }}>{applications.filter(a => a.status === 'sent' || a.status === 'in-progress').length}</div>
+            <div style={{ fontSize: '22px', fontWeight: '700', color: '#E2736B' }}>{applications.filter(a => a.status === 'sent' || a.status === 'in-progress').length}</div>
             <div style={{ fontSize: '11px', color: '#4A148C', marginTop: '4px' }}>awaiting completion</div>
           </div>
         </div>
@@ -688,7 +688,7 @@ const RecruitmentDashboard: React.FC = () => {
                       style={{
                         flex: 1,
                         padding: '6px 12px',
-                        background: '#2196F3',
+                        background: '#F0A81E',
                         color: 'white',
                         border: 'none',
                         borderRadius: '3px',
@@ -822,8 +822,8 @@ const RecruitmentDashboard: React.FC = () => {
                       <div style={{
                         display: 'inline-block',
                         padding: '4px 8px',
-                        background: app.status === 'completed' ? '#E8F5E9' : app.status === 'sent' ? '#FFF3E0' : '#E3F2FD',
-                        color: app.status === 'completed' ? '#2E7D32' : app.status === 'sent' ? '#E65100' : '#0D47A1',
+                        background: app.status === 'completed' ? '#E8F5E9' : app.status === 'sent' ? '#FFF3E0' : '#FFF3E4',
+                        color: app.status === 'completed' ? '#2E7D32' : app.status === 'sent' ? '#E65100' : '#B5651D',
                         borderRadius: '3px',
                         fontSize: '11px',
                         fontWeight: '600',
@@ -855,7 +855,7 @@ const RecruitmentDashboard: React.FC = () => {
                         }}
                         style={{
                           padding: '6px 12px',
-                          background: '#2196F3',
+                          background: '#F0A81E',
                           color: 'white',
                           border: 'none',
                           borderRadius: '3px',
@@ -870,7 +870,7 @@ const RecruitmentDashboard: React.FC = () => {
                         <button
                           style={{
                             padding: '6px 12px',
-                            background: app.recommendation === 'pass' ? '#4CAF50' : app.recommendation === 'flag' ? '#FF9800' : '#2196F3',
+                            background: app.recommendation === 'pass' ? '#4CAF50' : app.recommendation === 'flag' ? '#FF9800' : '#F0A81E',
                             color: 'white',
                             border: 'none',
                             borderRadius: '3px',
@@ -926,7 +926,7 @@ const RecruitmentDashboard: React.FC = () => {
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span>In Progress:</span>
-                    <strong style={{ color: '#2196F3' }}>{applications.filter(a => a.status === 'in-progress').length}</strong>
+                    <strong style={{ color: '#F0A81E' }}>{applications.filter(a => a.status === 'in-progress').length}</strong>
                   </div>
                 </div>
               </div>
@@ -973,9 +973,9 @@ const RecruitmentDashboard: React.FC = () => {
                     </ul>
                   </div>
                 </div>
-                <div style={{ marginTop: '12px', padding: '12px', background: '#E3F2FD', borderRadius: '4px' }}>
-                  <div style={{ fontWeight: '600', fontSize: '12px', color: '#0D47A1', marginBottom: '8px' }}>💬 Talking Points</div>
-                  <ul style={{ margin: 0, paddingLeft: '16px', fontSize: '12px', color: '#0D47A1', display: 'grid', gap: '4px' }}>
+                <div style={{ marginTop: '12px', padding: '12px', background: '#FFF3E4', borderRadius: '4px' }}>
+                  <div style={{ fontWeight: '600', fontSize: '12px', color: '#B5651D', marginBottom: '8px' }}>💬 Talking Points</div>
+                  <ul style={{ margin: 0, paddingLeft: '16px', fontSize: '12px', color: '#B5651D', display: 'grid', gap: '4px' }}>
                     {interviewPrep.talkingPoints.map((p, i) => (
                       <li key={i}>{p}</li>
                     ))}

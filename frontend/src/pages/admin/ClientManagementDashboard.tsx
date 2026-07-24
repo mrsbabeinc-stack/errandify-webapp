@@ -429,10 +429,10 @@ const ClientManagementDashboard: React.FC = () => {
             <div style={{ fontSize: '22px', fontWeight: '700', color: '#4CAF50' }}>{stats.totalClients}</div>
             <div style={{ fontSize: '11px', color: '#2E7D32', marginTop: '4px' }}>{stats.activeClients} active</div>
           </div>
-          <div style={{ padding: '16px', background: '#E3F2FD', borderRadius: '8px', border: '2px solid #2196F3' }}>
-            <div style={{ fontSize: '12px', color: '#0D47A1', marginBottom: '4px' }}>Total Invoiced</div>
-            <div style={{ fontSize: '22px', fontWeight: '700', color: '#2196F3' }}>SGD {(stats.totalInvoiced / 1000).toLocaleString(undefined, { maximumFractionDigits: 0 })}K</div>
-            <div style={{ fontSize: '11px', color: '#0D47A1', marginTop: '4px' }}>YTD revenue</div>
+          <div style={{ padding: '16px', background: '#FFF3E4', borderRadius: '8px', border: '2px solid #F0A81E' }}>
+            <div style={{ fontSize: '12px', color: '#B5651D', marginBottom: '4px' }}>Total Invoiced</div>
+            <div style={{ fontSize: '22px', fontWeight: '700', color: '#F0A81E' }}>SGD {(stats.totalInvoiced / 1000).toLocaleString(undefined, { maximumFractionDigits: 0 })}K</div>
+            <div style={{ fontSize: '11px', color: '#B5651D', marginTop: '4px' }}>YTD revenue</div>
           </div>
           <div style={{ padding: '16px', background: '#FFF3E0', borderRadius: '8px', border: '2px solid #FF9800' }}>
             <div style={{ fontSize: '12px', color: '#E65100', marginBottom: '4px' }}>Outstanding</div>
@@ -504,7 +504,7 @@ const ClientManagementDashboard: React.FC = () => {
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span>Total Paid:</span>
-                    <strong style={{ color: '#2196F3' }}>SGD {stats.totalPaid.toLocaleString()}</strong>
+                    <strong style={{ color: '#F0A81E' }}>SGD {stats.totalPaid.toLocaleString()}</strong>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span>Outstanding:</span>
@@ -530,7 +530,7 @@ const ClientManagementDashboard: React.FC = () => {
               </div>
             </div>
 
-            <div style={{ marginTop: '24px', padding: '12px 16px', background: '#E3F2FD', border: '2px solid #1976D2', borderRadius: '6px', fontSize: '12px', color: '#0D47A1' }}>
+            <div style={{ marginTop: '24px', padding: '12px 16px', background: '#FFF3E4', border: '2px solid #B5651D', borderRadius: '6px', fontSize: '12px', color: '#B5651D' }}>
               <strong>✅ Client Management:</strong> Track all B2B clients, invoicing, credit terms, and payment status. Organize by department for better tracking.
             </div>
           </div>
@@ -689,8 +689,8 @@ const ClientManagementDashboard: React.FC = () => {
                       <div style={{
                         display: 'inline-block',
                         padding: '4px 8px',
-                        background: inv.status === 'paid' ? '#E8F5E9' : inv.status === 'pending' ? '#FFF3E0' : inv.status === 'overdue' ? '#FFEBEE' : '#E3F2FD',
-                        color: inv.status === 'paid' ? '#2E7D32' : inv.status === 'pending' ? '#E65100' : inv.status === 'overdue' ? '#C62828' : '#0D47A1',
+                        background: inv.status === 'paid' ? '#E8F5E9' : inv.status === 'pending' ? '#FFF3E0' : inv.status === 'overdue' ? '#FFEBEE' : '#FFF3E4',
+                        color: inv.status === 'paid' ? '#2E7D32' : inv.status === 'pending' ? '#E65100' : inv.status === 'overdue' ? '#C62828' : '#B5651D',
                         borderRadius: '3px',
                         fontSize: '11px',
                         fontWeight: '600',

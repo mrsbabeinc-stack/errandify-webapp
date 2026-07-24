@@ -70,7 +70,7 @@ export const RegionalPerformanceReport: React.FC = () => {
             data={regions.map((r, idx) => ({
               label: r.name,
               value: r.revenue,
-              color: ['#FF6B35', '#2196F3', '#4CAF50', '#FFC107', '#9C27B0'][idx]
+              color: ['#FF6B35', '#F0A81E', '#4CAF50', '#FFC107', '#E2736B'][idx]
             }))}
           />
         </div>

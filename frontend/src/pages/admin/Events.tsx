@@ -303,7 +303,7 @@ export default function Events() {
   };
 
   const statusColors = {
-    draft: '#2196F3',
+    draft: '#F0A81E',
     active: '#4CAF50',
     cancelled: '#F44336',
     completed: '#999',
@@ -475,7 +475,7 @@ export default function Events() {
                           }}
                           style={{
                             padding: '8px',
-                            background: '#2196F3',
+                            background: '#F0A81E',
                             color: 'white',
                             border: 'none',
                             borderRadius: '4px',

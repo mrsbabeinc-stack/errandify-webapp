@@ -535,7 +535,7 @@ const StaffInfoEditorEnhanced: React.FC = () => {
                       <div style={sectionStyle}>
                         <div style={{ fontSize: '12px', fontWeight: '600', color: '#333', marginBottom: '10px' }}>Skills</div>
                         <div style={{ display: 'grid', gap: '12px' }}>
-                          <div style={{ padding: '8px', background: '#E3F2FD', borderRadius: '4px', fontSize: '11px', color: '#0D47A1' }}>
+                          <div style={{ padding: '8px', background: '#FFF3E4', borderRadius: '4px', fontSize: '11px', color: '#B5651D' }}>
                             💡 Skills can be auto-extracted from uploaded CV using AI
                           </div>
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>

@@ -356,8 +356,8 @@ export const EPRulesFlexiblePage: React.FC = () => {
                       <div style={{ fontWeight: '600', color: '#2E7D32', marginBottom: '4px' }}>Benefits</div>
                       <div style={{ color: '#555', fontSize: '10px', lineHeight: '1.4' }}>{strategy.benefits}</div>
                     </div>
-                    <div style={{ background: '#E3F2FD', padding: '8px', borderRadius: '4px', border: '1px solid #2196F3' }}>
-                      <div style={{ fontWeight: '600', color: '#1565C0', marginBottom: '4px' }}>How</div>
+                    <div style={{ background: '#FFF3E4', padding: '8px', borderRadius: '4px', border: '1px solid #F0A81E' }}>
+                      <div style={{ fontWeight: '600', color: '#D98C0C', marginBottom: '4px' }}>How</div>
                       <div style={{ color: '#555', fontSize: '10px', lineHeight: '1.4' }}>{strategy.implementation}</div>
                     </div>
                   </div>

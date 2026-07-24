@@ -489,7 +489,7 @@ Format as numbered list with bold headers. Keep it practical and specific to THI
   };
 
   const statusColors = {
-    draft: '#2196F3',
+    draft: '#F0A81E',
     active: '#4CAF50',
     cancelled: '#F44336',
     completed: '#999',

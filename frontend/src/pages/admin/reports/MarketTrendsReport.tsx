@@ -112,7 +112,7 @@ export const MarketTrendsReport: React.FC = () => {
             <polyline
               points="80,240 160,220 240,200 320,190 400,180 480,170 560,160"
               fill="none"
-              stroke="#2196F3"
+              stroke="#F0A81E"
               strokeWidth="2.5"
             />
 
@@ -142,7 +142,7 @@ export const MarketTrendsReport: React.FC = () => {
             <circle cx="620" cy="100" r="3" fill="#FF6B35"/>
             <text x="630" y="104" fontSize="11" fill="#333">Cleaning (↑23%)</text>
 
-            <circle cx="620" cy="130" r="3" fill="#2196F3"/>
+            <circle cx="620" cy="130" r="3" fill="#F0A81E"/>
             <text x="630" y="134" fontSize="11" fill="#333">Delivery (↑18%)</text>
 
             <circle cx="620" cy="160" r="3" fill="#4CAF50"/>

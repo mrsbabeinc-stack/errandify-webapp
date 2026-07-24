@@ -176,9 +176,9 @@ export default function AdminErrandManagement() {
   });
 
   const statusColors = {
-    'open': '#2196F3',
+    'open': '#F0A81E',
     'assigned': '#FF9800',
-    'in-progress': '#2196F3',
+    'in-progress': '#F0A81E',
     'completed': '#4CAF50',
     'cancelled': '#9E9E9E',
     'disputed': '#F44336',
@@ -217,8 +217,8 @@ export default function AdminErrandManagement() {
       {/* Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '12px', marginBottom: '24px' }}>
         {[
-          { label: 'Total', value: errands.length, color: '#2196F3' },
-          { label: 'Open', value: errands.filter(e => e.status === 'open').length, color: '#2196F3' },
+          { label: 'Total', value: errands.length, color: '#F0A81E' },
+          { label: 'Open', value: errands.filter(e => e.status === 'open').length, color: '#F0A81E' },
           { label: 'In Progress', value: errands.filter(e => e.status === 'in-progress').length, color: '#FF9800' },
           { label: 'Completed', value: errands.filter(e => e.status === 'completed').length, color: '#4CAF50' },
           { label: 'Disputed', value: errands.filter(e => e.status === 'disputed').length, color: '#F44336' },
@@ -349,8 +349,8 @@ export default function AdminErrandManagement() {
                     onClick={() => handleReassign(errand.id)}
                     style={{
                       padding: '8px',
-                      background: '#e3f2fd',
-                      color: '#1976d2',
+                      background: '#FFF3E4',
+                      color: '#B5651D',
                       border: 'none',
                       borderRadius: '4px',
                       fontSize: '11px',

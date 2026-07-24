@@ -225,9 +225,9 @@ const HolidayManager: React.FC = () => {
             <div style={{ fontSize: '11px', color: '#880E4F', marginBottom: '4px' }}>Public Holidays</div>
             <div style={{ fontSize: '20px', fontWeight: '700', color: '#E91E63' }}>{stats.public_holidays}</div>
           </div>
-          <div style={{ padding: '12px', background: '#F3E5F5', borderRadius: '8px', border: '2px solid #9C27B0' }}>
+          <div style={{ padding: '12px', background: '#FCEDE9', borderRadius: '8px', border: '2px solid #E2736B' }}>
             <div style={{ fontSize: '11px', color: '#4A148C', marginBottom: '4px' }}>Company Holidays</div>
-            <div style={{ fontSize: '20px', fontWeight: '700', color: '#9C27B0' }}>{stats.company_holidays}</div>
+            <div style={{ fontSize: '20px', fontWeight: '700', color: '#E2736B' }}>{stats.company_holidays}</div>
           </div>
           <div style={{ padding: '12px', background: '#FFF3E0', borderRadius: '8px', border: '2px solid #FF9800' }}>
             <div style={{ fontSize: '11px', color: '#E65100', marginBottom: '4px' }}>Special Events</div>

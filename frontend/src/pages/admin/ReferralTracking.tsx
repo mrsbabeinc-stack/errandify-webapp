@@ -151,15 +151,15 @@ export default function ReferralTracking() {
                 <p className="text-3xl font-black text-green-600">{conversionRate}%</p>
                 <p className="text-xs text-green-600">Conversion</p>
               </div>
-              <div className="bg-white rounded-lg p-4 shadow border-2 border-blue-300">
-                <p className="text-xs text-blue-700 font-bold mb-1">Total Active</p>
-                <p className="text-3xl font-black text-blue-600">{totalActive}</p>
-                <p className="text-xs text-blue-600">Referrals</p>
+              <div className="bg-white rounded-lg p-4 shadow border-2 border-orange-300">
+                <p className="text-xs text-orange-700 font-bold mb-1">Total Active</p>
+                <p className="text-3xl font-black text-orange-600">{totalActive}</p>
+                <p className="text-xs text-orange-600">Referrals</p>
               </div>
-              <div className="bg-white rounded-lg p-4 shadow border-2 border-purple-300">
-                <p className="text-xs text-purple-700 font-bold mb-1">Total Users</p>
-                <p className="text-3xl font-black text-purple-600">{referralUsers.length}</p>
-                <p className="text-xs text-purple-600">Referring</p>
+              <div className="bg-white rounded-lg p-4 shadow border-2 border-rose-300">
+                <p className="text-xs text-rose-700 font-bold mb-1">Total Users</p>
+                <p className="text-3xl font-black text-rose-600">{referralUsers.length}</p>
+                <p className="text-xs text-rose-600">Referring</p>
               </div>
             </div>
 
@@ -248,8 +248,8 @@ export default function ReferralTracking() {
                         <p className="font-bold text-gray-800">{conv.referrerAlias} → {conv.referredAlias}</p>
                         <span className={`px-1 py-0.5 rounded text-xs font-bold ${
                           conv.referrerType === 'company'
-                            ? 'bg-purple-100 text-purple-800'
-                            : 'bg-blue-100 text-blue-800'
+                            ? 'bg-rose-100 text-rose-800'
+                            : 'bg-orange-100 text-orange-800'
                         }`}>
                           {conv.referrerType === 'company' ? '🏢' : '👤'}
                         </span>
@@ -300,17 +300,17 @@ export default function ReferralTracking() {
 
             {/* Individual vs Company Breakdown */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-white rounded-lg p-4 shadow border-2 border-blue-300">
-                <p className="text-xs text-blue-700 font-bold mb-1">👤 Individual Referrers</p>
-                <p className="text-2xl font-black text-blue-600">{conversions.filter(c => c.referrerType === 'individual').length}</p>
-                <p className="text-xs text-blue-600 mt-1">Active conversions</p>
-                <p className="text-xs text-blue-700 font-bold mt-2">Avg: {(conversions.filter(c => c.referrerType === 'individual').reduce((s, c) => s + c.errandsCompleted, 0) / Math.max(conversions.filter(c => c.referrerType === 'individual').length, 1)).toFixed(1)} errands/person</p>
+              <div className="bg-white rounded-lg p-4 shadow border-2 border-orange-300">
+                <p className="text-xs text-orange-700 font-bold mb-1">👤 Individual Referrers</p>
+                <p className="text-2xl font-black text-orange-600">{conversions.filter(c => c.referrerType === 'individual').length}</p>
+                <p className="text-xs text-orange-600 mt-1">Active conversions</p>
+                <p className="text-xs text-orange-700 font-bold mt-2">Avg: {(conversions.filter(c => c.referrerType === 'individual').reduce((s, c) => s + c.errandsCompleted, 0) / Math.max(conversions.filter(c => c.referrerType === 'individual').length, 1)).toFixed(1)} errands/person</p>
               </div>
-              <div className="bg-white rounded-lg p-4 shadow border-2 border-purple-300">
-                <p className="text-xs text-purple-700 font-bold mb-1">🏢 Company Referrers</p>
-                <p className="text-2xl font-black text-purple-600">{conversions.filter(c => c.referrerType === 'company').length}</p>
-                <p className="text-xs text-purple-600 mt-1">Active conversions</p>
-                <p className="text-xs text-purple-700 font-bold mt-2">Avg: {(conversions.filter(c => c.referrerType === 'company').reduce((s, c) => s + c.errandsCompleted, 0) / Math.max(conversions.filter(c => c.referrerType === 'company').length, 1)).toFixed(1)} errands/person</p>
+              <div className="bg-white rounded-lg p-4 shadow border-2 border-rose-300">
+                <p className="text-xs text-rose-700 font-bold mb-1">🏢 Company Referrers</p>
+                <p className="text-2xl font-black text-rose-600">{conversions.filter(c => c.referrerType === 'company').length}</p>
+                <p className="text-xs text-rose-600 mt-1">Active conversions</p>
+                <p className="text-xs text-rose-700 font-bold mt-2">Avg: {(conversions.filter(c => c.referrerType === 'company').reduce((s, c) => s + c.errandsCompleted, 0) / Math.max(conversions.filter(c => c.referrerType === 'company').length, 1)).toFixed(1)} errands/person</p>
               </div>
             </div>
 
@@ -318,15 +318,15 @@ export default function ReferralTracking() {
             <div className="bg-white rounded-lg p-4 shadow border-2 border-orange-300">
               <h2 className="text-lg font-bold text-orange-800 mb-3">🎯 Conversion Funnel</h2>
               <div className="space-y-2">
-                <div className="p-3 bg-blue-50 rounded border border-blue-200">
+                <div className="p-3 bg-orange-50 rounded border border-orange-200">
                   <div className="flex justify-between items-center mb-1">
-                    <span className="font-bold text-blue-900">QR Code Scans → Signups</span>
-                    <span className="text-blue-700 font-black">{conversions.length} signups</span>
+                    <span className="font-bold text-orange-900">QR Code Scans → Signups</span>
+                    <span className="text-orange-700 font-black">{conversions.length} signups</span>
                   </div>
-                  <div className="w-full bg-blue-200 rounded-full h-2">
-                    <div className="bg-blue-500 h-2 rounded-full" style={{width: '100%'}}></div>
+                  <div className="w-full bg-orange-200 rounded-full h-2">
+                    <div className="bg-orange-500 h-2 rounded-full" style={{width: '100%'}}></div>
                   </div>
-                  <p className="text-xs text-blue-700 mt-1">100% - All referred users signed up</p>
+                  <p className="text-xs text-orange-700 mt-1">100% - All referred users signed up</p>
                 </div>
 
                 <div className="p-3 bg-green-50 rounded border border-green-200">
@@ -357,8 +357,8 @@ export default function ReferralTracking() {
             <div className="bg-gradient-to-r from-orange-50 to-yellow-50 rounded-lg p-4 shadow border-2 border-orange-300">
               <h2 className="text-lg font-bold text-orange-900 mb-3">💡 Key Insights & Growth Recommendations</h2>
               <div className="space-y-2 text-sm">
-                <div className="p-2 bg-white rounded border-l-4 border-blue-500">
-                  <p className="font-bold text-blue-900">📊 Individual vs Company Performance</p>
+                <div className="p-2 bg-white rounded border-l-4 border-orange-500">
+                  <p className="font-bold text-orange-900">📊 Individual vs Company Performance</p>
                   <p className="text-gray-700 text-xs mt-1">
                     Individual referrers show higher engagement ({(conversions.filter(c => c.referrerType === 'individual').reduce((s, c) => s + c.errandsCompleted, 0) / Math.max(conversions.filter(c => c.referrerType === 'individual').length, 1)).toFixed(1)} avg errands) vs companies ({(conversions.filter(c => c.referrerType === 'company').reduce((s, c) => s + c.errandsCompleted, 0) / Math.max(conversions.filter(c => c.referrerType === 'company').length, 1)).toFixed(1)} avg). <strong>Action: Promote B2C referrals with personal incentives.</strong>
                   </p>
@@ -378,8 +378,8 @@ export default function ReferralTracking() {
                   </p>
                 </div>
 
-                <div className="p-2 bg-white rounded border-l-4 border-purple-500">
-                  <p className="font-bold text-purple-900">📈 Viral Loop Strategy</p>
+                <div className="p-2 bg-white rounded border-l-4 border-rose-500">
+                  <p className="font-bold text-rose-900">📈 Viral Loop Strategy</p>
                   <p className="text-gray-700 text-xs mt-1">
                     Both referrer and referred users earn EP. <strong>Action: After 1st errand, show both earned amounts in celebratory notification. Encourage referred user to become a referrer with +50 EP bonus for their first referral.</strong>
                   </p>

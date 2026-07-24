@@ -401,8 +401,8 @@ const CompanyClientIntelligence: React.FC = () => {
                     <div style={{
                       display: 'inline-block',
                       padding: '4px 8px',
-                      background: company.subscriptionTier === 'silver' ? '#E3F2FD' : company.subscriptionTier === 'gold' ? '#FFF9C4' : '#F3E5F5',
-                      color: company.subscriptionTier === 'silver' ? '#1565C0' : company.subscriptionTier === 'gold' ? '#F57F17' : '#6A1B9A',
+                      background: company.subscriptionTier === 'silver' ? '#FFF3E4' : company.subscriptionTier === 'gold' ? '#FFF9C4' : '#FCEDE9',
+                      color: company.subscriptionTier === 'silver' ? '#D98C0C' : company.subscriptionTier === 'gold' ? '#F57F17' : '#6A1B9A',
                       fontSize: '11px',
                       fontWeight: '600',
                       borderRadius: '3px',
@@ -568,7 +568,7 @@ const CompanyClientIntelligence: React.FC = () => {
               )}
 
               {/* Advertising Optimization */}
-              <div style={{ padding: '16px', background: '#E3F2FD', borderRadius: '8px', border: '2px solid #64B5F6' }}>
+              <div style={{ padding: '16px', background: '#FFF3E4', borderRadius: '8px', border: '2px solid #F5C542' }}>
                 <div style={{ fontSize: '14px', fontWeight: '600', color: '#333', marginBottom: '8px' }}>
                   💰 Advertising Optimization
                 </div>
@@ -582,7 +582,7 @@ const CompanyClientIntelligence: React.FC = () => {
                 <button style={{
                   width: '100%',
                   padding: '10px',
-                  background: '#2196F3',
+                  background: '#F0A81E',
                   color: 'white',
                   border: 'none',
                   borderRadius: '6px',
@@ -634,7 +634,7 @@ const CompanyClientIntelligence: React.FC = () => {
               </div>
 
               {/* Engagement Channels */}
-              <div style={{ padding: '16px', background: '#E0F2F1', borderRadius: '8px', border: '1px solid #80DEEA' }}>
+              <div style={{ padding: '16px', background: '#E0F2F1', borderRadius: '8px', border: '1px solid #F5C542' }}>
                 <div style={{ fontSize: '13px', fontWeight: '600', color: '#333', marginBottom: '12px' }}>
                   📱 Engagement Channels
                 </div>
@@ -646,7 +646,7 @@ const CompanyClientIntelligence: React.FC = () => {
                       borderRadius: '4px',
                       fontSize: '12px',
                       color: '#555',
-                      border: '1px solid #80DEEA',
+                      border: '1px solid #F5C542',
                     }}>
                       📞 {channel}
                     </div>

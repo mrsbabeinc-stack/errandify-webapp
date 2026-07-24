@@ -230,7 +230,7 @@ const TimesheetManagement: React.FC = () => {
                           onClick={() => handleEdit(timesheet)}
                           style={{
                             padding: '6px 12px',
-                            background: '#2196F3',
+                            background: '#F0A81E',
                             color: 'white',
                             border: 'none',
                             borderRadius: '4px',
@@ -325,8 +325,8 @@ const TimesheetManagement: React.FC = () => {
                             <span
                               style={{
                                 padding: '2px 6px',
-                                background: '#E3F2FD',
-                                color: '#1976D2',
+                                background: '#FFF3E4',
+                                color: '#B5651D',
                                 borderRadius: '3px',
                               }}
                             >

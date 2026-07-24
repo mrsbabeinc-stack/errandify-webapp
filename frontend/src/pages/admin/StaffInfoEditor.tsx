@@ -400,7 +400,7 @@ const StaffInfoEditor: React.FC = () => {
                   </div>
 
                   {/* LEAVE & CPF */}
-                  <div style={{ padding: '12px', background: '#F5F5F5', borderRadius: '6px', borderLeft: '3px solid #2196F3' }}>
+                  <div style={{ padding: '12px', background: '#F5F5F5', borderRadius: '6px', borderLeft: '3px solid #F0A81E' }}>
                     <div style={{ fontSize: '12px', fontWeight: '600', color: '#333', marginBottom: '10px' }}>Leave & CPF</div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
                       <div>

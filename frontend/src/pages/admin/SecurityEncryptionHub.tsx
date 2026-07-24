@@ -50,7 +50,7 @@ const SecurityEncryptionHub: React.FC = () => {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '24px' }}>
           {[
             { label: 'Security Score', value: '94/100', color: '#4CAF50' },
-            { label: 'Encryption Level', value: 'AES-256', color: '#2196F3' },
+            { label: 'Encryption Level', value: 'AES-256', color: '#F0A81E' },
             { label: 'Vulnerabilities', value: '0 Critical', color: '#4CAF50' },
             { label: 'Last Audit', value: '2 hours ago', color: '#FF9800' },
           ].map((metric, idx) => (
@@ -92,7 +92,7 @@ const SecurityEncryptionHub: React.FC = () => {
                       {metric.status === 'configured' ? '✓ Configured' : metric.status === 'active' ? '✓ Active' : '⚠️ Disabled'}
                     </div>
                     {metric.status !== 'enabled' && (
-                      <button onClick={() => handleEnableEncryption(metric.name)} style={{ padding: '4px 8px', background: '#2196F3', color: 'white', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>
+                      <button onClick={() => handleEnableEncryption(metric.name)} style={{ padding: '4px 8px', background: '#F0A81E', color: 'white', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>
                         Enable
                       </button>
                     )}
@@ -168,7 +168,7 @@ const SecurityEncryptionHub: React.FC = () => {
                     <div style={{ fontWeight: '600', fontSize: '13px', color: '#333', marginBottom: '4px' }}>{policy.name}</div>
                     <div style={{ fontSize: '12px', color: '#666' }}>{policy.desc}</div>
                   </div>
-                  <button style={{ padding: '6px 12px', background: '#2196F3', color: 'white', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>
+                  <button style={{ padding: '6px 12px', background: '#F0A81E', color: 'white', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>
                     Edit
                   </button>
                 </div>

@@ -225,8 +225,8 @@ export const DiscountCodesPage: React.FC = () => {
           <div style={{ display: 'flex', gap: '6px' }}>
             <label style={{
               padding: '8px 12px',
-              background: '#E3F2FD',
-              color: '#1976D2',
+              background: '#FFF3E4',
+              color: '#B5651D',
               border: 'none',
               borderRadius: '4px',
               fontWeight: '600',
@@ -235,8 +235,8 @@ export const DiscountCodesPage: React.FC = () => {
               transition: 'all 0.2s',
               whiteSpace: 'nowrap'
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = '#BBDEFB')}
-            onMouseLeave={(e) => (e.currentTarget.style.background = '#E3F2FD')}
+            onMouseEnter={(e) => (e.currentTarget.style.background = '#F5C542')}
+            onMouseLeave={(e) => (e.currentTarget.style.background = '#FFF3E4')}
             >
               📊 Excel
               <input
@@ -337,7 +337,7 @@ export const DiscountCodesPage: React.FC = () => {
                     </td>
                     <td style={{ padding: '6px 8px', textAlign: 'center' }}>
                       {code.tags && code.tags.length > 0 ? (
-                        <span style={{ fontSize: '9px', background: '#E3F2FD', color: '#1976D2', padding: '2px 4px', borderRadius: '2px', fontWeight: '600' }}>
+                        <span style={{ fontSize: '9px', background: '#FFF3E4', color: '#B5651D', padding: '2px 4px', borderRadius: '2px', fontWeight: '600' }}>
                           {code.tags.length}
                         </span>
                       ) : (
@@ -382,8 +382,8 @@ export const DiscountCodesPage: React.FC = () => {
                           onClick={() => duplicateCode(code.id)}
                           style={{
                             padding: '4px 6px',
-                            background: '#E3F2FD',
-                            color: '#1976D2',
+                            background: '#FFF3E4',
+                            color: '#B5651D',
                             border: 'none',
                             borderRadius: '3px',
                             fontSize: '10px',
@@ -638,8 +638,8 @@ export const DiscountCodesPage: React.FC = () => {
                         key={tag}
                         style={{
                           display: 'inline-block',
-                          background: '#E3F2FD',
-                          color: '#1976D2',
+                          background: '#FFF3E4',
+                          color: '#B5651D',
                           padding: '4px 8px',
                           borderRadius: '4px',
                           fontSize: '11px',

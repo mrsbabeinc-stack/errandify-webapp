@@ -21,10 +21,10 @@ interface Application {
 }
 
 const STATUS_COLORS: { [key: string]: { bg: string; color: string } } = {
-  submitted: { bg: '#E3F2FD', color: '#0D47A1' },
+  submitted: { bg: '#FFF3E4', color: '#B5651D' },
   under_review: { bg: '#FFF3E0', color: '#E65100' },
   shortlisted: { bg: '#E8F5E9', color: '#1B5E20' },
-  interview_scheduled: { bg: '#F3E5F5', color: '#4A148C' },
+  interview_scheduled: { bg: '#FCEDE9', color: '#4A148C' },
   offered: { bg: '#FCE4EC', color: '#880E4F' },
   rejected: { bg: '#FFEBEE', color: '#B71C1C' },
   accepted: { bg: '#C8E6C9', color: '#1B5E20' },
@@ -519,8 +519,8 @@ const RecruitmentApplicationsDashboard: React.FC = () => {
                 <div style={{ display: 'grid', gap: '8px' }}>
                   {[
                     { value: 'shortlist', label: '✅ Shortlist for Interview', color: '#4CAF50' },
-                    { value: 'schedule_interview', label: '📅 Schedule Interview', color: '#2196F3' },
-                    { value: 'offer', label: '🎁 Send Offer', color: '#9C27B0' },
+                    { value: 'schedule_interview', label: '📅 Schedule Interview', color: '#F0A81E' },
+                    { value: 'offer', label: '🎁 Send Offer', color: '#E2736B' },
                     // 'approve' used to say "can now be added in Staff Manager",
                     // i.e. re-type everything including the NRIC by hand. The
                     // Hire button below does it properly.

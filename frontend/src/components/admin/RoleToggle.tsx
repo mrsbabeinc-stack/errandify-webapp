@@ -132,9 +132,9 @@ export const RoleToggle: React.FC = () => {
         }
 
         .role-btn.active {
-          background: #2563eb;
+          background: #B5651D;
           color: white;
-          border-color: #1d4ed8;
+          border-color: #B5651D;
         }
 
         .role-btn.admin {
@@ -186,8 +186,8 @@ export const RoleToggle: React.FC = () => {
         }
 
         .dropdown-item.active {
-          background: #e0e7ff;
-          color: #2563eb;
+          background: #FFF3E4;
+          color: #B5651D;
           font-weight: 500;
         }
 

@@ -261,10 +261,10 @@ export default function CommunityFeed() {
   };
 
   const typeColors = {
-    'announcement': '#2196F3',
+    'announcement': '#F0A81E',
     'story': '#4CAF50',
     'tip': '#FF9800',
-    'question': '#9C27B0',
+    'question': '#E2736B',
   };
 
   return (
@@ -498,7 +498,7 @@ export default function CommunityFeed() {
             {discussions.map(d => (
               <div key={d.id} style={{
                 padding: '14px', background: 'white',
-                border: '2px solid #9C27B0', borderRadius: '8px',
+                border: '2px solid #E2736B', borderRadius: '8px',
               }}>
                 {editingDiscId === d.id ? (
                   <input

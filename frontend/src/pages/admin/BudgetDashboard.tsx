@@ -236,8 +236,8 @@ const BudgetDashboard: React.FC = () => {
 
             <div style={{ background: 'white', padding: '20px', borderRadius: '8px', border: '1px solid #ddd' }}>
               {/* Required Fields Notice */}
-              <div style={{ padding: '12px', background: '#E3F2FD', borderRadius: '4px', marginBottom: '16px', borderLeft: '4px solid #1565C0' }}>
-                <p style={{ fontSize: '11px', color: '#0D47A1', margin: 0 }}>
+              <div style={{ padding: '12px', background: '#FFF3E4', borderRadius: '4px', marginBottom: '16px', borderLeft: '4px solid #D98C0C' }}>
+                <p style={{ fontSize: '11px', color: '#B5651D', margin: 0 }}>
                   <strong>* = Required to create the budget</strong>
                 </p>
               </div>
@@ -487,9 +487,9 @@ const BudgetDashboard: React.FC = () => {
                   })}
                   style={{
                     padding: '8px 12px',
-                    background: '#E3F2FD',
-                    color: '#1565C0',
-                    border: '1px solid #1565C0',
+                    background: '#FFF3E4',
+                    color: '#D98C0C',
+                    border: '1px solid #D98C0C',
                     borderRadius: '4px',
                     cursor: 'pointer',
                     fontWeight: '600',
@@ -579,7 +579,7 @@ const BudgetDashboard: React.FC = () => {
           {/* Summary */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '24px' }}>
             {[
-              { label: 'Total Budget', value: `SGD ${selectedBudget.total_budget.toLocaleString()}`, color: '#2196F3' },
+              { label: 'Total Budget', value: `SGD ${selectedBudget.total_budget.toLocaleString()}`, color: '#F0A81E' },
               { label: 'Total Spent', value: `SGD ${selectedBudget.total_spent.toLocaleString()}`, color: '#FF9800' },
               { label: 'Remaining', value: `SGD ${(selectedBudget.total_budget - selectedBudget.total_spent).toLocaleString()}`, color: '#4CAF50' },
             ].map((stat, idx) => (
@@ -770,7 +770,7 @@ const BudgetDashboard: React.FC = () => {
         {/* Summary Stats */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '12px', marginBottom: '24px' }}>
           {[
-            { label: 'Total Budget', value: `SGD ${totalBudget.toLocaleString()}`, color: '#2196F3' },
+            { label: 'Total Budget', value: `SGD ${totalBudget.toLocaleString()}`, color: '#F0A81E' },
             { label: 'Total Spent', value: `SGD ${totalSpent.toLocaleString()}`, color: '#FF9800' },
             { label: 'Remaining', value: `SGD ${totalVariance.toLocaleString()}`, color: '#4CAF50' },
             { label: 'Utilization', value: `${utilizationPercent}%`, color: '#FF6B35' },
@@ -846,7 +846,7 @@ const BudgetDashboard: React.FC = () => {
                     {/* Budget Amount */}
                     <div>
                       <div style={{ fontSize: '11px', color: '#666', marginBottom: '4px' }}>Budget</div>
-                      <div style={{ fontSize: '14px', fontWeight: '600', color: '#2196F3' }}>
+                      <div style={{ fontSize: '14px', fontWeight: '600', color: '#F0A81E' }}>
                         SGD {budget_amount.toLocaleString()}
                       </div>
                     </div>

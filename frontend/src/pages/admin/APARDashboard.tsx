@@ -301,7 +301,7 @@ const APARDashboard: React.FC = () => {
   const getStatusBadge = (status: string) => {
     const styles: { [key: string]: { bg: string; color: string; text: string; icon: string } } = {
       paid: { bg: '#E8F5E9', color: '#2E7D32', text: 'Paid', icon: '✓' },
-      pending: { bg: '#E3F2FD', color: '#1565C0', text: 'Pending', icon: '⏳' },
+      pending: { bg: '#FFF3E4', color: '#D98C0C', text: 'Pending', icon: '⏳' },
       overdue: { bg: '#FFEBEE', color: '#C62828', text: 'Overdue', icon: '⚠' },
       partial: { bg: '#FFF3E0', color: '#E65100', text: 'Partial', icon: '◐' },
     };
@@ -350,8 +350,8 @@ const APARDashboard: React.FC = () => {
 
             <div style={{ background: 'white', padding: '20px', borderRadius: '8px', border: '1px solid #ddd' }}>
               {/* Required Fields Notice */}
-              <div style={{ padding: '12px', background: '#E3F2FD', borderRadius: '4px', marginBottom: '16px', borderLeft: '4px solid #1565C0' }}>
-                <p style={{ fontSize: '11px', color: '#0D47A1', margin: 0 }}>
+              <div style={{ padding: '12px', background: '#FFF3E4', borderRadius: '4px', marginBottom: '16px', borderLeft: '4px solid #D98C0C' }}>
+                <p style={{ fontSize: '11px', color: '#B5651D', margin: 0 }}>
                   <strong>* = Required fields (Singapore IRAS/MOM compliance)</strong>
                 </p>
               </div>
@@ -588,14 +588,14 @@ const APARDashboard: React.FC = () => {
                   <label
                     style={{
                       padding: '16px',
-                      border: '2px dashed #2196F3',
+                      border: '2px dashed #F0A81E',
                       borderRadius: '4px',
                       textAlign: 'center',
                       cursor: 'pointer',
-                      background: '#E3F2FD',
+                      background: '#FFF3E4',
                       fontSize: '12px',
                       fontWeight: '600',
-                      color: '#1565C0',
+                      color: '#D98C0C',
                     }}
                   >
                     📷 Take Photo
@@ -749,7 +749,7 @@ const APARDashboard: React.FC = () => {
             { label: 'Payables Total', value: `SGD ${payablesTotal.toLocaleString()}`, color: '#F44336', icon: '📤' },
             { label: 'Payables Outstanding', value: `SGD ${payablesOutstanding.toLocaleString()}`, color: '#FF9800', icon: '⏳' },
             { label: 'Receivables Total', value: `SGD ${receivablesTotal.toLocaleString()}`, color: '#4CAF50', icon: '📥' },
-            { label: 'Receivables Outstanding', value: `SGD ${receivablesOutstanding.toLocaleString()}`, color: '#2196F3', icon: '⏳' },
+            { label: 'Receivables Outstanding', value: `SGD ${receivablesOutstanding.toLocaleString()}`, color: '#F0A81E', icon: '⏳' },
           ].map((stat, idx) => (
             <div
               key={idx}

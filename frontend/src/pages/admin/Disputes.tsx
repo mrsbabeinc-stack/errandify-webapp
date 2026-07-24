@@ -329,7 +329,7 @@ export const DisputesPage: React.FC = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'hana_reviewing':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-orange-100 text-orange-800';
       case 'admin_review':
         return 'bg-yellow-100 text-yellow-800';
       case 'resolved':
@@ -402,9 +402,9 @@ export const DisputesPage: React.FC = () => {
 
         {/* Stats */}
         <div className="grid grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-lg p-4 border-l-4 border-blue-500 shadow-sm">
+          <div className="bg-white rounded-lg p-4 border-l-4 border-orange-500 shadow-sm">
             <p className="text-xs text-gray-600 font-semibold">Hana reviewing</p>
-            <p className="text-2xl font-bold text-blue-600">
+            <p className="text-2xl font-bold text-orange-600">
               {disputes.filter((d) => d.status === 'hana_reviewing').length}
             </p>
           </div>
@@ -669,12 +669,12 @@ export const DisputesPage: React.FC = () => {
 
               {/* Linked Case Context */}
               {linkedCaseContext && (
-                <div className="bg-blue-50 border border-blue-300 rounded-lg p-4 space-y-3">
+                <div className="bg-orange-50 border border-orange-300 rounded-lg p-4 space-y-3">
                   <div className="flex justify-between items-start">
                     <div>
-                      <p className="text-xs font-bold text-blue-900 uppercase">📋 Linked Case</p>
-                      <p className="text-lg font-bold text-blue-800">{linkedCaseContext.case_id}</p>
-                      <p className="text-xs text-blue-700 mt-1">{linkedCaseContext.subject}</p>
+                      <p className="text-xs font-bold text-orange-900 uppercase">📋 Linked Case</p>
+                      <p className="text-lg font-bold text-orange-800">{linkedCaseContext.case_id}</p>
+                      <p className="text-xs text-orange-700 mt-1">{linkedCaseContext.subject}</p>
                     </div>
                     <div className="text-right">
                       <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
@@ -688,22 +688,22 @@ export const DisputesPage: React.FC = () => {
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div>
-                      <p className="text-blue-700 font-semibold">Asker</p>
-                      <p className="text-blue-600">{linkedCaseContext.asker_alias}</p>
+                      <p className="text-orange-700 font-semibold">Asker</p>
+                      <p className="text-orange-600">{linkedCaseContext.asker_alias}</p>
                     </div>
                     <div>
-                      <p className="text-blue-700 font-semibold">Doer</p>
-                      <p className="text-blue-600">{linkedCaseContext.doer_alias}</p>
+                      <p className="text-orange-700 font-semibold">Doer</p>
+                      <p className="text-orange-600">{linkedCaseContext.doer_alias}</p>
                     </div>
                   </div>
                   {linkedCaseContext.ai_analysis && (
-                    <div className="bg-white rounded p-2 text-xs text-gray-700 border-l-2 border-blue-500">
+                    <div className="bg-white rounded p-2 text-xs text-gray-700 border-l-2 border-orange-500">
                       <strong>AI Analysis:</strong> {linkedCaseContext.ai_analysis}
                     </div>
                   )}
                   <button
                     onClick={() => navigate(`/admin/cases/${linkedCaseContext.case_id}`)}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 rounded transition"
+                    className="w-full bg-orange-600 hover:bg-orange-700 text-white text-sm font-semibold py-2 rounded transition"
                   >
                     View Full Case →
                   </button>
@@ -807,9 +807,9 @@ export const DisputesPage: React.FC = () => {
                   </div>
                 </div>
               ) : (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-2">
-                  <p className="text-xs font-semibold text-blue-900">🤖 AI Safety Check</p>
-                  <div className="text-xs text-blue-800 space-y-1">
+                <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 space-y-2">
+                  <p className="text-xs font-semibold text-orange-900">🤖 AI Safety Check</p>
+                  <div className="text-xs text-orange-800 space-y-1">
                     <p>✓ No coercion language detected</p>
                     <p>✓ Both parties appear to have clean history</p>
                     <p>💡 AI Confidence: Moderate (use your judgment)</p>

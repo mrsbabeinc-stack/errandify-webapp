@@ -160,7 +160,7 @@ export const AdvertisingApproval: React.FC = () => {
       pending: '#ff9800',
       approved: '#4caf50',
       rejected: '#f44336',
-      live: '#2196f3',
+      live: '#F0A81E',
       expired: '#9e9e9e',
     };
     return colors[status] || '#666';

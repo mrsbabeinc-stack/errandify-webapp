@@ -118,7 +118,7 @@ const SingaporeComplianceCenter: React.FC = () => {
               </div>
 
               <div style={{ display: 'flex', gap: '6px' }}>
-                <button onClick={() => handleAudit(item.name)} style={{ padding: '6px 12px', background: '#2196F3', color: 'white', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>
+                <button onClick={() => handleAudit(item.name)} style={{ padding: '6px 12px', background: '#F0A81E', color: 'white', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>
                   🔍 Audit
                 </button>
                 {item.actions.map((action, idx) => (
@@ -132,9 +132,9 @@ const SingaporeComplianceCenter: React.FC = () => {
         </div>
 
         {/* Audit Trail */}
-        <div style={{ marginTop: '24px', padding: '16px', background: '#E3F2FD', borderRadius: '8px', border: '1px solid #2196F3' }}>
-          <p style={{ fontSize: '12px', color: '#1565C0', margin: '0 0 8px 0', fontWeight: '600' }}>📋 Compliance Features</p>
-          <ul style={{ fontSize: '12px', color: '#1565C0', margin: 0, paddingLeft: '20px' }}>
+        <div style={{ marginTop: '24px', padding: '16px', background: '#FFF3E4', borderRadius: '8px', border: '1px solid #F0A81E' }}>
+          <p style={{ fontSize: '12px', color: '#D98C0C', margin: '0 0 8px 0', fontWeight: '600' }}>📋 Compliance Features</p>
+          <ul style={{ fontSize: '12px', color: '#D98C0C', margin: 0, paddingLeft: '20px' }}>
             <li>Real-time compliance monitoring for PDPA, ACRA, MOM, IRAS</li>
             <li>Immutable audit trails for all compliance actions</li>
             <li>Automated compliance alerts & violation detection</li>

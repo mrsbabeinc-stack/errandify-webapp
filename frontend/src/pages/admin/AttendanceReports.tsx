@@ -232,7 +232,7 @@ const AttendanceReports: React.FC = () => {
         {/* Report Summary Stats */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '12px', marginBottom: '24px' }}>
           {[
-            { label: 'Total Staff', value: reportData.length, color: '#2196F3' },
+            { label: 'Total Staff', value: reportData.length, color: '#F0A81E' },
             { label: 'Avg Attendance', value: '95%', color: '#4CAF50' },
             { label: 'Late Arrivals', value: reportData.reduce((sum, r) => sum + r.late_days, 0), color: '#FF9800' },
             { label: 'Absences', value: reportData.reduce((sum, r) => sum + r.absent_days, 0), color: '#F44336' },
@@ -333,7 +333,7 @@ const AttendanceReports: React.FC = () => {
                         padding: '12px',
                         textAlign: 'center',
                         fontSize: '12px',
-                        color: '#2196F3',
+                        color: '#F0A81E',
                         fontWeight: '600',
                       }}
                     >

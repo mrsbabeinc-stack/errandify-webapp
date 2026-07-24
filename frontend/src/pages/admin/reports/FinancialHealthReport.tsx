@@ -184,7 +184,7 @@ export const FinancialHealthReport: React.FC = () => {
           </div>
           <div style={{ background: '#fff', padding: '16px', borderRadius: '8px', border: '1px solid #ffb88c' }}>
             <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>Net GST</div>
-            <div style={{ fontSize: '24px', fontWeight: '700', color: '#2196F3' }}>
+            <div style={{ fontSize: '24px', fontWeight: '700', color: '#F0A81E' }}>
               {summary ? sgd(summary.netGst) : '—'}
             </div>
             <div style={{ fontSize: '11px', color: '#999', marginTop: '4px' }}>

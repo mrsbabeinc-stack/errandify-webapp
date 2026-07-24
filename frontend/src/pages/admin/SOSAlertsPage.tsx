@@ -126,12 +126,12 @@ export const SOSAlertsPage: React.FC = () => {
           </div>
           <div style={{
             background: '#fff',
-            border: '2px solid #3b82f6',
+            border: '2px solid #F0A81E',
             borderRadius: '8px',
             padding: '12px',
             textAlign: 'center',
           }}>
-            <div style={{ fontSize: '14px', fontWeight: '700', color: '#3b82f6' }}>
+            <div style={{ fontSize: '14px', fontWeight: '700', color: '#F0A81E' }}>
               {pendingCount}
             </div>
             <div style={{ fontSize: '11px', color: '#666' }}>Pending</div>

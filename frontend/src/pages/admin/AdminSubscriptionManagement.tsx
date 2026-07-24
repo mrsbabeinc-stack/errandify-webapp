@@ -56,7 +56,7 @@ export default function AdminSubscriptionManagement() {
     const colors: Record<string, string> = {
       silver: 'bg-gray-100 text-gray-800',
       gold: 'bg-yellow-100 text-yellow-800',
-      platinum: 'bg-purple-100 text-purple-800',
+      platinum: 'bg-rose-100 text-rose-800',
       free: 'bg-gray-50 text-gray-600',
     };
     return colors[tier] || colors.free;
@@ -67,7 +67,7 @@ export default function AdminSubscriptionManagement() {
       active: 'bg-green-100 text-green-800',
       canceled: 'bg-red-100 text-red-800',
       downgrade_pending: 'bg-yellow-100 text-yellow-800',
-      pending: 'bg-blue-100 text-blue-800',
+      pending: 'bg-orange-100 text-orange-800',
     };
     return colors[status] || colors.pending;
   };
@@ -150,9 +150,9 @@ export default function AdminSubscriptionManagement() {
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4 mb-8">
-        <div className="bg-blue-50 p-4 rounded-lg">
+        <div className="bg-orange-50 p-4 rounded-lg">
           <p className="text-sm text-gray-600">Total Subscriptions</p>
-          <p className="text-2xl font-bold text-blue-600">{subscriptions.length}</p>
+          <p className="text-2xl font-bold text-orange-600">{subscriptions.length}</p>
         </div>
         <div className="bg-green-50 p-4 rounded-lg">
           <p className="text-sm text-gray-600">Active</p>
@@ -160,9 +160,9 @@ export default function AdminSubscriptionManagement() {
             {subscriptions.filter(s => s.status === 'active').length}
           </p>
         </div>
-        <div className="bg-purple-50 p-4 rounded-lg">
+        <div className="bg-rose-50 p-4 rounded-lg">
           <p className="text-sm text-gray-600">Platinum</p>
-          <p className="text-2xl font-bold text-purple-600">
+          <p className="text-2xl font-bold text-rose-600">
             {subscriptions.filter(s => s.current_tier === 'platinum').length}
           </p>
         </div>
@@ -249,7 +249,7 @@ export default function AdminSubscriptionManagement() {
                     </button>
                     {sub.status === 'active' && (
                       <>
-                        <button className="px-4 py-2 text-sm font-medium text-blue-700 border border-blue-300 rounded hover:bg-blue-50">
+                        <button className="px-4 py-2 text-sm font-medium text-orange-700 border border-orange-300 rounded hover:bg-orange-50">
                           Change Tier
                         </button>
                         <button className="px-4 py-2 text-sm font-medium text-red-700 border border-red-300 rounded hover:bg-red-50">

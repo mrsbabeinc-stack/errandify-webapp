@@ -57,9 +57,9 @@ export const AIAnalysisPanel: React.FC<AIAnalysisPanelProps> = ({
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '12px' }}>
         {safety && (
-          <div style={{ background: '#E3F2FD', padding: '8px', borderRadius: '6px' }}>
-            <div style={{ fontSize: '11px', fontWeight: '600', color: '#1976D2', marginBottom: '4px' }}>🔒 Safety</div>
-            <div style={{ fontSize: '12px', color: '#0D47A1', lineHeight: '1.4' }}>{safety}</div>
+          <div style={{ background: '#FFF3E4', padding: '8px', borderRadius: '6px' }}>
+            <div style={{ fontSize: '11px', fontWeight: '600', color: '#B5651D', marginBottom: '4px' }}>🔒 Safety</div>
+            <div style={{ fontSize: '12px', color: '#B5651D', lineHeight: '1.4' }}>{safety}</div>
           </div>
         )}
         {legal && (
@@ -69,7 +69,7 @@ export const AIAnalysisPanel: React.FC<AIAnalysisPanelProps> = ({
           </div>
         )}
         {bias && (
-          <div style={{ background: '#F3E5F5', padding: '8px', borderRadius: '6px' }}>
+          <div style={{ background: '#FCEDE9', padding: '8px', borderRadius: '6px' }}>
             <div style={{ fontSize: '11px', fontWeight: '600', color: '#6A1B9A', marginBottom: '4px' }}>⚖️ Bias Check</div>
             <div style={{ fontSize: '12px', color: '#4A148C', lineHeight: '1.4' }}>{bias}</div>
           </div>

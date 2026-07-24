@@ -55,7 +55,7 @@ const auth = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` }
 const fmt = (d: string | null) => (d ? new Date(d).toLocaleString('en-SG') : '—');
 
 const TYPE_COLOUR: Record<string, string> = {
-  access: '#2196F3',
+  access: '#F0A81E',
   erasure: '#F44336',
 };
 

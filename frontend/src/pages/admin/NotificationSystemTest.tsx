@@ -54,7 +54,7 @@ export const NotificationSystemTest: React.FC = () => {
                 'Information',
                 'This is an info notification - just letting you know something'
               )}
-              className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold transition"
+              className="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold transition"
             >
               ℹ Show Info Toast
             </button>
@@ -70,7 +70,7 @@ export const NotificationSystemTest: React.FC = () => {
                 actionLabel: 'View Details',
                 actionUrl: '/admin/dashboard',
               })}
-              className="px-6 py-3 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-semibold transition"
+              className="px-6 py-3 bg-rose-500 hover:bg-rose-600 text-white rounded-lg font-semibold transition"
             >
               🎯 Show Custom Toast
             </button>
@@ -121,8 +121,8 @@ export const MyComponent = () => {
                 </ul>
               </div>
 
-              <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
-                <p className="text-sm text-blue-900">
+              <div className="bg-orange-50 border border-orange-200 p-4 rounded-lg">
+                <p className="text-sm text-orange-900">
                   <strong>✓ All toasts are:</strong>
                   <br />
                   • Errandify-themed with orange accent colors

@@ -75,8 +75,8 @@ export const ActionPlansReport: React.FC = () => {
                   <span style={{
                     display: 'inline-block',
                     padding: '4px 8px',
-                    background: plan.status === 'completed' ? '#E8F5E9' : plan.status === 'in-progress' ? '#E3F2FD' : '#FFF3E0',
-                    color: plan.status === 'completed' ? '#2E7D32' : plan.status === 'in-progress' ? '#1976D2' : '#E65100',
+                    background: plan.status === 'completed' ? '#E8F5E9' : plan.status === 'in-progress' ? '#FFF3E4' : '#FFF3E0',
+                    color: plan.status === 'completed' ? '#2E7D32' : plan.status === 'in-progress' ? '#B5651D' : '#E65100',
                     borderRadius: '4px',
                     fontSize: '10px',
                     fontWeight: '600'

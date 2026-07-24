@@ -186,7 +186,7 @@ const HRDashboard: React.FC = () => {
           </div>
           <div style={{ padding: '16px', background: '#FFF8F5', borderRadius: '8px', border: '2px solid #FFD9B3' }}>
             <div style={{ fontSize: '12px', color: '#999', marginBottom: '4px' }}>Payroll (Monthly)</div>
-            <div style={{ fontSize: '24px', fontWeight: '700', color: '#2196F3' }}>
+            <div style={{ fontSize: '24px', fontWeight: '700', color: '#F0A81E' }}>
               SGD ${staff.reduce((sum, s) => sum + (s.baseSalary || 0), 0).toLocaleString()}
             </div>
           </div>

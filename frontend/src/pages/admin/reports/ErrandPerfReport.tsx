@@ -115,9 +115,9 @@ export const ErrandPerfReport: React.FC = () => {
               <text x="100" y="60" fontSize="12" textAnchor="middle" fill="#FF6B35" fontWeight="700">850</text>
 
               {/* Delivery - 720 */}
-              <rect x="150" y="92" width="60" height="108" fill="#2196F3" opacity="0.8" rx="4"/>
+              <rect x="150" y="92" width="60" height="108" fill="#F0A81E" opacity="0.8" rx="4"/>
               <text x="180" y="215" fontSize="11" textAnchor="middle" fill="#333" fontWeight="500">Delivery</text>
-              <text x="180" y="80" fontSize="12" textAnchor="middle" fill="#2196F3" fontWeight="700">720</text>
+              <text x="180" y="80" fontSize="12" textAnchor="middle" fill="#F0A81E" fontWeight="700">720</text>
 
               {/* Shopping - 540 */}
               <rect x="230" y="118" width="60" height="82" fill="#4CAF50" opacity="0.8" rx="4"/>
@@ -130,9 +130,9 @@ export const ErrandPerfReport: React.FC = () => {
               <text x="340" y="132" fontSize="12" textAnchor="middle" fill="#FFC107" fontWeight="700">380</text>
 
               {/* Others - 280 */}
-              <rect x="390" y="158" width="60" height="42" fill="#9C27B0" opacity="0.8" rx="4"/>
+              <rect x="390" y="158" width="60" height="42" fill="#E2736B" opacity="0.8" rx="4"/>
               <text x="420" y="215" fontSize="11" textAnchor="middle" fill="#333" fontWeight="500">Others</text>
-              <text x="420" y="146" fontSize="12" textAnchor="middle" fill="#9C27B0" fontWeight="700">280</text>
+              <text x="420" y="146" fontSize="12" textAnchor="middle" fill="#E2736B" fontWeight="700">280</text>
             </svg>
           </div>
         </div>

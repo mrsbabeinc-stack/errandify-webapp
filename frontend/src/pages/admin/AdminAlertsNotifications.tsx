@@ -65,7 +65,7 @@ interface AlertEvent {
 const auth = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` });
 const fmt = (d: string | null) => (d ? new Date(d).toLocaleString('en-SG') : '—');
 
-const SEV: Record<string, string> = { info: '#2196F3', warning: '#FF9800', critical: '#F44336' };
+const SEV: Record<string, string> = { info: '#F0A81E', warning: '#FF9800', critical: '#F44336' };
 
 async function api(path: string, init: RequestInit = {}) {
   const res = await fetch(path, {
@@ -231,7 +231,7 @@ export default function AdminAlertsNotifications() {
           ))}
           <div style={{ marginLeft: 'auto', paddingBottom: '6px' }}>
             <button onClick={runNow} disabled={busy}
-              style={{ padding: '8px 14px', background: '#2196F3', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
+              style={{ padding: '8px 14px', background: '#F0A81E', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
               {busy ? 'Working…' : 'Evaluate now'}
             </button>
           </div>

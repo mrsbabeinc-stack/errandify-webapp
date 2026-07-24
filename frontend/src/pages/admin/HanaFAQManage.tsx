@@ -113,8 +113,8 @@ export const HanaFAQManage: React.FC = () => {
               </div>
 
               {/* English Question & Answer */}
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-blue-900 mb-3">🇬🇧 English</h3>
+              <div className="bg-orange-50 p-4 rounded-lg">
+                <h3 className="font-semibold text-orange-900 mb-3">🇬🇧 English</h3>
                 <input
                   type="text"
                   placeholder="Question (English)"
@@ -275,7 +275,7 @@ export const HanaFAQManage: React.FC = () => {
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleEditFAQ(faq.id)}
-                      className="px-3 py-1 bg-blue-100 text-blue-600 hover:bg-blue-200 rounded text-sm font-semibold"
+                      className="px-3 py-1 bg-orange-100 text-orange-600 hover:bg-orange-200 rounded text-sm font-semibold"
                     >
                       Edit
                     </button>

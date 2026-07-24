@@ -239,7 +239,7 @@ export const SOSAlertDisplay: React.FC<SOSAlertDisplayProps> = ({ alert, onDismi
         </button>
         <button style={{
           padding: '8px',
-          background: '#3b82f6',
+          background: '#F0A81E',
           color: 'white',
           border: 'none',
           borderRadius: '4px',
@@ -251,7 +251,7 @@ export const SOSAlertDisplay: React.FC<SOSAlertDisplayProps> = ({ alert, onDismi
         </button>
         <button style={{
           padding: '8px',
-          background: '#6366f1',
+          background: '#F0A81E',
           color: 'white',
           border: 'none',
           borderRadius: '4px',

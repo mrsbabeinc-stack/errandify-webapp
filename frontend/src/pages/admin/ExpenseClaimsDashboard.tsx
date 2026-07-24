@@ -230,7 +230,7 @@ const ExpenseClaimsDashboard: React.FC = () => {
       case 'accounts-reviewed':
         return { bg: '#C8E6C9', color: '#1B5E20', label: '✓ ACCOUNTS REVIEWED' };
       case 'manager-approved':
-        return { bg: '#E3F2FD', color: '#0D47A1', label: '✓ MANAGER APPROVED' };
+        return { bg: '#FFF3E4', color: '#B5651D', label: '✓ MANAGER APPROVED' };
       case 'submitted':
         return { bg: '#FFF3E0', color: '#E65100', label: '⏳ SUBMITTED' };
       case 'draft':
@@ -274,7 +274,7 @@ const ExpenseClaimsDashboard: React.FC = () => {
         </div>
 
         {/* Compliance Banner */}
-        <div style={{ padding: '12px 16px', background: '#E3F2FD', border: '2px solid #1976D2', borderRadius: '6px', marginBottom: '16px', fontSize: '12px', color: '#0D47A1' }}>
+        <div style={{ padding: '12px 16px', background: '#FFF3E4', border: '2px solid #B5651D', borderRadius: '6px', marginBottom: '16px', fontSize: '12px', color: '#B5651D' }}>
           <strong>🧾 Claims and receipts:</strong> Staff submit → manager approves → accounts reviews → reimbursement, with each step recorded against a named approver. Reimbursement writes the expense to the ledger. Keep the receipts: IRAS requires supporting records for 5 years.
         </div>
 
@@ -298,7 +298,7 @@ const ExpenseClaimsDashboard: React.FC = () => {
             </div>
             <div style={{ padding: '16px', background: '#FFF8F5', borderRadius: '8px', border: '2px solid #FFD9B3' }}>
               <div style={{ fontSize: '12px', color: '#999', marginBottom: '4px' }}>Reimbursed</div>
-              <div style={{ fontSize: '24px', fontWeight: '700', color: '#2196F3' }}>
+              <div style={{ fontSize: '24px', fontWeight: '700', color: '#F0A81E' }}>
                 SGD ${claimSummary.reimbursedAmount.toLocaleString()}
               </div>
               <div style={{ fontSize: '11px', color: '#999', marginTop: '4px' }}>Completed</div>
@@ -812,7 +812,7 @@ const ExpenseClaimsDashboard: React.FC = () => {
                         onClick={() => handleProcessReimbursement(claim.id)}
                         style={{
                           padding: '8px 16px',
-                          background: '#2196F3',
+                          background: '#F0A81E',
                           color: 'white',
                           border: 'none',
                           borderRadius: '4px',

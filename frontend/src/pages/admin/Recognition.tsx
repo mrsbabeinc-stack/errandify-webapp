@@ -688,7 +688,7 @@ Respond with ONLY a detailed visual description (2-3 sentences) of what the imag
                         }}
                         style={{
                           padding: '6px',
-                          background: '#2196F3',
+                          background: '#F0A81E',
                           color: 'white',
                           border: 'none',
                           borderRadius: '4px',
@@ -767,7 +767,7 @@ Respond with ONLY a detailed visual description (2-3 sentences) of what the imag
                   </span>
                   <button
                     onClick={() => handleToggleVisibility(rec)}
-                    style={{ padding: '4px 10px', background: '#2196F3', color: 'white', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}
+                    style={{ padding: '4px 10px', background: '#F0A81E', color: 'white', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}
                   >
                     {rec.visibility === 'public' ? 'Hide' : 'Publish'}
                   </button>

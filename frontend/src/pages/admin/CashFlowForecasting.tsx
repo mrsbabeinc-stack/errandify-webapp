@@ -117,7 +117,7 @@ const CashFlowForecasting: React.FC = () => {
             { label: 'Actual Inflow (YTD)', value: `SGD ${totalInflow.toLocaleString()}`, color: '#4CAF50' },
             { label: 'Actual Outflow (YTD)', value: `SGD ${totalOutflow.toLocaleString()}`, color: '#E65100' },
             { label: 'Current Balance', value: `SGD ${currentBalance.toLocaleString()}`, color: '#FF6B35' },
-            { label: 'Projected Inflow (Next 3M)', value: `SGD ${projectedInflow.toLocaleString()}`, color: '#2196F3' },
+            { label: 'Projected Inflow (Next 3M)', value: `SGD ${projectedInflow.toLocaleString()}`, color: '#F0A81E' },
           ].map((stat, idx) => (
             <div key={idx} style={{ padding: '16px', background: 'white', border: `2px solid ${stat.color}`, borderRadius: '8px', textAlign: 'center' }}>
               <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>{stat.label}</div>

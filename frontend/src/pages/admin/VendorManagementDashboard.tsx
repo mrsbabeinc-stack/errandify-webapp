@@ -480,19 +480,19 @@ const VendorManagementDashboard: React.FC = () => {
             <div style={{ fontSize: '22px', fontWeight: '700', color: '#4CAF50' }}>{stats.totalVendors}</div>
             <div style={{ fontSize: '11px', color: '#2E7D32', marginTop: '4px' }}>{stats.activeVendors} active</div>
           </div>
-          <div style={{ padding: '16px', background: '#E3F2FD', borderRadius: '8px', border: '2px solid #2196F3' }}>
-            <div style={{ fontSize: '12px', color: '#0D47A1', marginBottom: '4px' }}>Total Paid (YTD)</div>
-            <div style={{ fontSize: '22px', fontWeight: '700', color: '#2196F3' }}>SGD {stats.totalPaid.toLocaleString()}</div>
-            <div style={{ fontSize: '11px', color: '#0D47A1', marginTop: '4px' }}>payments completed</div>
+          <div style={{ padding: '16px', background: '#FFF3E4', borderRadius: '8px', border: '2px solid #F0A81E' }}>
+            <div style={{ fontSize: '12px', color: '#B5651D', marginBottom: '4px' }}>Total Paid (YTD)</div>
+            <div style={{ fontSize: '22px', fontWeight: '700', color: '#F0A81E' }}>SGD {stats.totalPaid.toLocaleString()}</div>
+            <div style={{ fontSize: '11px', color: '#B5651D', marginTop: '4px' }}>payments completed</div>
           </div>
           <div style={{ padding: '16px', background: '#FFF3E0', borderRadius: '8px', border: '2px solid #FF9800' }}>
             <div style={{ fontSize: '12px', color: '#E65100', marginBottom: '4px' }}>Outstanding</div>
             <div style={{ fontSize: '22px', fontWeight: '700', color: '#FF9800' }}>SGD {stats.totalOutstanding.toLocaleString()}</div>
             <div style={{ fontSize: '11px', color: '#E65100', marginTop: '4px' }}>pending payment</div>
           </div>
-          <div style={{ padding: '16px', background: '#F3E5F5', borderRadius: '8px', border: '2px solid #9C27B0' }}>
+          <div style={{ padding: '16px', background: '#FCEDE9', borderRadius: '8px', border: '2px solid #E2736B' }}>
             <div style={{ fontSize: '12px', color: '#4A148C', marginBottom: '4px' }}>Payments Pending</div>
-            <div style={{ fontSize: '22px', fontWeight: '700', color: '#9C27B0' }}>{stats.paymentsPending}</div>
+            <div style={{ fontSize: '22px', fontWeight: '700', color: '#E2736B' }}>{stats.paymentsPending}</div>
             <div style={{ fontSize: '11px', color: '#4A148C', marginTop: '4px' }}>awaiting processing</div>
           </div>
         </div>
@@ -577,7 +577,7 @@ const VendorManagementDashboard: React.FC = () => {
               </div>
             </div>
 
-            <div style={{ marginTop: '24px', padding: '12px 16px', background: '#E3F2FD', border: '2px solid #1976D2', borderRadius: '6px', fontSize: '12px', color: '#0D47A1' }}>
+            <div style={{ marginTop: '24px', padding: '12px 16px', background: '#FFF3E4', border: '2px solid #B5651D', borderRadius: '6px', fontSize: '12px', color: '#B5651D' }}>
               <strong>✅ Vendor Management:</strong> Track all suppliers, payment terms, bank details, and outstanding balances. Manage payment approvals and reconciliations.
             </div>
           </div>

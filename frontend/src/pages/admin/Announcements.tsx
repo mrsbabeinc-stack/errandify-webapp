@@ -27,7 +27,7 @@ interface Announcement {
 
 const TYPE_COLORS: Record<string, string> = {
   important: '#E53935',
-  feature: '#2196F3',
+  feature: '#F0A81E',
   maintenance: '#FF9800',
   tip: '#4CAF50',
 };

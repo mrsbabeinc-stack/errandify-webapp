@@ -423,7 +423,7 @@ export default function AdminUserManagement() {
         gap: '12px',
       }}>
         {[
-          { label: 'Total Users', value: users.length, color: '#2196F3' },
+          { label: 'Total Users', value: users.length, color: '#F0A81E' },
           { label: 'Active', value: users.filter(u => u.status === 'active').length, color: '#4CAF50' },
           { label: 'Suspended', value: users.filter(u => u.status === 'suspended').length, color: '#FF9800' },
           { label: 'Banned', value: users.filter(u => u.status === 'banned').length, color: '#F44336' },

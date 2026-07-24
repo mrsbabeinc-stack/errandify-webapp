@@ -52,9 +52,9 @@ const AIFeaturesHub: React.FC = () => {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '24px' }}>
           {[
             { label: 'Avg Accuracy', value: '94.2%', color: '#4CAF50' },
-            { label: 'Monthly Usage', value: '9.3K', color: '#2196F3' },
+            { label: 'Monthly Usage', value: '9.3K', color: '#F0A81E' },
             { label: 'Model Version', value: 'v2.1', color: '#FF6B35' },
-            { label: 'Last Retrain', value: '3 days ago', color: '#9C27B0' },
+            { label: 'Last Retrain', value: '3 days ago', color: '#E2736B' },
           ].map((metric, idx) => (
             <div key={idx} style={{ padding: '16px', background: 'white', border: `2px solid ${metric.color}`, borderRadius: '8px', textAlign: 'center' }}>
               <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>{metric.label}</div>
@@ -83,7 +83,7 @@ const AIFeaturesHub: React.FC = () => {
             <div key={feature.id} style={{ padding: '16px', background: 'white', border: '1px solid #ddd', borderRadius: '8px', position: 'relative' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '12px' }}>
                 <div style={{ fontSize: '28px' }}>{feature.icon}</div>
-                <div style={{ padding: '4px 8px', background: feature.status === 'active' ? '#E8F5E9' : feature.status === 'beta' ? '#E3F2FD' : '#F3E5F5', color: feature.status === 'active' ? '#2E7D32' : feature.status === 'beta' ? '#1565C0' : '#6A1B9A', borderRadius: '4px', fontSize: '10px', fontWeight: '600' }}>
+                <div style={{ padding: '4px 8px', background: feature.status === 'active' ? '#E8F5E9' : feature.status === 'beta' ? '#FFF3E4' : '#FCEDE9', color: feature.status === 'active' ? '#2E7D32' : feature.status === 'beta' ? '#D98C0C' : '#6A1B9A', borderRadius: '4px', fontSize: '10px', fontWeight: '600' }}>
                   {feature.status === 'active' ? '✓ Active' : feature.status === 'beta' ? '🧪 Beta' : '🔜 Coming'}
                 </div>
               </div>
@@ -107,7 +107,7 @@ const AIFeaturesHub: React.FC = () => {
               <div style={{ display: 'flex', gap: '6px' }}>
                 {feature.status === 'active' && (
                   <>
-                    <button onClick={handleRunExtraction} style={{ flex: 1, padding: '6px', background: '#2196F3', color: 'white', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>
+                    <button onClick={handleRunExtraction} style={{ flex: 1, padding: '6px', background: '#F0A81E', color: 'white', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>
                       Run
                     </button>
                     <button onClick={handleTrainModel} style={{ flex: 1, padding: '6px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>
@@ -116,7 +116,7 @@ const AIFeaturesHub: React.FC = () => {
                   </>
                 )}
                 {feature.status === 'beta' && (
-                  <button style={{ flex: 1, padding: '6px', background: '#9C27B0', color: 'white', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>
+                  <button style={{ flex: 1, padding: '6px', background: '#E2736B', color: 'white', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>
                     Try Beta
                   </button>
                 )}

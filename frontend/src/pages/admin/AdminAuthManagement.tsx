@@ -230,7 +230,7 @@ export default function AdminAuthManagement() {
                   style={{ padding: '9px 12px', border: '2px solid #FFD9B3', borderRadius: '6px', fontSize: '13px', cursor: 'pointer' }}>
                   {roles.map(r => <option key={r} value={r}>{ROLE_LABELS[r]?.name || r}</option>)}
                 </select>
-                <button style={btn('#2196F3')} onClick={searchCandidates} disabled={searching}>
+                <button style={btn('#F0A81E')} onClick={searchCandidates} disabled={searching}>
                   {searching ? 'Searching…' : 'Search'}
                 </button>
               </div>

@@ -428,7 +428,7 @@ const InvoicingDashboard: React.FC = () => {
         </div>
 
         {/* Compliance Banner */}
-        <div style={{ padding: '12px 16px', background: '#E3F2FD', border: '2px solid #1976D2', borderRadius: '6px', marginBottom: '16px', fontSize: '12px', color: '#0D47A1' }}>
+        <div style={{ padding: '12px 16px', background: '#FFF3E4', border: '2px solid #B5651D', borderRadius: '6px', marginBottom: '16px', fontSize: '12px', color: '#B5651D' }}>
           <strong>🇸🇬 ACRA Invoice Compliance:</strong> Sequential invoice numbering maintained. GST fields ready for implementation (currently disabled). All invoices tracked in Accounts Receivable ledger.
         </div>
 
@@ -437,7 +437,7 @@ const InvoicingDashboard: React.FC = () => {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', marginBottom: '20px' }}>
             <div style={{ padding: '16px', background: '#FFF8F5', borderRadius: '8px', border: '2px solid #FFD9B3' }}>
               <div style={{ fontSize: '12px', color: '#999', marginBottom: '4px' }}>Total Invoiced</div>
-              <div style={{ fontSize: '20px', fontWeight: '700', color: '#2196F3' }}>
+              <div style={{ fontSize: '20px', fontWeight: '700', color: '#F0A81E' }}>
                 SGD ${receivablesReport.totalInvoiced.toLocaleString()}
               </div>
               <div style={{ fontSize: '11px', color: '#999', marginTop: '4px' }}>{receivablesReport.invoiceCount} invoices</div>
@@ -525,9 +525,9 @@ const InvoicingDashboard: React.FC = () => {
                           fontSize: '11px',
                           fontWeight: '600',
                           background:
-                            invoice.status === 'paid' ? '#E8F5E9' : invoice.status === 'sent' ? '#E3F2FD' : invoice.status === 'overdue' ? '#FFEBEE' : '#F5F5F5',
+                            invoice.status === 'paid' ? '#E8F5E9' : invoice.status === 'sent' ? '#FFF3E4' : invoice.status === 'overdue' ? '#FFEBEE' : '#F5F5F5',
                           color:
-                            invoice.status === 'paid' ? '#2E7D32' : invoice.status === 'sent' ? '#0D47A1' : invoice.status === 'overdue' ? '#C62828' : '#666',
+                            invoice.status === 'paid' ? '#2E7D32' : invoice.status === 'sent' ? '#B5651D' : invoice.status === 'overdue' ? '#C62828' : '#666',
                           marginBottom: '8px',
                         }}>
                           {invoice.status === 'paid' && '✓ PAID'}
@@ -544,7 +544,7 @@ const InvoicingDashboard: React.FC = () => {
                         onClick={() => handleExportPDF(invoice.invoiceNo)}
                         style={{
                           padding: '6px 12px',
-                          background: '#2196F3',
+                          background: '#F0A81E',
                           color: 'white',
                           border: 'none',
                           borderRadius: '4px',
@@ -881,7 +881,7 @@ const InvoicingDashboard: React.FC = () => {
                   </div>
                   <div style={{ padding: '12px', background: '#F5F5F5', borderRadius: '6px' }}>
                     <div style={{ color: '#666', marginBottom: '4px' }}>📧 Pending Payment</div>
-                    <div style={{ fontWeight: '600', fontSize: '14px', color: '#2196F3' }}>
+                    <div style={{ fontWeight: '600', fontSize: '14px', color: '#F0A81E' }}>
                       SGD ${(receivablesReport.totalOutstanding - receivablesReport.overdueAmount).toLocaleString()}
                     </div>
                     <div style={{ fontSize: '11px', color: '#999', marginTop: '4px' }}>
@@ -906,7 +906,7 @@ const InvoicingDashboard: React.FC = () => {
                   </div>
                   <div>
                     <div style={{ color: '#666', marginBottom: '4px' }}>Days Sales Outstanding (DSO)</div>
-                    <div style={{ fontWeight: '700', fontSize: '18px', color: '#2196F3' }}>
+                    <div style={{ fontWeight: '700', fontSize: '18px', color: '#F0A81E' }}>
                       ~30 days
                     </div>
                     <div style={{ fontSize: '11px', color: '#999', marginTop: '4px' }}>

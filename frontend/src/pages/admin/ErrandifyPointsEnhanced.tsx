@@ -96,8 +96,8 @@ export const ErrandifyPointsEnhancedPage: React.FC = () => {
           </div>
           <div style={{ background: '#FFF3E0', padding: '10px', borderRadius: '6px', border: '2px solid #FF6B35' }}>
             <div style={{ fontSize: '10px', color: '#E65100', fontWeight: '600', marginBottom: '2px' }}>💳 Spent/Redeemed Today</div>
-            <div style={{ fontSize: '20px', fontWeight: '700', color: '#2196F3' }}>SGD ${stats.spentTodayRedeemed.toFixed(2)}</div>
-            <div style={{ fontSize: '9px', color: '#0D47A1', marginTop: '2px' }}>User redemptions</div>
+            <div style={{ fontSize: '20px', fontWeight: '700', color: '#F0A81E' }}>SGD ${stats.spentTodayRedeemed.toFixed(2)}</div>
+            <div style={{ fontSize: '9px', color: '#B5651D', marginTop: '2px' }}>User redemptions</div>
           </div>
           <div style={{ background: '#E8F5E9', padding: '10px', borderRadius: '6px', border: '2px solid #4CAF50' }}>
             <div style={{ fontSize: '10px', color: '#2E7D32', fontWeight: '600', marginBottom: '2px' }}>📊 Net Spend Today</div>
@@ -141,7 +141,7 @@ export const ErrandifyPointsEnhancedPage: React.FC = () => {
                 data={dailyData.map((d, idx) => ({
                   label: d.day,
                   value: d.issued,
-                  color: ['#FF6B35', '#2196F3', '#4CAF50', '#FFC107', '#9C27B0', '#E91E63', '#00BCD4'][idx]
+                  color: ['#FF6B35', '#F0A81E', '#4CAF50', '#FFC107', '#E2736B', '#E91E63', '#E08A3C'][idx]
                 }))}
                 height={180}
               />
@@ -177,7 +177,7 @@ export const ErrandifyPointsEnhancedPage: React.FC = () => {
                 <div key={item.hour} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                   <span style={{ fontSize: '9px', color: '#666', minWidth: '28px', fontWeight: '500' }}>{item.hour}</span>
                   <div style={{ flex: 1, height: '4px', background: '#f5f5f5', borderRadius: '2px', overflow: 'hidden' }}>
-                    <div style={{ height: '100%', background: '#2196F3', width: `${(item.points / 420) * 100}%` }} />
+                    <div style={{ height: '100%', background: '#F0A81E', width: `${(item.points / 420) * 100}%` }} />
                   </div>
                   <span style={{ fontSize: '9px', color: '#666', minWidth: '24px', textAlign: 'right', fontWeight: '500' }}>{item.points}</span>
                 </div>

@@ -754,8 +754,8 @@ export default function AdminCompanyDeepManagement() {
                   <button
                     style={{
                       padding: '8px 12px',
-                      background: integration.status === 'connected' ? '#e8f5e9' : '#e3f2fd',
-                      color: integration.status === 'connected' ? '#2e7d32' : '#1976d2',
+                      background: integration.status === 'connected' ? '#e8f5e9' : '#FFF3E4',
+                      color: integration.status === 'connected' ? '#2e7d32' : '#B5651D',
                       border: 'none',
                       borderRadius: '4px',
                       fontSize: '12px',

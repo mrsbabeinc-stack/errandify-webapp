@@ -541,7 +541,7 @@ export default function AdminPaymentManagement() {
             borderRadius: '12px',
             padding: '16px',
             marginBottom: '16px',
-            border: '2px solid #2196F3',
+            border: '2px solid #F0A81E',
           }}>
             <h3 style={{ margin: '0 0 8px 0', fontSize: '16px', fontWeight: '700', color: '#333' }}>
               📊 Active Errand Holds (48-hour monitoring)
@@ -569,7 +569,7 @@ export default function AdminPaymentManagement() {
                   key={hold.id}
                   style={{
                     background: 'white',
-                    border: '2px solid #2196F3',
+                    border: '2px solid #F0A81E',
                     borderRadius: '8px',
                     padding: '16px',
                     display: 'flex',
@@ -581,13 +581,13 @@ export default function AdminPaymentManagement() {
                     <p style={{ margin: 0, fontSize: '14px', fontWeight: '700', color: '#333' }}>
                       {hold.companyName} • {hold.referenceId}
                     </p>
-                    <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#2196F3', fontWeight: '600' }}>
+                    <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#F0A81E', fontWeight: '600' }}>
                       Auto-releases in {hold.releaseDate ? getRemainingTime(hold.releaseDate) : 'N/A'}
                     </p>
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <p style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#333' }}>SGD ${hold.amount.toFixed(2)}</p>
-                    <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: '#2196F3' }}>⏳ Waiting for auto-release</p>
+                    <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: '#F0A81E' }}>⏳ Waiting for auto-release</p>
                   </div>
                 </div>
               ))}

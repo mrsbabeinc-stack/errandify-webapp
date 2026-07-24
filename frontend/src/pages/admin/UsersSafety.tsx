@@ -147,7 +147,7 @@ export const UsersSafetyPage: React.FC = () => {
             ['Critical', counts.critical, '#F44336'],
             ['High', counts.high, '#FF6B35'],
             ['Other', counts.other, '#FFB74D'],
-            ['Restricted accounts', restricted.length, '#9C27B0'],
+            ['Restricted accounts', restricted.length, '#E2736B'],
           ] as [string, number, string][]).map(([label, n, colour]) => (
             <div key={label} style={{ ...card, borderColor: colour }}>
               <div style={{ fontSize: '12px', color: '#666' }}>{label}</div>

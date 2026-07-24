@@ -138,7 +138,7 @@ const AssetManagement: React.FC = () => {
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '24px' }}>
           {[
-            { label: 'Total Assets', value: assets.length, color: '#2196F3' },
+            { label: 'Total Assets', value: assets.length, color: '#F0A81E' },
             { label: 'Book Value', value: `SGD ${totalValue.toLocaleString()}`, color: '#FF6B35' },
             { label: 'Current Value', value: `SGD ${currentValue.toLocaleString()}`, color: '#4CAF50' },
           ].map((stat, idx) => (

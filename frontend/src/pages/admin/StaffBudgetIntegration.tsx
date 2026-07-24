@@ -117,7 +117,7 @@ const StaffBudgetIntegration: React.FC = () => {
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '12px', marginBottom: '24px' }}>
           {[
-            { label: 'Total Headcount', value: totalHeadcount.toString(), color: '#2196F3' },
+            { label: 'Total Headcount', value: totalHeadcount.toString(), color: '#F0A81E' },
             { label: 'Total Staff Cost', value: `SGD ${totalStaffCost.toLocaleString()}`, color: '#FF6B35' },
             { label: 'Budget Allocated', value: `SGD ${totalBudgetAllocated.toLocaleString()}`, color: '#4CAF50' },
             { label: 'Total Variance', value: `SGD ${totalVariance.toLocaleString()}`, color: totalVariance > 0 ? '#4CAF50' : '#E65100' },

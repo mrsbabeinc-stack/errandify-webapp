@@ -44,8 +44,8 @@ const STAGE_LABEL: Record<LeadStage, string> = {
 
 const STAGE_COLOUR: Record<LeadStage, string> = {
   new: '#6B7280',
-  contacted: '#2563EB',
-  qualified: '#7C3AED',
+  contacted: '#B5651D',
+  qualified: '#E2736B',
   invited: '#D97706',
   signed_up: '#059669',
   converted: '#047857',

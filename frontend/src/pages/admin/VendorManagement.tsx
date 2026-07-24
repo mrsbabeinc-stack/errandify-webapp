@@ -138,7 +138,7 @@ const VendorManagement: React.FC = () => {
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '12px', marginBottom: '24px' }}>
           {[
-            { label: 'Total Vendors', value: vendors.length, color: '#2196F3' },
+            { label: 'Total Vendors', value: vendors.length, color: '#F0A81E' },
             { label: 'Active', value: activeCount, color: '#4CAF50' },
             { label: 'Total Spent', value: `SGD ${totalSpent.toLocaleString()}`, color: '#FF6B35' },
             { label: 'Avg Rating', value: `${avgRating}/5`, color: '#FFC107' },

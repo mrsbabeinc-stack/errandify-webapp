@@ -168,7 +168,7 @@ export default function AdminPaymentsManagement() {
           { label: 'Total Revenue', value: `$${totalRevenue.toFixed(2)}`, color: '#4CAF50' },
           { label: 'Failed Payments', value: `$${failedAmount.toFixed(2)}`, count: transactions.filter(t => t.status === 'failed').length, color: '#F44336' },
           { label: 'Pending', value: `$${pendingAmount.toFixed(2)}`, count: transactions.filter(t => t.status === 'pending').length, color: '#FF9800' },
-          { label: 'Total Transactions', value: transactions.length, color: '#2196F3' },
+          { label: 'Total Transactions', value: transactions.length, color: '#F0A81E' },
         ].map((card, i) => (
           <div key={i} style={{
             padding: '16px',

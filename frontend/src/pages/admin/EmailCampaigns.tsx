@@ -361,7 +361,7 @@ Make content warm, engaging, community-focused. Keep subject under 60 characters
 
 
   const statusColors: any = {
-    'draft': '#2196F3',
+    'draft': '#F0A81E',
     'scheduled': '#FF9800',
     'sent': '#4CAF50',
     'failed': '#F44336',
@@ -456,7 +456,7 @@ Make content warm, engaging, community-focused. Keep subject under 60 characters
                   disabled={plannerLoading}
                   style={{
                     padding: '12px',
-                    background: plannerLoading ? '#ccc' : 'linear-gradient(135deg, #A78BFA 0%, #C4B5FD 100%)',
+                    background: plannerLoading ? '#ccc' : 'linear-gradient(135deg, #E89B8F 0%, #C4B5FD 100%)',
                     color: 'white',
                     border: 'none',
                     borderRadius: '6px',
@@ -790,7 +790,7 @@ Make content warm, engaging, community-focused. Keep subject under 60 characters
                           onClick={() => handleEditCampaign(campaign)}
                           disabled={campaign.status === 'sent'}
                           title={campaign.status === 'sent' ? 'A sent campaign is a record of what people received' : 'Edit'}
-                          style={{ padding: '8px', background: campaign.status === 'sent' ? '#ccc' : '#2196F3', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: campaign.status === 'sent' ? 'not-allowed' : 'pointer', fontSize: '12px' }}
+                          style={{ padding: '8px', background: campaign.status === 'sent' ? '#ccc' : '#F0A81E', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: campaign.status === 'sent' ? 'not-allowed' : 'pointer', fontSize: '12px' }}
                         >
                           ✏️ Edit
                         </button>

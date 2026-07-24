@@ -542,19 +542,19 @@ const AccountsDashboard: React.FC = () => {
             <div style={{ fontSize: '22px', fontWeight: '700', color: netBalance >= 0 ? '#4CAF50' : '#F44336' }}>SGD {netBalance.toLocaleString()}</div>
             <div style={{ fontSize: '11px', color: '#666', marginTop: '4px' }}>{netBalance >= 0 ? '📈 Positive' : '📉 Negative'}</div>
           </div>
-          <div style={{ padding: '16px', background: '#E3F2FD', borderRadius: '8px', border: '2px solid #2196F3' }}>
-            <div style={{ fontSize: '12px', color: '#0D47A1', marginBottom: '4px' }}>Current Balance</div>
-            <div style={{ fontSize: '22px', fontWeight: '700', color: '#2196F3' }}>SGD {currentBalance.toLocaleString()}</div>
-            <div style={{ fontSize: '11px', color: '#0D47A1', marginTop: '4px' }}>From ledger</div>
+          <div style={{ padding: '16px', background: '#FFF3E4', borderRadius: '8px', border: '2px solid #F0A81E' }}>
+            <div style={{ fontSize: '12px', color: '#B5651D', marginBottom: '4px' }}>Current Balance</div>
+            <div style={{ fontSize: '22px', fontWeight: '700', color: '#F0A81E' }}>SGD {currentBalance.toLocaleString()}</div>
+            <div style={{ fontSize: '11px', color: '#B5651D', marginTop: '4px' }}>From ledger</div>
           </div>
           <div style={{ padding: '16px', background: '#FFF3E0', borderRadius: '8px', border: '2px solid #FF9800' }}>
             <div style={{ fontSize: '12px', color: '#E65100', marginBottom: '4px' }}>Pending Approval</div>
             <div style={{ fontSize: '22px', fontWeight: '700', color: '#FF9800' }}>SGD {expensesPending.toLocaleString()}</div>
             <div style={{ fontSize: '11px', color: '#E65100', marginTop: '4px' }}>{expenses.filter(e => e.approvalStatus === 'pending').length} expenses</div>
           </div>
-          <div style={{ padding: '16px', background: '#F3E5F5', borderRadius: '8px', border: '2px solid #9C27B0' }}>
+          <div style={{ padding: '16px', background: '#FCEDE9', borderRadius: '8px', border: '2px solid #E2736B' }}>
             <div style={{ fontSize: '12px', color: '#4A148C', marginBottom: '4px' }}>Income Received</div>
-            <div style={{ fontSize: '22px', fontWeight: '700', color: '#9C27B0' }}>SGD {incomeReceived.toLocaleString()}</div>
+            <div style={{ fontSize: '22px', fontWeight: '700', color: '#E2736B' }}>SGD {incomeReceived.toLocaleString()}</div>
             <div style={{ fontSize: '11px', color: '#4A148C', marginTop: '4px' }}>{income.filter(i => i.paymentStatus === 'received').length} confirmed</div>
           </div>
         </div>
@@ -663,7 +663,7 @@ const AccountsDashboard: React.FC = () => {
             </div>
 
             {/* Compliance Banner */}
-            <div style={{ marginTop: '24px', padding: '12px 16px', background: '#E3F2FD', border: '2px solid #1976D2', borderRadius: '6px', fontSize: '12px', color: '#0D47A1' }}>
+            <div style={{ marginTop: '24px', padding: '12px 16px', background: '#FFF3E4', border: '2px solid #B5651D', borderRadius: '6px', fontSize: '12px', color: '#B5651D' }}>
               <strong>📒 What this is:</strong> a transaction record with an audit trail — who entered what, who approved it, and when. GST is captured per entry but this does <strong>not</strong> produce a tax invoice or a GST F5 return, and invoice numbers are typed rather than issued in sequence. IRAS requires business records to be kept for 5 years.
             </div>
           </div>
@@ -762,7 +762,7 @@ const AccountsDashboard: React.FC = () => {
                 onClick={() => setShowExpenseForm(!showExpenseForm)}
                 style={{
                   padding: '8px 16px',
-                  background: '#2196F3',
+                  background: '#F0A81E',
                   color: 'white',
                   border: 'none',
                   borderRadius: '4px',
@@ -796,7 +796,7 @@ const AccountsDashboard: React.FC = () => {
                   style={{
                     gridColumn: '1 / -1',
                     padding: '10px',
-                    background: '#2196F3',
+                    background: '#F0A81E',
                     color: 'white',
                     border: 'none',
                     borderRadius: '4px',
@@ -889,8 +889,8 @@ const AccountsDashboard: React.FC = () => {
                   style={{
                     padding: '8px 16px',
                     background: '#fff',
-                    color: '#9C27B0',
-                    border: '1px solid #9C27B0',
+                    color: '#E2736B',
+                    border: '1px solid #E2736B',
                     borderRadius: '4px',
                     fontWeight: '600',
                     cursor: 'pointer',
@@ -903,7 +903,7 @@ const AccountsDashboard: React.FC = () => {
                   onClick={() => setShowRecurringForm(!showRecurringForm)}
                   style={{
                     padding: '8px 16px',
-                    background: '#9C27B0',
+                    background: '#E2736B',
                     color: 'white',
                     border: 'none',
                     borderRadius: '4px',
@@ -919,9 +919,9 @@ const AccountsDashboard: React.FC = () => {
 
             {/* KPI Cards for Recurring */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', marginBottom: '16px' }}>
-              <div style={{ padding: '12px 16px', background: '#F3E5F5', borderRadius: '6px', border: '1px solid #9C27B0' }}>
+              <div style={{ padding: '12px 16px', background: '#FCEDE9', borderRadius: '6px', border: '1px solid #E2736B' }}>
                 <div style={{ fontSize: '11px', color: '#4A148C', marginBottom: '2px' }}>Total Recurring</div>
-                <div style={{ fontSize: '18px', fontWeight: '700', color: '#9C27B0' }}>{recurringExpenses.length}</div>
+                <div style={{ fontSize: '18px', fontWeight: '700', color: '#E2736B' }}>{recurringExpenses.length}</div>
                 <div style={{ fontSize: '10px', color: '#4A148C' }}>expenses</div>
               </div>
               <div style={{ padding: '12px 16px', background: '#E8F5E9', borderRadius: '6px', border: '1px solid #4CAF50' }}>
@@ -1030,7 +1030,7 @@ const AccountsDashboard: React.FC = () => {
                   style={{
                     gridColumn: '1 / -1',
                     padding: '10px',
-                    background: '#9C27B0',
+                    background: '#E2736B',
                     color: 'white',
                     border: 'none',
                     borderRadius: '4px',
@@ -1129,7 +1129,7 @@ const AccountsDashboard: React.FC = () => {
                           flex: 1,
                           minWidth: '120px',
                           padding: '6px 12px',
-                          background: '#2196F3',
+                          background: '#F0A81E',
                           color: 'white',
                           border: 'none',
                           borderRadius: '3px',
@@ -1146,7 +1146,7 @@ const AccountsDashboard: React.FC = () => {
               ))}
             </div>
 
-            <div style={{ marginTop: '16px', padding: '12px', background: '#F3E5F5', borderRadius: '4px', fontSize: '11px', color: '#4A148C' }}>
+            <div style={{ marginTop: '16px', padding: '12px', background: '#FCEDE9', borderRadius: '4px', fontSize: '11px', color: '#4A148C' }}>
               <strong>💡 Recurring Expenses:</strong> Automatically process on schedule. Pending approvals must be approved first. Paused expenses won't be processed until resumed.
             </div>
           </div>
@@ -1193,7 +1193,7 @@ const AccountsDashboard: React.FC = () => {
               {reconciliations.map(rec => {
                 const isReconciled = rec.status === 'reconciled';
                 return (
-                  <div key={rec.id} style={{ padding: '12px 16px', background: isReconciled ? '#E8F5E9' : rec.status === 'variance' ? '#FFF3E0' : '#E3F2FD', border: `2px solid ${isReconciled ? '#4CAF50' : rec.status === 'variance' ? '#FF9800' : '#2196F3'}`, borderRadius: '8px' }}>
+                  <div key={rec.id} style={{ padding: '12px 16px', background: isReconciled ? '#E8F5E9' : rec.status === 'variance' ? '#FFF3E0' : '#FFF3E4', border: `2px solid ${isReconciled ? '#4CAF50' : rec.status === 'variance' ? '#FF9800' : '#F0A81E'}`, borderRadius: '8px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
                       <div>
                         <div style={{ fontWeight: '600', fontSize: '14px', color: '#333', marginBottom: '2px' }}>{rec.accountType}</div>
@@ -1233,7 +1233,7 @@ const AccountsDashboard: React.FC = () => {
                 onClick={() => setShowTagForm(!showTagForm)}
                 style={{
                   padding: '8px 16px',
-                  background: '#9C27B0',
+                  background: '#E2736B',
                   color: 'white',
                   border: 'none',
                   borderRadius: '4px',
@@ -1261,7 +1261,7 @@ const AccountsDashboard: React.FC = () => {
                   style={{
                     gridColumn: '1 / -1',
                     padding: '10px',
-                    background: '#9C27B0',
+                    background: '#E2736B',
                     color: 'white',
                     border: 'none',
                     borderRadius: '4px',

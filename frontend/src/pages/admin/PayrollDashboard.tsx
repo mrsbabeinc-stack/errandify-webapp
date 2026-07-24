@@ -112,8 +112,8 @@ const tdR: React.CSSProperties = { padding: '10px 12px', textAlign: 'right', fon
 
 const BATCH_STEPS: Record<string, { label: string; bg: string; fg: string }> = {
   awaiting_approval: { label: 'AWAITING APPROVAL', bg: '#FFF3E0', fg: '#E65100' },
-  approved: { label: 'APPROVED — READY TO SEND', bg: '#E3F2FD', fg: '#0D47A1' },
-  exported: { label: 'WITH THE BANK', bg: '#EDE7F6', fg: '#4527A0' },
+  approved: { label: 'APPROVED — READY TO SEND', bg: '#FFF3E4', fg: '#B5651D' },
+  exported: { label: 'WITH THE BANK', bg: '#FCEDE9', fg: '#4527A0' },
   settled: { label: 'PAID', bg: '#E8F5E9', fg: '#2E7D32' },
   cancelled: { label: 'CANCELLED', bg: '#FFEBEE', fg: '#C62828' },
 };
@@ -509,7 +509,7 @@ const PayrollDashboard: React.FC = () => {
         </div>
 
         {/* Compliance Banner */}
-        <div style={{ padding: '12px 16px', background: '#E3F2FD', border: '2px solid #1976D2', borderRadius: '6px', marginBottom: '16px', fontSize: '12px', color: '#0D47A1' }}>
+        <div style={{ padding: '12px 16px', background: '#FFF3E4', border: '2px solid #B5651D', borderRadius: '6px', marginBottom: '16px', fontSize: '12px', color: '#B5651D' }}>
           <strong>🇸🇬 CPF &amp; Tax:</strong> CPF at the private-sector rates for employees aged 55 and under, computed on <strong>base salary only</strong> — if any allowance below is a fixed wage component rather than a reimbursement, it is CPF-payable and is currently being missed. Income tax is <strong>not</strong> withheld: Singapore has no PAYE, so the tax figures are an annual projection for the employee, not a deduction. Confirm both with your accountant before running payroll for real.
         </div>
 
@@ -523,7 +523,7 @@ const PayrollDashboard: React.FC = () => {
           </div>
           <div style={{ padding: '16px', background: '#FFF8F5', borderRadius: '8px', border: '2px solid #FFD9B3' }}>
             <div style={{ fontSize: '12px', color: '#999', marginBottom: '4px' }}>Monthly Salary Outflow</div>
-            <div style={{ fontSize: '24px', fontWeight: '700', color: '#2196F3' }}>SGD ${totalMonthlyOutflow.toLocaleString()}</div>
+            <div style={{ fontSize: '24px', fontWeight: '700', color: '#F0A81E' }}>SGD ${totalMonthlyOutflow.toLocaleString()}</div>
             <div style={{ fontSize: '11px', color: '#999', marginTop: '4px' }}>
               Gross: ${totalMonthlyPayroll.toLocaleString()} + CPF Employer: ${Math.round(totalCPFEmployer * 100) / 100}
             </div>
@@ -805,7 +805,7 @@ const PayrollDashboard: React.FC = () => {
                         title="Write the double entry to the general ledger and freeze this run"
                         style={{
                           padding: '8px 16px',
-                          background: '#2196F3',
+                          background: '#F0A81E',
                           color: 'white',
                           border: 'none',
                           borderRadius: '4px',
@@ -930,7 +930,7 @@ const PayrollDashboard: React.FC = () => {
                         style={{
                           width: '100%',
                           padding: '8px 12px',
-                          background: '#2196F3',
+                          background: '#F0A81E',
                           color: 'white',
                           border: 'none',
                           borderRadius: '4px',
@@ -952,7 +952,7 @@ const PayrollDashboard: React.FC = () => {
         {/* PAYMENTS TAB */}
         {activeTab === 'payments' && (
           <div>
-            <div style={{ padding: '12px 16px', background: '#E3F2FD', border: '2px solid #1976D2', borderRadius: '6px', marginBottom: '16px', fontSize: '12px', color: '#0D47A1' }}>
+            <div style={{ padding: '12px 16px', background: '#FFF3E4', border: '2px solid #B5651D', borderRadius: '6px', marginBottom: '16px', fontSize: '12px', color: '#B5651D' }}>
               <strong>💳 How salary reaches a bank account:</strong> a posted run is turned into a bank
               bulk-credit batch, a <strong>second</strong> admin approves it, the file is downloaded and uploaded to
               your corporate banking portal (DBS IDEAL / OCBC Velocity / UOB BIBPlus), and the bank's
@@ -1018,22 +1018,22 @@ const PayrollDashboard: React.FC = () => {
               )}
 
               {inviteLink && (
-                <div style={{ marginTop: '14px', padding: '12px', background: '#E3F2FD', border: '2px solid #1976D2', borderRadius: '6px' }}>
-                  <div style={{ fontSize: '12px', fontWeight: 600, color: '#0D47A1', marginBottom: '6px' }}>
+                <div style={{ marginTop: '14px', padding: '12px', background: '#FFF3E4', border: '2px solid #B5651D', borderRadius: '6px' }}>
+                  <div style={{ fontSize: '12px', fontWeight: 600, color: '#B5651D', marginBottom: '6px' }}>
                     Link for {inviteLink.staff_name} — copy it now, it is not shown again
                   </div>
                   <input
                     readOnly
                     value={`${window.location.origin}${inviteLink.invite_path}`}
                     onFocus={(e) => e.currentTarget.select()}
-                    style={{ width: '100%', padding: '8px', fontSize: '11px', fontFamily: 'monospace', border: '1px solid #90CAF9', borderRadius: '4px', boxSizing: 'border-box' }}
+                    style={{ width: '100%', padding: '8px', fontSize: '11px', fontFamily: 'monospace', border: '1px solid #F5C542', borderRadius: '4px', boxSizing: 'border-box' }}
                   />
-                  <div style={{ fontSize: '11px', color: '#0D47A1', marginTop: '6px' }}>
+                  <div style={{ fontSize: '11px', color: '#B5651D', marginTop: '6px' }}>
                     They will be asked for the last 4 characters of their NRIC before the form opens.
                     Expires {new Date(inviteLink.expires_at).toLocaleDateString('en-SG')}.
                     Only the hash is stored — if this is lost, send a new link.
                   </div>
-                  <button onClick={() => setInviteLink(null)} style={{ ...btnOutline('#0D47A1'), marginTop: '8px' }}>
+                  <button onClick={() => setInviteLink(null)} style={{ ...btnOutline('#B5651D'), marginTop: '8px' }}>
                     Done
                   </button>
                 </div>
@@ -1101,7 +1101,7 @@ const PayrollDashboard: React.FC = () => {
                             </>
                           )}
                           {(batch.status === 'approved' || batch.status === 'exported' || batch.status === 'settled') && (
-                            <button onClick={() => handleExportBatch(batch)} style={btn('#2196F3')}>
+                            <button onClick={() => handleExportBatch(batch)} style={btn('#F0A81E')}>
                               📥 {batch.status === 'approved' ? 'Download bank file' : 'Download again'}
                             </button>
                           )}
@@ -1186,12 +1186,12 @@ const PayrollDashboard: React.FC = () => {
                     </div>
                     <div style={{ fontSize: '11px', color: '#2E7D32' }}>Net pay after CPF and deductions</div>
                   </div>
-                  <div style={{ padding: '14px', background: '#E3F2FD', border: '2px solid #1976D2', borderRadius: '8px' }}>
-                    <div style={{ fontSize: '11px', color: '#0D47A1', fontWeight: 600 }}>TO CPF BOARD</div>
-                    <div style={{ fontSize: '20px', fontWeight: 700, color: '#0D47A1', margin: '4px 0' }}>
+                  <div style={{ padding: '14px', background: '#FFF3E4', border: '2px solid #B5651D', borderRadius: '8px' }}>
+                    <div style={{ fontSize: '11px', color: '#B5651D', fontWeight: 600 }}>TO CPF BOARD</div>
+                    <div style={{ fontSize: '20px', fontWeight: 700, color: '#B5651D', margin: '4px 0' }}>
                       SGD {money(cpfSummary.totals.cpfRemittance)}
                     </div>
-                    <div style={{ fontSize: '11px', color: '#0D47A1' }}>
+                    <div style={{ fontSize: '11px', color: '#B5651D' }}>
                       {money(cpfSummary.totals.cpfEmployer)} employer + {money(cpfSummary.totals.cpfEmployee)} withheld from staff
                     </div>
                   </div>
@@ -1389,7 +1389,7 @@ const PayrollDashboard: React.FC = () => {
                           showToast(`❌ ${err instanceof Error ? err.message : 'Export failed'}`, 'error');
                         }
                       }}
-                      style={btn('#2196F3')}
+                      style={btn('#F0A81E')}
                     >
                       📥 Download IR8A data
                     </button>

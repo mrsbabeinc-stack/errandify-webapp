@@ -105,10 +105,10 @@ const AdvancedReportingAnalytics: React.FC = () => {
                   {type === 'line' ? '📈 Line' : type === 'bar' ? '📊 Bar' : '🥧 Pie'}
                 </button>
               ))}
-              <button onClick={() => handleExportReport('PDF')} style={{ padding: '8px 12px', background: '#2196F3', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600', fontSize: '12px' }}>
+              <button onClick={() => handleExportReport('PDF')} style={{ padding: '8px 12px', background: '#F0A81E', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600', fontSize: '12px' }}>
                 📥 PDF
               </button>
-              <button onClick={() => handleExportReport('CSV')} style={{ padding: '8px 12px', background: '#2196F3', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600', fontSize: '12px' }}>
+              <button onClick={() => handleExportReport('CSV')} style={{ padding: '8px 12px', background: '#F0A81E', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '600', fontSize: '12px' }}>
                 📥 CSV
               </button>
             </div>
@@ -137,7 +137,7 @@ const AdvancedReportingAnalytics: React.FC = () => {
                     ))}
                   </div>
                 ) : (
-                  <div style={{ width: '200px', height: '200px', borderRadius: '50%', background: 'conic-gradient(#FF6B35 0deg 90deg, #4CAF50 90deg 180deg, #2196F3 180deg 270deg, #FFC107 270deg)', margin: '0 auto' }} />
+                  <div style={{ width: '200px', height: '200px', borderRadius: '50%', background: 'conic-gradient(#FF6B35 0deg 90deg, #4CAF50 90deg 180deg, #F0A81E 180deg 270deg, #FFC107 270deg)', margin: '0 auto' }} />
                 )}
               </div>
               <div style={{ marginTop: '16px', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
@@ -231,7 +231,7 @@ const AdvancedReportingAnalytics: React.FC = () => {
                       <td style={{ padding: '12px', fontSize: '12px', color: '#666' }}>{report.frequency}</td>
                       <td style={{ padding: '12px', fontSize: '12px', color: '#666' }}>{report.lastRun}</td>
                       <td style={{ padding: '12px', textAlign: 'center' }}>
-                        <button onClick={() => handleScheduleReport(report.name)} style={{ padding: '4px 8px', background: '#2196F3', color: 'white', border: 'none', borderRadius: '3px', fontSize: '11px', fontWeight: '600', cursor: 'pointer', marginRight: '4px' }}>
+                        <button onClick={() => handleScheduleReport(report.name)} style={{ padding: '4px 8px', background: '#F0A81E', color: 'white', border: 'none', borderRadius: '3px', fontSize: '11px', fontWeight: '600', cursor: 'pointer', marginRight: '4px' }}>
                           Schedule
                         </button>
                         <button onClick={() => handleExportReport('PDF')} style={{ padding: '4px 8px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: '3px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>

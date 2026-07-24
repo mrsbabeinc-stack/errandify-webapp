@@ -345,19 +345,19 @@ const RBACManagementDashboard: React.FC = () => {
             <div style={{ fontSize: '22px', fontWeight: '700', color: '#4CAF50' }}>{stats.totalRoles}</div>
             <div style={{ fontSize: '11px', color: '#2E7D32', marginTop: '4px' }}>{stats.activeRoles} active</div>
           </div>
-          <div style={{ padding: '16px', background: '#E3F2FD', borderRadius: '8px', border: '2px solid #2196F3' }}>
-            <div style={{ fontSize: '12px', color: '#0D47A1', marginBottom: '4px' }}>Total Users</div>
-            <div style={{ fontSize: '22px', fontWeight: '700', color: '#2196F3' }}>{stats.totalUsers}</div>
-            <div style={{ fontSize: '11px', color: '#0D47A1', marginTop: '4px' }}>across all roles</div>
+          <div style={{ padding: '16px', background: '#FFF3E4', borderRadius: '8px', border: '2px solid #F0A81E' }}>
+            <div style={{ fontSize: '12px', color: '#B5651D', marginBottom: '4px' }}>Total Users</div>
+            <div style={{ fontSize: '22px', fontWeight: '700', color: '#F0A81E' }}>{stats.totalUsers}</div>
+            <div style={{ fontSize: '11px', color: '#B5651D', marginTop: '4px' }}>across all roles</div>
           </div>
           <div style={{ padding: '16px', background: '#FFF3E0', borderRadius: '8px', border: '2px solid #FF9800' }}>
             <div style={{ fontSize: '12px', color: '#E65100', marginBottom: '4px' }}>Permissions</div>
             <div style={{ fontSize: '22px', fontWeight: '700', color: '#FF9800' }}>{stats.totalPermissions}</div>
             <div style={{ fontSize: '11px', color: '#E65100', marginTop: '4px' }}>available</div>
           </div>
-          <div style={{ padding: '16px', background: '#F3E5F5', borderRadius: '8px', border: '2px solid #9C27B0' }}>
+          <div style={{ padding: '16px', background: '#FCEDE9', borderRadius: '8px', border: '2px solid #E2736B' }}>
             <div style={{ fontSize: '12px', color: '#4A148C', marginBottom: '4px' }}>Modules</div>
-            <div style={{ fontSize: '22px', fontWeight: '700', color: '#9C27B0' }}>{stats.totalModules}</div>
+            <div style={{ fontSize: '22px', fontWeight: '700', color: '#E2736B' }}>{stats.totalModules}</div>
             <div style={{ fontSize: '11px', color: '#4A148C', marginTop: '4px' }}>controlled</div>
           </div>
         </div>
@@ -534,7 +534,7 @@ const RBACManagementDashboard: React.FC = () => {
               </p>
             </div>
 
-            <div style={{ marginBottom: '16px', padding: '12px', background: '#E3F2FD', borderRadius: '6px', fontSize: '12px', color: '#0D47A1' }}>
+            <div style={{ marginBottom: '16px', padding: '12px', background: '#FFF3E4', borderRadius: '6px', fontSize: '12px', color: '#B5651D' }}>
               <strong>Currently assigned: {selectedPermissions.size} permissions</strong> • <button
                 onClick={() => {
                   // Get all permission IDs from current category view
@@ -548,7 +548,7 @@ const RBACManagementDashboard: React.FC = () => {
                 style={{
                   background: 'none',
                   border: 'none',
-                  color: '#0D47A1',
+                  color: '#B5651D',
                   fontWeight: '600',
                   cursor: 'pointer',
                   textDecoration: 'underline',
@@ -564,7 +564,7 @@ const RBACManagementDashboard: React.FC = () => {
                 style={{
                   background: 'none',
                   border: 'none',
-                  color: '#0D47A1',
+                  color: '#B5651D',
                   fontWeight: '600',
                   cursor: 'pointer',
                   textDecoration: 'underline',

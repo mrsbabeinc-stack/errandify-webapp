@@ -111,7 +111,7 @@ const AttendanceDashboard: React.FC = () => {
       case 'absent':
         return '#F44336';
       case 'half_day':
-        return '#2196F3';
+        return '#F0A81E';
       default:
         return '#999';
     }
@@ -168,7 +168,7 @@ const AttendanceDashboard: React.FC = () => {
             { label: 'Present', value: dailyStats.present, color: '#4CAF50', icon: '✓' },
             { label: 'Late', value: dailyStats.late, color: '#FF9800', icon: '⏱' },
             { label: 'Absent', value: dailyStats.absent, color: '#F44336', icon: '✗' },
-            { label: 'Half-day', value: dailyStats.half_day, color: '#2196F3', icon: '⊙' },
+            { label: 'Half-day', value: dailyStats.half_day, color: '#F0A81E', icon: '⊙' },
           ].map((stat, idx) => (
             <div
               key={idx}
@@ -234,7 +234,7 @@ const AttendanceDashboard: React.FC = () => {
             onClick={() => navigate('/admin/attendance-reports')}
             style={{
               padding: '8px 16px',
-              background: '#2196F3',
+              background: '#F0A81E',
               color: 'white',
               border: 'none',
               borderRadius: '4px',

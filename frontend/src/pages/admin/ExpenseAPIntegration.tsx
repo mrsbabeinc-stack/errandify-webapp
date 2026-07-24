@@ -160,7 +160,7 @@ const ExpenseAPIntegration: React.FC = () => {
                     </td>
                     <td style={{ padding: '12px', textAlign: 'center' }}>
                       {!expense.ap_created && expense.status === 'approved' && (
-                        <button onClick={() => handleCreateAPInvoice(expense)} style={{ padding: '4px 8px', background: '#2196F3', color: 'white', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>Create AP</button>
+                        <button onClick={() => handleCreateAPInvoice(expense)} style={{ padding: '4px 8px', background: '#F0A81E', color: 'white', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>Create AP</button>
                       )}
                     </td>
                   </tr>
@@ -191,7 +191,7 @@ const ExpenseAPIntegration: React.FC = () => {
                     <td style={{ padding: '12px', textAlign: 'right', fontSize: '12px', fontWeight: '600', color: '#333' }}>SGD {invoice.amount.toLocaleString()}</td>
                     <td style={{ padding: '12px', fontSize: '12px', color: '#666' }}>{invoice.due_date}</td>
                     <td style={{ padding: '12px', fontSize: '12px', color: '#666' }}>EXP-2026-{String(invoice.source_claim_id).padStart(3, '0')}</td>
-                    <td style={{ padding: '12px', textAlign: 'center', fontSize: '11px', background: invoice.status === 'pending' ? '#FFF3E0' : invoice.status === 'partial' ? '#E3F2FD' : '#E8F5E9', color: invoice.status === 'pending' ? '#E65100' : invoice.status === 'partial' ? '#1565C0' : '#2E7D32', fontWeight: '600', borderRadius: '4px' }}>
+                    <td style={{ padding: '12px', textAlign: 'center', fontSize: '11px', background: invoice.status === 'pending' ? '#FFF3E0' : invoice.status === 'partial' ? '#FFF3E4' : '#E8F5E9', color: invoice.status === 'pending' ? '#E65100' : invoice.status === 'partial' ? '#D98C0C' : '#2E7D32', fontWeight: '600', borderRadius: '4px' }}>
                       {invoice.status === 'pending' ? '⏳ Pending' : invoice.status === 'partial' ? '↔️ Partial' : '✓ Paid'}
                     </td>
                   </tr>

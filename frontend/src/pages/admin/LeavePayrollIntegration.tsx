@@ -199,7 +199,7 @@ const LeavePayrollIntegration: React.FC = () => {
                     </td>
                     <td style={{ padding: '12px', textAlign: 'center' }}>
                       {!leave.deduction_applied && !leave.paid && leave.status === 'approved' && (
-                        <button onClick={() => handleApplyDeduction(leave)} style={{ padding: '4px 8px', background: '#2196F3', color: 'white', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>Apply Deduction</button>
+                        <button onClick={() => handleApplyDeduction(leave)} style={{ padding: '4px 8px', background: '#F0A81E', color: 'white', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>Apply Deduction</button>
                       )}
                     </td>
                   </tr>

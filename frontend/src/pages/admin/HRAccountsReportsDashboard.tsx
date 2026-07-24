@@ -52,17 +52,17 @@ const HRAccountsReportsDashboard: React.FC = () => {
       setMetrics([
         // HR
         { category: 'HR', title: 'Active Staff', value: String(m.activeStaff), color: '#4CAF50', icon: '👥', link: '/admin/staff', description: `${m.totalStaff} on record` },
-        { category: 'HR', title: 'Leave Awaiting Approval', value: String(m.pendingLeave), color: '#2196F3', icon: '🏖️', link: '/admin/leave-management', description: `${m.leaveThisMonth} approved for this month` },
+        { category: 'HR', title: 'Leave Awaiting Approval', value: String(m.pendingLeave), color: '#F0A81E', icon: '🏖️', link: '/admin/leave-management', description: `${m.leaveThisMonth} approved for this month` },
         { category: 'HR', title: 'Open Roles', value: String(m.openRoles), color: '#FF9800', icon: '📋', link: '/admin/recruitment', description: 'Currently advertised' },
-        { category: 'HR', title: 'Monthly Payroll', value: sgd(m.monthlyPayroll), color: '#9C27B0', icon: '💼', link: '/admin/payroll', description: 'Base salaries of active staff' },
+        { category: 'HR', title: 'Monthly Payroll', value: sgd(m.monthlyPayroll), color: '#E2736B', icon: '💼', link: '/admin/payroll', description: 'Base salaries of active staff' },
 
         // Accounts
         { category: 'Accounts', title: 'Net This Period', value: sgd(summary.netProfit), color: summary.netProfit >= 0 ? '#4CAF50' : '#F44336', icon: '📈', link: '/admin/financial-reports', description: `${sgd(summary.totalIncome)} in, ${sgd(summary.totalExpenses)} out` },
         { category: 'Accounts', title: 'Outstanding Receivables', value: sgd(summary.receivables), color: '#4CAF50', icon: '📥', link: '/admin/accounts', description: 'Invoiced, not yet received' },
         { category: 'Accounts', title: 'Expenses Awaiting Approval', value: String(m.expensesPending), color: '#E65100', icon: '📤', link: '/admin/accounts', description: sgd(summary.pendingExpenseValue) },
-        { category: 'Accounts', title: 'Net GST This Period', value: sgd(summary.netGst), color: '#2196F3', icon: '📊', link: '/admin/accounts', description: `Output ${sgd(summary.outputGst)} − input ${sgd(summary.inputGst)}` },
+        { category: 'Accounts', title: 'Net GST This Period', value: sgd(summary.netGst), color: '#F0A81E', icon: '📊', link: '/admin/accounts', description: `Output ${sgd(summary.outputGst)} − input ${sgd(summary.inputGst)}` },
         { category: 'Accounts', title: 'Budgets Awaiting Approval', value: String(m.budgetsPending), color: '#FF6B35', icon: '💰', link: '/admin/budget', description: 'Submitted, not yet decided' },
-        { category: 'Accounts', title: 'Recurring Commitments', value: sgd(summary.monthlyRecurringValue), color: '#9C27B0', icon: '🔁', link: '/admin/accounts', description: `${summary.activeRecurring} active monthly rules` },
+        { category: 'Accounts', title: 'Recurring Commitments', value: sgd(summary.monthlyRecurringValue), color: '#E2736B', icon: '🔁', link: '/admin/accounts', description: `${summary.activeRecurring} active monthly rules` },
 
         // Integrations
         { category: 'Integrations', title: 'Payroll → GL', value: m.payrollUnposted > 0 ? `${m.payrollUnposted} unposted` : 'All posted', color: m.payrollUnposted > 0 ? '#FF9800' : '#4CAF50', icon: '💼', link: '/admin/payroll-gl', description: m.latestPayrollPeriod ? `Latest run: ${m.latestPayrollPeriod}` : 'No payroll run yet' },
@@ -135,13 +135,13 @@ const HRAccountsReportsDashboard: React.FC = () => {
                 <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>Accounts Metrics</div>
                 <div style={{ fontSize: '24px', fontWeight: '700', color: '#FF6B35' }}>{accountsMetrics.length}</div>
               </div>
-              <div style={{ padding: '16px', background: 'white', border: '2px solid #2196F3', borderRadius: '8px', textAlign: 'center' }}>
+              <div style={{ padding: '16px', background: 'white', border: '2px solid #F0A81E', borderRadius: '8px', textAlign: 'center' }}>
                 <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>Integrations</div>
-                <div style={{ fontSize: '24px', fontWeight: '700', color: '#2196F3' }}>{integrationMetrics.length}</div>
+                <div style={{ fontSize: '24px', fontWeight: '700', color: '#F0A81E' }}>{integrationMetrics.length}</div>
               </div>
-              <div style={{ padding: '16px', background: 'white', border: '2px solid #9C27B0', borderRadius: '8px', textAlign: 'center' }}>
+              <div style={{ padding: '16px', background: 'white', border: '2px solid #E2736B', borderRadius: '8px', textAlign: 'center' }}>
                 <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>Total Records</div>
-                <div style={{ fontSize: '24px', fontWeight: '700', color: '#9C27B0' }}>
+                <div style={{ fontSize: '24px', fontWeight: '700', color: '#E2736B' }}>
                   {totalRecords == null ? '—' : totalRecords.toLocaleString()}
                 </div>
               </div>

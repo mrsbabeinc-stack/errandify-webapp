@@ -133,7 +133,7 @@ export const CasesPage: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'open': return '#3b82f6';
+      case 'open': return '#F0A81E';
       case 'in_progress': return '#f59e0b';
       case 'resolved': return '#10b981';
       default: return '#6b7280';
@@ -464,7 +464,7 @@ export const CasesPage: React.FC = () => {
                     <div style={{ fontSize: '14px', fontWeight: '600', color: '#333', marginBottom: '4px' }}>
                       Response from Other Party:
                     </div>
-                    <div style={{ fontSize: '14px', color: '#666', paddingLeft: '12px', borderLeft: '3px solid #3b82f6', marginBottom: '8px' }}>
+                    <div style={{ fontSize: '14px', color: '#666', paddingLeft: '12px', borderLeft: '3px solid #F0A81E', marginBottom: '8px' }}>
                       "{selectedCase.dispute_defense}"
                     </div>
                   </div>
@@ -476,7 +476,7 @@ export const CasesPage: React.FC = () => {
                       AI Analysis & Recommendation
                     </div>
 
-                    <div style={{ fontSize: '13px', color: '#666', marginBottom: '10px', background: '#fff', padding: '8px', borderRadius: '4px', borderLeft: '3px solid #3b82f6' }}>
+                    <div style={{ fontSize: '13px', color: '#666', marginBottom: '10px', background: '#fff', padding: '8px', borderRadius: '4px', borderLeft: '3px solid #F0A81E' }}>
                       <strong>Considered from original dispute:</strong><br/>
                       "{selectedCase.dispute_claim}"
                     </div>
@@ -579,7 +579,7 @@ export const CasesPage: React.FC = () => {
                     style={{
                       marginLeft: '8px',
                       padding: '4px 10px',
-                      background: '#3b82f6',
+                      background: '#F0A81E',
                       color: 'white',
                       border: 'none',
                       borderRadius: '4px',
@@ -613,7 +613,7 @@ export const CasesPage: React.FC = () => {
                     style={{
                       marginLeft: '8px',
                       padding: '4px 10px',
-                      background: '#3b82f6',
+                      background: '#F0A81E',
                       color: 'white',
                       border: 'none',
                       borderRadius: '4px',
@@ -878,8 +878,8 @@ export const CasesPage: React.FC = () => {
                       {[
                         { key: 'full', label: 'Full Payment', color: '#10b981', tip: 'Doer receives 100% of errand amount', detail: 'Asker pays all fees' },
                         { key: 'partial', label: 'Fair Split 50/50', color: '#f59e0b', tip: 'Split payment evenly between parties', detail: 'Customize % in amount fields' },
-                        { key: 'refund', label: 'Full Refund', color: '#3b82f6', tip: 'Doer receives $0, Asker gets 100% back', detail: 'No Stripe fee (escrow release)' },
-                        { key: 'escalate', label: 'Escalate L3', color: '#6366f1', tip: 'Cannot decide now, needs senior review', detail: 'Case remains open' },
+                        { key: 'refund', label: 'Full Refund', color: '#F0A81E', tip: 'Doer receives $0, Asker gets 100% back', detail: 'No Stripe fee (escrow release)' },
+                        { key: 'escalate', label: 'Escalate L3', color: '#F0A81E', tip: 'Cannot decide now, needs senior review', detail: 'Case remains open' },
                       ].map(option => (
                         <div
                           key={option.key}
@@ -1159,7 +1159,7 @@ export const CasesPage: React.FC = () => {
                                 Only option available
                               </div>
                             </div>
-                            <div style={{ fontSize: '13px', fontWeight: '700', color: '#3b82f6', marginTop: '8px' }} id="askerRefundDisplay">
+                            <div style={{ fontSize: '13px', fontWeight: '700', color: '#F0A81E', marginTop: '8px' }} id="askerRefundDisplay">
                               $0.00
                             </div>
                           </div>
@@ -1188,7 +1188,7 @@ export const CasesPage: React.FC = () => {
                       <div style={{ marginTop: '12px', padding: '12px', background: '#fff', borderRadius: '6px', border: '1px solid #ddd' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
                           <div style={{ fontWeight: '600', color: '#333', fontSize: '14px' }}>Payment Breakdown</div>
-                          <div style={{ fontSize: '12px', background: '#dbeafe', padding: '3px 6px', borderRadius: '3px', color: '#075985', fontWeight: '500' }}>
+                          <div style={{ fontSize: '12px', background: '#FFF3E4', padding: '3px 6px', borderRadius: '3px', color: '#075985', fontWeight: '500' }}>
                             💡 What each party pays and receives after all fees
                           </div>
                         </div>
@@ -1216,7 +1216,7 @@ export const CasesPage: React.FC = () => {
                         </div>
 
                         {/* Mode Badge */}
-                        <div style={{ marginTop: '8px', fontSize: '12px', fontWeight: '600', color: '#7c3aed', background: '#f3e8ff', padding: '4px 8px', borderRadius: '3px', display: 'inline-block' }}>
+                        <div style={{ marginTop: '8px', fontSize: '12px', fontWeight: '600', color: '#E2736B', background: '#f3e8ff', padding: '4px 8px', borderRadius: '3px', display: 'inline-block' }}>
                           Mode: <span id="feeAssignmentMode">Auto</span>
                         </div>
                       </div>
@@ -1371,7 +1371,7 @@ Errandify Resolution Team`}
 
                     {/* Message to Asker */}
                     <div id="askerMessagePanel" style={{ display: 'none' }}>
-                      <div style={{ fontSize: '13px', fontWeight: '600', color: '#3b82f6', marginBottom: '6px' }}>
+                      <div style={{ fontSize: '13px', fontWeight: '600', color: '#F0A81E', marginBottom: '6px' }}>
                         Message to Asker (Customer)
                       </div>
                       <div style={{ marginBottom: '8px' }}>
@@ -1435,7 +1435,7 @@ Errandify Resolution Team`}
                         onClick={() => showToast('Message to Asker approved and sent', 'success')}
                         style={{
                           padding: '8px 12px',
-                          background: '#3b82f6',
+                          background: '#F0A81E',
                           color: 'white',
                           border: 'none',
                           borderRadius: '4px',
@@ -1466,7 +1466,7 @@ Errandify Resolution Team`}
                         document.getElementById('doerMessagePanel')!.style.display = 'none';
                         document.getElementById('askerMessagePanel')!.style.display = 'block';
                         document.getElementById('doerTabBtn')!.style.background = '#e5e7eb';
-                        document.getElementById('askerTabBtn')!.style.background = '#3b82f6';
+                        document.getElementById('askerTabBtn')!.style.background = '#F0A81E';
                       }}
                     />
                   </div>

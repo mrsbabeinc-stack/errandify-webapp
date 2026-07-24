@@ -78,31 +78,31 @@ export const DemographicsReport: React.FC = () => {
             <text x="235" y="167" fontSize="11" textAnchor="middle" fill="#E91E63" fontWeight="600">5%</text>
 
             {/* Age groups - Right side (Male) */}
-            <rect x="300" y="30" width="160" height="25" fill="#2196F3" opacity="0.8"/>
+            <rect x="300" y="30" width="160" height="25" fill="#F0A81E" opacity="0.8"/>
             <text x="470" y="47" fontSize="11" textAnchor="start" fill="#333">18-24</text>
-            <text x="390" y="47" fontSize="11" textAnchor="middle" fill="#2196F3" fontWeight="600">7%</text>
+            <text x="390" y="47" fontSize="11" textAnchor="middle" fill="#F0A81E" fontWeight="600">7%</text>
 
-            <rect x="300" y="60" width="180" height="25" fill="#2196F3" opacity="0.8"/>
+            <rect x="300" y="60" width="180" height="25" fill="#F0A81E" opacity="0.8"/>
             <text x="490" y="77" fontSize="11" textAnchor="start" fill="#333">25-34</text>
-            <text x="390" y="77" fontSize="11" textAnchor="middle" fill="#2196F3" fontWeight="600">13%</text>
+            <text x="390" y="77" fontSize="11" textAnchor="middle" fill="#F0A81E" fontWeight="600">13%</text>
 
-            <rect x="300" y="90" width="190" height="25" fill="#2196F3" opacity="0.8"/>
+            <rect x="300" y="90" width="190" height="25" fill="#F0A81E" opacity="0.8"/>
             <text x="500" y="107" fontSize="11" textAnchor="start" fill="#333">35-44</text>
-            <text x="395" y="107" fontSize="11" textAnchor="middle" fill="#2196F3" fontWeight="600">14%</text>
+            <text x="395" y="107" fontSize="11" textAnchor="middle" fill="#F0A81E" fontWeight="600">14%</text>
 
-            <rect x="300" y="120" width="150" height="25" fill="#2196F3" opacity="0.8"/>
+            <rect x="300" y="120" width="150" height="25" fill="#F0A81E" opacity="0.8"/>
             <text x="460" y="137" fontSize="11" textAnchor="start" fill="#333">45-54</text>
-            <text x="375" y="137" fontSize="11" textAnchor="middle" fill="#2196F3" fontWeight="600">6%</text>
+            <text x="375" y="137" fontSize="11" textAnchor="middle" fill="#F0A81E" fontWeight="600">6%</text>
 
-            <rect x="300" y="150" width="110" height="25" fill="#2196F3" opacity="0.8"/>
+            <rect x="300" y="150" width="110" height="25" fill="#F0A81E" opacity="0.8"/>
             <text x="420" y="167" fontSize="11" textAnchor="start" fill="#333">55+</text>
-            <text x="355" y="167" fontSize="11" textAnchor="middle" fill="#2196F3" fontWeight="600">2%</text>
+            <text x="355" y="167" fontSize="11" textAnchor="middle" fill="#F0A81E" fontWeight="600">2%</text>
 
             {/* Legend */}
             <circle cx="320" cy="195" r="5" fill="#E91E63"/>
             <text x="330" y="199" fontSize="11" fill="#333">Female (58%)</text>
 
-            <circle cx="480" cy="195" r="5" fill="#2196F3"/>
+            <circle cx="480" cy="195" r="5" fill="#F0A81E"/>
             <text x="490" y="199" fontSize="11" fill="#333">Male (40%)</text>
           </svg>
         </div>
@@ -126,7 +126,7 @@ export const DemographicsReport: React.FC = () => {
                   <span style={{ fontSize: '12px', fontWeight: '600' }}>40%</span>
                 </div>
                 <div style={{ height: '8px', background: '#f5f5f5', borderRadius: '4px' }}>
-                  <div style={{ height: '100%', background: '#2196F3', width: '40%' }} />
+                  <div style={{ height: '100%', background: '#F0A81E', width: '40%' }} />
                 </div>
               </div>
               <div>
@@ -135,7 +135,7 @@ export const DemographicsReport: React.FC = () => {
                   <span style={{ fontSize: '12px', fontWeight: '600' }}>2%</span>
                 </div>
                 <div style={{ height: '8px', background: '#f5f5f5', borderRadius: '4px' }}>
-                  <div style={{ height: '100%', background: '#9C27B0', width: '2%' }} />
+                  <div style={{ height: '100%', background: '#E2736B', width: '2%' }} />
                 </div>
               </div>
             </div>

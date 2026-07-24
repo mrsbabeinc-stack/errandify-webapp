@@ -321,7 +321,7 @@ export default function NotificationsManagement() {
   });
 
   const typeColors = {
-    'announcement': '#2196F3',
+    'announcement': '#F0A81E',
     'alert': '#F44336',
     'reminder': '#FF9800',
     'promotion': '#4CAF50',
@@ -654,7 +654,7 @@ export default function NotificationsManagement() {
                           onClick={() => handleEditGroup(group)}
                           style={{
                             padding: '6px 12px',
-                            background: '#2196F3',
+                            background: '#F0A81E',
                             color: 'white',
                             border: 'none',
                             borderRadius: '4px',
@@ -1117,11 +1117,11 @@ export default function NotificationsManagement() {
       <div style={{
         marginTop: '24px',
         padding: '12px 16px',
-        background: '#e3f2fd',
-        border: '2px solid #2196F3',
+        background: '#FFF3E4',
+        border: '2px solid #F0A81E',
         borderRadius: '8px',
         fontSize: '12px',
-        color: '#1565c0',
+        color: '#D98C0C',
       }}>
         <strong>ℹ️ What's what:</strong>
         <ul style={{ marginTop: '6px', paddingLeft: '18px' }}>

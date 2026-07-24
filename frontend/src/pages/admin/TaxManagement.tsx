@@ -246,12 +246,12 @@ const TaxManagement: React.FC = () => {
                     <td style={{ padding: '12px', textAlign: 'right', fontSize: '12px', color: '#333' }}>SGD {filing.total_taxable.toLocaleString()}</td>
                     <td style={{ padding: '12px', textAlign: 'right', fontSize: '12px', fontWeight: '600', color: '#333' }}>SGD {filing.total_tax.toLocaleString()}</td>
                     <td style={{ padding: '12px', textAlign: 'right', fontSize: '12px', color: filing.amount_paid > 0 ? '#4CAF50' : '#999', fontWeight: '600' }}>SGD {filing.amount_paid.toLocaleString()}</td>
-                    <td style={{ padding: '12px', textAlign: 'center', fontSize: '11px', background: filing.status === 'paid' ? '#E8F5E9' : filing.status === 'submitted' ? '#E3F2FD' : '#FFF3E0', color: filing.status === 'paid' ? '#2E7D32' : filing.status === 'submitted' ? '#1565C0' : '#E65100', fontWeight: '600', borderRadius: '4px' }}>
+                    <td style={{ padding: '12px', textAlign: 'center', fontSize: '11px', background: filing.status === 'paid' ? '#E8F5E9' : filing.status === 'submitted' ? '#FFF3E4' : '#FFF3E0', color: filing.status === 'paid' ? '#2E7D32' : filing.status === 'submitted' ? '#D98C0C' : '#E65100', fontWeight: '600', borderRadius: '4px' }}>
                       {filing.status === 'paid' ? '✓ Paid' : filing.status === 'submitted' ? '📨 Submitted' : '✏️ Draft'}
                     </td>
                     <td style={{ padding: '12px', textAlign: 'center' }}>
                       {filing.status === 'draft' && (
-                        <button onClick={() => handleSubmitFiling(filing)} style={{ padding: '4px 8px', background: '#2196F3', color: 'white', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>Submit to IRAS</button>
+                        <button onClick={() => handleSubmitFiling(filing)} style={{ padding: '4px 8px', background: '#F0A81E', color: 'white', border: 'none', borderRadius: '4px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>Submit to IRAS</button>
                       )}
                     </td>
                   </tr>

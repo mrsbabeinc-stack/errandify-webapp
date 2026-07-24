@@ -187,8 +187,8 @@ const ApprovalWorkflows: React.FC = () => {
             </div>
 
             <div style={{ background: 'white', padding: '20px', borderRadius: '8px', border: '1px solid #ddd' }}>
-              <div style={{ padding: '12px', background: '#E3F2FD', borderRadius: '4px', marginBottom: '16px', borderLeft: '4px solid #1565C0' }}>
-                <p style={{ fontSize: '11px', color: '#0D47A1', margin: 0 }}><strong>* = Required fields</strong></p>
+              <div style={{ padding: '12px', background: '#FFF3E4', borderRadius: '4px', marginBottom: '16px', borderLeft: '4px solid #D98C0C' }}>
+                <p style={{ fontSize: '11px', color: '#B5651D', margin: 0 }}><strong>* = Required fields</strong></p>
               </div>
 
               <div style={{ marginBottom: '16px' }}>
@@ -324,7 +324,7 @@ const ApprovalWorkflows: React.FC = () => {
             { label: 'Pending', value: pendingCount, color: '#FF9800', icon: '⏳' },
             { label: 'Approved', value: approvedCount, color: '#4CAF50', icon: '✓' },
             { label: 'Rejected', value: rejectedCount, color: '#F44336', icon: '✗' },
-            { label: 'Total Amount', value: `SGD ${totalAmount.toLocaleString()}`, color: '#2196F3', icon: '💰' },
+            { label: 'Total Amount', value: `SGD ${totalAmount.toLocaleString()}`, color: '#F0A81E', icon: '💰' },
           ].map((stat, idx) => (
             <div key={idx} style={{ padding: '16px', background: 'white', border: `2px solid ${stat.color}`, borderRadius: '8px', textAlign: 'center' }}>
               <div style={{ fontSize: '24px', marginBottom: '4px' }}>{stat.icon}</div>
