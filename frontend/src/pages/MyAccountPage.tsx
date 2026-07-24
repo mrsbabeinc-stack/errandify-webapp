@@ -1464,27 +1464,19 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                       </div>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div className="bg-orange-50 rounded p-2">
-                        <p className="text-gray-600 font-semibold">Name</p>
-                        <p className="text-orange-900 font-bold">{profileData.name}</p>
-                      </div>
-                      <div className="bg-amber-50 rounded p-2">
-                        <p className="text-gray-600 font-semibold">Alias</p>
-                        <p className="text-amber-900 font-bold">{editForm.alias || '—'}</p>
-                      </div>
-                      <div className="bg-amber-50 rounded p-2">
-                        <p className="text-gray-600 font-semibold">Email</p>
-                        <p className="text-amber-900 font-bold break-all">{profileData.email || '—'}</p>
-                      </div>
-                      <div className="bg-orange-50 rounded p-2">
-                        <p className="text-gray-600 font-semibold">Mobile</p>
-                        <p className="text-orange-900 font-bold">{profileData.mobile || '—'}</p>
-                      </div>
-                      <div className="bg-amber-50 rounded p-2 col-span-2">
-                        <p className="text-gray-600 font-semibold">Gender</p>
-                        <p className="text-amber-900 font-bold">{profileData.gender === 'F' ? '👩 Female' : profileData.gender === 'M' ? '👨 Male' : '—'}</p>
-                      </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { label: 'Name', value: profileData.name, full: false },
+                        { label: 'Alias', value: editForm.alias || '—', full: false },
+                        { label: 'Email', value: profileData.email || '—', full: false, breakAll: true },
+                        { label: 'Mobile', value: profileData.mobile || '—', full: false },
+                        { label: 'Gender', value: profileData.gender === 'F' ? '👩 Female' : profileData.gender === 'M' ? '👨 Male' : '—', full: true },
+                      ].map((f) => (
+                        <div key={f.label} className={`bg-orange-50/70 border border-orange-100 rounded-lg px-2.5 py-2 ${f.full ? 'col-span-2' : ''}`}>
+                          <div className="text-[10px] uppercase tracking-wide font-bold text-errandify-orange-deep/70">{f.label}</div>
+                          <div className={`text-[13px] font-bold text-errandify-brown mt-0.5 ${f.breakAll ? 'break-all' : 'truncate'}`}>{f.value}</div>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
