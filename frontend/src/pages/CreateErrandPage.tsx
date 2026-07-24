@@ -161,25 +161,31 @@ export default function CreateErrandPage() {
             setPostalCode(prefilledData.postalCode);
             console.log('[CreateErrand] Postal code:', prefilledData.postalCode);
 
-            // Auto-correct area based on postal code (verify postal code mapping)
-            const postalPrefix = prefilledData.postalCode.substring(0, 2);
-            const correctAreaFromPostal = postalCodeAreas[postalPrefix]?.area;
-
-            if (correctAreaFromPostal) {
-              // Verify prefilled area matches postal code
-              const prefilliedAreaNormalized = prefilledData.area?.toLowerCase().trim() || '';
-              const correctAreaNormalized = correctAreaFromPostal.toLowerCase().trim();
-
-              if (prefilliedAreaNormalized !== correctAreaNormalized) {
-                console.warn('[CreateErrand] ⚠️ AREA MISMATCH: Postal code', prefilledData.postalCode, 'should be in', correctAreaFromPostal, 'but prefilled data says', prefilledData.area);
-                console.log('[CreateErrand] ✅ AUTO-CORRECTING area to match postal code');
-              }
-
-              setArea(correctAreaFromPostal);
-              setFormData((prev) => ({
-                ...prev,
-                location: correctAreaFromPostal,
-              }));
+            // Derive the area from the backend (OneMap-backed, authoritative),
+            // the same source the manual postal field uses — NOT the local
+            // 2-digit-prefix map, which was wrong for many sectors (e.g. 507565
+            // resolved to "Redhill" instead of "Changi"). Both paths now agree.
+            const pc = prefilledData.postalCode;
+            if (/^\d{6}$/.test(pc)) {
+              fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/address/${pc}`)
+                .then((res) => res.json())
+                .then((data) => {
+                  if (data?.success && data?.data?.area) {
+                    setArea(data.data.area);
+                    setFormData((prev) => ({ ...prev, location: data.data.area }));
+                  }
+                  if (data?.data?.fullAddress) setFullAddress(data.data.fullAddress);
+                })
+                .catch(() => {
+                  // Backend unreachable — fall back to whatever the extractor gave.
+                  if (prefilledData.area) {
+                    setArea(prefilledData.area);
+                    setFormData((prev) => ({ ...prev, location: prefilledData.area }));
+                  }
+                });
+            } else if (prefilledData.area) {
+              setArea(prefilledData.area);
+              setFormData((prev) => ({ ...prev, location: prefilledData.area }));
             }
           }
 
@@ -1438,7 +1444,9 @@ export default function CreateErrandPage() {
                     style={{borderColor: '#FFF0E5', color: '#333'}}
                   >
                     <option value="">Select Area</option>
-                    {Array.from(new Set(Object.values(postalCodeAreas).map(x => x.area))).sort().map((areaName) => (
+                    {/* Always include the backend-provided area (e.g. "Changi") so it
+                        is selectable even when it's not in the static local list. */}
+                    {Array.from(new Set([...(area ? [area] : []), ...Object.values(postalCodeAreas).map(x => x.area)])).sort().map((areaName) => (
                       <option key={areaName} value={areaName}>{areaName}</option>
                     ))}
                   </select>
