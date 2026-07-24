@@ -220,7 +220,9 @@ export default function HanaTaskCreation({
     const example = getExampleByCategory(categoryToUse);
     setHanaMessage(`Hi! What errand do you need help with?\n\nExample:\n'${example}'`);
     setCurrentStep('input');
-    speakText('Hi! What errand do you need help with?');
+    // No auto-speak on open. Voice-to-form only needs the mic (speech-to-text);
+    // Hana talking back isn't required and its TTS voice is a degraded fallback.
+    // The speaker button remains for anyone who wants to hear the greeting.
   };
 
   const triggerSpeaking = () => {
