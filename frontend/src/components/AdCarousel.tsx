@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import EarnPointsModal from './EarnPointsModal';
 
 /**
  * The hero carousel — now fed by the server rather than by this file.
@@ -129,6 +130,8 @@ export default function AdCarousel({ location = 'home' }: { location?: string })
     fetch(`${api}/api/banners/${currentAd.id}/impression`, { method: 'POST' }).catch(() => {});
   }, [currentAd?.id, currentAd?.kind]);
 
+  const [showPointsModal, setShowPointsModal] = useState(false);
+
   const handleAdClick = () => {
     if (currentAd?.kind !== 'ad') return;
     fetch(`${api}/api/banners/${currentAd.id}/click`, { method: 'POST' }).catch(() => {});
@@ -200,7 +203,16 @@ export default function AdCarousel({ location = 'home' }: { location?: string })
             <div className="flex-shrink-0">
               <a
                 href={currentAd.cta.url}
-                onClick={handleAdClick}
+                onClick={(e) => {
+                  // The Errandify Points notice opens a lightweight sheet on the
+                  // spot instead of navigating to a whole page.
+                  if (currentAd.cta?.url === '/errandify-points') {
+                    e.preventDefault();
+                    setShowPointsModal(true);
+                    return;
+                  }
+                  handleAdClick();
+                }}
                 {...(currentAd.kind === 'ad'
                   ? { target: '_blank', rel: 'noopener noreferrer sponsored' }
                   : {})}
@@ -240,6 +252,8 @@ export default function AdCarousel({ location = 'home' }: { location?: string })
           />
         ))}
       </div>
+
+      <EarnPointsModal open={showPointsModal} onClose={() => setShowPointsModal(false)} />
     </div>
   );
 }
