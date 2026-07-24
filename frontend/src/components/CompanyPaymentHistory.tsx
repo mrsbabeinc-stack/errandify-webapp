@@ -570,7 +570,7 @@ Thank you for your business!
 
         .card.balance {
           background: linear-gradient(135deg, #FFF3E4, #FFE0C2);
-          border-left: 4px solid #2196F3;
+          border-left: 4px solid #F0A81E;
         }
 
         .card .label {

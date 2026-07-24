@@ -670,7 +670,7 @@ body {
 }
 
 .tier-comparison-table .tier-col.platinum {
-  color: #9B59B6;
+  color: #D2521C;
   font-weight: 600;
 }
 
@@ -2101,8 +2101,8 @@ body {
 }
 
 .status-badge.active {
-  background: #E3F2FD;
-  color: #1976D2;
+  background: #FFF3E4;
+  color: #D2521C;
 }
 
 .status-badge.completed {

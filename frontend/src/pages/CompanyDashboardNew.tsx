@@ -323,7 +323,7 @@ const CompanyDashboardNew: React.FC = () => {
       description: 'Advanced analytics dashboard now available for all Gold partners and above.',
       badge: 'New',
       badgeIcon: '✨',
-      gradient: 'linear-gradient(135deg, #5BA3D0, #7DB8E0)',
+      gradient: 'linear-gradient(135deg, #F0A81E, #F5C542)',
     },
     {
       id: 3,
@@ -331,7 +331,7 @@ const CompanyDashboardNew: React.FC = () => {
       description: 'Upgrade to Platinum and get 30% off your first three months!',
       badge: 'Promo',
       badgeIcon: '🎉',
-      gradient: 'linear-gradient(135deg, #9B59B6, #C39BD3)',
+      gradient: 'linear-gradient(135deg, #D2521C, #E89B8F)',
     },
     {
       id: 4,
@@ -1169,7 +1169,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                       <div className="category-name">Office Services</div>
                       <div className="category-stat">38</div>
                       <div className="progress-bar">
-                        <div className="progress-fill" style={{width: '20%', background: '#5BA3D0'}}></div>
+                        <div className="progress-fill" style={{width: '20%', background: '#F0A81E'}}></div>
                       </div>
                       <div className="category-percentage">20%</div>
                     </div>
@@ -1178,7 +1178,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                       <div className="category-name">Delivery</div>
                       <div className="category-stat">32</div>
                       <div className="progress-bar">
-                        <div className="progress-fill" style={{width: '17%', background: '#27AE60'}}></div>
+                        <div className="progress-fill" style={{width: '17%', background: '#E2736B'}}></div>
                       </div>
                       <div className="category-percentage">17%</div>
                     </div>
@@ -1187,7 +1187,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                       <div className="category-name">Event Planning</div>
                       <div className="category-stat">28</div>
                       <div className="progress-bar">
-                        <div className="progress-fill" style={{width: '15%', background: '#9B59B6'}}></div>
+                        <div className="progress-fill" style={{width: '15%', background: '#D2521C'}}></div>
                       </div>
                       <div className="category-percentage">15%</div>
                     </div>
@@ -1260,17 +1260,17 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                           <text x="85" y="260" fontSize="11" fill="#999">Week 1</text>
                           <text x="85" y="280" fontSize="13" fontWeight="700" fill="#FF6B35">78%</text>
 
-                          <rect x="150" y="80" width="40" height="160" fill="#5BA3D0" opacity="0.8" />
+                          <rect x="150" y="80" width="40" height="160" fill="#F0A81E" opacity="0.8" />
                           <text x="155" y="260" fontSize="11" fill="#999">Week 2</text>
-                          <text x="155" y="280" fontSize="13" fontWeight="700" fill="#5BA3D0">85%</text>
+                          <text x="155" y="280" fontSize="13" fontWeight="700" fill="#F0A81E">85%</text>
 
                           <rect x="220" y="60" width="40" height="180" fill="#27AE60" opacity="0.8" />
                           <text x="225" y="260" fontSize="11" fill="#999">Week 3</text>
                           <text x="225" y="280" fontSize="13" fontWeight="700" fill="#27AE60">92%</text>
 
-                          <rect x="290" y="40" width="40" height="200" fill="#9B59B6" opacity="0.8" />
+                          <rect x="290" y="40" width="40" height="200" fill="#D2521C" opacity="0.8" />
                           <text x="295" y="260" fontSize="11" fill="#999">Week 4</text>
-                          <text x="295" y="280" fontSize="13" fontWeight="700" fill="#9B59B6">96%</text>
+                          <text x="295" y="280" fontSize="13" fontWeight="700" fill="#D2521C">96%</text>
 
                           {/* Grid Line */}
                           <line x1="50" y1="240" x2="380" y2="240" stroke="#e0e0e0" strokeWidth="2" />
@@ -2691,7 +2691,7 @@ This is a sample invoice. For actual invoices, integrate with Stripe PDF API.`;
                         <p style={{margin: '0 0 2px 0', fontSize: '13px', fontWeight: '600', color: '#333'}}>💳 $10 Discount</p>
                         <p style={{margin: 0, fontSize: '11px', color: '#999'}}>Expires Aug 12, 2026</p>
                       </div>
-                      <div style={{padding: '12px', background: '#F5EFEA', borderRadius: '8px', borderLeft: '4px solid #5BA3D0'}}>
+                      <div style={{padding: '12px', background: '#F5EFEA', borderRadius: '8px', borderLeft: '4px solid #F0A81E'}}>
                         <p style={{margin: '0 0 2px 0', fontSize: '13px', fontWeight: '600', color: '#333'}}>☕ Starbucks $10</p>
                         <p style={{margin: 0, fontSize: '11px', color: '#999'}}>Expires Sep 30, 2026</p>
                       </div>
