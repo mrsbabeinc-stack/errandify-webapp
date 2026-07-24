@@ -12,7 +12,7 @@ const SAMPLE_EVENTS: EventNotification[] = [
   {
     id: '1',
     message: '🎉 Weekend Bonus: Earn 2x EP on all errands this weekend!',
-    type: 'success',
+    type: 'info',
     icon: '🎁',
     action: { label: 'View Details', url: '/promotions' }
   },

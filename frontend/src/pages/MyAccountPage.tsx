@@ -346,11 +346,11 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
       console.error('Failed to load activities:', error);
     }
     return [
-      { id: 1, type: 'completed', emoji: '✅', title: 'Completed: Clean apartment', errandId: 'ERR-2847', date: 'Today 10:28 AM', amount: '+$80', color: 'green' },
+      { id: 1, type: 'completed', emoji: '✅', title: 'Completed: Clean apartment', errandId: 'ERR-2847', date: 'Today 10:28 AM', amount: '+$80', color: 'orange' },
       { id: 2, type: 'posted', emoji: '📝', title: 'Posted: Home repairs', errandId: 'ERR-2846', date: 'Yesterday 10:25 PM', amount: '-$120', color: 'orange' },
       { id: 3, type: 'referral', emoji: '🎁', title: 'Referral: @SunnyLove', errandId: 'N/A', date: '2 days ago', amount: '+$50', color: 'orange' },
       { id: 4, type: 'rating', emoji: '⭐', title: 'Rating given: Clean apartment', errandId: 'ERR-2847', date: '3 days ago', amount: '5 stars', color: 'amber' },
-      { id: 5, type: 'accepted', emoji: '✅', title: 'Accepted offer: Tutoring', errandId: 'ERR-2845', date: '4 days ago', amount: 'SGD $60', color: 'green' },
+      { id: 5, type: 'accepted', emoji: '✅', title: 'Accepted offer: Tutoring', errandId: 'ERR-2845', date: '4 days ago', amount: 'SGD $60', color: 'orange' },
       { id: 6, type: 'posted', emoji: '📋', title: 'Posted: Office admin', errandId: 'ERR-2844', date: '5 days ago', amount: '-$75', color: 'orange' },
     ];
   });
@@ -1303,7 +1303,7 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
             <div className="space-y-1.5">
               <button
                 onClick={() => navigate('/referral')}
-                className="w-full bg-gradient-to-r from-amber-500 via-pink-500 to-red-500 hover:from-amber-600 hover:via-pink-600 hover:to-red-600 rounded-xl p-4 shadow-lg hover:shadow-2xl transition transform hover:scale-102 active:scale-95 text-white text-center border-3 border-amber-700"
+                className="w-full bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 hover:from-amber-600 hover:via-orange-600 hover:to-red-600 rounded-xl p-4 shadow-lg hover:shadow-2xl transition transform hover:scale-102 active:scale-95 text-white text-center border-3 border-amber-700"
               >
                 <div className="flex items-center justify-center gap-3">
                   <div className="text-3xl animate-bounce">🎁</div>
@@ -1485,16 +1485,16 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                         <p className="text-gray-600 font-semibold">Mobile</p>
                         <p className="text-orange-900 font-bold">{profileData.mobile || '—'}</p>
                       </div>
-                      <div className="bg-rose-50 rounded p-2 col-span-2">
+                      <div className="bg-amber-50 rounded p-2 col-span-2">
                         <p className="text-gray-600 font-semibold">Gender</p>
-                        <p className="text-rose-900 font-bold">{profileData.gender === 'F' ? '👩 Female' : profileData.gender === 'M' ? '👨 Male' : '—'}</p>
+                        <p className="text-amber-900 font-bold">{profileData.gender === 'F' ? '👩 Female' : profileData.gender === 'M' ? '👨 Male' : '—'}</p>
                       </div>
                     </div>
                   )}
                 </div>
 
                 {/* Bio */}
-                <div className="bg-gradient-to-r from-amber-50 to-pink-50 rounded-lg border border-amber-200 p-3">
+                <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg border border-amber-200 p-3">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="text-xs font-bold text-amber-900">✍️ Bio</h3>
                     <span className="text-xs text-amber-700">{editForm.bio?.length || 0}/200</span>
@@ -1544,7 +1544,7 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                     🔒 Private: Only used to show you special discounts and support
                   </p>
                   {profileData.chasCardColor && (
-                    <p className="text-xs text-green-600 mt-1">
+                    <p className="text-xs text-orange-600 mt-1">
                       ✅ Your CHAS status: {profileData.chasCardColor === 'blue' ? '🟦 Blue Card' : profileData.chasCardColor === 'green' ? '🟩 Green Card' : 'None'}
                     </p>
                   )}
@@ -1735,10 +1735,10 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
             <div className="space-y-2">
               {aiAlerts.length > 0 ? (
                 aiAlerts.map((alert, idx) => {
-                  const bgColor = alert.type === 'success' ? 'bg-green-50' : alert.type === 'achievement' ? 'bg-orange-50' : 'bg-amber-50';
-                  const borderColor = alert.type === 'success' ? 'border-green-500' : alert.type === 'achievement' ? 'border-orange-500' : 'border-amber-500';
-                  const titleColor = alert.type === 'success' ? 'text-green-900' : alert.type === 'achievement' ? 'text-orange-900' : 'text-amber-900';
-                  const textColor = alert.type === 'success' ? 'text-green-800' : alert.type === 'achievement' ? 'text-orange-800' : 'text-amber-800';
+                  const bgColor = alert.type === 'success' ? 'bg-orange-50' : alert.type === 'achievement' ? 'bg-orange-50' : 'bg-amber-50';
+                  const borderColor = alert.type === 'success' ? 'border-orange-500' : alert.type === 'achievement' ? 'border-orange-500' : 'border-amber-500';
+                  const titleColor = alert.type === 'success' ? 'text-orange-900' : alert.type === 'achievement' ? 'text-orange-900' : 'text-amber-900';
+                  const textColor = alert.type === 'success' ? 'text-orange-800' : alert.type === 'achievement' ? 'text-orange-800' : 'text-amber-800';
                   return (
                     <div key={idx} className={`${bgColor} border-l-4 ${borderColor} rounded-lg p-3`}>
                       <p className={`text-xs font-bold ${titleColor} mb-1`}>{alert.emoji} {alert.title}</p>
@@ -1748,9 +1748,9 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                 })
               ) : (
                 <>
-                  <div className="bg-green-50 border-l-4 border-green-500 rounded-lg p-3">
-                    <p className="text-xs font-bold text-green-900 mb-1">✅ Great News!</p>
-                    <p className="text-xs text-green-800">Loading your personalized alerts...</p>
+                  <div className="bg-orange-50 border-l-4 border-orange-500 rounded-lg p-3">
+                    <p className="text-xs font-bold text-orange-900 mb-1">✅ Great News!</p>
+                    <p className="text-xs text-orange-800">Loading your personalized alerts...</p>
                   </div>
                 </>
               )}
@@ -1849,7 +1849,7 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                       <select
                         value={payoutForm.bankName}
                         onChange={(e) => setPayoutForm({ ...payoutForm, bankName: e.target.value })}
-                        className="w-full border border-gray-300 rounded px-2 py-1.5 text-gray-800 text-xs focus:outline-none focus:ring-2 focus:ring-green-500"
+                        className="w-full border border-gray-300 rounded px-2 py-1.5 text-gray-800 text-xs focus:outline-none focus:ring-2 focus:ring-orange-500"
                       >
                         <option value="">Select a bank...</option>
                         {singaporeBanks.map((bank) => (
@@ -1921,7 +1921,7 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                             setShowErrorModal(true);
                           }
                         }}
-                        className="flex-1 bg-green-500 text-white py-1 rounded text-xs font-semibold hover:bg-green-600"
+                        className="flex-1 bg-orange-500 text-white py-1 rounded text-xs font-semibold hover:bg-orange-600"
                       >
                         Complete Setup on Stripe
                       </button>
@@ -1943,7 +1943,7 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                     </div>
                     <div className="flex justify-between pt-2 border-t border-gray-200">
                       <span className="text-gray-600">Status:</span>
-                      <span className="font-semibold text-green-600">✅ Verified</span>
+                      <span className="font-semibold text-orange-600">✅ Verified</span>
                     </div>
                   </>
                 )}
@@ -1982,7 +1982,7 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                 onClick={() => setRewardsTab('gift')}
                 className={`px-3 py-1.5 text-xs font-bold transition rounded whitespace-nowrap ${
                   rewardsTab === 'gift'
-                    ? 'bg-pink-500 text-white'
+                    ? 'bg-orange-500 text-white'
                     : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
                 }`}
               >
@@ -2013,13 +2013,13 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
             {rewardsTab === 'overview' && (
               <div className="space-y-2">
                 {/* Happy Header */}
-                <div className="text-center py-2 bg-gradient-to-r from-yellow-100 via-orange-100 to-pink-100 rounded-lg border-2 border-yellow-300">
+                <div className="text-center py-2 bg-gradient-to-r from-yellow-100 via-orange-100 to-orange-100 rounded-lg border-2 border-yellow-300">
                   <p className="text-sm font-bold text-orange-600">🎊 You're doing AMAZING! 🎊</p>
                   <p className="text-xs text-gray-600 mt-1">Keep earning and redeeming rewards with Errandify!</p>
                 </div>
 
                 {/* Errandify Points Card - Big & Happy */}
-                <div className="bg-gradient-to-br from-yellow-300 via-orange-400 to-pink-400 text-white rounded-xl p-4 shadow-lg relative overflow-hidden">
+                <div className="bg-gradient-to-br from-yellow-300 via-orange-400 to-orange-400 text-white rounded-xl p-4 shadow-lg relative overflow-hidden">
                   <div className="absolute top-1 right-1 text-2xl opacity-20">✨</div>
                   <div className="absolute bottom-1 left-1 text-2xl opacity-20">🎁</div>
                   <div className="relative z-10">
@@ -2055,14 +2055,14 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                         useCustomMessage: false,
                       });
                     }}
-                    className="flex-1 bg-gradient-to-r from-pink-400 to-rose-500 text-white py-3 rounded-lg font-bold text-sm hover:shadow-lg hover:scale-105 transition transform shadow-md"
+                    className="flex-1 bg-gradient-to-r from-orange-400 to-amber-500 text-white py-3 rounded-lg font-bold text-sm hover:shadow-lg hover:scale-105 transition transform shadow-md"
                   >
                     💝 Send A Gift
                   </button>
                 </div>
 
                 {/* Fun Footer */}
-                <div className="text-center py-3 bg-gradient-to-r from-amber-100 via-pink-100 to-orange-100 rounded-lg border-2 border-amber-200">
+                <div className="text-center py-3 bg-gradient-to-r from-amber-100 via-orange-100 to-orange-100 rounded-lg border-2 border-amber-200">
                   <p className="text-xs font-bold text-amber-600">🌈 Keep earning rewards & spread happiness! 🌈</p>
                   <p className="text-xs text-gray-600 mt-1">Every errand completed = More points earned = More rewards unlocked! 🚀</p>
                 </div>
@@ -2072,9 +2072,9 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
             {/* SHOP TAB - Redeem Rewards */}
             {rewardsTab === 'shop' && (
               <div className="space-y-2">
-                <div className="text-center py-2 bg-gradient-to-r from-green-100 to-emerald-100 rounded-lg border-2 border-green-300">
-                  <p className="text-sm font-bold text-green-600">🛍️ Shop Rewards 🛍️</p>
-                  <p className="text-xs text-gray-600 mt-1">Current Balance: <span className="font-bold text-green-600">{profileData?.errandifyPoints ?? userBalance} EP</span></p>
+                <div className="text-center py-2 bg-gradient-to-r from-orange-100 to-amber-100 rounded-lg border-2 border-orange-300">
+                  <p className="text-sm font-bold text-orange-600">🛍️ Shop Rewards 🛍️</p>
+                  <p className="text-xs text-gray-600 mt-1">Current Balance: <span className="font-bold text-orange-600">{profileData?.errandifyPoints ?? userBalance} EP</span></p>
                 </div>
 
                 {/* Buy EP Section */}
@@ -2201,7 +2201,7 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                         disabled={(profileData?.errandifyPoints ?? userBalance) < 200}
                         className={`text-white px-3 py-2 rounded-lg text-xs font-bold transition ${
                           (profileData?.errandifyPoints ?? userBalance) >= 200
-                            ? 'bg-gradient-to-r from-amber-500 to-pink-500 hover:shadow-lg cursor-pointer'
+                            ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:shadow-lg cursor-pointer'
                             : 'bg-gray-400 cursor-not-allowed opacity-50'
                         }`}
                       >
@@ -2212,8 +2212,8 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                 </div>
 
                 {/* Recommended for You Section */}
-                <div className="bg-white rounded-xl border-2 border-pink-200 overflow-hidden shadow-md">
-                  <div className="bg-gradient-to-r from-pink-400 to-rose-500 text-white p-3">
+                <div className="bg-white rounded-xl border-2 border-orange-200 overflow-hidden shadow-md">
+                  <div className="bg-gradient-to-r from-orange-400 to-amber-500 text-white p-3">
                     <h3 className="text-sm font-bold">✨ Recommended For You ✨</h3>
                     <p className="text-xs mt-1 opacity-90">Personalized vouchers based on your interests</p>
                   </div>
@@ -2237,7 +2237,7 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                         Redeem
                       </button>
                     </div>
-                    <div className="bg-gradient-to-br from-red-50 to-pink-50 border-2 border-red-200 rounded-lg p-2 hover:shadow-md transition">
+                    <div className="bg-gradient-to-br from-red-50 to-orange-50 border-2 border-red-200 rounded-lg p-2 hover:shadow-md transition">
                       <p className="text-2xl mb-1">🍗</p>
                       <p className="font-bold text-xs text-gray-900">KFC Voucher</p>
                       <p className="text-xs text-red-600 font-bold mb-1">450 EP</p>
@@ -2331,8 +2331,8 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
 
                 {/* Show saved groups count */}
                 {savedGroups.length > 0 && (
-                  <div className="bg-gradient-to-r from-green-100 to-green-50 border-2 border-green-400 rounded-lg p-3">
-                    <p className="text-xs font-bold text-green-700">✅ You have {savedGroups.length} saved group{savedGroups.length !== 1 ? 's' : ''}:</p>
+                  <div className="bg-gradient-to-r from-orange-100 to-orange-50 border-2 border-orange-400 rounded-lg p-3">
+                    <p className="text-xs font-bold text-orange-700">✅ You have {savedGroups.length} saved group{savedGroups.length !== 1 ? 's' : ''}:</p>
                     <div className="flex flex-wrap gap-2 mt-2">
                       {savedGroups.map((group) => (
                         <button
@@ -2343,7 +2343,7 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                               recipients: group.members,
                             });
                           }}
-                          className="bg-white text-xs px-3 py-1 rounded-full border border-green-400 text-green-700 font-bold hover:bg-green-50 transition"
+                          className="bg-white text-xs px-3 py-1 rounded-full border border-orange-400 text-orange-700 font-bold hover:bg-orange-50 transition"
                         >
                           {group.name} ({group.members.length}) →
                         </button>
@@ -2365,15 +2365,15 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                         <p className="text-xs text-gray-600">Per Person</p>
                         <p className="text-lg font-bold text-orange-600">{giftForm.points} EP</p>
                       </div>
-                      <div className="bg-white rounded p-2 border border-pink-100">
+                      <div className="bg-white rounded p-2 border border-orange-100">
                         <p className="text-xs text-gray-600">Total Cost</p>
-                        <p className="text-lg font-bold text-pink-600">{Math.max(0, (parseInt(giftForm.points || '0') || 0) * (giftForm.recipients?.length ?? 0))} EP</p>
+                        <p className="text-lg font-bold text-orange-600">{Math.max(0, (parseInt(giftForm.points || '0') || 0) * (giftForm.recipients?.length ?? 0))} EP</p>
                       </div>
                     </div>
                     <div className={`rounded p-2 border-2 ${
                       (parseInt(giftForm.points || '0') || 0) * (giftForm.recipients?.length ?? 0) > userBalance
                         ? 'bg-red-50 border-red-300'
-                        : 'bg-green-50 border-green-300'
+                        : 'bg-orange-50 border-orange-300'
                     }`}>
                       <div className="flex justify-between items-center">
                         <p className="text-xs text-gray-600">Current Balance:</p>
@@ -2384,7 +2384,7 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                         <p className={`text-sm font-bold ${
                           (parseInt(giftForm.points || '0') || 0) * (giftForm.recipients?.length ?? 0) > userBalance
                             ? 'text-red-600'
-                            : 'text-green-600'
+                            : 'text-orange-600'
                         }`}>
                           {Math.max(0, userBalance - ((parseInt(giftForm.points || '0') || 0) * (giftForm.recipients?.length ?? 0)))} EP
                         </p>
@@ -2453,7 +2453,7 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                       className={`flex-1 py-2 rounded-lg font-bold text-sm transition ${
                         (giftForm.recipients?.length ?? 0) > 0
                           ? 'bg-red-100 text-red-700 border border-red-300'
-                          : 'bg-green-100 text-green-700 border border-green-300'
+                          : 'bg-orange-100 text-orange-700 border border-orange-300'
                       }`}
                     >
                       {(giftForm.recipients?.length ?? 0) > 0 ? '❌ Clear All' : '✅ Select All'}
@@ -2675,7 +2675,7 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                       setShowGiftConfirmation(true);
                     }
                   }}
-                  className="w-full bg-gradient-to-r from-pink-400 to-rose-500 text-white py-2.5 rounded-lg font-bold text-sm hover:shadow-lg transition"
+                  className="w-full bg-gradient-to-r from-orange-400 to-amber-500 text-white py-2.5 rounded-lg font-bold text-sm hover:shadow-lg transition"
                 >
                   💝 Send Gift
                 </button>
@@ -2685,7 +2685,7 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
             {/* MYVOUCHER TAB - Redeemed Vouchers */}
             {rewardsTab === 'myVoucher' && (
               <div className="space-y-2">
-                <div className="text-center py-2 bg-gradient-to-r from-amber-100 to-pink-100 rounded-lg border-2 border-amber-300">
+                <div className="text-center py-2 bg-gradient-to-r from-amber-100 to-orange-100 rounded-lg border-2 border-amber-300">
                   <p className="text-sm font-bold text-amber-600">🎟️ MyVoucher 🎟️</p>
                   <p className="text-xs text-gray-600 mt-1">All your redeemed discount codes</p>
                 </div>
@@ -2693,7 +2693,7 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                 {/* Vouchers List */}
                 {redemptionHistory.length > 0 ? (
                   <div className="bg-white rounded-xl border-2 border-amber-200 overflow-hidden shadow-md">
-                    <div className="bg-gradient-to-r from-amber-500 to-pink-500 text-white p-3">
+                    <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white p-3">
                       <h3 className="text-sm font-bold">🎁 MyVoucher ({redemptionHistory.length}) 🎁</h3>
                       <p className="text-xs mt-1 opacity-90">Click to copy code</p>
                     </div>
@@ -2716,7 +2716,7 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                               setModalMessage(`✅ Code copied: ${record.code}`);
                               setShowSuccessModal(true);
                             }}
-                            className="w-full bg-gradient-to-r from-amber-400 to-pink-400 text-white py-2 rounded-lg font-bold text-xs hover:shadow-lg transition mt-2"
+                            className="w-full bg-gradient-to-r from-amber-400 to-orange-400 text-white py-2 rounded-lg font-bold text-xs hover:shadow-lg transition mt-2"
                           >
                             📋 Copy Code: {record.code}
                           </button>
@@ -2730,7 +2730,7 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                     <p className="text-xs text-gray-600 mb-4">Redeem discounts in the Shop to collect vouchers</p>
                     <button
                       onClick={() => setRewardsTab('shop')}
-                      className="bg-gradient-to-r from-amber-500 to-pink-500 text-white px-4 py-2 rounded-lg font-bold text-xs hover:shadow-lg transition"
+                      className="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-4 py-2 rounded-lg font-bold text-xs hover:shadow-lg transition"
                     >
                       🛍️ Go to Shop
                     </button>
@@ -2774,8 +2774,8 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                     onClick={() => setHistoryFilter('gifts')}
                     className={`px-3 py-1.5 text-xs font-bold transition rounded whitespace-nowrap ${
                       historyFilter === 'gifts'
-                        ? 'bg-pink-500 text-white'
-                        : 'bg-pink-100 text-pink-700 hover:bg-pink-200'
+                        ? 'bg-orange-500 text-white'
+                        : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
                     }`}
                   >
                     💝 Gifts ({allActivities.filter(a => a.type === 'gift').length})
@@ -2850,12 +2850,12 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                                 <p className="font-bold text-orange-600 text-sm">{record.amount} EP</p>
                               </div>
                             ) : (
-                              <div key={`gift-${record.id}`} className="p-3 flex justify-between hover:bg-pink-50 transition bg-gradient-to-r from-transparent to-pink-50">
+                              <div key={`gift-${record.id}`} className="p-3 flex justify-between hover:bg-orange-50 transition bg-gradient-to-r from-transparent to-orange-50">
                                 <div>
                                   <p className="font-bold text-gray-900">{record.emoji} {record.title}</p>
                                   <p className="text-gray-500 text-xs">{record.date}{record.time && ` at ${record.time}`}</p>
                                 </div>
-                                <p className="font-bold text-pink-600 text-sm">{record.amount}</p>
+                                <p className="font-bold text-orange-600 text-sm">{record.amount}</p>
                               </div>
                             )
                           ));
@@ -3058,15 +3058,15 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                 <div className="divide-y divide-gray-100 p-2 space-y-2">
                   <div className="flex justify-between items-center text-xs">
                     <span>✓ Offer Confirmed</span>
-                    <span className="bg-green-500 text-white px-2 py-1 rounded text-xs">ON</span>
+                    <span className="bg-orange-500 text-white px-2 py-1 rounded text-xs">ON</span>
                   </div>
                   <div className="flex justify-between items-center text-xs">
                     <span>✓ Errand Reopened</span>
-                    <span className="bg-green-500 text-white px-2 py-1 rounded text-xs">ON</span>
+                    <span className="bg-orange-500 text-white px-2 py-1 rounded text-xs">ON</span>
                   </div>
                   <div className="flex justify-between items-center text-xs">
                     <span>✓ Payment Released</span>
-                    <span className="bg-green-500 text-white px-2 py-1 rounded text-xs">ON</span>
+                    <span className="bg-orange-500 text-white px-2 py-1 rounded text-xs">ON</span>
                   </div>
                 </div>
               </div>
@@ -3083,7 +3083,7 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                       onClick={() => toggleNotificationPref('newOffer')}
                       className={`px-3 py-1 rounded text-xs font-bold transition ${
                         notificationPrefs.newOffer
-                          ? 'bg-green-500 text-white'
+                          ? 'bg-orange-500 text-white'
                           : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
                       }`}
                     >
@@ -3096,7 +3096,7 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                       onClick={() => toggleNotificationPref('messageReceived')}
                       className={`px-3 py-1 rounded text-xs font-bold transition ${
                         notificationPrefs.messageReceived
-                          ? 'bg-green-500 text-white'
+                          ? 'bg-orange-500 text-white'
                           : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
                       }`}
                     >
@@ -3109,7 +3109,7 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                       onClick={() => toggleNotificationPref('errandDone')}
                       className={`px-3 py-1 rounded text-xs font-bold transition ${
                         notificationPrefs.errandDone
-                          ? 'bg-green-500 text-white'
+                          ? 'bg-orange-500 text-white'
                           : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
                       }`}
                     >
@@ -3120,8 +3120,8 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
               </div>
 
               {/* Optional Section */}
-              <div className="border border-green-200 rounded overflow-hidden">
-                <div className="px-3 py-2 bg-green-500 text-white">
+              <div className="border border-orange-200 rounded overflow-hidden">
+                <div className="px-3 py-2 bg-orange-500 text-white">
                   <h3 className="text-xs font-bold">🟢 Optional</h3>
                 </div>
                 <div className="divide-y divide-gray-100 p-2 space-y-2">
@@ -3131,7 +3131,7 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                       onClick={() => toggleNotificationPref('profileViewed')}
                       className={`px-3 py-1 rounded text-xs font-bold transition ${
                         notificationPrefs.profileViewed
-                          ? 'bg-green-500 text-white'
+                          ? 'bg-orange-500 text-white'
                           : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
                       }`}
                     >
@@ -3144,7 +3144,7 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                       onClick={() => toggleNotificationPref('referralActivity')}
                       className={`px-3 py-1 rounded text-xs font-bold transition ${
                         notificationPrefs.referralActivity
-                          ? 'bg-green-500 text-white'
+                          ? 'bg-orange-500 text-white'
                           : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
                       }`}
                     >
@@ -3157,7 +3157,7 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                       onClick={() => toggleNotificationPref('platformUpdates')}
                       className={`px-3 py-1 rounded text-xs font-bold transition ${
                         notificationPrefs.platformUpdates
-                          ? 'bg-green-500 text-white'
+                          ? 'bg-orange-500 text-white'
                           : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
                       }`}
                     >
@@ -3168,8 +3168,8 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
               </div>
 
               {/* Success Message */}
-              <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
-                <p className="text-xs text-green-700 font-semibold">✅ Preferences saved automatically</p>
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-center">
+                <p className="text-xs text-orange-700 font-semibold">✅ Preferences saved automatically</p>
               </div>
             </div>
           </div>
@@ -3177,12 +3177,12 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
 
         {/* CATEGORIES SECTION */}
         {activeSection === 'categories' && (
-          <div className="bg-gradient-to-br from-amber-100 via-pink-100 to-orange-100 rounded-lg shadow-md p-4 space-y-3">
+          <div className="bg-gradient-to-br from-amber-100 via-orange-100 to-orange-100 rounded-lg shadow-md p-4 space-y-3">
             {/* Header with stats */}
             <div className="flex items-center justify-between mb-2">
               <h2 className="text-xl font-bold text-amber-900">🎯 My Categories</h2>
               <div className="flex gap-2 text-sm font-bold">
-                <span className="bg-green-500 text-white px-3 py-1 rounded-full">💪 {categoriesCanHelpCount}</span>
+                <span className="bg-orange-500 text-white px-3 py-1 rounded-full">💪 {categoriesCanHelpCount}</span>
                 <span className="bg-orange-500 text-white px-3 py-1 rounded-full">🙋 {categoriesNeedHelpCount}</span>
               </div>
             </div>
@@ -3191,8 +3191,8 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
             <div className="bg-white bg-opacity-80 rounded-lg p-3 border-2 border-amber-300 mb-2">
               <p className="text-sm font-bold text-amber-900 mb-2">🤖 How AI Uses This:</p>
               <div className="grid grid-cols-2 gap-2 text-xs text-gray-800">
-                <div className="bg-green-50 p-2 rounded">
-                  <p className="font-bold text-green-700">💪 I Can Help</p>
+                <div className="bg-orange-50 p-2 rounded">
+                  <p className="font-bold text-orange-700">💪 I Can Help</p>
                   <p>AI shows you errands in these categories first. Build your reputation here!</p>
                 </div>
                 <div className="bg-orange-50 p-2 rounded">
@@ -3208,15 +3208,15 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                 the original two columns. */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {/* I CAN HELP COLUMN */}
-              <div className="bg-green-50 rounded-lg p-3 border-4 border-green-400">
-                <p className="text-lg font-bold text-green-700 mb-3">💪 I Can Help</p>
+              <div className="bg-orange-50 rounded-lg p-3 border-4 border-orange-400">
+                <p className="text-lg font-bold text-orange-700 mb-3">💪 I Can Help</p>
                 <div className="space-y-2 mb-3">
                   {ALL_16_CATEGORIES.map(category => (
                     selectedCategoriesHelp.includes(category.id) && (
                       <button
                         key={category.id}
                         onClick={() => toggleCategoryHelp(category.id)}
-                        className="w-full text-left text-base bg-green-500 text-white px-3 py-2 rounded-lg font-bold hover:bg-green-600 transition flex items-center gap-2 active:scale-95"
+                        className="w-full text-left text-base bg-orange-500 text-white px-3 py-2 rounded-lg font-bold hover:bg-orange-600 transition flex items-center gap-2 active:scale-95"
                       >
                         <span className="text-2xl">{category.icon}</span>
                         <span>{category.name}</span>
@@ -3234,13 +3234,13 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                       <div key={category.id} className="relative group flex flex-col items-center">
                         <button
                           onClick={() => toggleCategoryHelp(category.id)}
-                          className="text-3xl md:text-5xl p-1 md:p-2 hover:scale-110 transition active:scale-95 rounded-lg hover:bg-green-200 w-full leading-none"
+                          className="text-3xl md:text-5xl p-1 md:p-2 hover:scale-110 transition active:scale-95 rounded-lg hover:bg-orange-200 w-full leading-none"
                         >
                           {category.icon}
                         </button>
                         {/* Visible label on phones — the hover tooltip never
                             appears on touch, so the emoji was unlabelled. */}
-                        <span className="md:hidden text-[10px] leading-tight font-semibold text-green-800 text-center mt-0.5 line-clamp-2">
+                        <span className="md:hidden text-[10px] leading-tight font-semibold text-orange-800 text-center mt-0.5 line-clamp-2">
                           {category.name}
                         </span>
                         <div className="hidden md:block absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm font-bold rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
@@ -3348,7 +3348,7 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden">
             {/* Success Header - Rainbow Gradient - Compact */}
-            <div className="bg-gradient-to-r from-pink-400 via-amber-400 to-green-400 p-4 text-white text-center">
+            <div className="bg-gradient-to-r from-orange-400 via-amber-400 to-orange-400 p-4 text-white text-center">
               <div className="text-4xl mb-1 animate-pulse">🎁</div>
               <h2 className="text-2xl font-black">WOOHOO! 🥳</h2>
             </div>
@@ -3362,13 +3362,13 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
               </div>
 
               {/* Message */}
-              <div className="bg-pink-50 rounded-lg p-3 border border-pink-300">
-                <p className="text-xs text-pink-900 italic line-clamp-2">"{giftSuccessData.message}"</p>
+              <div className="bg-orange-50 rounded-lg p-3 border border-orange-300">
+                <p className="text-xs text-orange-900 italic line-clamp-2">"{giftSuccessData.message}"</p>
               </div>
 
               {/* Schedule + Recorded */}
-              <div className="bg-green-50 rounded-lg p-3 border border-green-300 text-center">
-                <p className="text-xs text-green-700 font-black">✅ {giftSuccessData.scheduledDate}</p>
+              <div className="bg-orange-50 rounded-lg p-3 border border-orange-300 text-center">
+                <p className="text-xs text-orange-700 font-black">✅ {giftSuccessData.scheduledDate}</p>
               </div>
             </div>
 
@@ -3380,7 +3380,7 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                   setShowGiftModal(false);
                   setActiveSection('rewards');
                 }}
-                className="w-full bg-green-500 text-white font-bold py-2 text-sm rounded-lg hover:bg-green-600 transition"
+                className="w-full bg-orange-500 text-white font-bold py-2 text-sm rounded-lg hover:bg-orange-600 transition"
               >
                 📊 View Rewards
               </button>
@@ -3399,7 +3399,7 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                   });
                   setShowGiftModal(true);
                 }}
-                className="w-full bg-pink-500 text-white font-bold py-2 text-sm rounded-lg hover:bg-pink-600 transition"
+                className="w-full bg-orange-500 text-white font-bold py-2 text-sm rounded-lg hover:bg-orange-600 transition"
               >
                 💝 Send Another
               </button>
@@ -3456,8 +3456,8 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
 
             {/* Show saved groups count */}
             {savedGroups.length > 0 && (
-              <div className="bg-gradient-to-r from-green-100 to-green-50 border-2 border-green-400 rounded-lg p-3">
-                <p className="text-xs font-bold text-green-700">✅ You have {savedGroups.length} saved group{savedGroups.length !== 1 ? 's' : ''}:</p>
+              <div className="bg-gradient-to-r from-orange-100 to-orange-50 border-2 border-orange-400 rounded-lg p-3">
+                <p className="text-xs font-bold text-orange-700">✅ You have {savedGroups.length} saved group{savedGroups.length !== 1 ? 's' : ''}:</p>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {savedGroups.map((group) => (
                     <button
@@ -3468,7 +3468,7 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                           recipients: group.members,
                         });
                       }}
-                      className="bg-white text-xs px-3 py-1 rounded-full border border-green-400 text-green-700 font-bold hover:bg-green-50 transition"
+                      className="bg-white text-xs px-3 py-1 rounded-full border border-orange-400 text-orange-700 font-bold hover:bg-orange-50 transition"
                     >
                       {group.name} ({group.members.length}) →
                     </button>
@@ -3492,9 +3492,9 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                     <p className="text-xs text-gray-600">Per Person</p>
                     <p className="text-lg font-bold text-orange-600">{giftForm.points} EP</p>
                   </div>
-                  <div className="bg-white rounded p-2 border border-pink-100">
+                  <div className="bg-white rounded p-2 border border-orange-100">
                     <p className="text-xs text-gray-600">Total Cost</p>
-                    <p className="text-lg font-bold text-pink-600">{Math.max(0, (parseInt(giftForm.points || '0') || 0) * (giftForm.recipients?.length ?? 0))} EP</p>
+                    <p className="text-lg font-bold text-orange-600">{Math.max(0, (parseInt(giftForm.points || '0') || 0) * (giftForm.recipients?.length ?? 0))} EP</p>
                   </div>
                 </div>
 
@@ -3502,7 +3502,7 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                 <div className={`rounded p-2 border-2 ${
                   (parseInt(giftForm.points || '0') || 0) * (giftForm.recipients?.length ?? 0) > userBalance
                     ? 'bg-red-50 border-red-300'
-                    : 'bg-green-50 border-green-300'
+                    : 'bg-orange-50 border-orange-300'
                 }`}>
                   <div className="flex justify-between items-center">
                     <p className="text-xs text-gray-600">Current Balance:</p>
@@ -3513,7 +3513,7 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                     <p className={`text-sm font-bold ${
                       (parseInt(giftForm.points || '0') || 0) * (giftForm.recipients?.length ?? 0) > userBalance
                         ? 'text-red-600'
-                        : 'text-green-600'
+                        : 'text-orange-600'
                     }`}>
                       {Math.max(0, userBalance - ((parseInt(giftForm.points || '0') || 0) * (giftForm.recipients?.length ?? 0)))} EP
                     </p>
@@ -3930,7 +3930,7 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                     console.log('✅ Confirmation modal opened!');
                   }
                 }}
-                className="w-full bg-gradient-to-r from-pink-400 to-rose-500 text-white py-3 rounded-lg font-bold text-base hover:shadow-lg transition active:scale-95"
+                className="w-full bg-gradient-to-r from-orange-400 to-amber-500 text-white py-3 rounded-lg font-bold text-base hover:shadow-lg transition active:scale-95"
               >
                 💝 Send Gift
               </button>
@@ -3954,13 +3954,13 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-4 space-y-4">
             {/* Header */}
-            <div className="text-center pb-3 border-b-2 border-pink-200">
-              <p className="text-lg font-bold text-pink-600">🎁 Confirm Gift</p>
+            <div className="text-center pb-3 border-b-2 border-orange-200">
+              <p className="text-lg font-bold text-orange-600">🎁 Confirm Gift</p>
             </div>
 
             {/* Details */}
             <div className="space-y-3">
-              <div className="bg-pink-50 rounded-lg p-3">
+              <div className="bg-orange-50 rounded-lg p-3">
                 <p className="text-xs text-gray-600">Recipients:</p>
                 <p className="text-sm font-bold text-gray-900">{giftConfirmationData.recipientNames}</p>
                 <p className="text-xs text-gray-600 mt-1">({giftConfirmationData.recipientCount} friend{giftConfirmationData.recipientCount > 1 ? 's' : ''})</p>
@@ -3971,9 +3971,9 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                   <p className="text-xs text-gray-600">Per person:</p>
                   <p className="text-sm font-bold text-orange-600">{giftConfirmationData.pointsToSend} EP</p>
                 </div>
-                <div className="bg-pink-100 rounded-lg p-3">
+                <div className="bg-orange-100 rounded-lg p-3">
                   <p className="text-xs text-gray-600">Total:</p>
-                  <p className="text-sm font-bold text-pink-600">{giftConfirmationData.totalPointsDeducted} EP</p>
+                  <p className="text-sm font-bold text-orange-600">{giftConfirmationData.totalPointsDeducted} EP</p>
                 </div>
               </div>
 
@@ -4034,7 +4034,7 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                     date: dateString,
                     time: timeString,
                     amount: `-${giftConfirmationData.totalPointsDeducted} EP`,
-                    color: 'pink',
+                    color: 'orange',
                   };
                   console.log('🎁 New gift transaction:', newActivity);
                   setAllActivities([newActivity, ...allActivities]);
@@ -4080,7 +4080,7 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                   });
                   setShowGiftSuccessModal(true);
                 }}
-                className="w-full bg-gradient-to-r from-pink-400 to-rose-500 text-white py-2.5 rounded-lg font-bold text-sm hover:shadow-lg transition"
+                className="w-full bg-gradient-to-r from-orange-400 to-amber-500 text-white py-2.5 rounded-lg font-bold text-sm hover:shadow-lg transition"
               >
                 ✅ Confirm & Send
               </button>
@@ -4316,7 +4316,7 @@ function SafetyResourcesList({
               <div className="flex gap-2 flex-wrap">
                 <a
                   href={`tel:${resource.phone}`}
-                  className="flex-1 text-xs bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded transition font-medium text-center"
+                  className="flex-1 text-xs bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded transition font-medium text-center"
                 >
                   📞 Call
                 </a>
