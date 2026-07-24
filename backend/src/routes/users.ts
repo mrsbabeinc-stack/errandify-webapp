@@ -58,6 +58,13 @@ router.get('/profile', authMiddleware, async (req, res) => {
     );
     const timesFavorited = parseInt(favoritedResult.rows[0]?.favorite_count || 0);
 
+    // Get posted errands count (errands this user created as the asker)
+    const postedResult = await db.query(
+      `SELECT COUNT(*) as posted_count FROM errands WHERE asker_id = $1`,
+      [req.userId]
+    );
+    const postedTasks = parseInt(postedResult.rows[0]?.posted_count || 0);
+
     res.json({
       success: true,
       data: {
@@ -80,6 +87,7 @@ router.get('/profile', authMiddleware, async (req, res) => {
         completedTasks: completedTasks,
         totalEarnings: totalEarnings,
         timesFavorited: timesFavorited,
+        postedTasks: postedTasks,
         categories: [],
       },
     });

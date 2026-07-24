@@ -25,6 +25,8 @@ interface UserProfile {
   rating?: number;
   reviewCount?: number;
   completedTasks?: number;
+  postedTasks?: number;
+  timesFavorited?: number;
   totalEarnings?: number;
   errandifyPoints?: number;
   categories?: string[];
@@ -1360,12 +1362,12 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
                       certificates={certificates}
                       profileImage={profileImage}
                       role={profileData.role}
-                      trustedCount={3}
+                      trustedCount={profileData.timesFavorited || 0}
                       completedTasks={profileData.completedTasks || 0}
-                      postedTasks={30}
+                      postedTasks={profileData.postedTasks || 0}
                       alias={editForm.alias}
-                      averageRating={4.8}
-                      reviewCount={12}
+                      averageRating={ratings.averageRating || 0}
+                      reviewCount={ratings.reviewCount || 0}
                     />
                   </div>
                 )}
@@ -2965,9 +2967,9 @@ export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccoun
             {safetyTab === 'resources' && (
               <div className="p-4 space-y-4">
                 {/* Header */}
-                <div className="bg-gradient-to-br from-red-50 to-orange-50 border-l-4 border-red-500 rounded-lg p-4">
-                  <h3 className="font-bold text-red-900 mb-1">🆘 Get Help Anytime</h3>
-                  <p className="text-xs text-red-800">All services are 24/7, confidential, and free.</p>
+                <div className="bg-errandify-orange-wash border-l-4 border-errandify-orange rounded-lg p-4">
+                  <h3 className="font-bold text-errandify-brown mb-1">🆘 Get Help Anytime</h3>
+                  <p className="text-xs text-gray-700">All services are 24/7, confidential, and free.</p>
                 </div>
 
                 {/* Search & Filter */}
