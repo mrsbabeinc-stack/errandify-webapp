@@ -4,7 +4,10 @@ import AdminLayout from '../../components/admin/AdminLayout';
 export const EPRulesFlexiblePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'rules' | 'strategies' | 'analytics'>('rules');
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [selectedRule, setSelectedRule] = useState<any>(null);
+  // When set, the Create/Edit modal is editing this rule instead of creating a
+  // new one. (Was `selectedRule`, which the Edit button set but nothing ever
+  // rendered — so Edit did nothing.)
+  const [editingRuleId, setEditingRuleId] = useState<number | null>(null);
 
   const [rules, setRules] = useState([
     {
@@ -133,28 +136,68 @@ export const EPRulesFlexiblePage: React.FC = () => {
     conditions: ''
   });
 
-  const handleCreateRule = () => {
+  const closeModal = () => {
+    setShowCreateModal(false);
+    setEditingRuleId(null);
+    setNewRule({ name: '', description: '', category: 'Custom', triggerEvent: '', basePoints: 10, conditions: '' });
+  };
+
+  const openCreateModal = () => {
+    setEditingRuleId(null);
+    setNewRule({ name: '', description: '', category: 'Custom', triggerEvent: '', basePoints: 10, conditions: '' });
+    setShowCreateModal(true);
+  };
+
+  const openEditModal = (rule: any) => {
+    setEditingRuleId(rule.id);
+    setNewRule({
+      name: rule.name || '',
+      description: rule.description || '',
+      category: rule.category || 'Custom',
+      triggerEvent: rule.triggers?.[0] || '',
+      basePoints: rule.conditions?.basePoints ?? 10,
+      conditions: rule.conditions?.custom || ''
+    });
+    setShowCreateModal(true);
+  };
+
+  const handleSaveRule = () => {
     if (!newRule.name || !newRule.triggerEvent) {
       alert('Please fill in required fields');
       return;
     }
 
-    const rule = {
-      id: Math.max(...rules.map(r => r.id), 0) + 1,
-      name: newRule.name,
-      icon: '✨',
-      category: newRule.category,
-      description: newRule.description,
-      triggers: [newRule.triggerEvent],
-      conditions: { basePoints: newRule.basePoints, custom: newRule.conditions },
-      active: true,
-      impact: 'TBD - Monitor performance'
-    };
+    if (editingRuleId != null) {
+      setRules(rules.map(r =>
+        r.id === editingRuleId
+          ? {
+              ...r,
+              name: newRule.name,
+              category: newRule.category,
+              description: newRule.description,
+              triggers: [newRule.triggerEvent],
+              conditions: { basePoints: newRule.basePoints, custom: newRule.conditions }
+            }
+          : r
+      ));
+      alert(`✅ Rule "${newRule.name}" updated!`);
+    } else {
+      const rule = {
+        id: Math.max(...rules.map(r => r.id), 0) + 1,
+        name: newRule.name,
+        icon: '✨',
+        category: newRule.category,
+        description: newRule.description,
+        triggers: [newRule.triggerEvent],
+        conditions: { basePoints: newRule.basePoints, custom: newRule.conditions },
+        active: true,
+        impact: 'TBD - Monitor performance'
+      };
+      setRules([...rules, rule]);
+      alert(`✅ Rule "${newRule.name}" created!`);
+    }
 
-    setRules([...rules, rule]);
-    alert(`✅ Rule "${newRule.name}" created!`);
-    setShowCreateModal(false);
-    setNewRule({ name: '', description: '', category: 'Custom', triggerEvent: '', basePoints: 10, conditions: '' });
+    closeModal();
   };
 
   const toggleRuleActive = (ruleId: number) => {
@@ -216,7 +259,7 @@ export const EPRulesFlexiblePage: React.FC = () => {
                 Active EP Earning Rules
               </h3>
               <button
-                onClick={() => setShowCreateModal(true)}
+                onClick={openCreateModal}
                 style={{
                   padding: '8px 16px',
                   background: '#FF6B35',
@@ -237,7 +280,7 @@ export const EPRulesFlexiblePage: React.FC = () => {
               {rules.map(rule => (
                 <div
                   key={rule.id}
-                  onClick={() => setSelectedRule(rule)}
+                  onClick={() => openEditModal(rule)}
                   style={{
                     background: rule.active ? '#fff' : '#f5f5f5',
                     border: rule.active ? '1px solid #ffb88c' : '1px solid #ddd',
@@ -292,7 +335,7 @@ export const EPRulesFlexiblePage: React.FC = () => {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        setSelectedRule(rule);
+                        openEditModal(rule);
                       }}
                       style={{
                         flex: 1,
@@ -456,7 +499,7 @@ export const EPRulesFlexiblePage: React.FC = () => {
               width: '90%',
               boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
             }}>
-              <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#333', margin: '0 0 16px 0' }}>Create Custom EP Rule</h2>
+              <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#333', margin: '0 0 16px 0' }}>{editingRuleId != null ? 'Edit EP Rule' : 'Create Custom EP Rule'}</h2>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <div>
@@ -539,16 +582,16 @@ export const EPRulesFlexiblePage: React.FC = () => {
 
                 <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
                   <button
-                    onClick={() => setShowCreateModal(false)}
+                    onClick={closeModal}
                     style={{ flex: 1, padding: '10px', background: '#f0f0f0', color: '#333', border: '1px solid #ddd', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}
                   >
                     Cancel
                   </button>
                   <button
-                    onClick={handleCreateRule}
+                    onClick={handleSaveRule}
                     style={{ flex: 1, padding: '10px', background: '#FF6B35', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '700' }}
                   >
-                    Create Rule
+                    {editingRuleId != null ? 'Save Changes' : 'Create Rule'}
                   </button>
                 </div>
               </div>
