@@ -1794,7 +1794,7 @@ window.topNotification?.({
   message: 'Done!',
   icon: '✓',
   duration: 4000
-});`})]})]}),GF=({onMenuToggle:t,isMenuOpen:n=!0,onLogout:r})=>{const s=Ne(),[o,i]=a.useState(!1),l=localStorage.getItem("user"),d=l?JSON.parse(l):null,c=(d==null?void 0:d.display_name)||(d==null?void 0:d.name)||"Admin",m=()=>{r?r():(localStorage.removeItem("token"),localStorage.removeItem("user"),localStorage.removeItem("userId"),localStorage.removeItem("userRole"),localStorage.removeItem("current_role"),localStorage.removeItem("singpass_state"),localStorage.removeItem("singpass_nonce"),localStorage.removeItem("singpass_mode"),window.location.href="/auth")},u=()=>{localStorage.setItem("current_role","asker"),s("/home")};return e.jsxs("nav",{className:"admin-navbar",children:[e.jsxs("div",{className:"navbar-content",children:[e.jsxs("div",{className:"navbar-left",children:[e.jsx("button",{className:"menu-toggle",onClick:t,title:n?"Collapse sidebar":"Expand sidebar",children:n?"◀":"▶"}),e.jsxs("div",{className:"navbar-brand",children:[e.jsx("span",{className:"brand-icon",children:"⚙️"}),e.jsx("span",{className:"brand-name",children:"Errandify Admin"})]})]}),e.jsx("div",{className:"navbar-center",children:e.jsx("div",{className:"breadcrumb",children:(()=>{const S=location.pathname;return S==="/admin/dashboard"?"Home":S==="/admin/dashboard/users"?"Users & Safety":S==="/admin/operations/auth-management"?"Admin Users":S==="/admin/operations/user-management"?"User Management":S==="/admin/dashboard/disputes"?"Disputes (L1/L2/L3)":S==="/admin/cases"?"Cases Management":S==="/admin/operations/errand-management"?"Errand Management":S==="/admin/operations/payments"?"Payments & Refunds":S==="/admin/config/audit-compliance"?"Audit & Compliance":S==="/admin/config/alerts-notifications"?"Alerts & Notifications":"Admin"})()})}),e.jsx("div",{className:"navbar-right",children:e.jsxs("div",{className:"user-menu",children:[e.jsxs("button",{className:"user-button",onClick:()=>i(!o),children:[e.jsx("span",{className:"user-avatar",children:"👤"}),e.jsx("span",{className:"user-name",children:c}),e.jsx("span",{className:"dropdown-arrow",children:"▼"})]}),o&&e.jsxs("div",{className:"dropdown-menu",children:[e.jsx("button",{className:"dropdown-item",onClick:()=>s("/admin/settings"),children:"⚙️ Settings"}),e.jsx("button",{className:"dropdown-item",onClick:()=>s("/admin/profile"),children:"👤 Profile"}),e.jsx("div",{className:"dropdown-divider"}),e.jsx("button",{className:"dropdown-item",onClick:u,children:"← Back to User Mode"}),e.jsx("button",{className:"dropdown-item logout",onClick:m,children:"🚪 Logout"})]})]})})]}),e.jsx("style",{children:`
+});`})]})]}),GF=({onMenuToggle:t,isMenuOpen:n=!0,onLogout:r})=>{const s=Ne(),[o,i]=a.useState(!1),l=localStorage.getItem("user"),d=l?JSON.parse(l):null,c=(d==null?void 0:d.display_name)||(d==null?void 0:d.name)||"Admin",m=()=>{r?r():(localStorage.removeItem("token"),localStorage.removeItem("user"),localStorage.removeItem("userId"),localStorage.removeItem("userRole"),localStorage.removeItem("current_role"),localStorage.removeItem("singpass_state"),localStorage.removeItem("singpass_nonce"),localStorage.removeItem("singpass_mode"),window.location.href="/auth")},u=()=>{localStorage.setItem("current_role","asker"),s("/home")},S=()=>{window.history.length>1?s(-1):s("/admin/dashboard")};return e.jsxs("nav",{className:"admin-navbar",children:[e.jsxs("div",{className:"navbar-content",children:[e.jsxs("div",{className:"navbar-left",children:[e.jsx("button",{className:"menu-toggle",onClick:t,title:n?"Collapse sidebar":"Expand sidebar",children:n?"◀":"▶"}),e.jsx("button",{className:"nav-back",onClick:S,title:"Back","aria-label":"Back",children:"←"}),e.jsxs("div",{className:"navbar-brand",children:[e.jsx("span",{className:"brand-icon",children:"⚙️"}),e.jsx("span",{className:"brand-name",children:"Errandify Admin"})]})]}),e.jsx("div",{className:"navbar-center",children:e.jsx("div",{className:"breadcrumb",children:(()=>{const x=location.pathname;return x==="/admin/dashboard"?"Home":x==="/admin/dashboard/users"?"Users & Safety":x==="/admin/operations/auth-management"?"Admin Users":x==="/admin/operations/user-management"?"User Management":x==="/admin/dashboard/disputes"?"Disputes (L1/L2/L3)":x==="/admin/cases"?"Cases Management":x==="/admin/operations/errand-management"?"Errand Management":x==="/admin/operations/payments"?"Payments & Refunds":x==="/admin/config/audit-compliance"?"Audit & Compliance":x==="/admin/config/alerts-notifications"?"Alerts & Notifications":"Admin"})()})}),e.jsx("div",{className:"navbar-right",children:e.jsxs("div",{className:"user-menu",children:[e.jsxs("button",{className:"user-button",onClick:()=>i(!o),children:[e.jsx("span",{className:"user-avatar",children:"👤"}),e.jsx("span",{className:"user-name",children:c}),e.jsx("span",{className:"dropdown-arrow",children:"▼"})]}),o&&e.jsxs("div",{className:"dropdown-menu",children:[e.jsx("button",{className:"dropdown-item",onClick:()=>s("/admin/settings"),children:"⚙️ Settings"}),e.jsx("button",{className:"dropdown-item",onClick:()=>s("/admin/profile"),children:"👤 Profile"}),e.jsx("div",{className:"dropdown-divider"}),e.jsx("button",{className:"dropdown-item",onClick:u,children:"← Back to User Mode"}),e.jsx("button",{className:"dropdown-item logout",onClick:m,children:"🚪 Logout"})]})]})})]}),e.jsx("style",{children:`
         .admin-navbar {
           height: 60px;
           background: linear-gradient(to right, #ff6b35, #ff8c42);
@@ -1841,6 +1841,29 @@ window.topNotification?.({
         }
 
         .menu-toggle:hover {
+          background: rgba(255,255,255,0.2);
+          border-color: rgba(255,255,255,0.5);
+        }
+
+        .nav-back {
+          width: 36px;
+          height: 36px;
+          border: 1px solid rgba(255,255,255,0.3);
+          background: rgba(255,255,255,0.1);
+          color: #fff;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 18px;
+          font-weight: 700;
+          line-height: 1;
+          transition: all 0.2s;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+
+        .nav-back:hover {
           background: rgba(255,255,255,0.2);
           border-color: rgba(255,255,255,0.5);
         }
@@ -2351,11 +2374,30 @@ window.topNotification?.({
 
         @media (max-width: 768px) {
           .admin-content {
-            padding: 16px;
+            padding: 12px;
           }
 
           .admin-main {
             margin-left: 0;
+          }
+
+          /* Many admin screens hard-code multi-column inline grids
+             (repeat(4, 1fr), fixed minmax(280px…) etc.) that don't fit a phone,
+             so cards run off the right edge. Re-flow every inline grid to an
+             auto-fit that can never be wider than the viewport — the
+             min(160px, 100%) floor keeps a single card full-width when even
+             160px won't fit, so nothing is ever cut off. */
+          .admin-content [style*="grid-template-columns"] {
+            grid-template-columns: repeat(auto-fit, minmax(min(160px, 100%), 1fr)) !important;
+          }
+
+          /* Section headings were often white-space:nowrap and overran the
+             screen; let them wrap on a phone. */
+          .admin-content h1,
+          .admin-content h2,
+          .admin-content h3 {
+            white-space: normal !important;
+            overflow-wrap: anywhere;
           }
         }
 

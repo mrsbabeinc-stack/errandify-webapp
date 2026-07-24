@@ -40,6 +40,17 @@ export const AdminNavbar: React.FC<AdminNavbarProps> = ({ onMenuToggle, isMenuOp
     navigate('/home');
   };
 
+  const handleBack = () => {
+    // Go back a step; if there's no in-app history to pop (e.g. deep-linked
+    // straight into a section), fall back to the admin dashboard so the button
+    // is never a dead end.
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate('/admin/dashboard');
+    }
+  };
+
   return (
     <nav className="admin-navbar">
       <div className="navbar-content">
@@ -50,6 +61,15 @@ export const AdminNavbar: React.FC<AdminNavbarProps> = ({ onMenuToggle, isMenuOp
             title={isMenuOpen ? 'Collapse sidebar' : 'Expand sidebar'}
           >
             {isMenuOpen ? '◀' : '▶'}
+          </button>
+
+          <button
+            className="nav-back"
+            onClick={handleBack}
+            title="Back"
+            aria-label="Back"
+          >
+            ←
           </button>
 
           <div className="navbar-brand">
@@ -156,6 +176,29 @@ export const AdminNavbar: React.FC<AdminNavbarProps> = ({ onMenuToggle, isMenuOp
         }
 
         .menu-toggle:hover {
+          background: rgba(255,255,255,0.2);
+          border-color: rgba(255,255,255,0.5);
+        }
+
+        .nav-back {
+          width: 36px;
+          height: 36px;
+          border: 1px solid rgba(255,255,255,0.3);
+          background: rgba(255,255,255,0.1);
+          color: #fff;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 18px;
+          font-weight: 700;
+          line-height: 1;
+          transition: all 0.2s;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+
+        .nav-back:hover {
           background: rgba(255,255,255,0.2);
           border-color: rgba(255,255,255,0.5);
         }

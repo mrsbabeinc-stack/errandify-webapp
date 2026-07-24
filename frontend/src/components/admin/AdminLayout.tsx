@@ -152,11 +152,30 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, onLogout }) 
 
         @media (max-width: 768px) {
           .admin-content {
-            padding: 16px;
+            padding: 12px;
           }
 
           .admin-main {
             margin-left: 0;
+          }
+
+          /* Many admin screens hard-code multi-column inline grids
+             (repeat(4, 1fr), fixed minmax(280px…) etc.) that don't fit a phone,
+             so cards run off the right edge. Re-flow every inline grid to an
+             auto-fit that can never be wider than the viewport — the
+             min(160px, 100%) floor keeps a single card full-width when even
+             160px won't fit, so nothing is ever cut off. */
+          .admin-content [style*="grid-template-columns"] {
+            grid-template-columns: repeat(auto-fit, minmax(min(160px, 100%), 1fr)) !important;
+          }
+
+          /* Section headings were often white-space:nowrap and overran the
+             screen; let them wrap on a phone. */
+          .admin-content h1,
+          .admin-content h2,
+          .admin-content h3 {
+            white-space: normal !important;
+            overflow-wrap: anywhere;
           }
         }
 
