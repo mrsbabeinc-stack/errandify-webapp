@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import AdCarousel from '../components/AdCarousel';
 import MyCompanyInvites from '../components/company/MyCompanyInvites';
@@ -62,7 +62,19 @@ const ACCOUNT_SECTIONS = [
 
 export default function MyAccountPage({ onLogout, userRole = 'asker' }: MyAccountPageProps = {}) {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [activeSection, setActiveSection] = useState<'dashboard' | 'profile' | 'pocket' | 'rewards' | 'safety' | 'notify' | 'categories' | 'availability'>('dashboard');
+
+  // Deep-link into a section via ?tab= (e.g. /my-account?tab=rewards from the
+  // Earn-Points sheet's Redeem button). Without this the query was ignored and
+  // every link just landed on the default dashboard.
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    const valid = ['dashboard', 'profile', 'pocket', 'rewards', 'safety', 'notify', 'categories', 'availability'] as const;
+    if (tab && (valid as readonly string[]).includes(tab)) {
+      setActiveSection(tab as typeof valid[number]);
+    }
+  }, [searchParams]);
   const [profileTab, setProfileTab] = useState<'shared' | 'private'>('shared');
   const [safetyTab, setSafetyTab] = useState<'blocked' | 'resources' | 'pause'>('resources');
   const [showAccountPauseModal, setShowAccountPauseModal] = useState(false);

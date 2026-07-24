@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import EarnPointsModal from './EarnPointsModal';
+import HeroInfoModal, { HeroInfoContent } from './HeroInfoModal';
 
 /**
  * The hero carousel — now fed by the server rather than by this file.
@@ -131,6 +132,7 @@ export default function AdCarousel({ location = 'home' }: { location?: string })
   }, [currentAd?.id, currentAd?.kind]);
 
   const [showPointsModal, setShowPointsModal] = useState(false);
+  const [infoModal, setInfoModal] = useState<HeroInfoContent | null>(null);
 
   const handleAdClick = () => {
     if (currentAd?.kind !== 'ad') return;
@@ -204,11 +206,23 @@ export default function AdCarousel({ location = 'home' }: { location?: string })
               <a
                 href={currentAd.cta.url}
                 onClick={(e) => {
-                  // The Errandify Points notice opens a lightweight sheet on the
-                  // spot instead of navigating to a whole page.
-                  if (currentAd.cta?.url === '/errandify-points') {
+                  // Errandify's own hero notices open a lightweight sheet on the
+                  // spot instead of jumping to a whole page; the sheet's button
+                  // then routes onward. Paid ads (kind === 'ad') still navigate
+                  // out to the advertiser as before.
+                  if (currentAd.kind !== 'ad' && currentAd.cta) {
                     e.preventDefault();
-                    setShowPointsModal(true);
+                    if (currentAd.cta.url === '/errandify-points') {
+                      setShowPointsModal(true);
+                    } else {
+                      setInfoModal({
+                        icon: currentAd.image,
+                        title: currentAd.title,
+                        description: currentAd.description,
+                        ctaLabel: currentAd.cta.label,
+                        ctaUrl: currentAd.cta.url,
+                      });
+                    }
                     return;
                   }
                   handleAdClick();
@@ -254,6 +268,7 @@ export default function AdCarousel({ location = 'home' }: { location?: string })
       </div>
 
       <EarnPointsModal open={showPointsModal} onClose={() => setShowPointsModal(false)} />
+      <HeroInfoModal content={infoModal} onClose={() => setInfoModal(null)} />
     </div>
   );
 }
