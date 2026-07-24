@@ -85,17 +85,24 @@ export default function EventBanner() {
         {/* LEFT: Icon + Message */}
         <div className="flex items-center gap-1.5 flex-1 min-w-0">
           <span className="text-base flex-shrink-0">{currentEvent.icon}</span>
-          <p className={`${styles.text} text-xs font-semibold leading-snug line-clamp-2`}>
+          {/* !text-[11px] beats the global `p { font-size:14px !important }`
+              rule — at 14px the line-clamp chopped the message to "Wee…" on a
+              narrow phone; at 11px the two clamped lines hold the full headline. */}
+          <p className={`${styles.text} !text-[11px] font-semibold leading-snug line-clamp-2`}>
             {currentEvent.message}
           </p>
         </div>
 
-        {/* RIGHT: Action Button + Next + Close */}
-        <div className="flex items-center gap-1 flex-shrink-0">
+        {/* RIGHT: Action Button + Next + Close.
+            Kept tight so the message keeps most of the row on a narrow phone —
+            before, this cluster took ~133px of a 320px banner and clamped the
+            message down to "Weeke…". The "next event" arrow is non-essential, so
+            it only shows from sm up. */}
+        <div className="flex items-center gap-0.5 flex-shrink-0">
           {currentEvent.action && (
             <a
               href={currentEvent.action.url}
-              className={`${styles.action} text-xs font-bold px-1.5 py-0.5 hover:underline whitespace-nowrap`}
+              className={`${styles.action} !text-[11px] font-bold px-1 py-0.5 hover:underline whitespace-nowrap`}
             >
               {currentEvent.action.label}
             </a>
@@ -104,7 +111,7 @@ export default function EventBanner() {
           {SAMPLE_EVENTS.length > 1 && (
             <button
               onClick={handleNext}
-              className={`${styles.action} text-xs font-bold px-1.5 py-0.5 hover:bg-white hover:bg-opacity-50 rounded transition`}
+              className={`${styles.action} hidden sm:block text-xs font-bold px-1 py-0.5 hover:bg-white hover:bg-opacity-50 rounded transition`}
               title="Next event"
             >
               ›
@@ -113,7 +120,7 @@ export default function EventBanner() {
 
           <button
             onClick={() => setDismissed(true)}
-            className={`${styles.action} text-xs font-bold px-1.5 py-0.5 hover:bg-white hover:bg-opacity-50 rounded transition`}
+            className={`${styles.action} text-xs font-bold px-1 py-0.5 hover:bg-white hover:bg-opacity-50 rounded transition`}
             title="Dismiss"
           >
             ✕

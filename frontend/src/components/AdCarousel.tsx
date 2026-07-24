@@ -184,10 +184,13 @@ export default function AdCarousel({ location = 'home' }: { location?: string })
                 Two lines each is the balance: it fits the full title and
                 description of every current slide, and measured at 360x600 the
                 category grid still clears the bottom nav by ~90px. */}
-            <h3 className="text-[13px] sm:text-lg font-bold mb-0.5 leading-tight line-clamp-2">
+            {/* !-prefixed so the global `h3/p { font-size:14px !important }`
+                rules don't inflate these past their intended scale — at 14px the
+                title wrapped and the description truncated on a narrow phone. */}
+            <h3 className="!text-white !text-[13px] sm:!text-lg font-bold mb-0.5 leading-tight line-clamp-2">
               {currentAd.title}
             </h3>
-            <p className="text-white text-opacity-90 text-[11px] sm:text-xs leading-snug line-clamp-2">
+            <p className="!text-white text-opacity-90 !text-[11px] sm:!text-xs leading-snug line-clamp-2">
               {currentAd.description}
             </p>
           </div>
